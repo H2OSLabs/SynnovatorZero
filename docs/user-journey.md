@@ -18,6 +18,7 @@
 - [10. 获得证书](#10-获得证书)
 - [11. 编辑 Post（版本管理与发布审核）](#11-编辑-post版本管理与发布审核)
 - [12. 删除 Post](#12-删除-post)
+- [13. 社区互动（点赞、评论、评分）](#13-社区互动点赞评论评分)
 - [附录：报名规则定义（Rule Definition）](#附录报名规则定义rule-definition)
 
 ---
@@ -32,7 +33,7 @@
 
 ## 数据模型速览
 
-**六种内容类型：**
+**七种内容类型：**
 
 | 类型 | 格式 | 说明 |
 |------|------|------|
@@ -42,16 +43,19 @@
 | `rule` | YAML + Markdown | 活动规则，由组织者创建 |
 | `user` | YAML | 用户信息 |
 | `group` | YAML | 团队/分组，可用于参赛组队、组织方团队、权限分组等 |
+| `interaction` | YAML | 交互记录（点赞、评论、评分），可指向任意内容类型 |
 
-**四种关系：**
+**七种关系：**
 
 | 关系 | 说明 |
 |------|------|
 | `category : rule` | 活动关联其规则 |
 | `category : post` | 活动关联帖子（报名内容、提交作品等） |
+| `category : group` | 团队在特定活动中的报名绑定 |
 | `post : post` | 帖子间关联（引用、回复等） |
 | `post : resource` | 帖子关联附件资源 |
 | `group : user` | 分组关联成员 |
+| `target : interaction` | 内容对象关联其交互记录（点赞、评论、评分） |
 
 ---
 
@@ -68,12 +72,17 @@ flowchart TD
     D --> H[删除 Post]
     D --> I[加入活动/报名]
     D --> J[创建/加入团队]
+    D --> K[社区互动]
+
+    K --> K1[点赞]
+    K --> K2[评论/回复]
+    K --> K3[评委评分]
 
     E --> E1[筛选浏览]
-    E1 --> E2[个人说明 Post #profile]
-    E1 --> E3[团队 Post #team]
-    E1 --> E4[活动说明 Post #category]
-    E1 --> E5[活动提交 Post #for_category]
+    E1 --> E2[个人说明 Post type=profile]
+    E1 --> E3[团队 Post type=team]
+    E1 --> E4[活动说明 Post type=category]
+    E1 --> E5[活动提交 Post type=for_category]
 
     F --> F1[选择 Post 类型]
     F1 --> F2[新建 Post]
@@ -117,7 +126,7 @@ flowchart TD
 | 1 | 点击注册 | — | 进入注册流程 |
 | 2 | 填写基本信息 | — | 用户名、邮箱、密码等 |
 | 3 | 提交注册 | `CREATE user` | 创建用户记录 |
-| 4 | （可选）完善个人资料 | `CREATE post`（tag: `#profile`） | 创建个人说明帖 |
+| 4 | （可选）完善个人资料 | `CREATE post`（type: profile） | 创建个人说明帖 |
 
 - **结果：** 用户获得账号，默认角色为参赛者
 
@@ -147,8 +156,8 @@ flowchart TD
 |------|---------|---------|------|
 | 1 | 浏览可加入的 Group | `READ group`（公开列表） | 查看可加入的团队/分组 |
 | 2 | 选择目标 Group | `READ group`（详情） | 查看 Group 详情和成员列表 |
-| 3 | 申请加入 | `UPDATE group : user`（创建关联） | 将 user 关联到 group |
-| 4 | （若需审批）等待审批 | — | 视 Group 设置，可能需组长批准 |
+| 3 | 申请加入 | `CREATE group:user`（关联，role=member） | 将 user 关联到 group；`require_approval=true` 时 status 初始为 `pending`，否则自动为 `accepted` |
+| 4 | （若需审批）等待审批 | — | Group Owner/Admin 批准：`UPDATE group:user`（status → accepted） |
 | 5 | 加入成功 | `READ group`（成员列表） | 用户成为 Group 成员 |
 
 - **结果：** 用户成为某个 Group 的成员，可以以团队身份参与活动
@@ -190,7 +199,10 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[浏览活动详情] --> B[点击报名]
-    B --> C{活动 Rule 要求}
+    B --> B1{是否以团队身份报名}
+    B1 -->|是| B2[团队报名绑定]
+    B1 -->|否| C
+    B2 --> C{活动 Rule 要求}
     C -->|需要新建提交| D[创建 Post]
     C -->|可选择已有内容| E[选择已有 Post]
     D --> F[Post 关联到 Category]
@@ -203,13 +215,14 @@ flowchart TD
 |------|---------|---------|------|
 | 1 | 浏览活动详情 | `READ category` + `READ rule` | 查看活动说明和规则要求 |
 | 2 | 点击报名 | — | 系统自动读取该活动关联的 Rule |
-| 3a | （路径A）新建 Post | `CREATE post` | 按 Rule 要求创建提交内容 |
-| 3b | （路径B）选择已有 Post | `READ post`（用户自己的列表） | 从自己的帖子中选择 |
-| 4a | 关联 Post 到活动 | `CREATE category : post`（关联） | 将新建的 Post 关联到 Category |
-| 4b | 为 Post 打活动标签 | `UPDATE post`（添加 tag） | 为已有 Post 添加 `#for_category` 标签 |
-| 5 | 报名完成 | — | 用户成为活动参与者 |
+| 3 | （若团队参赛）团队报名绑定 | `CREATE category:group`（关联） | 将团队绑定到活动；同一 group 在同一 category 中只能注册一次 |
+| 4a | （路径A）新建 Post | `CREATE post`（type: for_category） | 按 Rule 要求创建提交内容 |
+| 4b | （路径B）选择已有 Post | `READ post`（用户自己的列表） | 从自己的帖子中选择 |
+| 5a | 关联 Post 到活动 | `CREATE category:post`（关联，relation_type: submission） | 将新建的 Post 关联到 Category |
+| 5b | 为 Post 打活动标签 | `UPDATE post`（添加 tag `#for_<category>`） | 为已有 Post 添加活动标签 |
+| 6 | 报名完成 | — | 用户成为活动参与者 |
 
-- **结果：** 用户成功报名活动，其 Post 作为参赛内容与活动关联
+- **结果：** 用户（或团队）成功报名活动，其 Post 作为参赛内容与活动关联
 
 ---
 
@@ -224,7 +237,7 @@ flowchart TD
 | 2 | 创建者自动成为组长 | `CREATE group : user`（关联，role=owner） | 创建者关联为团队 owner |
 | 3 | 邀请成员 / 分享链接 | — | 生成邀请链接或直接邀请 |
 | 4 | 成员接受邀请 | `CREATE group : user`（关联，role=member） | 新成员关联到团队 |
-| 5 | （可选）关联团队到活动 | `CREATE post`（tag: `#team`） | 创建团队介绍帖，可在活动中展示 |
+| 5 | （可选）创建团队介绍帖 | `CREATE post`（type: team） | 创建团队介绍帖，可在活动中展示 |
 
 - **结果：** 团队创建完成，成员可以以团队身份参与活动
 
@@ -274,7 +287,7 @@ flowchart TD
 | 2 | 组织者发布证书/结果 | `CREATE resource`（证书文件） | 生成证书资源 |
 | 3 | 关联证书到用户 Post | `CREATE post : resource`（关联） | 将证书关联到用户的参赛 Post |
 | 4 | 用户查看证书 | `READ resource` | 用户在个人页面查看/下载证书 |
-| 5 | （可选）分享证书 | `CREATE post`（tag: `#certificate`） | 用户发帖分享获得的证书 |
+| 5 | （可选）分享证书 | `CREATE post`（type: certificate） | 用户发帖分享获得的证书 |
 
 - **结果：** 用户获得活动证书，可查看和分享
 
@@ -323,12 +336,14 @@ flowchart TD
 
 ### 11.2 编辑他人 Post
 
+> **注意：** 编辑权限请求目前依赖系统级通知机制，不直接映射到 command.md 中定义的内容类型。具体实现可通过 `interaction`（type: comment，附带权限请求语义）或独立的系统通知模块承载。
+
 | 步骤 | 用户操作 | 数据操作 | 说明 |
 |------|---------|---------|------|
 | 1 | 浏览他人 Post | `READ post` | 查看目标 Post 内容 |
-| 2 | 请求编辑权限 | `CREATE`（权限请求记录） | 向 Post 作者发起编辑权限申请 |
+| 2 | 请求编辑权限 | （系统级通知） | 向 Post 作者发起编辑权限申请 |
 | 3 | 等待作者审批 | — | 作者收到通知并决定是否授权 |
-| 4 | 获得授权 | `UPDATE`（权限请求 → approved） | 权限请求通过 |
+| 4 | 获得授权 | （系统级通知 → approved） | 权限请求通过 |
 | 5 | 创建新版本并编辑 | `CREATE post`（新版本） + `UPDATE post` | 同 11.1 步骤 3-4 |
 | 6 | 提交发布 | 同 11.1 步骤 5-8 | 走相同的发布流程 |
 
@@ -360,11 +375,79 @@ flowchart TD
 | 2 | 点击删除 | `READ category : post` + `READ post : post` + `READ post : resource` | 系统查询所有关联关系 |
 | 3 | 查看关联关系提示 | — | 系统展示该 Post 的关联信息（所属活动、引用的帖子、附件等） |
 | 4 | 确认删除 | — | 用户确认删除操作 |
-| 5 | 删除关联关系 | `DELETE category : post` + `DELETE post : post` + `DELETE post : resource` | 移除 Post 与 Category、其他 Post、Resource 的关联 |
-| 6 | 删除 Post | `DELETE post` | 删除 Post 本体 |
-| 7 | （可选）清理孤立资源 | `DELETE resource`（无关联的资源） | 若关联的 Resource 不再被其他 Post 引用，可选择清理 |
+| 5 | 删除关联关系 | `DELETE category:post` + `DELETE post:post` + `DELETE post:resource` | 移除 Post 与 Category、其他 Post、Resource 的关联 |
+| 6 | 删除关联 interaction | `DELETE target:interaction`（目标为该 Post 的所有交互记录） | 级联删除所有点赞、评论、评分；若为父评论则级联删除子回复 |
+| 7 | 删除 Post | `DELETE post` | 删除 Post 本体 |
+| 8 | （可选）清理孤立资源 | `DELETE resource`（无关联的资源） | 若关联的 Resource 不再被其他 Post 引用，可选择清理 |
 
-- **结果：** Post 及其关联关系被彻底删除，关联的资源视情况保留或清理
+- **结果：** Post 及其关联关系和交互记录被彻底删除，关联的资源视情况保留或清理
+
+---
+
+## 13. 社区互动（点赞、评论、评分）
+
+- **角色：** 已登录用户（点赞/评论）；评委/组织者（评分）
+- **前置条件：** 已登录，目标内容对当前用户可见
+
+### 13.1 点赞
+
+| 步骤 | 用户操作 | 数据操作 | 说明 |
+|------|---------|---------|------|
+| 1 | 浏览目标内容 | `READ post` / `READ category` | 查看帖子或活动 |
+| 2 | 点击点赞 | `CREATE interaction`（type: like） | 创建点赞交互记录 |
+| 3 | 关联到目标 | `CREATE target:interaction` | 将点赞关联到目标内容 |
+| 4 | （系统自动）更新计数 | `UPDATE post`（like_count +1） | 系统自动维护缓存统计 |
+
+- **结果：** 点赞成功，目标内容的 like_count 实时更新
+
+### 13.2 发表评论与回复
+
+| 步骤 | 用户操作 | 数据操作 | 说明 |
+|------|---------|---------|------|
+| 1 | 浏览目标内容 | `READ post` / `READ category` | 查看帖子或活动 |
+| 2 | 编写评论 | `CREATE interaction`（type: comment, value: 评论文本） | 创建评论交互记录（Markdown 格式） |
+| 3 | 关联到目标 | `CREATE target:interaction` | 将评论关联到目标内容 |
+| 4 | （系统自动）更新计数 | `UPDATE post`（comment_count +1） | 系统自动维护缓存统计 |
+| 5 | （可选）回复评论 | `CREATE interaction`（type: comment, parent_id: 父评论 ID） | 创建嵌套回复，通过 parent_id 指向被回复的评论 |
+
+- **结果：** 评论发布成功，支持嵌套回复，comment_count 实时更新
+
+### 13.3 评委多维度评分
+
+- **角色：** 评委 / 组织者
+- **前置条件：** 已登录，拥有评审权限（在 Rule.reviewers 列表中）
+
+```mermaid
+flowchart TD
+    A[进入参赛帖详情] --> B[查看评分标准]
+    B --> C[按维度打分]
+    C --> D[提交评分]
+    D --> E[系统加权计算总分]
+    E --> F[更新 average_rating]
+```
+
+| 步骤 | 用户操作 | 数据操作 | 说明 |
+|------|---------|---------|------|
+| 1 | 进入参赛帖详情 | `READ post` + `READ category:rule` | 查看帖子内容及关联的评分标准 |
+| 2 | 查看评分标准 | `READ rule`（scoring_criteria） | 获取各维度名称、权重、说明 |
+| 3 | 按维度打分 | — | 评委对每个维度独立评分（0-100） |
+| 4 | 提交评分 | `CREATE interaction`（type: rating, value: 多维度评分对象） | value 为对象，Key 与 scoring_criteria.name 一一对应 |
+| 5 | 关联到目标 | `CREATE target:interaction` | 将评分关联到参赛帖 |
+| 6 | （系统自动）更新均分 | `UPDATE post`（average_rating 重算） | 系统按 weight 加权计算总分，更新所有评分的均值 |
+
+**rating value 示例：**
+
+```yaml
+value:
+  创新性: 87        # 0-100，weight=30
+  技术实现: 82      # 0-100，weight=30
+  实用价值: 78      # 0-100，weight=25
+  演示效果: 91      # 0-100，weight=15
+  _comment: "架构设计清晰，建议完善错误处理"
+# 系统加权总分: 87×0.30 + 82×0.30 + 78×0.25 + 91×0.15 = 83.85
+```
+
+- **结果：** 评分提交成功，参赛帖的 average_rating 实时更新，支持排行榜展示
 
 ---
 
