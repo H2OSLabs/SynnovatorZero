@@ -6,6 +6,8 @@
 
 ## 内容类型 Schema
 
+> **字段命名规范：** 所有内容类型统一使用 `created_by` 表示创建者/作者/上传者。
+
 ### category
 
 比赛活动或运营活动，关联不同的 Rule。格式为 YAML frontmatter + Markdown body。
@@ -31,6 +33,7 @@ id: string                # 唯一标识（自动生成）
 created_by: user_id       # 创建者（自动关联当前用户）
 created_at: datetime      # 创建时间
 updated_at: datetime      # 最后更新时间
+deleted_at: datetime      # 软删除时间（null 表示未删除）
 ---
 
 <!-- Markdown body: 活动详细说明 -->
@@ -54,14 +57,18 @@ type: enum                # 帖子类型（可选，不填则为 general）:
                           #   certificate  = 证书分享
                           #   general      = 日常帖子（默认）
 tags: list[string]        # 标签列表（如 ["找队友", "提案", "日记"]）
-status: enum              # 帖子状态: draft | published
-                          #   默认: draft
+status: enum              # 帖子状态: draft | pending_review | published | rejected
+                          #   draft          = 草稿（默认）
+                          #   pending_review = 待审核（Rule 不允许直接发布时）
+                          #   published      = 已发布
+                          #   rejected       = 审核驳回
 
 # === 自动生成字段 ===
 id: string                # 唯一标识
-author: user_id           # 作者（自动关联当前用户）
+created_by: user_id       # 创建者（自动关联当前用户）
 created_at: datetime      # 创建时间
 updated_at: datetime      # 最后更新时间
+deleted_at: datetime      # 软删除时间（null 表示未删除）
 
 # === 缓存统计字段（自动维护）===
 like_count: integer       # 点赞数（默认: 0，interaction 增删时自动更新）
@@ -101,8 +108,10 @@ id: string                # 唯一标识
 mime_type: string         # MIME 类型（自动检测）
 size: integer             # 文件大小（字节）
 url: string               # 文件存储 URL
-uploaded_by: user_id      # 上传者
+created_by: user_id       # 创建者（上传者）
 created_at: datetime      # 上传时间
+updated_at: datetime      # 最后更新时间
+deleted_at: datetime      # 软删除时间（null 表示未删除）
 ---
 ```
 
@@ -142,6 +151,7 @@ id: string
 created_by: user_id
 created_at: datetime
 updated_at: datetime
+deleted_at: datetime      # 软删除时间（null 表示未删除）
 ---
 
 <!-- Markdown body: 规则详细说明（面向参赛者展示） -->
@@ -168,6 +178,7 @@ role: enum                # 平台角色: participant | organizer | admin
 id: string
 created_at: datetime
 updated_at: datetime
+deleted_at: datetime      # 软删除时间（null 表示未删除）
 ---
 ```
 
@@ -191,6 +202,7 @@ id: string
 created_by: user_id       # 创建者
 created_at: datetime
 updated_at: datetime
+deleted_at: datetime      # 软删除时间（null 表示未删除）
 ---
 ```
 
@@ -215,8 +227,10 @@ parent_id: interaction_id # 父级交互 ID（仅 comment 类型使用，用于�
 
 # === 自动生成字段 ===
 id: string                # 唯一标识
-author: user_id           # 交互发起人
+created_by: user_id       # 创建者（交互发起人）
 created_at: datetime      # 创建时间
+updated_at: datetime      # 最后更新时间
+deleted_at: datetime      # 软删除时间（null 表示未删除）
 ---
 ```
 
@@ -247,6 +261,27 @@ value:
 #   87×0.30 + 82×0.30 + 78×0.25 + 91×0.15
 #   = 26.1 + 24.6 + 19.5 + 13.65 = 83.85
 ```
+
+### 枚举值汇总
+
+| 内容类型 | 字段 | 可选值 |
+|---------|------|-------|
+| category | type | `competition`, `operation` |
+| category | status | `draft`, `published`, `closed` |
+| post | type | `profile`, `team`, `category`, `for_category`, `certificate`, `general` |
+| post | status | `draft`, `pending_review`, `published`, `rejected` |
+| user | role | `participant`, `organizer`, `admin` |
+| group | visibility | `public`, `private` |
+| interaction | type | `like`, `comment`, `rating` |
+| interaction | target_type | `post`, `category`, `resource` |
+
+| 关系 | 字段 | 可选值 |
+|-----|------|-------|
+| category:post | relation_type | `submission`, `reference` |
+| post:post | relation_type | `reference`, `reply`, `embed` |
+| post:resource | display_type | `attachment`, `inline` |
+| group:user | role | `owner`, `admin`, `member` |
+| group:user | status | `pending`, `accepted`, `rejected` |
 
 ---
 
@@ -346,6 +381,7 @@ status: enum              # 成员状态: pending | accepted | rejected
                           #   当 Group.require_approval = false 时，CREATE 自动设为 accepted
                           #   当 Group.require_approval = true 时，CREATE 默认为 pending
 joined_at: datetime       # 加入时间（status 变为 accepted 时自动记录）
+status_changed_at: datetime  # 状态变更时间（每次 status 变更时自动更新）
 ```
 
 **状态流转：**
@@ -375,6 +411,105 @@ interaction_id: string    # 交互记录 ID（必填）
 ```
 
 > **权限规则：** 只要目标对象（post/category/resource）对当前用户可见，其关联的所有 interaction 即公开可读。
+
+---
+
+## 数据完整性约束
+
+### 唯一性约束
+
+| 类型 | 约束 | 说明 |
+|------|-----|------|
+| user | `(username)` | 用户名全局唯一 |
+| user | `(email)` | 邮箱全局唯一 |
+| interaction (like) | `(created_by, target_type, target_id)` | 同一用户对同一目标只能点赞一次 |
+| category:rule | `(category_id, rule_id)` | 同一规则不能重复关联到同一活动 |
+| category:group | `(category_id, group_id)` | 同一团队不能重复报名同一活动 |
+| group:user | `(group_id, user_id)` | 同一用户不能重复加入同一分组 |
+
+> **业务唯一性规则：** 同一用户在同一 category 中只能属于一个 group。此约束需在应用层校验：`CREATE category:group` 时检查该 group 的所有 accepted 成员是否已通过其他 group 参加了同一 category。
+
+### 软删除策略
+
+所有内容类型（category、post、resource、rule、user、group、interaction）均支持**软删除**：
+
+- **软删除**：设置 `deleted_at = 当前时间`，数据保留在数据库中
+- **硬删除**：物理删除记录，仅用于关系解除（见下方说明）
+
+**查询过滤规则：**
+
+- 默认查询自动添加 `WHERE deleted_at IS NULL` 过滤
+- 管理员可通过特殊参数查询已软删除的记录
+- 软删除的内容对非管理员用户不可见
+
+**级联策略：**
+
+| 操作 | 级联行为 |
+|------|---------|
+| 软删除 category | 关联的 interaction 一并软删除；关系保留但查询时按目标可见性过滤 |
+| 软删除 post | 关联的 interaction 一并软删除 |
+| 软删除 user | 该用户的所有 interaction 一并软删除；group:user 关系保留（标记为离组） |
+| 软删除 group | group:user 关系保留（成员可查询历史） |
+
+**恢复机制：**
+
+- 恢复操作：设置 `deleted_at = NULL`
+- 级联恢复：恢复父对象时，一并恢复因级联而软删除的子对象
+- 恢复权限：仅 Admin 可执行恢复操作
+
+### 引用完整性
+
+**外键约束：**
+
+| 字段 | 引用目标 | 约束行为 |
+|------|---------|---------|
+| `*.created_by` | user.id | 限制删除（不可删除仍有内容的用户） |
+| category:rule.category_id | category.id | 级联软删除时解除 |
+| category:rule.rule_id | rule.id | 级联软删除时解除 |
+| category:post.post_id | post.id | 级联软删除时解除 |
+| category:group.group_id | group.id | 级联软删除时解除 |
+| group:user.user_id | user.id | 保留（标记为离组） |
+| interaction.parent_id | interaction.id | 级联软删除子回复 |
+
+**多态引用（interaction）的完整性保障：**
+
+interaction 通过 `(target_type, target_id)` 引用不同内容类型，无法使用数据库级外键。保障策略：
+
+1. **写入校验**：CREATE interaction 时验证 `target_id` 对应的记录存在且未被软删除
+2. **读取过滤**：READ interaction 时联查目标对象，过滤目标已软删除的记录
+3. **孤儿清理**：定期任务检测并标记目标已不存在的 interaction 记录
+
+### 建议索引
+
+| 索引 | 字段 | 用途 |
+|------|-----|------|
+| 内容列表查询 | `(type, status, deleted_at, created_at DESC)` | category/post 列表按状态和时间排序 |
+| 用户内容查询 | `(created_by, deleted_at, created_at DESC)` | 查询某用户创建的所有内容 |
+| 交互记录查询 | `(target_type, target_id, type, deleted_at)` | 查询目标的点赞/评论/评分 |
+| 嵌套评论查询 | `(parent_id, deleted_at, created_at)` | 查询评论的子回复 |
+| 分组成员查询 | `(group_id, status)` | 查询分组的有效成员 |
+| 活动报名查询 | `(category_id)` on category:group | 查询活动的报名团队 |
+| 软删除过滤 | `(deleted_at)` on 所有内容类型 | 加速 `deleted_at IS NULL` 过滤 |
+
+---
+
+## 规范化建议
+
+以下字段当前采用**内嵌（denormalized）**形式存储，而非拆分为独立实体：
+
+| 字段 | 所属类型 | 内嵌形式 | 内嵌理由 |
+|------|---------|---------|---------|
+| `tags` | post | `list[string]` | 标签为自由文本，无需全局去重或独立管理 |
+| `reviewers` | rule | `list[user_id]` | 审核人列表规模小（通常 < 10），随规则生命周期管理 |
+| `scoring_criteria` | rule | 内嵌对象列表 | 评分标准与规则强绑定，跨规则不复用 |
+
+**拆分为独立实体的时机：**
+
+- **tags**：当需要全局标签管理（合并/重命名/统计）或标签数量超过百级别时，拆分为 `tag` 实体 + `post:tag` 关系
+- **reviewers**：当需要审核人工作量统计、审核任务分配等功能时，拆分为 `rule:user` 关系（role=reviewer）
+- **scoring_criteria**：当多个规则需要共享同一套评分标准，或需要独立管理评分维度时，拆分为 `criteria` 实体
+
+> **原则：** 在当前规模下优先简单性，避免过早引入关系表带来的查询复杂度。当业务需求明确要求跨实体管理时再进行拆分。
 
 ---
 
@@ -426,6 +561,7 @@ interaction_id: string    # 交互记录 ID（必填）
 |------|------|
 | `READ category:rule` | 查询活动关联的所有规则 |
 | `READ category:post` | 查询活动关联的所有帖子（可按 relation_type 筛选） |
+| `READ category:group` | 查询活动的报名团队列表 |
 | `READ post:post` | 查询帖子的关联帖子（可按 relation_type 筛选） |
 | `READ post:resource` | 查询帖子的关联资源 |
 | `READ group:user` | 查询分组的成员列表（含角色和状态信息，可按 status 筛选） |
@@ -444,6 +580,23 @@ interaction_id: string    # 交互记录 ID（必填）
 | `UPDATE user` | 更新用户信息 | 本人, Admin |
 | `UPDATE group` | 更新分组信息和设置 | Owner, Admin |
 | `UPDATE interaction` | 更新交互内容（如修改评论文本、修改评分） | 交互发起人本人 |
+
+**缓存统计字段规范：**
+
+以下字段为**只读缓存**，不支持手动 UPDATE，仅由系统在 interaction 变更时自动维护。
+
+| 缓存字段 | 触发条件 | 计算逻辑 |
+|---------|---------|---------|
+| `like_count` | interaction (type=like) 的 CREATE / DELETE | `COUNT(*)` 关联的未删除 like interaction |
+| `comment_count` | interaction (type=comment) 的 CREATE / DELETE | `COUNT(*)` 关联的未删除 comment interaction（含嵌套回复） |
+| `average_rating` | interaction (type=rating) 的 CREATE / UPDATE / DELETE | 所有未删除 rating interaction 的加权总分均值（权重来自 rule.scoring_criteria） |
+
+**一致性模型：**
+
+- **最终一致性**：缓存字段在 interaction 变更后异步更新，短暂延迟可接受
+- **全量重算**：每次触发时对该 post 的所有有效 interaction 重新计算，而非增量更新，确保数据准确
+- **缓存重建**：提供管理员命令，可对指定 post 或全量 post 重建缓存统计
+- **容错机制**：缓存更新失败时记录日志，不影响 interaction 本身的写入；下次触发时自动修正
 
 #### 更新关系属性
 
@@ -469,22 +622,27 @@ interaction_id: string    # 交互记录 ID（必填）
 
 #### 删除内容
 
+> **默认软删除：** 内容类型的 DELETE 操作默认执行**软删除**（设置 `deleted_at`），详见"数据完整性约束 > 软删除策略"。
+
 | 操作 | 说明 | 权限 | 级联影响 |
 |------|------|------|----------|
-| `DELETE category` | 删除活动 | 创建者, Admin | 解除所有 category:rule 和 category:post 关系，删除关联 interaction |
+| `DELETE category` | 删除活动 | 创建者, Admin | 解除所有 category:rule、category:post、category:group 关系，删除关联 interaction |
 | `DELETE post` | 删除帖子 | 作者, Admin | 解除所有 post:post、post:resource、category:post 关系，删除关联 interaction |
 | `DELETE resource` | 删除文件资源 | 上传者, Admin | 解除所有 post:resource 关系，删除关联 interaction |
 | `DELETE rule` | 删除规则 | 创建者, Admin | 解除所有 category:rule 关系 |
 | `DELETE user` | 删除/注销用户 | 本人, Admin | 解除所有 group:user 关系，删除所有该用户的 interaction |
-| `DELETE group` | 删除分组 | Owner, Admin | 解除所有 group:user 关系 |
+| `DELETE group` | 删除分组 | Owner, Admin | 解除所有 group:user、category:group 关系 |
 | `DELETE interaction` | 删除交互记录 | 交互发起人, Admin | 若为父评论，级联删除所有子回复 |
 
 #### 删除关系
+
+> **硬删除：** 关系的 DELETE 操作执行**物理删除**，直接移除关联记录。关系不设 `deleted_at` 字段。
 
 | 操作 | 说明 |
 |------|------|
 | `DELETE category:rule` | 解除活动与规则的关联 |
 | `DELETE category:post` | 解除活动与帖子的关联 |
+| `DELETE category:group` | 解除团队与活动的报名绑定 |
 | `DELETE post:post` | 解除帖子间的关联 |
 | `DELETE post:resource` | 解除帖子与资源的关联 |
 | `DELETE group:user` | 将成员移出分组（或撤回申请） |
@@ -697,6 +855,15 @@ post_id: "post_codereview_copilot"
 relation_type: submission
 ```
 
+#### 团队报名活动（category : group）
+
+```yaml
+# Team Synnovator 报名参加 AI Hackathon
+category_id: "cat_ai_hackathon_2025"
+group_id: "grp_team_synnovator"
+# registered_at 自动生成
+```
+
 #### 帖子中嵌入团队卡片（post : post）
 
 ```yaml
@@ -811,22 +978,31 @@ value: "目前支持 GitHub Actions 和 GitLab CI，Jenkins 插件正在开发�
 ---
 ```
 
-#### 评委评分（target : interaction, type=rating）
+#### 评委多维度评分（target : interaction, type=rating）
 
 ```yaml
-# 评分 interaction（评分范围由活动 Rule 的 scoring_criteria 定义）
+# 评分 interaction —— value 为多维度对象，Key 与 Rule.scoring_criteria.name 一一对应
+# 每个维度统一 0-100 分，系统按 weight 加权计算总分
 ---
 type: rating
 target_type: post
 target_id: "post_codereview_copilot"
-value: "85"
+value:
+  创新性: 87                # 0-100，对应 Rule scoring_criteria weight=30
+  技术实现: 82              # 0-100，对应 weight=30
+  实用价值: 78              # 0-100，对应 weight=25
+  演示效果: 91              # 0-100，对应 weight=15
+  _comment: "架构设计清晰，建议完善错误处理"
 ---
-# 此评分对应 Rule 中 scoring_criteria 的加权体系：
-#   创新性(30): 26/30
-#   技术实现(30): 25/30
-#   实用价值(25): 20/25
-#   演示效果(15): 14/15
-#   总分: 85/100
+# 系统自动加权计算:
+#   创新性:   87 × 30/100 = 26.10
+#   技术实现: 82 × 30/100 = 24.60
+#   实用价值: 78 × 25/100 = 19.50
+#   演示效果: 91 × 15/100 = 13.65
+#   ─────────────────────────────
+#   加权总分: 83.85
+#
+# 此分数计入 post.average_rating 的均值计算
 ```
 
 ### 场景串联示例：从创建活动到互动评审
@@ -836,7 +1012,7 @@ value: "85"
 ```
 === 阶段一：组织者创建活动 ===
 1.  Organizer: CREATE category           → 创建 "2025 AI Hackathon"
-2.  Organizer: CREATE rule               → 创建提交规则
+2.  Organizer: CREATE rule               → 创建提交规则（含多维度 scoring_criteria）
 3.  Organizer: CREATE category:rule      → 将规则关联到活动
 4.  Organizer: UPDATE category (status→published) → 发布活动
 
@@ -849,23 +1025,31 @@ value: "85"
 10. Participant(Carol): CREATE group:user (role=member, status=pending) → Carol 申请加入
 11. Participant(Alice): UPDATE group:user (status→rejected) → Alice 拒绝 Carol
 
-=== 阶段三：参赛提交 ===
-12. Participant(Alice): CREATE post (type=team)  → 创建团队介绍帖
-13. Participant(Alice): CREATE post (type=for_category) → 创建参赛提交帖
-14. Participant(Alice): CREATE post:post (embed) → 在参赛帖中嵌入团队卡片
-15. Participant(Alice): CREATE resource  → 上传演示视频
-16. Participant(Alice): CREATE post:resource → 关联视频到参赛帖
-17. Participant(Alice): CREATE category:post (submission) → 将参赛帖关联到活动
-18. Participant(Alice): UPDATE post (status→published) → 发布参赛帖
+=== 阶段三：团队报名活动 ===
+12. Participant(Alice): CREATE category:group → 团队报名活动（绑定 group 到 category）
 
-=== 阶段四：社区互动 ===
-19. Participant(Dave): CREATE interaction (type=like)    → 对参赛帖点赞
-20. Participant(Dave): CREATE target:interaction         → 关联点赞到帖子
-21. Participant(Eve):  CREATE interaction (type=comment) → 发表评论
-22. Participant(Eve):  CREATE target:interaction         → 关联评论到帖子
-23. Participant(Alice): CREATE interaction (type=comment, parent_id=上一条) → 回复评论
+=== 阶段四：参赛提交 ===
+13. Participant(Alice): CREATE post (type=team)  → 创建团队介绍帖
+14. Participant(Alice): CREATE post (type=for_category) → 创建参赛提交帖
+15. Participant(Alice): CREATE post:post (embed) → 在参赛帖中嵌入团队卡片
+16. Participant(Alice): CREATE resource  → 上传演示视频
+17. Participant(Alice): CREATE post:resource → 关联视频到参赛帖
+18. Participant(Alice): CREATE category:post (submission) → 将参赛帖关联到活动
+19. Participant(Alice): UPDATE post (status→published) → 发布参赛帖
 
-=== 阶段五：评审评分 ===
-24. Organizer(Judge): CREATE interaction (type=rating, value="85") → 评委打分
-25. Organizer(Judge): CREATE target:interaction          → 关联评分到参赛帖
+=== 阶段五：社区互动 ===
+20. Participant(Dave): CREATE interaction (type=like)    → 对参赛帖点赞
+21. Participant(Dave): CREATE target:interaction         → 关联点赞到帖子
+    [系统自动] UPDATE post.like_count (+1)              → 更新点赞计数缓存
+22. Participant(Eve):  CREATE interaction (type=comment) → 发表评论
+23. Participant(Eve):  CREATE target:interaction         → 关联评论到帖子
+    [系统自动] UPDATE post.comment_count (+1)           → 更新评论计数缓存
+24. Participant(Alice): CREATE interaction (type=comment, parent_id=上一条) → 回复评论
+    [系统自动] UPDATE post.comment_count (+1)           → 更新评论计数缓存
+
+=== 阶段六：评审多维度评分 ===
+25. Organizer(Judge): CREATE interaction (type=rating)  → 评委多维度打分
+    value: { 创新性: 87, 技术实现: 82, 实用价值: 78, 演示效果: 91 }
+26. Organizer(Judge): CREATE target:interaction         → 关联评分到参赛帖
+    [系统自动] UPDATE post.average_rating               → 重算加权总分均值（83.85）
 ```
