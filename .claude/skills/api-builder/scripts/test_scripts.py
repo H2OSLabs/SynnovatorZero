@@ -62,7 +62,7 @@ class TestRunner:
         test_spec = self.script_dir / "test_spec.yaml"
 
         success, output = self.run_command(
-            ["python3", str(validate_script), str(test_spec)],
+            [sys.executable, str(validate_script), str(test_spec)],
             "Validate spec"
         )
 
@@ -88,7 +88,7 @@ class TestRunner:
         parsed_output = self.test_dir / "parsed.json"
 
         success, output = self.run_command(
-            ["python3", str(parse_script), str(test_spec), "--output", str(parsed_output)],
+            [sys.executable, str(parse_script), str(test_spec), "--output", str(parsed_output)],
             "Parse spec"
         )
 
@@ -138,7 +138,7 @@ class TestRunner:
         parsed_output = self.test_dir / "parsed.json"
 
         self.run_command(
-            ["python3", str(parse_script), str(test_spec), "--output", str(parsed_output)],
+            [sys.executable, str(parse_script), str(test_spec), "--output", str(parsed_output)],
             "Parse spec for code generation"
         )
 
@@ -149,7 +149,7 @@ class TestRunner:
 
         success, output = self.run_command(
             [
-                "python3", str(generate_script),
+                sys.executable, str(generate_script),
                 "--parsed-data", str(parsed_output),
                 "--output-dir", str(output_dir),
                 "--templates-dir", str(templates_dir)
@@ -200,7 +200,7 @@ class TestRunner:
 
         success, output = self.run_command(
             [
-                "python3", str(cli_script),
+                sys.executable, str(cli_script),
                 "--spec", str(test_spec),
                 "--output", str(output_dir)
             ],
@@ -251,7 +251,7 @@ class TestRunner:
         parsed_output = self.test_dir / "parsed_for_client.json"
 
         self.run_command(
-            ["python3", str(parse_script), str(test_spec), "--output", str(parsed_output)],
+            [sys.executable, str(parse_script), str(test_spec), "--output", str(parsed_output)],
             "Parse spec for client generation"
         )
 
@@ -262,7 +262,7 @@ class TestRunner:
 
         success, output = self.run_command(
             [
-                "python3", str(generate_client_script),
+                sys.executable, str(generate_client_script),
                 "--parsed-data", str(parsed_output),
                 "--output", str(client_output),
                 "--templates-dir", str(templates_dir)
@@ -316,7 +316,7 @@ class TestRunner:
 
         success, output = self.run_command(
             [
-                "python3", str(cli_script),
+                sys.executable, str(cli_script),
                 "--spec", str(test_spec),
                 "--output", str(output_dir),
                 "--generate-client"
@@ -385,7 +385,7 @@ class TestRunner:
 
         success, output = self.run_command(
             [
-                "python3", str(cli_script),
+                sys.executable, str(cli_script),
                 "--spec", str(test_spec),
                 "--output", str(output_dir),
                 "--setup-alembic"
