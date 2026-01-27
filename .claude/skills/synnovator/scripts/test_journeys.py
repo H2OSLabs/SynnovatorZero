@@ -419,12 +419,15 @@ class TestRunner:
             "relation_type": "reference"
         })
 
-        # Create interaction on this post
+        # Create interaction on this post (interaction + target_interaction relation)
         iact = create_content(self.data_dir, "interaction", {
             "type": "like",
-            "target_type": "post",
-            "target_id": del_id
         }, current_user=self.ids["user_bob"])
+        create_relation(self.data_dir, "target_interaction", {
+            "target_type": "post",
+            "target_id": del_id,
+            "interaction_id": iact["id"]
+        })
 
         # Step 1: Read post
         p = read_content(self.data_dir, "post", del_id)
@@ -462,12 +465,10 @@ class TestRunner:
         # 13.1: Like
         like = create_content(self.data_dir, "interaction", {
             "type": "like",
-            "target_type": "post",
-            "target_id": target_post
         }, current_user=self.ids["user_dave"])
         self.assert_ok("Create like", like["type"] == "like")
 
-        # Create target_interaction relation
+        # Create target_interaction relation (triggers cache stats update)
         rel = create_relation(self.data_dir, "target_interaction", {
             "target_type": "post",
             "target_id": target_post,
@@ -479,26 +480,34 @@ class TestRunner:
         post = read_content(self.data_dir, "post", target_post)
         self.assert_ok("Like count updated", post["like_count"] >= 1)
 
-        # Duplicate like rejection
+        # Duplicate like rejection (now checked at relation creation)
+        dup_like = create_content(self.data_dir, "interaction", {
+            "type": "like",
+        }, current_user=self.ids["user_dave"])
         self.assert_raises(
             "Reject duplicate like",
-            lambda: create_content(self.data_dir, "interaction", {
-                "type": "like",
+            lambda: create_relation(self.data_dir, "target_interaction", {
                 "target_type": "post",
-                "target_id": target_post
-            }, current_user=self.ids["user_dave"]),
+                "target_id": target_post,
+                "interaction_id": dup_like["id"]
+            }),
             "already liked"
         )
 
         # 13.2: Comment
         comment = create_content(self.data_dir, "interaction", {
             "type": "comment",
-            "target_type": "post",
-            "target_id": target_post,
             "value": "Great project! How does the AST parsing work?"
         }, current_user=self.ids["user_eve"])
         self.ids["comment1"] = comment["id"]
         self.assert_ok("Create comment", comment["type"] == "comment")
+
+        # Link comment to target post
+        create_relation(self.data_dir, "target_interaction", {
+            "target_type": "post",
+            "target_id": target_post,
+            "interaction_id": comment["id"]
+        })
 
         # Verify comment_count
         post = read_content(self.data_dir, "post", target_post)
@@ -507,18 +516,21 @@ class TestRunner:
         # Nested reply
         reply = create_content(self.data_dir, "interaction", {
             "type": "comment",
-            "target_type": "post",
-            "target_id": target_post,
             "parent_id": comment["id"],
             "value": "We use tree-sitter for multi-language AST parsing."
         }, current_user=self.ids["user_alice"])
         self.assert_ok("Create nested reply", reply["parent_id"] == comment["id"])
 
+        # Link reply to target post
+        create_relation(self.data_dir, "target_interaction", {
+            "target_type": "post",
+            "target_id": target_post,
+            "interaction_id": reply["id"]
+        })
+
         # 13.3: Rating
         rating = create_content(self.data_dir, "interaction", {
             "type": "rating",
-            "target_type": "post",
-            "target_id": target_post,
             "value": {
                 "创新性": 87,
                 "技术实现": 82,
@@ -528,6 +540,13 @@ class TestRunner:
             }
         }, current_user=self.ids["user_judge"])
         self.assert_ok("Create rating", rating["type"] == "rating")
+
+        # Link rating to target post
+        create_relation(self.data_dir, "target_interaction", {
+            "target_type": "post",
+            "target_id": target_post,
+            "interaction_id": rating["id"]
+        })
 
         # Verify average_rating updated
         post = read_content(self.data_dir, "post", target_post)
@@ -601,6 +620,487 @@ class TestRunner:
         })
         self.assert_ok("Dave re-applies after rejection", rel3["status"] == "pending")
 
+    # === Rule Enforcement Tests ===
+    def test_rule_enforcement(self):
+        print("\n=== Rule Enforcement ===")
+
+        # --- Setup: create a strict category with tight rules ---
+        strict_cat = create_content(self.data_dir, "category", {
+            "name": "Strict Contest", "description": "For rule tests",
+            "type": "competition", "status": "published"
+        }, current_user=self.ids["user_alice"])
+
+        # Rule with past deadline
+        expired_rule = create_content(self.data_dir, "rule", {
+            "name": "Expired Rule", "description": "Deadline passed",
+            "submission_start": "2024-01-01T00:00:00Z",
+            "submission_deadline": "2024-12-31T23:59:59Z",
+        }, current_user=self.ids["user_alice"])
+        create_relation(self.data_dir, "category_rule", {
+            "category_id": strict_cat["id"], "rule_id": expired_rule["id"]
+        })
+
+        # Test 1: Reject submission after deadline
+        post1 = create_content(self.data_dir, "post", {
+            "title": "Late Submission", "type": "for_category"
+        }, current_user=self.ids["user_bob"])
+        self.assert_raises(
+            "Reject submission past deadline",
+            lambda: create_relation(self.data_dir, "category_post", {
+                "category_id": strict_cat["id"], "post_id": post1["id"],
+                "relation_type": "submission"
+            }),
+            "deadline passed"
+        )
+
+        # --- Setup: category with future-start rule ---
+        future_cat = create_content(self.data_dir, "category", {
+            "name": "Future Contest", "description": "Not yet open",
+            "type": "competition", "status": "published"
+        }, current_user=self.ids["user_alice"])
+
+        future_rule = create_content(self.data_dir, "rule", {
+            "name": "Future Rule", "description": "Not yet open",
+            "submission_start": "2030-06-01T00:00:00Z",
+            "submission_deadline": "2030-12-31T23:59:59Z",
+        }, current_user=self.ids["user_alice"])
+        create_relation(self.data_dir, "category_rule", {
+            "category_id": future_cat["id"], "rule_id": future_rule["id"]
+        })
+
+        # Test 2: Reject submission before start
+        self.assert_raises(
+            "Reject submission before start",
+            lambda: create_relation(self.data_dir, "category_post", {
+                "category_id": future_cat["id"], "post_id": post1["id"],
+                "relation_type": "submission"
+            }),
+            "not yet open"
+        )
+
+        # --- Setup: category with max_submissions=1 ---
+        limit_cat = create_content(self.data_dir, "category", {
+            "name": "One-Shot Contest", "description": "Max 1 submission",
+            "type": "competition", "status": "published"
+        }, current_user=self.ids["user_alice"])
+
+        limit_rule = create_content(self.data_dir, "rule", {
+            "name": "One Submission Rule", "description": "Max 1",
+            "max_submissions": 1,
+            "submission_start": "2025-01-01T00:00:00Z",
+            "submission_deadline": "2030-12-31T23:59:59Z",
+        }, current_user=self.ids["user_alice"])
+        create_relation(self.data_dir, "category_rule", {
+            "category_id": limit_cat["id"], "rule_id": limit_rule["id"]
+        })
+
+        # First submission succeeds
+        post2 = create_content(self.data_dir, "post", {
+            "title": "First Attempt", "type": "for_category"
+        }, current_user=self.ids["user_bob"])
+        create_relation(self.data_dir, "category_post", {
+            "category_id": limit_cat["id"], "post_id": post2["id"],
+            "relation_type": "submission"
+        })
+        self.assert_ok("First submission allowed", True)
+
+        # Test 3: Second submission rejected
+        post3 = create_content(self.data_dir, "post", {
+            "title": "Second Attempt", "type": "for_category"
+        }, current_user=self.ids["user_bob"])
+        self.assert_raises(
+            "Reject exceeding max_submissions",
+            lambda: create_relation(self.data_dir, "category_post", {
+                "category_id": limit_cat["id"], "post_id": post3["id"],
+                "relation_type": "submission"
+            }),
+            "max submissions reached"
+        )
+
+        # --- Test 4: Format validation ---
+        format_cat = create_content(self.data_dir, "category", {
+            "name": "PDF Only Contest", "description": "Only PDF",
+            "type": "competition", "status": "published"
+        }, current_user=self.ids["user_alice"])
+
+        format_rule = create_content(self.data_dir, "rule", {
+            "name": "PDF Only Rule", "description": "Only PDF files",
+            "submission_format": ["pdf"],
+            "submission_start": "2025-01-01T00:00:00Z",
+            "submission_deadline": "2030-12-31T23:59:59Z",
+        }, current_user=self.ids["user_alice"])
+        create_relation(self.data_dir, "category_rule", {
+            "category_id": format_cat["id"], "rule_id": format_rule["id"]
+        })
+
+        # Create post with wrong format resource
+        post4 = create_content(self.data_dir, "post", {
+            "title": "Wrong Format", "type": "for_category"
+        }, current_user=self.ids["user_bob"])
+        bad_res = create_content(self.data_dir, "resource", {
+            "filename": "slides.pptx"
+        }, current_user=self.ids["user_bob"])
+        create_relation(self.data_dir, "post_resource", {
+            "post_id": post4["id"], "resource_id": bad_res["id"],
+            "display_type": "attachment"
+        })
+
+        self.assert_raises(
+            "Reject disallowed format",
+            lambda: create_relation(self.data_dir, "category_post", {
+                "category_id": format_cat["id"], "post_id": post4["id"],
+                "relation_type": "submission"
+            }),
+            "not allowed"
+        )
+
+        # --- Test 5: Min team size ---
+        team_cat = create_content(self.data_dir, "category", {
+            "name": "Team Contest", "description": "Need 3+ members",
+            "type": "competition", "status": "published"
+        }, current_user=self.ids["user_alice"])
+
+        team_rule = create_content(self.data_dir, "rule", {
+            "name": "Team Size Rule", "description": "Min 3 members",
+            "min_team_size": 3, "max_team_size": 5,
+            "submission_start": "2025-01-01T00:00:00Z",
+            "submission_deadline": "2030-12-31T23:59:59Z",
+        }, current_user=self.ids["user_alice"])
+        create_relation(self.data_dir, "category_rule", {
+            "category_id": team_cat["id"], "rule_id": team_rule["id"]
+        })
+
+        # Create a small group (only alice as owner)
+        small_grp = create_content(self.data_dir, "group", {
+            "name": "Small Team", "visibility": "public", "require_approval": False
+        }, current_user=self.ids["user_alice"])
+        create_relation(self.data_dir, "group_user", {
+            "group_id": small_grp["id"], "user_id": self.ids["user_alice"], "role": "owner"
+        })
+        create_relation(self.data_dir, "category_group", {
+            "category_id": team_cat["id"], "group_id": small_grp["id"]
+        })
+
+        post5 = create_content(self.data_dir, "post", {
+            "title": "Small Team Submission", "type": "for_category"
+        }, current_user=self.ids["user_alice"])
+
+        self.assert_raises(
+            "Reject submission with too few members",
+            lambda: create_relation(self.data_dir, "category_post", {
+                "category_id": team_cat["id"], "post_id": post5["id"],
+                "relation_type": "submission"
+            }),
+            "team too small"
+        )
+
+        # --- Test 6: Max team size (group_user hook) ---
+        tiny_cat = create_content(self.data_dir, "category", {
+            "name": "Solo Contest", "description": "Max 1 member",
+            "type": "competition", "status": "published"
+        }, current_user=self.ids["user_alice"])
+
+        tiny_rule = create_content(self.data_dir, "rule", {
+            "name": "Solo Rule", "description": "Max 1",
+            "max_team_size": 1,
+        }, current_user=self.ids["user_alice"])
+        create_relation(self.data_dir, "category_rule", {
+            "category_id": tiny_cat["id"], "rule_id": tiny_rule["id"]
+        })
+
+        solo_grp = create_content(self.data_dir, "group", {
+            "name": "Solo Group", "visibility": "public", "require_approval": False
+        }, current_user=self.ids["user_alice"])
+        create_relation(self.data_dir, "group_user", {
+            "group_id": solo_grp["id"], "user_id": self.ids["user_alice"], "role": "owner"
+        })
+        create_relation(self.data_dir, "category_group", {
+            "category_id": tiny_cat["id"], "group_id": solo_grp["id"]
+        })
+
+        self.assert_raises(
+            "Reject joining full team",
+            lambda: create_relation(self.data_dir, "group_user", {
+                "group_id": solo_grp["id"], "user_id": self.ids["user_bob"],
+                "role": "member"
+            }),
+            "team is full"
+        )
+
+        # --- Test 7: Publish path enforcement ---
+        strict_pub_cat = create_content(self.data_dir, "category", {
+            "name": "Review Required Contest", "description": "No direct publish",
+            "type": "competition", "status": "published"
+        }, current_user=self.ids["user_alice"])
+
+        strict_pub_rule = create_content(self.data_dir, "rule", {
+            "name": "No Direct Publish", "description": "Must go through review",
+            "allow_public": False, "require_review": True,
+            "submission_start": "2025-01-01T00:00:00Z",
+            "submission_deadline": "2030-12-31T23:59:59Z",
+        }, current_user=self.ids["user_alice"])
+        create_relation(self.data_dir, "category_rule", {
+            "category_id": strict_pub_cat["id"], "rule_id": strict_pub_rule["id"]
+        })
+
+        post6 = create_content(self.data_dir, "post", {
+            "title": "Needs Review", "type": "for_category"
+        }, current_user=self.ids["user_bob"])
+        create_relation(self.data_dir, "category_post", {
+            "category_id": strict_pub_cat["id"], "post_id": post6["id"],
+            "relation_type": "submission"
+        })
+
+        self.assert_raises(
+            "Reject direct publish when review required",
+            lambda: update_content(self.data_dir, "post", post6["id"], {"status": "published"}),
+            "direct publish not allowed"
+        )
+
+        # pending_review should be allowed
+        update_content(self.data_dir, "post", post6["id"], {"status": "pending_review"})
+        p = read_content(self.data_dir, "post", post6["id"])
+        self.assert_ok("Pending review allowed", p["status"] == "pending_review")
+
+    # === Journey 14: User Follow/Friend ===
+    def test_journey_14_follow_friend(self):
+        print("\n=== Journey 14: User Follow/Friend ===")
+
+        alice = self.ids["user_alice"]
+        bob = self.ids["user_bob"]
+        carol = self.ids["user_carol"]
+        dave = self.ids["user_dave"]
+
+        # 14.1: Follow
+        rel = create_relation(self.data_dir, "user_user", {
+            "source_user_id": alice, "target_user_id": bob,
+            "relation_type": "follow"
+        })
+        self.assert_ok("Alice follows Bob", rel["relation_type"] == "follow")
+
+        # 14.2: Mutual follow (friend)
+        rel2 = create_relation(self.data_dir, "user_user", {
+            "source_user_id": bob, "target_user_id": alice,
+            "relation_type": "follow"
+        })
+        self.assert_ok("Bob follows Alice", rel2["relation_type"] == "follow")
+
+        # Check mutual follow
+        a_to_b = read_relation(self.data_dir, "user_user", {
+            "source_user_id": alice, "target_user_id": bob,
+            "relation_type": "follow"
+        })
+        b_to_a = read_relation(self.data_dir, "user_user", {
+            "source_user_id": bob, "target_user_id": alice,
+            "relation_type": "follow"
+        })
+        self.assert_ok("Mutual follow = friends", len(a_to_b) == 1 and len(b_to_a) == 1)
+
+        # 14.3: Unfollow
+        delete_relation(self.data_dir, "user_user", {
+            "source_user_id": alice, "target_user_id": bob,
+            "relation_type": "follow"
+        })
+        a_to_b_after = read_relation(self.data_dir, "user_user", {
+            "source_user_id": alice, "target_user_id": bob,
+            "relation_type": "follow"
+        })
+        self.assert_ok("Alice unfollows Bob", len(a_to_b_after) == 0)
+
+        # 14.4: Self-follow should fail
+        self.assert_raises(
+            "Reject self-follow",
+            lambda: create_relation(self.data_dir, "user_user", {
+                "source_user_id": alice, "target_user_id": alice,
+                "relation_type": "follow"
+            }),
+            "yourself"
+        )
+
+        # 14.5: Block
+        block_rel = create_relation(self.data_dir, "user_user", {
+            "source_user_id": carol, "target_user_id": dave,
+            "relation_type": "block"
+        })
+        self.assert_ok("Carol blocks Dave", block_rel["relation_type"] == "block")
+
+        # 14.6: Blocked user cannot follow
+        self.assert_raises(
+            "Blocked user cannot follow",
+            lambda: create_relation(self.data_dir, "user_user", {
+                "source_user_id": dave, "target_user_id": carol,
+                "relation_type": "follow"
+            }),
+            "blocked you"
+        )
+
+        # 14.7: Duplicate follow should fail
+        self.assert_raises(
+            "Reject duplicate follow",
+            lambda: create_relation(self.data_dir, "user_user", {
+                "source_user_id": bob, "target_user_id": alice,
+                "relation_type": "follow"
+            }),
+            "already exists"
+        )
+
+    # === Journey 15: Activity Association ===
+    def test_journey_15_activity_association(self):
+        print("\n=== Journey 15: Activity Association ===")
+
+        alice = self.ids["user_alice"]
+
+        # Create stage categories
+        stage1 = create_content(self.data_dir, "category", {
+            "name": "Stage 1: Proposal", "description": "Submit proposals",
+            "type": "competition", "status": "published"
+        }, current_user=alice)
+
+        stage2 = create_content(self.data_dir, "category", {
+            "name": "Stage 2: Prototype", "description": "Build prototypes",
+            "type": "competition", "status": "published"
+        }, current_user=alice)
+
+        stage3 = create_content(self.data_dir, "category", {
+            "name": "Stage 3: Final", "description": "Final presentation",
+            "type": "competition", "status": "published"
+        }, current_user=alice)
+
+        # 15.1: Create stage chain
+        rel1 = create_relation(self.data_dir, "category_category", {
+            "source_category_id": stage1["id"],
+            "target_category_id": stage2["id"],
+            "relation_type": "stage",
+            "stage_order": 1
+        })
+        self.assert_ok("Stage 1→2 created", rel1["relation_type"] == "stage")
+
+        rel2 = create_relation(self.data_dir, "category_category", {
+            "source_category_id": stage2["id"],
+            "target_category_id": stage3["id"],
+            "relation_type": "stage",
+            "stage_order": 2
+        })
+        self.assert_ok("Stage 2→3 created", rel2["relation_type"] == "stage")
+
+        # 15.2: Circular dependency should fail
+        self.assert_raises(
+            "Reject circular stage dependency",
+            lambda: create_relation(self.data_dir, "category_category", {
+                "source_category_id": stage3["id"],
+                "target_category_id": stage1["id"],
+                "relation_type": "stage",
+                "stage_order": 3
+            }),
+            "Circular dependency"
+        )
+
+        # 15.3: Self-reference should fail
+        self.assert_raises(
+            "Reject self-reference",
+            lambda: create_relation(self.data_dir, "category_category", {
+                "source_category_id": stage1["id"],
+                "target_category_id": stage1["id"],
+                "relation_type": "stage"
+            }),
+            "itself"
+        )
+
+        # 15.4: Duplicate relation should fail
+        self.assert_raises(
+            "Reject duplicate category_category",
+            lambda: create_relation(self.data_dir, "category_category", {
+                "source_category_id": stage1["id"],
+                "target_category_id": stage2["id"],
+                "relation_type": "stage",
+                "stage_order": 1
+            }),
+            "already exists"
+        )
+
+        # 15.5: Parallel tracks
+        main_cat = create_content(self.data_dir, "category", {
+            "name": "Main Event", "description": "Parent event",
+            "type": "competition", "status": "published"
+        }, current_user=alice)
+
+        track_a = create_content(self.data_dir, "category", {
+            "name": "Track A: AI", "description": "AI track",
+            "type": "competition", "status": "published"
+        }, current_user=alice)
+
+        track_b = create_content(self.data_dir, "category", {
+            "name": "Track B: Web3", "description": "Web3 track",
+            "type": "competition", "status": "published"
+        }, current_user=alice)
+
+        rel_a = create_relation(self.data_dir, "category_category", {
+            "source_category_id": main_cat["id"],
+            "target_category_id": track_a["id"],
+            "relation_type": "track"
+        })
+        self.assert_ok("Track A linked", rel_a["relation_type"] == "track")
+
+        rel_b = create_relation(self.data_dir, "category_category", {
+            "source_category_id": main_cat["id"],
+            "target_category_id": track_b["id"],
+            "relation_type": "track"
+        })
+        self.assert_ok("Track B linked", rel_b["relation_type"] == "track")
+
+        # Read tracks
+        tracks = read_relation(self.data_dir, "category_category", {
+            "source_category_id": main_cat["id"],
+            "relation_type": "track"
+        })
+        self.assert_ok("Read parallel tracks", len(tracks) == 2)
+
+        # 15.6: Prerequisite enforcement
+        bounty = create_content(self.data_dir, "category", {
+            "name": "Bounty Challenge", "description": "Complete bounty first",
+            "type": "competition", "status": "published"
+        }, current_user=alice)
+
+        main_comp = create_content(self.data_dir, "category", {
+            "name": "Main Competition", "description": "Requires bounty completion",
+            "type": "competition", "status": "published"
+        }, current_user=alice)
+
+        create_relation(self.data_dir, "category_category", {
+            "source_category_id": bounty["id"],
+            "target_category_id": main_comp["id"],
+            "relation_type": "prerequisite"
+        })
+        self.assert_ok("Prerequisite link created", True)
+
+        # Create a group for registration
+        prereq_grp = create_content(self.data_dir, "group", {
+            "name": "Prereq Team", "visibility": "public", "require_approval": False
+        }, current_user=alice)
+        create_relation(self.data_dir, "group_user", {
+            "group_id": prereq_grp["id"], "user_id": alice, "role": "owner"
+        })
+
+        # Try to register for main_comp while bounty is still open → should fail
+        self.assert_raises(
+            "Reject registration (prerequisite not closed)",
+            lambda: create_relation(self.data_dir, "category_group", {
+                "category_id": main_comp["id"],
+                "group_id": prereq_grp["id"]
+            }),
+            "must be closed"
+        )
+
+        # Close bounty
+        update_content(self.data_dir, "category", bounty["id"], {"status": "closed"})
+
+        # Now registration should succeed
+        create_relation(self.data_dir, "category_group", {
+            "category_id": main_comp["id"],
+            "group_id": prereq_grp["id"]
+        })
+        self.assert_ok("Registration after prerequisite closed", True)
+
     # === Setup Mock Data ===
     def setup_mock_data(self):
         print("=== Setting up mock data ===")
@@ -652,8 +1152,8 @@ class TestRunner:
             "description": "2025 AI Hackathon submission requirements",
             "allow_public": True, "require_review": True,
             "reviewers": [judge["id"]],
-            "submission_start": "2025-03-01T00:00:00Z",
-            "submission_deadline": "2025-03-14T23:59:59Z",
+            "submission_start": "2025-01-01T00:00:00Z",
+            "submission_deadline": "2030-12-31T23:59:59Z",
             "submission_format": ["markdown", "pdf", "zip"],
             "max_submissions": 3, "min_team_size": 1, "max_team_size": 5,
             "scoring_criteria": [
@@ -721,6 +1221,9 @@ class TestRunner:
         self.test_journey_13_interaction()
         self.test_appendix_rule_definition()
         self.test_group_approval_workflow()
+        self.test_rule_enforcement()
+        self.test_journey_14_follow_friend()
+        self.test_journey_15_activity_association()
 
         print(f"\n{'='*50}")
         print(f"Results: {self.passed} passed, {self.failed} failed")

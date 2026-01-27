@@ -10,7 +10,7 @@
 > **Spec 文件：** `docs/command.md`
 >
 > **日期：** 2026-01-27
-> **更新：** 2026-01-27 — FIX-06 Spec 矛盾已修复，FIX-04/05 方向已确认
+> **更新：** 2026-01-27 — FIX-01/02/03 P0 全部修复完成，FIX-06 Spec 矛盾已修复，FIX-04/05 方向已确认
 > **分支：** `test/biz-test`
 
 ---
@@ -19,9 +19,9 @@
 
 | 优先级 | 编号 | 修改项 | 类型 | 难度 | 发现者 |
 |--------|------|--------|------|------|--------|
-| **P0** | FIX-01 | `create_relation` 枚举验证缺失 | Bug | 低 | Yuxin |
-| **P0** | FIX-02 | User 级联删除未更新缓存计数 | Bug | 低 | Ruihua |
-| **P0** | FIX-03 | 生成数据 ID 格式不一致 | Bug | 低 | Yilun |
+| ~~P0~~ | ~~FIX-01~~ | ~~`create_relation` 枚举验证缺失~~ | ~~Bug~~ | — | **DONE** |
+| ~~P0~~ | ~~FIX-02~~ | ~~User 级联删除未更新缓存计数~~ | ~~Bug~~ | — | **DONE** |
+| ~~P0~~ | ~~FIX-03~~ | ~~生成数据 ID 格式不一致~~ | ~~Bug~~ | — | **DONE** |
 | **P1** | FIX-04 | `delete group` 未级联 `group_user` | Bug | 低 | Yuxin+Ruihua |
 | **P1** | FIX-05 | `delete user` 未级联 `group_user` | Bug | 低 | Yuxin+Ruihua |
 | ~~P1~~ | ~~FIX-06~~ | ~~`command.md` 级联策略表与 CRUD 操作表矛盾~~ | ~~Spec~~ | — | **DONE** |
@@ -37,71 +37,29 @@
 
 ---
 
-## 二、P0 — 数据完整性（必须修复）
+## 二、~~P0 — 数据完整性~~ — ALL DONE
 
-### FIX-01: `create_relation` 缺少枚举字段验证
+### ~~FIX-01: `create_relation` 缺少枚举字段验证~~ — DONE
 
-**位置：** `engine.py` — `create_relation()` 函数 (L399-429)
+已于 2026-01-27 修复。`engine.py` 变更内容：
 
-**问题：** `update_relation()` 在 L469-473 对 `relation_type`, `display_type`, `role`, `status` 等枚举字段做了验证，但 `create_relation()` 完全没有枚举校验。可通过 create 写入非法值。
-
-**复现：**
-```bash
-uv run python .claude/skills/synnovator/scripts/engine.py \
-  --data-dir .synnovator_test \
-  create group_user \
-  --data '{"group_id":"grp_alpha","user_id":"user_bob","role":"superadmin"}'
-# 预期: EXIT=1 (superadmin 不在 ENUMS["group_user.role"] 中)
-# 实际: EXIT=0 (记录成功创建)
-```
-
-**影响字段：**
-
-| 关系类型 | 字段 | 合法值 |
-|---------|------|-------|
-| `group_user` | `role` | `owner`, `admin`, `member` |
-| `group_user` | `status` | `pending`, `accepted`, `rejected` |
-| `category_post` | `relation_type` | `submission`, `reference` |
-| `post_post` | `relation_type` | `reference`, `reply`, `embed` |
-| `post_resource` | `display_type` | `attachment`, `inline` |
-
-**修复方案：** 在 `create_relation()` 函数中，`save_record()` 调用之前（约 L427），添加与 `update_relation()` L469-473 相同的枚举验证逻辑：
-
-```python
-# 在 create_relation() 中，save_record() 之前添加:
-for field in ["relation_type", "display_type", "role", "status"]:
-    if field in data:
-        enum_key = f"{relation_type}.{field}"
-        if enum_key in ENUMS and data[field] not in ENUMS[enum_key]:
-            raise ValueError(f"Invalid value '{data[field]}' for {enum_key}. Allowed: {ENUMS[enum_key]}")
-```
-
-**插入位置：** L421 (`data.setdefault("role", "member")` 之后) 和 L423 (`rel_id = gen_id("rel")` 之前) 之间。
+在 `create_relation()` 函数中，`data.setdefault("role", "member")` 之后、`rel_id = gen_id("rel")` 之前（L449-454），添加了与 `update_relation()` 一致的枚举校验逻辑，覆盖 `relation_type`, `display_type`, `role`, `status` 四个字段。
 
 ---
 
-### FIX-02: User 级联删除未更新目标 Post 缓存计数
+### ~~FIX-02: User 级联删除未更新目标 Post 缓存计数~~ — DONE
 
-**位置：** `engine.py` L384-385 + L592-599
+已于 2026-01-27 修复。`engine.py` 变更内容：
 
-**问题：** `_cascade_soft_delete_user_interactions()` 软删除了用户的 interaction，但未调用 `_update_cache_stats()`。对比：直接删除 interaction 时（L388-392）会调用 `_update_cache_stats(removed=True)`。
-
-**复现：**
-1. 用户 Charlie 对某 Post 点赞 + 评论 → `like_count=1, comment_count=1`
-2. Admin 删除 Charlie → interaction 被级联软删除
-3. 读取目标 Post → `like_count=1, comment_count=1`（陈旧，应为 0）
-
-**修复方案：** 在 `_cascade_soft_delete_user_interactions()` 中，对每个被软删除的 interaction，调用 `_update_cache_stats(target_id, removed=True)` 更新目标 post 的缓存计数。
+重写 `_cascade_soft_delete_user_interactions()` (L786-797)：先收集所有被影响的 `(target_type, target_id)` 对，soft delete 完成后按 target 去重批量调用 `_update_cache_stats()`，避免重复全量扫描。
 
 ---
 
-### FIX-03: 生成数据 ID 格式不一致
+### ~~FIX-03: 生成数据 ID 格式不一致~~ — DONE
 
-**问题：** 执行 `create` 命令后，输出的文件名格式不统一。有些是 `post_submission_01.md`（语义命名），有些是 `post_61dbe7351af8.md`（UUID 格式）。
+已于 2026-01-27 修复。`engine.py` 变更内容：
 
-**预期行为：** 所有 record 的 id 和文件名一致，格式统一为 `{type}_{uuid}.md`。
-
-**修复方案：** 排查 `gen_id()` 函数以及 skill prompt 中是否有指导 AI 生成语义化 ID 的逻辑，统一为 UUID 格式。确保 skill 的 prompt 指令中不会引导生成 `post_submission_01` 这类命名。
+`create_content()` (L259) 移除 `data.get("id")` 回退逻辑，强制使用 `gen_id()` 生成 UUID 格式 ID。外部传入的 `id` 字段不再被采用，确保所有记录文件名统一为 `{prefix}_{12位hex}.md` 格式。
 
 ---
 
@@ -295,11 +253,11 @@ logic:
 
 ## 七、推荐执行顺序
 
-### 第一批：P0 — 数据完整性（无需 Spec 确认）
+### ~~第一批：P0 — 数据完整性~~ — ALL DONE
 
-1. **FIX-01** — `create_relation` 枚举验证（5 行代码）
-2. **FIX-02** — User 级联删除更新缓存计数（10 行代码）
-3. **FIX-03** — 统一 ID 格式（排查 skill prompt + `gen_id()`）
+1. ~~**FIX-01**~~ — `create_relation` 枚举验证 — **DONE**
+2. ~~**FIX-02**~~ — User 级联删除更新缓存计数（按 target 去重批量更新） — **DONE**
+3. ~~**FIX-03**~~ — 强制 `gen_id()` 生成 ID，忽略外部传入 — **DONE**
 
 ### 第二批：P1 — 级联修复（Spec 已确认，可直接执行）
 
@@ -327,15 +285,15 @@ logic:
 ## 八、各来源独有发现摘要
 
 ### 仅 Yilun 发现
-- **FIX-03**: ID 生成格式不一致（`post_submission_01.md` vs `post_61dbe7351af8.md`）
+- ~~**FIX-03**~~: ID 生成格式不一致 — **DONE**
 
 ### 仅 Yuxin 发现
-- **FIX-01**: `create_relation` 枚举验证缺失 — 唯一通过直接测试触发的数据完整性 bug
+- ~~**FIX-01**~~: `create_relation` 枚举验证缺失 — **DONE**
 - **FIX-08**: `target_interaction` 需手动创建
 - **FIX-12**: 引用完整性缺失
 
 ### 仅 Ruihua 发现
-- **FIX-02**: User 级联删除后缓存计数陈旧 — 通过深度审计发现
+- ~~**FIX-02**~~: User 级联删除后缓存计数陈旧 — **DONE**
 - **FIX-09**: 无跨组用户唯一性约束 — 同用户多队报名同一 category
 - **FIX-10**: 无可见性过滤 — anonymous 可读 draft 内容
 - **FIX-13**: `scoring_criteria` 无校验 — weights 和可超过 100

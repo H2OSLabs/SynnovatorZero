@@ -28,18 +28,28 @@ No test framework is configured yet. When tests are added, use `uv run pytest`.
 ## Project Structure
 
 ```
-docs/           # Functional documentation (data model, user journeys)
-specs/          # Development standards and guidelines
-specs/ui/       # Design system (.pen files: style guide + components)
-.claude/        # Claude Code configuration, skills, plugins
-main.py         # Entry point (placeholder)
-pyproject.toml  # Python project config
-uv.toml         # UV package manager config (Tsinghua mirror)
+docs/               # Functional documentation
+  data-types.md     #   Content type schemas (7 types)
+  relationships.md  #   Relationship schemas (9 relations)
+  crud-operations.md #  CRUD operations and permissions
+  user-journeys.md  #   13 user flow documents
+  examples.md       #   Data operation examples
+specs/              # Development standards and guidelines
+  data-integrity.md #   Data constraints, soft delete, cascading
+  data-indexing.md  #   Database index recommendations
+  data-normalization.md # Denormalization decisions
+  cache-strategy.md #   Cache field maintenance strategy
+  spec-guideline.md #   AI agent spec writing guide
+  ui/               #   Design system (.pen files)
+.claude/            # Claude Code configuration, skills, plugins
+main.py             # Entry point (placeholder)
+pyproject.toml      # Python project config
+uv.toml             # UV package manager config (Tsinghua mirror)
 ```
 
 ## Architecture
 
-### Data Model (docs/command.md)
+### Data Model (docs/data-types.md, docs/relationships.md)
 
 Seven content types stored as **YAML frontmatter + Markdown body**:
 
@@ -53,7 +63,7 @@ Seven content types stored as **YAML frontmatter + Markdown body**:
 | `group` | Teams / permission groups |
 | `interaction` | Likes, comments, ratings on any content type |
 
-Seven relationship types: `category:rule`, `category:post`, `category:group`, `post:post`, `post:resource`, `group:user`, `target:interaction`.
+Nine relationship types: `category:rule`, `category:post`, `category:group`, `category:category`, `post:post`, `post:resource`, `group:user`, `user:user`, `target:interaction`.
 
 All content types use **soft delete** (`deleted_at` field). Cached counters (`like_count`, `comment_count`, `average_rating`) are auto-maintained on `post`.
 
@@ -63,7 +73,7 @@ All content types use **soft delete** (`deleted_at` field). Cached counters (`li
 - **Organizer (组织者):** Create/manage categories and rules, review content
 - **Admin (管理员):** Platform-level user and content management
 
-### User Journeys (docs/user-journey.md)
+### User Journeys (docs/user-journeys.md)
 
 13 documented user flows covering registration, event creation, team formation, post lifecycle (create/edit/delete with version management), and community interactions (like/comment/rate).
 
@@ -100,5 +110,7 @@ Use **Plan Mode** (Shift+Tab) before implementing features. Read the relevant `d
 
 - Never read or commit `.env` or `secrets/**`
 - Never use `curl` in bash commands (denied in settings)
-- Reference `docs/command.md` for the canonical data schema before implementing any CRUD operations
-- Reference `docs/user-journey.md` before implementing user-facing flows
+- Reference `docs/data-types.md` and `docs/relationships.md` for the canonical data schema before implementing any CRUD operations
+- Reference `docs/crud-operations.md` for CRUD operation definitions and permissions
+- Reference `docs/user-journeys.md` before implementing user-facing flows
+- Reference `specs/data-integrity.md` for data constraints and soft delete behavior
