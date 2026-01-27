@@ -8,6 +8,7 @@
       "y": 0,
       "name": "UserProfile",
       "width": 1440,
+      "height": 800,
       "fill": "#181818",
       "layout": "vertical",
       "children": [
@@ -53,7 +54,7 @@
                   "type": "text",
                   "id": "Oapkq",
                   "name": "logoText",
-                  "fill": "#FFFFFF",
+                  "fill": "#BBFD3B",
                   "content": "协创者",
                   "fontFamily": "Space Grotesk",
                   "fontSize": 20,
@@ -67,15 +68,15 @@
               "name": "searchBar",
               "width": 400,
               "fill": "#222222",
-              "cornerRadius": 8,
+              "cornerRadius": 21,
               "stroke": {
                 "thickness": 1,
                 "fill": "#333333"
               },
               "gap": 8,
               "padding": [
-                8,
-                16
+                10,
+                20
               ],
               "alignItems": "center",
               "children": [
@@ -265,8 +266,8 @@
                         "link": "https://unsplash.com/@julee_juu",
                         "author": "Julee Juu"
                       },
-                      "width": 80,
-                      "height": 80,
+                      "width": 90,
+                      "height": 90,
                       "fill": {
                         "type": "image",
                         "enabled": true,
@@ -377,7 +378,7 @@
                                   "id": "jjwiY",
                                   "name": "stat3Num",
                                   "fill": "#FFFFFF",
-                                  "content": "4",
+                                  "content": "6",
                                   "fontFamily": "Poppins",
                                   "fontSize": 16,
                                   "fontWeight": "600"
@@ -403,7 +404,18 @@
                       "id": "AkhCX",
                       "name": "actionsRow",
                       "gap": 8,
+                      "alignItems": "center",
                       "children": [
+                        {
+                          "type": "text",
+                          "id": "OX5At",
+                          "name": "mutualLabel",
+                          "fill": "#8E8E8E",
+                          "content": "粉丝相互",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
                         {
                           "type": "frame",
                           "id": "KmIQc",
@@ -517,8 +529,13 @@
                           "id": "dO0eD",
                           "name": "ac1",
                           "width": "fill_container",
-                          "height": 100,
-                          "fill": "#222222",
+                          "height": 120,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "./images/generated-1769514646490.png",
+                            "mode": "fill"
+                          },
                           "cornerRadius": 12,
                           "stroke": {
                             "thickness": 1,
@@ -555,8 +572,13 @@
                           "id": "f7aoM",
                           "name": "ac2",
                           "width": "fill_container",
-                          "height": 100,
-                          "fill": "#222222",
+                          "height": 120,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "./images/generated-1769514653120.png",
+                            "mode": "fill"
+                          },
                           "cornerRadius": 12,
                           "stroke": {
                             "thickness": 1,
@@ -593,8 +615,13 @@
                           "id": "ybjAy",
                           "name": "ac3",
                           "width": "fill_container",
-                          "height": 100,
-                          "fill": "#222222",
+                          "height": 120,
+                          "fill": {
+                            "type": "image",
+                            "enabled": true,
+                            "url": "./images/generated-1769514662011.png",
+                            "mode": "fill"
+                          },
                           "cornerRadius": 12,
                           "stroke": {
                             "thickness": 1,
@@ -753,8 +780,8 @@
                         "link": "https://unsplash.com/@chestmax",
                         "author": "Max Ovcharenko"
                       },
-                      "width": 200,
-                      "height": 240,
+                      "width": "fill_container",
+                      "height": 260,
                       "fill": {
                         "type": "image",
                         "enabled": true,
@@ -773,8 +800,8 @@
                         "link": "https://unsplash.com/@mayulec",
                         "author": "Maya Alexa G. Romero"
                       },
-                      "width": 200,
-                      "height": 240,
+                      "width": "fill_container",
+                      "height": 260,
                       "fill": {
                         "type": "image",
                         "enabled": true,
@@ -782,10 +809,39 @@
                         "mode": "fill"
                       },
                       "cornerRadius": 12
+                    },
+                    {
+                      "type": "frame",
+                      "id": "2RepH",
+                      "name": "gridCard3",
+                      "metadata": {
+                        "type": "unsplash",
+                        "username": "lordkex",
+                        "link": "https://unsplash.com/@lordkex",
+                        "author": "Ábel Istvánffy"
+                      },
+                      "width": "fill_container",
+                      "height": 260,
+                      "fill": {
+                        "type": "image",
+                        "enabled": true,
+                        "url": "https://images.unsplash.com/photo-1759864912501-3f1d1eb154f6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3Njk1MTQ2NjJ8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "mode": "fill"
+                      },
+                      "cornerRadius": 12
                     }
                   ]
                 }
               ]
+            },
+            {
+              "type": "frame",
+              "id": "vg8zE",
+              "name": "rightPanel",
+              "width": 360,
+              "height": "fill_container",
+              "fill": "#F5F5F5",
+              "cornerRadius": 12
             }
           ]
         }

@@ -8,6 +8,7 @@
       "y": 0,
       "name": "CategoryDetail",
       "width": 1440,
+      "height": 900,
       "fill": "#181818",
       "layout": "vertical",
       "children": [
@@ -53,7 +54,7 @@
                   "type": "text",
                   "id": "SpDCN",
                   "name": "logoText",
-                  "fill": "#FFFFFF",
+                  "fill": "#BBFD3B",
                   "content": "协创者",
                   "fontFamily": "Space Grotesk",
                   "fontSize": 20,
@@ -67,15 +68,15 @@
               "name": "searchBar",
               "width": 400,
               "fill": "#222222",
-              "cornerRadius": 8,
+              "cornerRadius": 21,
               "stroke": {
                 "thickness": 1,
                 "fill": "#333333"
               },
               "gap": 8,
               "padding": [
-                8,
-                16
+                10,
+                20
               ],
               "alignItems": "center",
               "children": [
@@ -344,7 +345,7 @@
                       "fill": {
                         "type": "image",
                         "enabled": true,
-                        "url": "https://images.unsplash.com/photo-1690529376141-1ca71c8443c5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3Njk1MDg2NDJ8&ixlib=rb-4.1.0&q=80&w=1080",
+                        "url": "./images/generated-1769513817184.png",
                         "mode": "fill"
                       },
                       "cornerRadius": 12
@@ -539,7 +540,7 @@
                           "id": "o1kkB",
                           "name": "dtab2Text",
                           "fill": "#8E8E8E",
-                          "content": "提案",
+                          "content": "排榜",
                           "fontFamily": "Inter",
                           "fontSize": 14,
                           "fontWeight": "normal"
@@ -560,7 +561,7 @@
                           "id": "0Lqmt",
                           "name": "dtab3Text",
                           "fill": "#8E8E8E",
-                          "content": "排行榜",
+                          "content": "讨论区",
                           "fontFamily": "Inter",
                           "fontSize": 14,
                           "fontWeight": "normal"
@@ -581,7 +582,7 @@
                           "id": "3zU9B",
                           "name": "dtab4Text",
                           "fill": "#8E8E8E",
-                          "content": "赛程安排",
+                          "content": "成员",
                           "fontFamily": "Inter",
                           "fontSize": 14,
                           "fontWeight": "normal"
@@ -602,7 +603,7 @@
                           "id": "RFn4I",
                           "name": "dtab5Text",
                           "fill": "#8E8E8E",
-                          "content": "更多信息",
+                          "content": "赛程安排",
                           "fontFamily": "Inter",
                           "fontSize": 14,
                           "fontWeight": "normal"
@@ -623,7 +624,7 @@
                           "id": "0LTuE",
                           "name": "dtab6Text",
                           "fill": "#8E8E8E",
-                          "content": "资助区",
+                          "content": "关联活动",
                           "fontFamily": "Inter",
                           "fontSize": 14,
                           "fontWeight": "normal"
