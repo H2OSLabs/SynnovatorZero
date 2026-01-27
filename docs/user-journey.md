@@ -464,8 +464,7 @@ value:
 | （可扩展更多规则） | — | — |
 
 ### 规则执行流程：Not create Only Select
-
-此规则对应 `example-onboarding.png` 中描述的报名分支逻辑。
+该规则约束了用户只能选择已有的Post，而不允许新建Post。
 
 ```mermaid
 flowchart TD
