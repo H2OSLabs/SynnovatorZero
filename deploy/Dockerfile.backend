@@ -9,7 +9,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
 # Copy dependency definitions
 # Copy dependency definitions
-COPY backend/pyproject.toml backend/uv.lock* ./
+COPY pyproject.toml uv.lock* ./
 
 # Install dependencies
 ENV UV_PYPI_MIRROR=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
