@@ -1,0 +1,3 @@
+@import "../frontend/app/globals.css";
+@source "../frontend/components/**/*.tsx";
+@source "../frontend/utils/**/*.ts";
