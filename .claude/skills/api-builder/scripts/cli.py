@@ -198,6 +198,68 @@ def generate_client(parsed_file: str, output_file: str, templates_dir: str) -> b
     )
 
 
+def setup_alembic(output_dir: str, templates_dir: str) -> bool:
+    """设置Alembic配置文件"""
+    print_step(7, "Setting up Alembic configuration")
+
+    output_path = Path(output_dir)
+    template_path = Path(templates_dir).parent / "fastapi-template"
+
+    # 复制alembic.ini
+    alembic_ini_src = template_path / "alembic.ini"
+    alembic_ini_dst = output_path / "alembic.ini"
+
+    if alembic_ini_src.exists() and not alembic_ini_dst.exists():
+        import shutil
+        shutil.copy2(alembic_ini_src, alembic_ini_dst)
+        print(f"  Created: {alembic_ini_dst}")
+
+    # 复制alembic目录
+    alembic_dir_src = template_path / "alembic"
+    alembic_dir_dst = output_path / "alembic"
+
+    if alembic_dir_src.exists() and not alembic_dir_dst.exists():
+        import shutil
+        shutil.copytree(alembic_dir_src, alembic_dir_dst)
+        print(f"  Created: {alembic_dir_dst}/")
+
+    return True
+
+
+def run_migrations(output_dir: str, migration_message: str = "Auto-generated migration") -> bool:
+    """运行Alembic数据库迁移"""
+    print_step(8, "Running database migrations")
+
+    output_path = Path(output_dir)
+
+    # 检查alembic是否已配置
+    if not (output_path / "alembic.ini").exists():
+        print_error("Alembic not configured. Run with --setup-alembic first.")
+        return False
+
+    # 生成迁移
+    print("  Generating migration...")
+    result1 = run_command(
+        ["alembic", "revision", "--autogenerate", "-m", migration_message],
+        "Migration generation"
+    )
+
+    if not result1:
+        print_warning("Migration generation failed, but continuing...")
+
+    # 运行迁移
+    print("  Applying migration...")
+    result2 = run_command(
+        ["alembic", "upgrade", "head"],
+        "Migration execution"
+    )
+
+    if result2:
+        print_success("  Migrations applied successfully")
+
+    return result2
+
+
 def create_init_files(output_dir: str):
     """创建 __init__.py 文件"""
     print_step(5, "Creating __init__.py files")
@@ -276,6 +338,24 @@ def main():
         help='Output file for TypeScript client (default: <output>/api-client.ts)'
     )
 
+    parser.add_argument(
+        '--setup-alembic',
+        action='store_true',
+        help='Copy Alembic configuration files to output directory'
+    )
+
+    parser.add_argument(
+        '--run-migrations',
+        action='store_true',
+        help='Run Alembic database migrations (requires --setup-alembic first)'
+    )
+
+    parser.add_argument(
+        '--migration-message',
+        default='Auto-generated migration',
+        help='Migration message (default: "Auto-generated migration")'
+    )
+
     args = parser.parse_args()
 
     # 设置路径
@@ -320,6 +400,23 @@ def main():
             ("generate_client", lambda: generate_client(str(parsed_file), client_output, templates_dir))
         )
 
+    # 添加alembic设置步骤（如果启用）
+    if args.setup_alembic:
+        steps.append(
+            ("setup_alembic", lambda: setup_alembic(args.output, templates_dir))
+        )
+
+    # 添加migration步骤（如果启用）
+    if args.run_migrations:
+        if not args.setup_alembic:
+            # 检查是否已有alembic配置
+            if not (Path(args.output) / "alembic.ini").exists():
+                print_error("--run-migrations requires --setup-alembic or existing Alembic configuration")
+                sys.exit(1)
+        steps.append(
+            ("run_migrations", lambda: run_migrations(args.output, args.migration_message))
+        )
+
     for step_name, step_func in steps:
         success = step_func()
         if not success:
@@ -337,6 +434,22 @@ def main():
         print(f"  1. Copy {client_output} to your Next.js project (e.g., lib/api/)")
         print(f"  2. Set NEXT_PUBLIC_API_URL in .env.local")
         print(f"  3. Import: import {{ apiClient }} from '@/lib/api/api-client'")
+
+    # 打印migration信息（如果运行了）
+    if args.run_migrations:
+        print(f"\n{Colors.GREEN}🗄️  Database Migrations:{Colors.END}")
+        print(f"  Status: Applied successfully")
+        print(f"\n{Colors.CYAN}Next steps:{Colors.END}")
+        print(f"  1. Review migration files in {args.output}/alembic/versions/")
+        print(f"  2. Start your FastAPI application")
+        print(f"  3. Database schema is ready!")
+    elif args.setup_alembic:
+        print(f"\n{Colors.YELLOW}🗄️  Alembic Configuration:{Colors.END}")
+        print(f"  Alembic configured in {args.output}/")
+        print(f"\n{Colors.CYAN}To run migrations manually:{Colors.END}")
+        print(f"  cd {args.output}")
+        print(f"  alembic revision --autogenerate -m 'Initial migration'")
+        print(f"  alembic upgrade head")
 
     print_success("\n🎉 API generation complete!")
 
