@@ -23,13 +23,21 @@ This will:
 
 ```
 .
+├── pyproject.toml      # Python dependencies & project config
+├── Makefile            # Build commands
+├── backend/            # FastAPI backend (Python package)
+│   ├── __init__.py
+│   └── main.py         # API entry point
 ├── frontend/           # Next.js frontend
-│   └── app/           # App router pages
-├── backend/           # FastAPI backend
-│   └── main.py        # API entry point
-├── Makefile           # Build commands
-└── README.md
+│   ├── app/            # App router pages
+│   └── package.json    # Node.js dependencies
+└── data/               # SQLite database (gitignored)
 ```
+
+## Dependency Management
+
+- **Python**: Dependencies defined in `pyproject.toml`, managed by [uv](https://docs.astral.sh/uv/)
+- **Node.js**: Dependencies defined in `frontend/package.json`, managed by npm
 
 ## API Endpoints
 
