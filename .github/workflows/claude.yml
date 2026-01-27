@@ -1,0 +1,75 @@
+name: Claude Code
+
+on:
+  # PR auto-review on creation
+  pull_request:
+    types: [opened, reopened]
+
+  # @claude mention support
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  # Auto-summarize PR on creation
+  pr-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Summarize PR
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Summarize this PR concisely in Chinese. Structure your response as:
+
+            ## 变更摘要
+            - 用 1-3 个要点概括本次 PR 的核心改动
+
+            ## 改动文件
+            - 列出关键改动文件及其变更类型（新增/修改/删除）
+
+            ## Review 注意点
+            - 列出 Reviewer 需要重点关注的改动点（如破坏性变更、安全相关、性能影响等）
+            - 如果没有特别需要注意的点，可以省略此部分
+
+            Keep the summary short and actionable. Do not include code snippets unless absolutely necessary.
+          claude_args: |
+            --max-turns 5
+
+  # Respond to @claude mentions
+  claude-mention:
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Claude Code
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
