@@ -68,7 +68,8 @@
               "content": "A vibrant, high-energy dark theme with electric neon accents for the Synnovator creative collaboration platform.\n一个充满活力、高能量的暗色主题，搭配电光霓虹色调，专为协创者创意协作平台设计。",
               "lineHeight": 1.5,
               "fontFamily": "Inter",
-              "fontSize": 20
+              "fontSize": 20,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -129,11 +130,50 @@
                 },
                 {
                   "type": "frame",
-                  "id": "LE2TG",
+                  "id": "2sII2",
                   "name": "accentSwatches",
                   "width": "fill_container",
                   "gap": 16,
                   "children": [
+                    {
+                      "type": "frame",
+                      "id": "UhhSf",
+                      "name": "s1",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 12,
+                          "id": "AfPN5",
+                          "name": "s1box",
+                          "fill": "$lime-primary",
+                          "width": "fill_container",
+                          "height": 80
+                        },
+                        {
+                          "type": "text",
+                          "id": "9oU9G",
+                          "name": "s1name",
+                          "fill": "$white",
+                          "content": "Lime Green / 青柠绿",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "fk7bW",
+                          "name": "s1hex",
+                          "fill": "$muted",
+                          "content": "#BBFD3B",
+                          "fontFamily": "Poppins",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
                     {
                       "type": "frame",
                       "id": "kLe9M",
@@ -147,7 +187,7 @@
                           "cornerRadius": 12,
                           "id": "sKhCn",
                           "name": "s1box",
-                          "fill": "$lime-primary",
+                          "fill": "#f0ff31ff",
                           "width": "fill_container",
                           "height": 80
                         },
@@ -156,7 +196,7 @@
                           "id": "kYhJM",
                           "name": "s1name",
                           "fill": "$white",
-                          "content": "Lime Green / 青柠绿",
+                          "content": "Yellow / 荧光黄",
                           "fontFamily": "Inter",
                           "fontSize": 14,
                           "fontWeight": "600"
@@ -166,7 +206,7 @@
                           "id": "6rELb",
                           "name": "s1hex",
                           "fill": "$muted",
-                          "content": "#BBFD3B",
+                          "content": "#F0FF31",
                           "fontFamily": "Poppins",
                           "fontSize": 12,
                           "fontWeight": "normal"
@@ -186,13 +226,52 @@
                           "cornerRadius": 12,
                           "id": "CdQoG",
                           "name": "s2box",
-                          "fill": "$mint",
+                          "fill": "#8aff80ff",
                           "width": "fill_container",
                           "height": 80
                         },
                         {
                           "type": "text",
                           "id": "X8wcf",
+                          "name": "s2name",
+                          "fill": "$white",
+                          "content": "Light green / 浅绿",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "HtRpl",
+                          "name": "s2hex",
+                          "fill": "$muted",
+                          "content": "#8AFF80",
+                          "fontFamily": "Poppins",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "yJFS9",
+                      "name": "s2",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 12,
+                          "id": "ulp4q",
+                          "name": "s2box",
+                          "fill": "$mint",
+                          "width": "fill_container",
+                          "height": 80
+                        },
+                        {
+                          "type": "text",
+                          "id": "Xy9nx",
                           "name": "s2name",
                           "fill": "$white",
                           "content": "Mint / 薄荷绿",
@@ -202,7 +281,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "HtRpl",
+                          "id": "y5yff",
                           "name": "s2hex",
                           "fill": "$muted",
                           "content": "#74FFBB",
@@ -214,7 +293,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "O13jj",
+                      "id": "5whjz",
                       "name": "s3",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -223,7 +302,7 @@
                         {
                           "type": "rectangle",
                           "cornerRadius": 12,
-                          "id": "owZ2N",
+                          "id": "i27Y0",
                           "name": "s3box",
                           "fill": "$cyan",
                           "width": "fill_container",
@@ -231,7 +310,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "vx0qn",
+                          "id": "N86FF",
                           "name": "s3name",
                           "fill": "$white",
                           "content": "Cyan / 青色",
@@ -241,7 +320,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "oumIg",
+                          "id": "yDEwA",
                           "name": "s3hex",
                           "fill": "$muted",
                           "content": "#41FAF4",
@@ -253,7 +332,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "odSmf",
+                      "id": "7SGhP",
                       "name": "s4",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -262,7 +341,7 @@
                         {
                           "type": "rectangle",
                           "cornerRadius": 12,
-                          "id": "3LdRC",
+                          "id": "nHIYs",
                           "name": "s4box",
                           "fill": "$pink",
                           "width": "fill_container",
@@ -270,7 +349,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "E8qjH",
+                          "id": "v9Kng",
                           "name": "s4name",
                           "fill": "$white",
                           "content": "Pink / 粉色",
@@ -280,7 +359,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "PEdjj",
+                          "id": "bIFfb",
                           "name": "s4hex",
                           "fill": "$muted",
                           "content": "#FF74A7",
@@ -292,7 +371,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "HuwKQ",
+                      "id": "ZRBuo",
                       "name": "s5",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -301,7 +380,7 @@
                         {
                           "type": "rectangle",
                           "cornerRadius": 12,
-                          "id": "mssCX",
+                          "id": "MBkif",
                           "name": "s5box",
                           "fill": "$blue",
                           "width": "fill_container",
@@ -309,7 +388,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "yTrVa",
+                          "id": "RZHqo",
                           "name": "s5name",
                           "fill": "$white",
                           "content": "Blue / 蓝色",
@@ -319,7 +398,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "160Ay",
+                          "id": "dYwgm",
                           "name": "s5hex",
                           "fill": "$muted",
                           "content": "#4C78FF",
@@ -331,7 +410,7 @@
                     },
                     {
                       "type": "frame",
-                      "id": "ym0o7",
+                      "id": "XenaA",
                       "name": "s6",
                       "width": "fill_container",
                       "layout": "vertical",
@@ -340,7 +419,7 @@
                         {
                           "type": "rectangle",
                           "cornerRadius": 12,
-                          "id": "OAWud",
+                          "id": "a4dKo",
                           "name": "s6box",
                           "fill": "$orange",
                           "width": "fill_container",
@@ -348,7 +427,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "G03g6",
+                          "id": "igChr",
                           "name": "s6name",
                           "fill": "$white",
                           "content": "Orange / 橙色",
@@ -358,7 +437,7 @@
                         },
                         {
                           "type": "text",
-                          "id": "YTVa7",
+                          "id": "HAMGX",
                           "name": "s6hex",
                           "fill": "$muted",
                           "content": "#FB7A38",
@@ -411,12 +490,11 @@
                           "cornerRadius": 12,
                           "id": "HPI86",
                           "name": "b1box",
-                          "fill": "$surface",
+                          "fill": "#00000eff",
                           "width": "fill_container",
                           "height": 80,
                           "stroke": {
-                            "thickness": 1,
-                            "fill": "$secondary-bg"
+                            "thickness": 1
                           }
                         },
                         {
@@ -434,7 +512,7 @@
                           "id": "Lhtqr",
                           "name": "b1hex",
                           "fill": "$muted",
-                          "content": "#181818",
+                          "content": "#00000E",
                           "fontFamily": "Poppins",
                           "fontSize": 12,
                           "fontWeight": "normal"
@@ -454,12 +532,11 @@
                           "cornerRadius": 12,
                           "id": "ougPD",
                           "name": "b2box",
-                          "fill": "$dark-bg",
+                          "fill": "#333333ff",
                           "width": "fill_container",
                           "height": 80,
                           "stroke": {
-                            "thickness": 1,
-                            "fill": "$secondary-bg"
+                            "thickness": 1
                           }
                         },
                         {
@@ -477,7 +554,7 @@
                           "id": "UsJqz",
                           "name": "b2hex",
                           "fill": "$muted",
-                          "content": "#222222",
+                          "content": "#333333",
                           "fontFamily": "Poppins",
                           "fontSize": 12,
                           "fontWeight": "normal"
@@ -497,12 +574,11 @@
                           "cornerRadius": 12,
                           "id": "E2SrY",
                           "name": "b3box",
-                          "fill": "$secondary-bg",
+                          "fill": "#8e8e8eff",
                           "width": "fill_container",
                           "height": 80,
                           "stroke": {
-                            "thickness": 1,
-                            "fill": "#444444"
+                            "thickness": 1
                           }
                         },
                         {
@@ -520,7 +596,7 @@
                           "id": "bQfWJ",
                           "name": "b3hex",
                           "fill": "$muted",
-                          "content": "#333333",
+                          "content": "#8E8E8E",
                           "fontFamily": "Poppins",
                           "fontSize": 12,
                           "fontWeight": "normal"
@@ -570,7 +646,7 @@
                           "cornerRadius": 12,
                           "id": "B0Gym",
                           "name": "sem1box",
-                          "fill": "$success",
+                          "fill": "#74ffbbff",
                           "width": "fill_container",
                           "height": 80
                         },
@@ -589,7 +665,7 @@
                           "id": "mSiSb",
                           "name": "sem1hex",
                           "fill": "$muted",
-                          "content": "#00B42A",
+                          "content": "#74FFBB",
                           "fontFamily": "Poppins",
                           "fontSize": 12,
                           "fontWeight": "normal"
@@ -845,6 +921,7 @@
                   "id": "9kfcR",
                   "name": "ff1",
                   "width": "fill_container",
+                  "height": 220,
                   "fill": "$dark-bg",
                   "cornerRadius": 12,
                   "layout": "vertical",
@@ -869,7 +946,7 @@
                       "fill": "$white",
                       "content": "Space Grotesk Bold",
                       "fontFamily": "Space Grotesk",
-                      "fontSize": 28,
+                      "fontSize": 24,
                       "fontWeight": "700"
                     },
                     {
@@ -879,7 +956,7 @@
                       "fill": "$muted",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "Used for headings, display text, and primary titles. Weight 700.\n用于标题、展示文字和主标题。字重 700。",
+                      "content": "Used for headings, display text, and primary titles. Weight 700-900.\n用于标题、展示文字和主标题。字重 700-900。",
                       "lineHeight": 1.5,
                       "fontFamily": "Inter",
                       "fontSize": 13,
@@ -892,6 +969,7 @@
                   "id": "oI6FL",
                   "name": "ff2",
                   "width": "fill_container",
+                  "height": 220,
                   "fill": "$dark-bg",
                   "cornerRadius": 12,
                   "layout": "vertical",
@@ -916,7 +994,8 @@
                       "fill": "$white",
                       "content": "Inter Regular",
                       "fontFamily": "Inter",
-                      "fontSize": 28
+                      "fontSize": 24,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -938,6 +1017,7 @@
                   "id": "qeGjN",
                   "name": "ff3",
                   "width": "fill_container",
+                  "height": 220,
                   "fill": "$dark-bg",
                   "cornerRadius": 12,
                   "layout": "vertical",
@@ -962,7 +1042,7 @@
                       "fill": "$white",
                       "content": "Poppins Medium",
                       "fontFamily": "Poppins",
-                      "fontSize": 28,
+                      "fontSize": 24,
                       "fontWeight": "500"
                     },
                     {
@@ -985,6 +1065,7 @@
                   "id": "Rk40E",
                   "name": "ff4",
                   "width": "fill_container",
+                  "height": 220,
                   "fill": "$dark-bg",
                   "cornerRadius": 12,
                   "layout": "vertical",
@@ -1009,7 +1090,8 @@
                       "fill": "$white",
                       "content": "Noto Sans SC Regular",
                       "fontFamily": "Noto Sans SC",
-                      "fontSize": 28
+                      "fontSize": 24,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -1254,7 +1336,7 @@
                       "fill": "$muted",
                       "textGrowth": "fixed-width",
                       "width": 60,
-                      "content": "12px",
+                      "content": "10-12px",
                       "fontFamily": "Poppins",
                       "fontSize": 13,
                       "fontWeight": "normal"
@@ -1484,6 +1566,35 @@
                           "fontWeight": "normal"
                         }
                       ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "9HkI4",
+                      "name": "sp5",
+                      "width": "fill_container",
+                      "gap": 16,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": 2,
+                          "id": "pORck",
+                          "name": "sp5bar",
+                          "fill": "$pink",
+                          "width": 36,
+                          "height": 16
+                        },
+                        {
+                          "type": "text",
+                          "id": "Z8XvF",
+                          "name": "sp5label",
+                          "fill": "$light-gray",
+                          "content": "XXL — 36px / 极大+",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
                     }
                   ]
                 },
@@ -1656,7 +1767,7 @@
                           "children": [
                             {
                               "type": "rectangle",
-                              "cornerRadius": 21,
+                              "cornerRadius": 20,
                               "id": "MEgN5",
                               "name": "r4box",
                               "fill": "none",
@@ -1682,7 +1793,7 @@
                               "id": "L0Kps",
                               "name": "r4val",
                               "fill": "$muted",
-                              "content": "21px",
+                              "content": "20px",
                               "fontFamily": "Poppins",
                               "fontSize": 11,
                               "fontWeight": "normal"
