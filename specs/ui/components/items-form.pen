@@ -1,0 +1,276 @@
+{
+  "version": "2.6",
+  "children": [
+    {
+      "type": "frame",
+      "id": "Fa1mQ",
+      "name": "Items/Form",
+      "reusable": true,
+      "x": 0,
+      "y": 0,
+      "width": 1440,
+      "fill": "#181818",
+      "layout": "vertical",
+      "gap": 32,
+      "padding": [48, 80],
+      "children": [
+        {
+          "type": "frame",
+          "id": "Fb2nR",
+          "name": "header",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 16,
+          "children": [
+            {
+              "type": "frame",
+              "id": "Fc3oS",
+              "name": "breadcrumb",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Fd4pT",
+                  "name": "breadcrumbList",
+                  "fill": "#8E8E8E",
+                  "content": "Item List / 项目列表",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "icon_font",
+                  "id": "Fe5qU",
+                  "name": "breadcrumbSep",
+                  "width": 14,
+                  "height": 14,
+                  "iconFontName": "chevron-right",
+                  "iconFontFamily": "lucide",
+                  "fill": "#8E8E8E"
+                },
+                {
+                  "type": "text",
+                  "id": "Ff6rV",
+                  "name": "breadcrumbCurrent",
+                  "fill": "#FFFFFF",
+                  "content": "Create Item / 新建项目",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "Fg7sW",
+              "name": "pageTitle",
+              "fill": "#FFFFFF",
+              "content": "Create Item / 新建项目",
+              "fontFamily": "Space Grotesk",
+              "fontSize": 28,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "Fh8tX",
+              "name": "pageDesc",
+              "fill": "#DCDCDC",
+              "content": "Fill in the form below to create a new item. / 填写以下表单以创建新项目。",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Fi9uY",
+          "name": "formCard",
+          "width": 720,
+          "fill": "#222222",
+          "cornerRadius": 12,
+          "stroke": {
+            "thickness": 1,
+            "fill": "#333333"
+          },
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "Fj0vZ",
+              "name": "cardHeader",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 4,
+              "padding": [24, 24, 16, 24],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Fk1wA",
+                  "name": "cardTitle",
+                  "fill": "#FFFFFF",
+                  "content": "Item Information / 项目信息",
+                  "fontFamily": "Inter",
+                  "fontSize": 16,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "text",
+                  "id": "Fl2xB",
+                  "name": "cardDesc",
+                  "fill": "#8E8E8E",
+                  "content": "Enter the details for this item. / 输入该项目的详细信息。",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "rectangle",
+              "id": "Fm3yC",
+              "name": "cardDivider",
+              "fill": "#333333",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "Fn4zD",
+              "name": "cardContent",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 24,
+              "padding": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Fo5AE",
+                  "name": "fieldName",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Fp6BF",
+                      "name": "fieldNameLabel",
+                      "fill": "#FFFFFF",
+                      "content": "Name / 名称",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Fq7CG",
+                      "name": "fieldNameInput",
+                      "width": "fill_container",
+                      "fill": "#222222",
+                      "cornerRadius": 8,
+                      "stroke": {
+                        "thickness": 1,
+                        "fill": "#8E8E8E"
+                      },
+                      "padding": [12, 16],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Fr8DH",
+                          "name": "fieldNamePlaceholder",
+                          "fill": "#8E8E8E",
+                          "content": "Enter item name... / 输入项目名称...",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "Fs9EI",
+                      "name": "fieldNameHelper",
+                      "fill": "#8E8E8E",
+                      "content": "Required. The display name of the item. / 必填。项目的显示名称。",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "rectangle",
+              "id": "Ft0FJ",
+              "name": "footerDivider",
+              "fill": "#333333",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "Fu1GK",
+              "name": "cardFooter",
+              "width": "fill_container",
+              "gap": 12,
+              "padding": 24,
+              "justifyContent": "end",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Fv2HL",
+                  "name": "cancelBtn",
+                  "cornerRadius": 8,
+                  "stroke": {
+                    "thickness": 1,
+                    "fill": "#8E8E8E"
+                  },
+                  "padding": [12, 24],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Fw3IM",
+                      "name": "cancelBtnLabel",
+                      "fill": "#FFFFFF",
+                      "content": "Cancel / 取消",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Fx4JN",
+                  "name": "submitBtn",
+                  "fill": "#BBFD3B",
+                  "cornerRadius": 8,
+                  "padding": [12, 24],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Fy5KO",
+                      "name": "submitBtnLabel",
+                      "fill": "#00000E",
+                      "content": "Create Item / 创建项目",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
