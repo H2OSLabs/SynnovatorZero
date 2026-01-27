@@ -8,6 +8,7 @@
       "y": 0,
       "name": "Home",
       "width": 1440,
+      "height": 960,
       "fill": "#181818",
       "layout": "vertical",
       "children": [
@@ -53,7 +54,7 @@
                   "type": "text",
                   "id": "vr00x",
                   "name": "logo",
-                  "fill": "#FFFFFF",
+                  "fill": "#BBFD3B",
                   "content": "协创者",
                   "fontFamily": "Space Grotesk",
                   "fontSize": 20,
@@ -67,15 +68,15 @@
               "name": "searchBar",
               "width": 400,
               "fill": "#222222",
-              "cornerRadius": 8,
+              "cornerRadius": 21,
               "stroke": {
                 "thickness": 1,
                 "fill": "#333333"
               },
               "gap": 8,
               "padding": [
-                8,
-                16
+                10,
+                20
               ],
               "alignItems": "center",
               "children": [
@@ -114,10 +115,10 @@
                   "name": "publishBtn",
                   "fill": "#BBFD3B",
                   "cornerRadius": 50,
-                  "gap": 8,
+                  "gap": 6,
                   "padding": [
                     8,
-                    16
+                    18
                   ],
                   "alignItems": "center",
                   "children": [
@@ -326,7 +327,7 @@
               "width": "fill_container",
               "height": "fill_container",
               "layout": "vertical",
-              "gap": 16,
+              "gap": 20,
               "padding": [
                 16,
                 24
@@ -449,16 +450,16 @@
                           "name": "card1Img",
                           "metadata": {
                             "type": "unsplash",
-                            "username": "shavin47",
-                            "link": "https://unsplash.com/@shavin47",
-                            "author": "Shavin Peiries"
+                            "username": "yanahd",
+                            "link": "https://unsplash.com/@yanahd",
+                            "author": "Allen Y"
                           },
                           "width": "fill_container",
-                          "height": 140,
+                          "height": 180,
                           "fill": {
                             "type": "image",
                             "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1577044093913-60b8922be62e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3Njk1MDg1MjR8&ixlib=rb-4.1.0&q=80&w=1080",
+                            "url": "https://images.unsplash.com/photo-1718408954920-22f83687ea40?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3Njk1MTIyMDV8&ixlib=rb-4.1.0&q=80&w=1080",
                             "mode": "fill"
                           }
                         },
@@ -480,6 +481,33 @@
                               "fontFamily": "Inter",
                               "fontSize": 13,
                               "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "lmUjN",
+                              "name": "card1AuthorRow",
+                              "gap": 6,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "ellipse",
+                                  "id": "AKDTu",
+                                  "name": "card1Avatar",
+                                  "fill": "#555555",
+                                  "width": 18,
+                                  "height": 18
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "11wpj",
+                                  "name": "card1Author",
+                                  "fill": "#8E8E8E",
+                                  "content": "西建创新",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                }
+                              ]
                             }
                           ]
                         }
@@ -505,7 +533,7 @@
                             "author": "BoliviaInteligente"
                           },
                           "width": "fill_container",
-                          "height": 140,
+                          "height": 180,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -531,6 +559,33 @@
                               "fontFamily": "Inter",
                               "fontSize": 13,
                               "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "7XNyp",
+                              "name": "card2AuthorRow",
+                              "gap": 6,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "ellipse",
+                                  "id": "JaPMr",
+                                  "name": "card2Avatar",
+                                  "fill": "#555555",
+                                  "width": 18,
+                                  "height": 18
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "5f30X",
+                                  "name": "card2Author",
+                                  "fill": "#8E8E8E",
+                                  "content": "众创发酵",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                }
+                              ]
                             }
                           ]
                         }
@@ -556,7 +611,7 @@
                             "author": "Luca Pistollato"
                           },
                           "width": "fill_container",
-                          "height": 140,
+                          "height": 180,
                           "fill": {
                             "type": "image",
                             "enabled": true,
@@ -582,6 +637,33 @@
                               "fontFamily": "Inter",
                               "fontSize": 13,
                               "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "saB3O",
+                              "name": "card3AuthorRow",
+                              "gap": 6,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "ellipse",
+                                  "id": "lgSKo",
+                                  "name": "card3Avatar",
+                                  "fill": "#555555",
+                                  "width": 18,
+                                  "height": 18
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "ZPXDm",
+                                  "name": "card3Author",
+                                  "fill": "#8E8E8E",
+                                  "content": "JioNan",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                }
+                              ]
                             }
                           ]
                         }
@@ -597,6 +679,16 @@
                   "justifyContent": "space_between",
                   "alignItems": "center",
                   "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "tySoM",
+                      "name": "hotIcon",
+                      "width": 20,
+                      "height": 20,
+                      "iconFontName": "flame",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FB7A38"
+                    },
                     {
                       "type": "text",
                       "id": "5ziLD",
@@ -642,16 +734,16 @@
                           "name": "prop1Img",
                           "metadata": {
                             "type": "unsplash",
-                            "username": "shamblenstudios",
-                            "link": "https://unsplash.com/@shamblenstudios",
-                            "author": "Shamblen Studios"
+                            "username": "swipt",
+                            "link": "https://unsplash.com/@swipt",
+                            "author": "Ilia"
                           },
                           "width": 100,
                           "height": 100,
                           "fill": {
                             "type": "image",
                             "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1621349375404-01f48593be7a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3Njk1MDg1NDZ8&ixlib=rb-4.1.0&q=80&w=1080",
+                            "url": "https://images.unsplash.com/photo-1603201866527-18fd9ff8fb9a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3Njk1MTIyMDZ8&ixlib=rb-4.1.0&q=80&w=1080",
                             "mode": "fill"
                           },
                           "cornerRadius": 8
@@ -746,16 +838,16 @@
                           "name": "prop2Img",
                           "metadata": {
                             "type": "unsplash",
-                            "username": "sofacommunications",
-                            "link": "https://unsplash.com/@sofacommunications",
-                            "author": "Sofa Communications"
+                            "username": "steve_j",
+                            "link": "https://unsplash.com/@steve_j",
+                            "author": "Steve Johnson"
                           },
                           "width": 100,
                           "height": 100,
                           "fill": {
                             "type": "image",
                             "enabled": true,
-                            "url": "https://images.unsplash.com/photo-1578320982011-87ce8736dd93?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3Njk1MDg1NDd8&ixlib=rb-4.1.0&q=80&w=1080",
+                            "url": "https://images.unsplash.com/photo-1731687863569-fb5bc94bb915?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NDM0ODN8MHwxfHJhbmRvbXx8fHx8fHx8fDE3Njk1MTIyMDd8&ixlib=rb-4.1.0&q=80&w=1080",
                             "mode": "fill"
                           },
                           "cornerRadius": 8
@@ -895,6 +987,7 @@
                       "width": "fill_container",
                       "fill": "#BBFD3B",
                       "cornerRadius": 50,
+                      "gap": 6,
                       "padding": [
                         8,
                         16
@@ -902,6 +995,16 @@
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "JsghV",
+                          "name": "findTeamIcon",
+                          "width": 14,
+                          "height": 14,
+                          "iconFontName": "users",
+                          "iconFontFamily": "lucide",
+                          "fill": "#00000E"
+                        },
                         {
                           "type": "text",
                           "id": "mOmoI",
@@ -925,6 +1028,7 @@
                         "thickness": 1,
                         "fill": "#333333"
                       },
+                      "gap": 6,
                       "padding": [
                         8,
                         16
@@ -932,6 +1036,16 @@
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "YunN5",
+                          "name": "findIdeaIcon",
+                          "width": 14,
+                          "height": 14,
+                          "iconFontName": "lightbulb",
+                          "iconFontFamily": "lucide",
+                          "fill": "#DCDCDC"
+                        },
                         {
                           "type": "text",
                           "id": "uicie",
