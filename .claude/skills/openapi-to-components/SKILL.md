@@ -1,5 +1,5 @@
 ---
-name: auto-openapi-to-components
+name: openapi-to-components
 description: >
   Convert Synnovator OpenAPI spec into fully integrated Next.js frontend components.
   Reads .synnovator/openapi.yaml and frontend/components/pages/*.tsx, then generates
