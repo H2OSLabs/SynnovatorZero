@@ -1,12 +1,17 @@
 ---
 name: skill-creator
-description: Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations.
+description: Interactive guide for creating effective skills through structured Q&A. Use when users want to create a new skill or update an existing skill. This skill will ask targeted questions to gather requirements, identify needed materials (scripts, references, assets), and guide users through the complete skill creation process.
 license: Complete terms in LICENSE.txt
 ---
 
 # Skill Creator
 
-This skill provides guidance for creating effective skills.
+This skill provides an interactive, question-driven approach to creating effective skills. When invoked, it will:
+
+1. **Ask targeted questions** to understand what the skill should do
+2. **Identify required materials** and tell you what to prepare
+3. **Guide you through creation** step by step
+4. **Validate and package** the final skill
 
 ## About Skills
 
@@ -212,22 +217,41 @@ Skill creation involves these steps:
 
 Follow these steps in order, skipping only if there is a clear reason why they are not applicable.
 
-### Step 1: Understanding the Skill with Concrete Examples
+### Step 1: Interactive Discovery - Understanding the Skill
 
 Skip this step only when the skill's usage patterns are already clearly understood. It remains valuable even when working with an existing skill.
 
-To create an effective skill, clearly understand concrete examples of how the skill will be used. This understanding can come from either direct user examples or generated examples that are validated with user feedback.
+**This step uses an interactive Q&A process to gather all necessary information.** See [references/discovery-questions.md](references/discovery-questions.md) for the complete questionnaire.
 
-For example, when building an image-editor skill, relevant questions include:
+#### Discovery Process
 
-- "What functionality should the image-editor skill support? Editing, rotating, anything else?"
-- "Can you give some examples of how this skill would be used?"
-- "I can imagine users asking for things like 'Remove the red-eye from this image' or 'Rotate this image'. Are there other ways you imagine this skill being used?"
-- "What would a user say that should trigger this skill?"
+1. **Start with core purpose** (Phase 1): Ask what problem the skill solves, trigger examples, and expected output
+2. **Explore the workflow** (Phase 2): Walk through the manual process step by step
+3. **Identify inputs & context** (Phase 3): What data, files, or knowledge is needed
+4. **Plan resources** (Phase 4): Determine scripts, references, and assets needed
+5. **Define boundaries** (Phase 5): What the skill should NOT do
 
-To avoid overwhelming users, avoid asking too many questions in a single message. Start with the most important questions and follow up as needed for better effectiveness.
+#### Key Principles
 
-Conclude this step when there is a clear sense of the functionality the skill should support.
+- **Ask 1-3 questions at a time** - Avoid overwhelming the user
+- **Adapt based on responses** - Follow-up questions should build on answers
+- **Request concrete examples** - "Can you show me an example?" is always valuable
+- **Identify materials needed** - Tell the user what they need to provide (templates, docs, samples)
+
+#### Quick Start Questions
+
+Begin with these essential questions:
+
+1. "What problem does this skill solve? What task should it help accomplish?"
+2. "Give 2-3 examples of what you might say to trigger this skill"
+3. "What should the skill produce as output?"
+
+#### Conclude with Summary
+
+Before proceeding to Step 2, summarize the findings using the template in [references/discovery-questions.md](references/discovery-questions.md). This ensures:
+- User confirms understanding is correct
+- All required materials are identified
+- Scope and boundaries are clear
 
 ### Step 2: Planning the Reusable Skill Contents
 
