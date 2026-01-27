@@ -56,17 +56,36 @@
 └────────────────────────────────────────────────────────────────┘
                             ↓
 ┌────────────────────────────────────────────────────────────────┐
-│ 阶段 4: 前端客户端生成（可选）                                   │
-│  [api-builder --generate-client]                              │
-│      ↓                                                        │
-│  TypeScript API Client                                        │
-│      ├─→ 类型定义 (从 OpenAPI schemas)                       │
-│      ├─→ API 方法 (从 OpenAPI paths)                         │
-│      └─→ 错误处理                                             │
+│ 阶段 4: 前端开发                                               │
 │                                                                │
-│  集成到 Next.js                                                │
-│      ↓                                                        │
-│  frontend/lib/api/api-client.ts                               │
+│  4.1 UI 设计稿 (.pen)                                         │
+│      ↓ [pen-page-gen skill]                                   │
+│  specs/ui/components/*.pen (页面布局规范)                       │
+│                                                                │
+│  4.2 React 组件生成                                            │
+│      ↓ [pen-to-react skill]                                   │
+│  components/pages/*.tsx (静态页面组件)                          │
+│  components/ui/*.tsx (shadcn/ui 基础组件)                      │
+│                                                                │
+│  4.3 路由配置                                                  │
+│      ↓ [手工]                                                 │
+│  app/**/page.tsx (Next.js App Router)                         │
+│                                                                │
+│  4.4 API 客户端生成                                            │
+│      ↓ [api-builder --generate-client]                        │
+│  frontend/utils/api-client.ts (TypeScript API 客户端)          │
+│                                                                │
+│  4.5 API 对接                                                  │
+│      ↓ [手工]                                                 │
+│  组件接入真实数据（替换 mock → fetch）                          │
+│                                                                │
+│  4.6 交互与导航验证                                            │
+│      ↓ [手工]                                                 │
+│  页面跳转、表单提交、状态管理                                   │
+│                                                                │
+│  4.7 前端测试                                                  │
+│      ├─→ Jest 单元测试（组件渲染）                             │
+│      └─→ Playwright E2E 测试（用户旅程）                      │
 └────────────────────────────────────────────────────────────────┘
                             ↓
 ┌────────────────────────────────────────────────────────────────┐
@@ -85,12 +104,14 @@
 
 ## 使用的 Skills
 
-| Skill | 用途 | 状态 |
-|-------|------|------|
-| **synnovator** | 管理 .synnovator/*.md 文件数据（CRUD） | ✅ 可用 |
-| **schema-to-openapi** | 从 Synnovator 数据模型生成 OpenAPI 3.0 规范 | ✅ 可用 |
-| **api-builder** | 从 OpenAPI 生成 FastAPI 后端 + 迁移 + 测试 + TypeScript 客户端 | ✅ 可用 |
-| **data-importer** | 从 .synnovator 导入数据到 SQLite | ✅ 可用 |
+| Skill | 用途 | 阶段 | 状态 |
+|-------|------|------|------|
+| **synnovator** | 管理 .synnovator/*.md 文件数据（CRUD） | 1 | ✅ 可用 |
+| **schema-to-openapi** | 从 Synnovator 数据模型生成 OpenAPI 3.0 规范 | 1 | ✅ 可用 |
+| **api-builder** | 从 OpenAPI 生成 FastAPI 后端 + 迁移 + 测试 + TypeScript 客户端 | 2, 4 | ✅ 可用 |
+| **data-importer** | 从 .synnovator 导入数据到 SQLite | 3 | ✅ 可用 |
+| **pen-page-gen** | 从后端 router 生成 .pen 页面布局规范 | 4.1 | ✅ 可用 |
+| **pen-to-react** | 从 .pen 设计稿生成 React 组件 (shadcn/ui + Tailwind) | 4.2 | ✅ 可用 |
 
 ---
 
@@ -484,89 +505,140 @@ python .claude/skills/data-importer/scripts/cli.py import \
 
 ---
 
-### 阶段 4: 前端客户端生成（可选）
+### 阶段 4: 前端开发
 
-#### 4.1 生成 TypeScript API 客户端
+前端开发分为 7 个子步骤，从设计稿到可测试的完整页面。
+
+```
+.pen 设计稿 → React 组件 → 路由配置 → API 客户端 → API 对接 → 交互验证 → 测试
+```
+
+#### 4.1 生成 UI 设计稿 (.pen)
+
+使用 **pen-page-gen skill** 从后端 router 自动生成页面布局规范。
+
+```bash
+# 输入: 后端 router 文件
+# 输出: specs/ui/components/*.pen
+```
+
+也可手工编写 `.pen` 文件。设计稿需遵循 `specs/ui/style.pen` 定义的设计系统（Neon Forge 主题）。
+
+**当前项目 .pen 文件：**
+
+```
+specs/ui/
+├── style.pen                    # 全局样式规范（颜色、字体、间距）
+├── basic.pen                    # 基础 UI 组件规范
+└── components/
+    ├── home.pen                 # 首页
+    ├── post-list.pen            # 帖子列表
+    ├── post-detail.pen          # 帖子详情
+    ├── proposal-list.pen        # 提案列表
+    ├── proposal-detail.pen      # 提案详情
+    ├── category-detail.pen      # 活动详情
+    ├── user-profile.pen         # 用户主页
+    ├── team.pen                 # 团队页
+    ├── following-list.pen       # 关注列表
+    └── assets.pen               # 我的资产
+```
+
+**验收标准：** 每个页面有对应的 `.pen` 文件，包含布局、组件层级、文案和样式标注。
+
+#### 4.2 生成 React 组件
+
+使用 **pen-to-react skill** 将 `.pen` 转换为 React 组件。
+
+```bash
+# 输入: specs/ui/components/*.pen + specs/ui/style.pen
+# 输出: components/pages/*.tsx + components/ui/*.tsx
+```
+
+**生成结果：**
+
+```
+frontend/
+├── components/
+│   ├── ui/             # shadcn/ui 基础组件（Button, Card, Badge, Tabs...）
+│   └── pages/          # 页面级组件（纯展示，使用 mock 数据）
+│       ├── home.tsx
+│       ├── post-list.tsx
+│       ├── post-detail.tsx
+│       ├── proposal-list.tsx
+│       ├── proposal-detail.tsx
+│       ├── category-detail.tsx
+│       ├── user-profile.tsx
+│       ├── team.tsx
+│       ├── following-list.tsx
+│       └── assets.tsx
+```
+
+**验收标准：**
+- 每个 `.pen` 文件有对应的 `.tsx` 组件
+- 组件使用 shadcn/ui 基础组件 + Tailwind CSS
+- 组件内使用硬编码 mock 数据（此阶段不接 API）
+- `npm run build` 编译通过
+
+#### 4.3 路由配置
+
+为每个页面组件创建 Next.js App Router 路由页面。
+
+```
+frontend/app/
+├── layout.tsx                    # 根布局
+├── page.tsx                      # / → Home
+├── posts/
+│   ├── page.tsx                  # /posts → PostList
+│   └── [id]/page.tsx             # /posts/:id → PostDetail
+├── proposals/
+│   ├── page.tsx                  # /proposals → ProposalList
+│   └── [id]/page.tsx             # /proposals/:id → ProposalDetail
+├── categories/
+│   └── [id]/page.tsx             # /categories/:id → CategoryDetail
+├── profile/page.tsx              # /profile → UserProfile
+├── team/page.tsx                 # /team → Team
+├── following/page.tsx            # /following → FollowingList
+└── assets/page.tsx               # /assets → Assets
+```
+
+路由页面是薄层包装，仅导入并渲染对应的页面组件：
+
+```typescript
+// app/posts/page.tsx
+import { PostList } from "@/components/pages/post-list"
+export default function PostsPage() {
+  return <PostList />
+}
+```
+
+**验收标准：**
+- 每个路由页面能独立访问，不抛异常
+- `npm run build` 编译通过，所有页面 SSG/SSR 正常
+
+#### 4.4 生成 API 客户端
+
+使用 **api-builder skill** 从 OpenAPI 规范生成 TypeScript API 客户端。
 
 ```bash
 cd .claude/skills/api-builder/scripts
 
-# 使用 schema-to-openapi 生成的规范
-python cli.py \
-  --spec ../../../.synnovator/openapi.yaml \
-  --output ../../../backend \
-  --generate-client \
-  --client-output ../../../frontend/lib/api/api-client.ts
-
-# 或使用自定义规范路径
 python cli.py \
   --spec ../../../specs/synnovator-api.yaml \
   --output ../../../backend \
   --generate-client \
-  --client-output ../../../frontend/lib/api/api-client.ts
+  --client-output ../../../frontend/utils/api-client.ts
 ```
 
 **生成内容：**
 
-```typescript
-// frontend/lib/api/api-client.ts
-
-// 类型定义（从 OpenAPI schemas 生成）
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  display_name?: string;
-  role: 'participant' | 'organizer' | 'admin';
-  created_at: string;
-  updated_at: string;
-}
-
-export interface UserCreate {
-  username: string;
-  email: string;
-  display_name?: string;
-  role?: 'participant' | 'organizer' | 'admin';
-}
-
-// API 客户端类
-class ApiClient {
-  private baseURL: string;
-
-  constructor(baseURL?: string) {
-    this.baseURL = baseURL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-  }
-
-  // User endpoints
-  async listUsers(): Promise<User[]> {
-    const response = await fetch(`${this.baseURL}/users`);
-    if (!response.ok) throw new Error('Failed to fetch users');
-    return response.json();
-  }
-
-  async createUser(data: UserCreate): Promise<User> {
-    const response = await fetch(`${this.baseURL}/users`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('Failed to create user');
-    return response.json();
-  }
-
-  async getUser(id: string): Promise<User> {
-    const response = await fetch(`${this.baseURL}/users/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch user');
-    return response.json();
-  }
-
-  // ... 其他 endpoints
-}
-
-export const apiClient = new ApiClient();
 ```
-
-#### 4.2 集成到 Next.js
+frontend/utils/
+├── utils.ts             # cn() 工具函数
+└── api-client.ts        # 自动生成的 API 客户端
+    ├── 类型定义          # 从 OpenAPI schemas 生成
+    ├── API 方法          # 从 OpenAPI paths 生成
+    └── 错误处理          # 统一异常处理
+```
 
 **配置环境变量：**
 
@@ -575,70 +647,160 @@ export const apiClient = new ApiClient();
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-**在 Server Component 中使用：**
+**验收标准：**
+- `api-client.ts` 包含所有后端 endpoint 对应的 TypeScript 方法
+- 类型定义与后端 Pydantic schema 一致
+- TypeScript 类型检查通过
+
+#### 4.5 API 对接
+
+将页面组件从 mock 数据切换到真实 API 调用。**逐页面改造**，每完成一个页面立即验证。
+
+**改造模式：**
+
+| 数据场景 | 实现方式 |
+|----------|----------|
+| 页面初始数据加载 | Server Component 直接 `await apiClient.listXxx()` |
+| 用户触发的操作（提交、点赞等） | Client Component + `useState` + `apiClient.createXxx()` |
+| 列表分页/筛选 | Client Component + `useEffect` + URL 参数 |
+
+**Server Component 示例（列表页）：**
 
 ```typescript
-// frontend/app/users/page.tsx
-import { apiClient } from '@/lib/api/api-client';
+// app/posts/page.tsx
+import { apiClient } from '@/utils/api-client';
+import { PostList } from "@/components/pages/post-list"
 
-export default async function UsersPage() {
-  const users = await apiClient.listUsers();
-
-  return (
-    <div>
-      <h1>Users</h1>
-      <ul>
-        {users.map(user => (
-          <li key={user.id}>
-            {user.username} ({user.email})
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+export default async function PostsPage() {
+  const posts = await apiClient.listPosts();
+  return <PostList posts={posts} />
 }
 ```
 
-**在 Client Component 中使用：**
+**Client Component 示例（交互操作）：**
 
 ```typescript
-// frontend/app/users/create/page.tsx
+// components/pages/post-detail.tsx
 'use client';
+import { apiClient } from '@/utils/api-client';
 
-import { useState } from 'react';
-import { apiClient } from '@/lib/api/api-client';
-
-export default function CreateUserPage() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const user = await apiClient.createUser({ username, email });
-      alert(`User created: ${user.id}`);
-    } catch (error) {
-      alert('Failed to create user');
-    }
+export function PostDetail({ post }: { post: Post }) {
+  const handleLike = async () => {
+    await apiClient.createInteraction({
+      target_type: 'post',
+      target_id: post.id,
+      type: 'like',
+    });
   };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input value={username} onChange={e => setUsername(e.target.value)} placeholder="Username" />
-      <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" />
-      <button type="submit">Create User</button>
-    </form>
-  );
+  // ...
 }
 ```
 
-#### 4.3 错误处理和类型安全
+**改造顺序（按依赖关系）：**
+1. 首页 (home) — 聚合数据，最后改造
+2. 列表页 (post-list, proposal-list, following-list, assets)
+3. 详情页 (post-detail, proposal-detail, category-detail)
+4. 个人页 (user-profile, team)
 
-生成的客户端提供：
-- ✅ TypeScript 类型安全
-- ✅ 自动 JSON 序列化/反序列化
-- ✅ 统一的错误处理
-- ✅ 环境变量配置
+**验收标准：**
+- 每个页面使用真实 API 数据渲染
+- 启动 `FastAPI + Next.js` 后，页面正常显示
+- 网络请求无 4xx/5xx 错误
+
+#### 4.6 交互与导航验证
+
+验证所有页面间的跳转和用户交互是否正常工作。
+
+**导航验证清单：**
+
+| 起始页 | 操作 | 目标页 |
+|--------|------|--------|
+| 首页 | 点击帖子卡片 | /posts/:id |
+| 首页 | 点击提案卡片 | /proposals/:id |
+| 首页 | 点击「发布新内容」 | 发布页/弹窗 |
+| 帖子列表 | 点击帖子 | /posts/:id |
+| 提案列表 | 点击提案 | /proposals/:id |
+| 提案详情 | 点击「返回提案广场」 | /proposals |
+| 提案详情 | 点击「查看团队」 | /team |
+| 用户主页 | 点击「关注」按钮 | 触发关注 API |
+| 活动详情 | 切换 Tabs | 面板内容切换 |
+| 侧边栏 | 点击「探索/星球/营地」 | 页面切换 |
+
+**交互验证清单：**
+
+| 组件 | 交互行为 | 预期结果 |
+|------|----------|----------|
+| Header 搜索框 | 输入关键词 | 触发搜索/跳转 |
+| 「发布新内容」按钮 | 点击 | 打开发布流程 |
+| Tab 组件 | 切换 tab | 显示对应面板内容 |
+| 点赞按钮 | 点击 | 调用 API + 更新计数 |
+| 评论输入 | 提交 | 调用 API + 刷新列表 |
+| 分页/加载更多 | 滚动/点击 | 加载下一页数据 |
+
+**验收标准：**
+- 所有页面间跳转使用 `next/link`（客户端导航，无整页刷新）
+- 动态路由参数 `[id]` 正确传递
+- 表单提交后有成功/失败反馈
+- Tab 切换正常，默认选中正确
+
+#### 4.7 前端测试
+
+##### 4.7.1 单元测试（Jest + React Testing Library）
+
+验证组件能正常渲染、关键文本和结构存在。
+
+```bash
+cd frontend && npm test
+```
+
+**测试结构：**
+
+```
+frontend/__tests__/
+├── components/        # 页面组件测试（每个组件一个文件）
+│   ├── home.test.tsx
+│   ├── post-list.test.tsx
+│   ├── post-detail.test.tsx
+│   ├── proposal-list.test.tsx
+│   ├── proposal-detail.test.tsx
+│   ├── category-detail.test.tsx
+│   ├── user-profile.test.tsx
+│   ├── team.test.tsx
+│   ├── following-list.test.tsx
+│   └── assets.test.tsx
+└── pages/
+    └── routes.test.tsx  # 路由页面统一渲染测试
+```
+
+**每个组件测试覆盖：**
+- 组件能正常渲染（不抛异常）
+- 关键文本存在（页面标题、按钮文字）
+- 关键结构存在（header、sidebar、main content）
+
+##### 4.7.2 E2E 测试（Playwright）
+
+验证完整的用户旅程，对照 `docs/user-journey.md` 中的 13 个场景。
+
+```bash
+cd frontend && npx playwright test
+```
+
+**E2E 测试覆盖（按 user-journey.md 顺序）：**
+
+| 测试文件 | 对应用户旅程 | 核心验证 |
+|----------|-------------|----------|
+| `browse.spec.ts` | #2 浏览探索页 | 首页渲染、卡片展示、Tab 切换 |
+| `posts.spec.ts` | #9 发送帖子 | 帖子列表 → 详情 → 创建 |
+| `proposals.spec.ts` | — | 提案列表 → 详情 → 标签/Tab |
+| `category.spec.ts` | #6 创建活动, #7 加入活动 | 活动详情 → Tab 切换 |
+| `team.spec.ts` | #8 创建团队 | 团队页 → 成员 → 资产 |
+| `profile.spec.ts` | — | 用户主页 → 关注 → Tab |
+| `navigation.spec.ts` | — | 跨页面跳转完整验证 |
+
+**验收标准：**
+- `npm test` — 全部单元测试通过
+- `npx playwright test` — 全部 E2E 测试通过
+- `npm run build` — 生产构建正常
 
 ---
 
@@ -940,8 +1102,11 @@ async def upload_file(file: UploadFile = File(...)):
 ### 前端
 - **框架**: Next.js 14 (App Router)
 - **语言**: TypeScript
-- **API 客户端**: 自动生成（TypeScript）
-- **测试**: Playwright
+- **UI 组件**: shadcn/ui + Radix UI + Tailwind CSS v4
+- **设计规范**: .pen 文件 (Neon Forge 主题)
+- **API 客户端**: 自动生成（TypeScript，从 OpenAPI）
+- **单元测试**: Jest + React Testing Library + @swc/jest
+- **E2E 测试**: Playwright
 - **包管理**: npm
 
 ### 工具链
