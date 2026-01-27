@@ -373,6 +373,58 @@ class TestRunner:
             print(f"\n⚠️  {self.failed} test(s) failed")
             return False
 
+    def test_alembic_setup(self):
+        """测试 Alembic 配置"""
+        print("\n" + "="*60)
+        print("Test 7: cli.py with --setup-alembic")
+        print("="*60)
+
+        cli_script = self.script_dir / "cli.py"
+        test_spec = self.script_dir / "test_spec.yaml"
+        output_dir = self.test_dir / "alembic_setup_output"
+
+        success, output = self.run_command(
+            [
+                "python3", str(cli_script),
+                "--spec", str(test_spec),
+                "--output", str(output_dir),
+                "--setup-alembic"
+            ],
+            "CLI with Alembic setup"
+        )
+
+        print(output)
+
+        if success and "🎉 API generation complete!" in output:
+            # 检查生成的文件
+            checks = [
+                ((output_dir / "alembic.ini").exists(), "Alembic: alembic.ini created"),
+                ((output_dir / "alembic" / "env.py").exists(), "Alembic: env.py created"),
+                ((output_dir / "alembic" / "versions").exists(), "Alembic: versions directory created"),
+                ("Alembic configured" in output or "Alembic Configuration" in output, "Alembic: status message shown"),
+            ]
+
+            all_passed = True
+            for check, description in checks:
+                if check:
+                    print(f"   ✅ {description}")
+                else:
+                    print(f"   ❌ {description}")
+                    all_passed = False
+
+            if all_passed:
+                print("✅ PASSED: cli.py with --setup-alembic works correctly")
+                self.passed += 1
+                return True
+            else:
+                print("❌ FAILED: cli.py with --setup-alembic did not configure Alembic properly")
+                self.failed += 1
+                return False
+        else:
+            print("❌ FAILED: cli.py with --setup-alembic execution failed")
+            self.failed += 1
+            return False
+
     def run_all(self):
         """运行所有测试"""
         print("🚀 Running api-builder scripts tests\n")
@@ -386,6 +438,7 @@ class TestRunner:
             self.test_cli()
             self.test_generate_client()
             self.test_cli_with_client()
+            self.test_alembic_setup()
 
             all_passed = self.print_summary()
 

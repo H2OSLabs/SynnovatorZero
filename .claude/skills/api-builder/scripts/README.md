@@ -120,6 +120,9 @@ python3 cli.py --spec <spec-file> --output <output-dir> [options]
 - `--resources LIST` - 只生成指定资源（逗号分隔）
 - `--generate-client` - 生成 Next.js TypeScript 客户端
 - `--client-output FILE` - 客户端输出文件（默认：<output>/api-client.ts）
+- `--setup-alembic` - 配置 Alembic 数据库迁移
+- `--run-migrations` - 运行 Alembic 数据库迁移
+- `--migration-message TEXT` - 迁移消息（默认："Auto-generated migration"）
 
 **示例**：
 ```bash
@@ -137,6 +140,12 @@ python3 cli.py --spec api.yaml --output ./backend --generate-client
 
 # 指定client输出位置
 python3 cli.py --spec api.yaml --output ./backend --generate-client --client-output ../frontend/lib/api/api-client.ts
+
+# 生成后端 + 配置数据库迁移
+python3 cli.py --spec api.yaml --output ./backend --setup-alembic
+
+# 生成后端 + 自动运行迁移
+python3 cli.py --spec api.yaml --output ./backend --setup-alembic --run-migrations
 ```
 
 **执行流程**：
@@ -146,7 +155,9 @@ python3 cli.py --spec api.yaml --output ./backend --generate-client --client-out
 4. 生成后端代码（models, schemas, routers）
 5. 创建 __init__.py 文件
 6. 生成前端client（如果启用 --generate-client）
-7. 打印摘要
+7. 配置 Alembic（如果启用 --setup-alembic）
+8. 运行数据库迁移（如果启用 --run-migrations）
+9. 打印摘要
 
 ---
 
@@ -167,9 +178,10 @@ python3 test_scripts.py
 4. cli.py - 端到端测试
 5. generate_client.py - TypeScript客户端生成
 6. cli.py with --generate-client - 集成测试
+7. cli.py with --setup-alembic - Alembic配置测试
 
 **测试结果**：
-- ✅ 6/6 测试通过 (exit code 0)
+- ✅ 7/7 测试通过 (exit code 0)
 - ❌ 有测试失败 (exit code 1)
 
 ---
@@ -206,6 +218,84 @@ python3 generate_code.py \
   --parsed-data parsed.json \
   --output-dir ./generated \
   --templates-dir ../assets/templates
+```
+
+---
+
+## 数据库迁移
+
+### 自动迁移（推荐）
+
+生成代码时自动配置并运行迁移：
+```bash
+python3 cli.py \
+  --spec api.yaml \
+  --output ./backend \
+  --setup-alembic \
+  --run-migrations
+```
+
+这会：
+1. 复制 Alembic 配置文件到输出目录
+2. 自动生成迁移脚本（基于生成的models）
+3. 应用迁移到数据库
+
+### 手动迁移
+
+如果只想配置 Alembic（稍后手动运行迁移）：
+```bash
+# 1. 配置 Alembic
+python3 cli.py --spec api.yaml --output ./backend --setup-alembic
+
+# 2. 进入项目目录
+cd backend
+
+# 3. 生成迁移
+alembic revision --autogenerate -m "Initial migration"
+
+# 4. 应用迁移
+alembic upgrade head
+```
+
+### 迁移场景
+
+#### 场景1：全新项目
+```bash
+# 生成代码并立即创建数据库
+python3 cli.py --spec api.yaml --output ./backend --setup-alembic --run-migrations
+```
+
+#### 场景2：已有项目，添加新字段
+```bash
+# 1. 修改 OpenAPI 规范（添加新字段）
+vim api.yaml
+
+# 2. 重新生成代码
+python3 cli.py --spec api.yaml --output ./backend
+
+# 3. 生成并运行迁移
+cd backend
+alembic revision --autogenerate -m "Add new fields"
+alembic upgrade head
+```
+
+#### 场景3：Schema 变更
+当你修改 OpenAPI 规范后：
+- 添加字段：Alembic 自动添加列
+- 删除字段：Alembic 生成 drop column
+- 修改类型：Alembic 生成 alter column
+- 重命名表/列：需要手动编辑迁移文件
+
+### 迁移文件位置
+```
+backend/
+├── alembic/
+│   ├── versions/          # 迁移文件目录
+│   │   └── xxxx_initial.py
+│   ├── env.py
+│   └── script.py.mako
+├── alembic.ini            # Alembic 配置
+└── models/                # SQLAlchemy 模型
 ```
 
 ---

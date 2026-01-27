@@ -109,17 +109,44 @@ python3 generate_code.py \
 
 如果已存在，询问用户是否添加新的 router 注册代码。
 
-#### 3.6 生成数据库迁移
+#### 3.6 配置和运行数据库迁移（可选）
 
-- 使用 Alembic 自动生成迁移文件
-- 运行：`alembic revision --autogenerate -m "Initial tables"`
-- 生成到 `alembic/versions/`
+**使用 CLI（推荐）**：
 
-**如果 Alembic 未配置**：
-- 从 `assets/fastapi-template/` 复制：
-  - `alembic.ini`
-  - `alembic/env.py`
-  - `alembic/script.py.mako`
+```bash
+# 自动配置并运行迁移
+cd ${CLAUDE_PLUGIN_ROOT}/scripts
+python3 cli.py \
+  --spec <spec-file> \
+  --output <output-dir> \
+  --setup-alembic \
+  --run-migrations
+```
+
+**手动执行**：
+
+如果用户想手动控制：
+```bash
+# 1. 配置 Alembic
+cd ${CLAUDE_PLUGIN_ROOT}/scripts
+python3 cli.py --spec <spec-file> --output <output-dir> --setup-alembic
+
+# 2. 进入项目目录手动运行迁移
+cd <output-dir>
+alembic revision --autogenerate -m "Initial tables"
+alembic upgrade head
+```
+
+**生成内容**：
+- `alembic.ini` - Alembic 配置文件
+- `alembic/env.py` - 迁移环境配置
+- `alembic/versions/` - 迁移文件目录
+- `alembic/script.py.mako` - 迁移模板
+
+**何时使用迁移**：
+- 全新项目：使用 `--setup-alembic --run-migrations` 立即创建数据库
+- 已有项目更新schema：手动运行 `alembic revision --autogenerate`
+- 生产环境：先测试迁移，再手动应用
 
 ### 阶段 4：生成测试
 
