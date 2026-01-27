@@ -1,0 +1,36 @@
+# Backend Dockerfile
+# Context: Project Root (..)
+FROM registry.h2os.cloud/python:3.12-slim-bookworm AS builder
+
+WORKDIR /app
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+
+# Copy dependency definitions
+# Copy dependency definitions
+COPY pyproject.toml uv.lock* ./
+
+# Install dependencies
+ENV UV_PYPI_MIRROR=https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+RUN uv sync --no-dev --no-install-project
+
+# Copy source code
+COPY backend/main.py .
+
+# Final stage
+FROM registry.h2os.cloud/python:3.12-slim-bookworm
+
+WORKDIR /app
+
+# Copy virtual environment
+COPY --from=builder /app/.venv /app/.venv
+
+# Copy app code
+COPY --from=builder /app/main.py .
+
+# Set path
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Run
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

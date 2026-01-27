@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.frontend
+    restart: always
+    env_file:
+      - ../.env
+    networks:
+      - synnovator_net
+
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.backend
+    restart: always
+    env_file:
+      - ../.env
+    depends_on:
+      - postgres
+    networks:
+      - synnovator_net
+
+  nginx:
+    image: registry.h2os.cloud/nginx:alpine
+    restart: always
+    ports:
+      - "9080:80"
+      - "9443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - synnovator_net
+
+  postgres:
+    image: registry.h2os.cloud/postgres:17-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-synnovator_zero}
+    volumes:
+      - /app/synnovator-zero/postgres:/var/lib/postgresql/data
+    networks:
+      - synnovator_net
+  # redis:
+  #   image: redis:alpine
+  #   restart: always
+  #   networks:
+  #     - synnovator_net
+
+networks:
+  synnovator_net:
+    driver: bridge
