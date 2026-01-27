@@ -1,12 +1,12 @@
-"""Member Pydantic schemas"""
+"""Member Pydantic schemas — group:user relationship"""
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 
 class MemberBase(BaseModel):
-    role: str
-    status: str
+    role: Literal["owner", "admin", "member"] = "member"
+    status: Literal["pending", "accepted", "rejected"] = "pending"
 
 
 class MemberCreate(MemberBase):
@@ -15,8 +15,8 @@ class MemberCreate(MemberBase):
 
 
 class MemberUpdate(BaseModel):
-    role: Optional[str] = None
-    status: Optional[str] = None
+    role: Optional[Literal["owner", "admin", "member"]] = None
+    status: Optional[Literal["pending", "accepted", "rejected"]] = None
 
 
 class MemberInDBBase(MemberBase):
@@ -28,8 +28,7 @@ class MemberInDBBase(MemberBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class Member(MemberInDBBase):

@@ -1,60 +1,59 @@
 """Post Pydantic schemas"""
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional, List
+from typing import List, Literal, Optional
 
 
+POST_TYPES = ("profile", "team", "category", "for_category", "certificate", "general")
+POST_STATUSES = ("draft", "pending_review", "published", "rejected")
+POST_VISIBILITIES = ("public", "private")
 
-# Shared properties
+# Valid status transitions:
+#   draft → pending_review → published | rejected
+#   rejected → draft (resubmit after revision)
+#   private posts: draft → published (skip pending_review)
+VALID_POST_STATUS_TRANSITIONS = {
+    "draft": ("pending_review", "published"),
+    "pending_review": ("published", "rejected"),
+    "published": (),
+    "rejected": ("draft",),
+}
+
+
 class PostBase(BaseModel):
-    """Post 基础 schema"""
     title: str
-    type: str
-    tags: Optional[List] = None
-    status: str
-    like_count: Optional[int] = None
-    comment_count: Optional[int] = None
-    average_rating: Optional[float] = None
+    type: Literal["profile", "team", "category", "for_category", "certificate", "general"] = "general"
+    tags: Optional[List[str]] = None
+    status: Literal["draft", "pending_review", "published", "rejected"] = "draft"
+    visibility: Literal["public", "private"] = "public"
     content: Optional[str] = None
-    
 
-# Properties to receive on creation
+
 class PostCreate(PostBase):
-    """创建 Post 的请求 schema"""
     title: str
-    type: str
-    status: str
-    
 
-# Properties to receive on update
+
 class PostUpdate(BaseModel):
-    """更新 Post 的请求 schema"""
     title: Optional[str] = None
-    type: Optional[str] = None
-    tags: Optional[List] = None
-    status: Optional[str] = None
-    like_count: Optional[int] = None
-    comment_count: Optional[int] = None
-    average_rating: Optional[float] = None
+    type: Optional[Literal["profile", "team", "category", "for_category", "certificate", "general"]] = None
+    tags: Optional[List[str]] = None
+    status: Optional[Literal["draft", "pending_review", "published", "rejected"]] = None
+    visibility: Optional[Literal["public", "private"]] = None
     content: Optional[str] = None
-    
 
-# Properties shared by models stored in DB
+
 class PostInDBBase(PostBase):
-    """数据库中的 Post 基础 schema"""
     id: int
+    created_by: Optional[int] = None
+    like_count: int = 0
+    comment_count: int = 0
+    average_rating: Optional[float] = None
+    deleted_at: Optional[datetime] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
 
-# Properties to return to client
+    model_config = {"from_attributes": True}
+
+
 class Post(PostInDBBase):
-    """Post 响应 schema"""
-    pass
-
-# Properties stored in DB
-class PostInDB(PostInDBBase):
-    """数据库中存储的 Post schema"""
     pass

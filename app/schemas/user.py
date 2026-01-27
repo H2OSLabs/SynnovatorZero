@@ -1,56 +1,45 @@
 """User Pydantic schemas"""
-from pydantic import BaseModel, EmailStr, AnyUrl
+from pydantic import BaseModel, EmailStr, field_validator
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
+
+VALID_ROLES = ("participant", "organizer", "admin")
 
 
-
-# Shared properties
 class UserBase(BaseModel):
-    """User 基础 schema"""
     username: str
     email: EmailStr
     display_name: Optional[str] = None
-    avatar_url: Optional[AnyUrl] = None
+    avatar_url: Optional[str] = None
     bio: Optional[str] = None
-    role: str
-    
+    role: Literal["participant", "organizer", "admin"] = "participant"
 
-# Properties to receive on creation
+
 class UserCreate(UserBase):
-    """创建 User 的请求 schema"""
-    username: str
-    email: EmailStr
-    role: str
-    
+    pass
 
-# Properties to receive on update
+
 class UserUpdate(BaseModel):
-    """更新 User 的请求 schema"""
     username: Optional[str] = None
     email: Optional[EmailStr] = None
     display_name: Optional[str] = None
-    avatar_url: Optional[AnyUrl] = None
+    avatar_url: Optional[str] = None
     bio: Optional[str] = None
-    role: Optional[str] = None
-    
+    role: Optional[Literal["participant", "organizer", "admin"]] = None
 
-# Properties shared by models stored in DB
+
 class UserInDBBase(UserBase):
-    """数据库中的 User 基础 schema"""
+    model_config = {"from_attributes": True}
+
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
+    deleted_at: Optional[datetime] = None
 
-# Properties to return to client
+
 class User(UserInDBBase):
-    """User 响应 schema"""
     pass
 
-# Properties stored in DB
+
 class UserInDB(UserInDBBase):
-    """数据库中存储的 User schema"""
     pass

@@ -1,53 +1,41 @@
 """Group Pydantic schemas"""
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 
+VISIBILITY_VALUES = ("public", "private")
 
-# Shared properties
+
 class GroupBase(BaseModel):
-    """Group 基础 schema"""
     name: str
     description: Optional[str] = None
-    visibility: str
+    visibility: Literal["public", "private"] = "public"
     max_members: Optional[int] = None
-    require_approval: Optional[bool] = None
-    
+    require_approval: Optional[bool] = False
 
-# Properties to receive on creation
+
 class GroupCreate(GroupBase):
-    """创建 Group 的请求 schema"""
     name: str
-    visibility: str
-    
 
-# Properties to receive on update
+
 class GroupUpdate(BaseModel):
-    """更新 Group 的请求 schema"""
     name: Optional[str] = None
     description: Optional[str] = None
-    visibility: Optional[str] = None
+    visibility: Optional[Literal["public", "private"]] = None
     max_members: Optional[int] = None
     require_approval: Optional[bool] = None
-    
 
-# Properties shared by models stored in DB
+
 class GroupInDBBase(GroupBase):
-    """数据库中的 Group 基础 schema"""
     id: int
+    created_by: Optional[int] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
-    
-    class Config:
-        from_attributes = True
+    deleted_at: Optional[datetime] = None
 
-# Properties to return to client
+    model_config = {"from_attributes": True}
+
+
 class Group(GroupInDBBase):
-    """Group 响应 schema"""
-    pass
-
-# Properties stored in DB
-class GroupInDB(GroupInDBBase):
-    """数据库中存储的 Group schema"""
     pass

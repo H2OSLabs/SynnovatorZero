@@ -16,7 +16,7 @@ class Category(Base):
     cover_image = Column(String, nullable=True)
     start_date = Column(DateTime, nullable=True)
     end_date = Column(DateTime, nullable=True)
-    created_by = Column(String, nullable=True)
+    created_by = Column(Integer, nullable=True)
     content = Column(Text, nullable=True)
     deleted_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

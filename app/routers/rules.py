@@ -1,10 +1,11 @@
 """rules API 路由"""
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import Any, List, Optional
+from typing import Optional
 
 from app import crud, schemas
 from app.database import get_db
+from app.deps import get_current_user_id, require_current_user_id, require_role
 
 router = APIRouter()
 
@@ -24,8 +25,16 @@ def list_rules(
 def create_rule(
     rule_in: schemas.RuleCreate,
     db: Session = Depends(get_db),
+    user_id: int = Depends(require_role("organizer", "admin")),
 ):
-    return crud.rules.create(db, obj_in=rule_in)
+    obj_data = rule_in.model_dump()
+    obj_data["created_by"] = user_id
+    from app.models.rule import Rule as RuleModel
+    db_obj = RuleModel(**obj_data)
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
 
 
 @router.get("/rules/{rule_id}", response_model=schemas.Rule, tags=["rules"])
@@ -59,5 +68,6 @@ def delete_rule(
     item = crud.rules.get(db, id=rule_id)
     if item is None:
         raise HTTPException(status_code=404, detail="Rule not found")
-    crud.rules.remove(db, id=rule_id)
+    from app.services.cascade_delete import cascade_delete_rule
+    cascade_delete_rule(db, rule_id)
     return None
