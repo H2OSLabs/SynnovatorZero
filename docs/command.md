@@ -446,15 +446,19 @@ interaction_id: string    # 交互记录 ID（必填）
 
 | 操作 | 级联行为 |
 |------|---------|
-| 软删除 category | 关联的 interaction 一并软删除；关系保留但查询时按目标可见性过滤 |
-| 软删除 post | 关联的 interaction 一并软删除 |
-| 软删除 user | 该用户的所有 interaction 一并软删除；group:user 关系保留（标记为离组） |
-| 软删除 group | group:user 关系保留（成员可查询历史） |
+| 软删除 category | 解除所有 category:rule、category:post、category:group 关系；关联的 interaction 一并软删除 |
+| 软删除 post | 解除所有 post:post、post:resource、category:post 关系；关联的 interaction 一并软删除 |
+| 软删除 resource | 解除所有 post:resource 关系；关联的 interaction 一并软删除 |
+| 软删除 rule | 解除所有 category:rule 关系 |
+| 软删除 user | 解除所有 group:user 关系；该用户的所有 interaction 一并软删除 |
+| 软删除 group | 解除所有 group:user、category:group 关系 |
+| 软删除 interaction | 若为父评论，级联软删除所有子回复 |
 
 **恢复机制：**
 
 - 恢复操作：设置 `deleted_at = NULL`
-- 级联恢复：恢复父对象时，一并恢复因级联而软删除的子对象
+- 级联恢复：恢复父对象时，一并恢复因级联而软删除的子对象（如 interaction）
+- 注意：级联时被硬删除的关系（如 category:rule、group:user 等）**不可自动恢复**，需手动重建
 - 恢复权限：仅 Admin 可执行恢复操作
 
 ### 引用完整性
@@ -468,7 +472,8 @@ interaction_id: string    # 交互记录 ID（必填）
 | category:rule.rule_id | rule.id | 级联软删除时解除 |
 | category:post.post_id | post.id | 级联软删除时解除 |
 | category:group.group_id | group.id | 级联软删除时解除 |
-| group:user.user_id | user.id | 保留（标记为离组） |
+| group:user.group_id | group.id | 级联软删除时解除 |
+| group:user.user_id | user.id | 级联软删除时解除 |
 | interaction.parent_id | interaction.id | 级联软删除子回复 |
 
 **多态引用（interaction）的完整性保障：**
