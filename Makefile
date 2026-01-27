@@ -13,7 +13,7 @@ install:
 backend:
 	@echo "Starting backend on http://localhost:8000"
 	@mkdir -p data
-	@uv run uvicorn app.main:app --reload --port 8000
+	@uv run python -m uvicorn app.main:app --reload --port 8000
 
 frontend:
 	@echo "Starting frontend on http://localhost:3000"
