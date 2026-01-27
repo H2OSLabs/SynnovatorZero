@@ -38,6 +38,7 @@ engine.py read <type> --include-deleted
 engine.py update <type> --id <record_id> --data '<json>'
 ```
 Special: for post tags, use `"+tagname"` to append, `"-tagname"` to remove.
+Note: `like_count`, `comment_count`, `average_rating` on posts are read-only cache fields — they are silently ignored in update data.
 
 ### DELETE
 ```bash
@@ -55,7 +56,7 @@ Use `_` separator or `:` separator for relation type names.
 ```bash
 engine.py create <relation_type> --data '<json>'
 ```
-Relation types: `category_rule`, `category_post`, `category_group`, `post_post`, `post_resource`, `group_user`, `target_interaction`
+Relation types: `category_rule`, `category_post`, `category_group`, `category_category`, `post_post`, `post_resource`, `group_user`, `user_user`, `target_interaction`
 
 ### READ
 ```bash
@@ -111,16 +112,67 @@ engine.py create category_post --data '{"category_id":"cat_xxx","post_id":"post_
 
 ### Like a post
 ```bash
-engine.py --user user_bob create interaction --data '{"type":"like","target_type":"post","target_id":"post_xxx"}'
+# Step 1: Create the interaction record
+engine.py --user user_bob create interaction --data '{"type":"like"}'
+# Step 2: Link it to the target (triggers cache stats update + duplicate check)
 engine.py create target_interaction --data '{"target_type":"post","target_id":"post_xxx","interaction_id":"iact_xxx"}'
 ```
 
 ### Comment on a post
 ```bash
-engine.py --user user_bob create interaction --data '{"type":"comment","target_type":"post","target_id":"post_xxx","value":"Great work!"}'
+# Step 1: Create the comment interaction
+engine.py --user user_bob create interaction --data '{"type":"comment","value":"Great work!"}'
+# Step 2: Link to target
+engine.py create target_interaction --data '{"target_type":"post","target_id":"post_xxx","interaction_id":"iact_xxx"}'
 ```
 
 ### Submit a rating
 ```bash
-engine.py --user user_judge create interaction --data '{"type":"rating","target_type":"post","target_id":"post_xxx","value":{"Innovation":87,"Technical":82,"Practical":78,"Demo":91,"_comment":"Well done"}}'
+# Step 1: Create the rating interaction
+engine.py --user user_judge create interaction --data '{"type":"rating","value":{"Innovation":87,"Technical":82,"Practical":78,"Demo":91,"_comment":"Well done"}}'
+# Step 2: Link to target (triggers average_rating recalculation)
+engine.py create target_interaction --data '{"target_type":"post","target_id":"post_xxx","interaction_id":"iact_xxx"}'
+```
+
+### Follow a user
+```bash
+engine.py create user_user --data '{"source_user_id":"user_alice","target_user_id":"user_bob","relation_type":"follow"}'
+```
+
+### Block a user
+```bash
+engine.py create user_user --data '{"source_user_id":"user_alice","target_user_id":"user_bob","relation_type":"block"}'
+```
+
+### Unfollow a user
+```bash
+engine.py delete user_user --filters '{"source_user_id":"user_alice","target_user_id":"user_bob","relation_type":"follow"}'
+```
+
+### Check mutual follow (friends)
+```bash
+# Read A->B follow
+engine.py read user_user --filters '{"source_user_id":"user_alice","target_user_id":"user_bob","relation_type":"follow"}'
+# Read B->A follow
+engine.py read user_user --filters '{"source_user_id":"user_bob","target_user_id":"user_alice","relation_type":"follow"}'
+# Both exist = friends
+```
+
+### Create activity stage chain
+```bash
+# Stage 1 -> Stage 2 (sequential)
+engine.py create category_category --data '{"source_category_id":"cat_stage1","target_category_id":"cat_stage2","relation_type":"stage","stage_order":1}'
+engine.py create category_category --data '{"source_category_id":"cat_stage2","target_category_id":"cat_stage3","relation_type":"stage","stage_order":2}'
+```
+
+### Create parallel tracks
+```bash
+engine.py create category_category --data '{"source_category_id":"cat_main","target_category_id":"cat_track_a","relation_type":"track"}'
+engine.py create category_category --data '{"source_category_id":"cat_main","target_category_id":"cat_track_b","relation_type":"track"}'
+```
+
+### Set prerequisite activity
+```bash
+# Bounty must close before main competition registration
+engine.py create category_category --data '{"source_category_id":"cat_bounty","target_category_id":"cat_main_competition","relation_type":"prerequisite"}'
 ```

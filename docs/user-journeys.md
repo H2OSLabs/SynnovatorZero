@@ -1,11 +1,11 @@
-# User Journey
+# 用户旅程
 
 本文档描述 Synnovator 平台的核心用户旅程，面向开发团队，每个场景包含角色、前置条件、步骤序列及对应的数据操作（CRUD）。
 
+> 角色定义详见 [data-types.md](./data-types.md#角色定义)，数据类型详见 [data-types.md](./data-types.md)，关系详见 [relationships.md](./relationships.md)。
+
 ## 目录
 
-- [角色定义](#角色定义)
-- [数据模型速览](#数据模型速览)
 - [1. User Lifetime 总览](#1-user-lifetime-总览)
 - [2. 浏览探索页](#2-浏览探索页)
 - [3. 注册](#3-注册)
@@ -20,42 +20,6 @@
 - [12. 删除 Post](#12-删除-post)
 - [13. 社区互动（点赞、评论、评分）](#13-社区互动点赞评论评分)
 - [附录：报名规则定义（Rule Definition）](#附录报名规则定义rule-definition)
-
----
-
-## 角色定义
-
-| 角色 | 说明 | 核心权限范围 |
-|------|------|-------------|
-| **参赛者（Participant）** | 普通用户，参与活动 | 浏览、注册、报名、创建/编辑自己的 Post、组队 |
-| **组织者（Organizer）** | 活动发起人，管理活动 | 创建/管理 Category 和 Rule、审核活动内容、管理活动相关 Post |
-| **管理员（Admin）** | 平台运营，管理平台 | 平台级用户管理、全局内容管理、系统配置 |
-
-## 数据模型速览
-
-**七种内容类型：**
-
-| 类型 | 格式 | 说明 |
-|------|------|------|
-| `category` | YAML + Markdown | 比赛活动或运营活动，关联不同的 Rule |
-| `post` | Markdown | 用户提交的帖子，支持标签和自定义渲染 |
-| `resource` | 文件 | 上传的附件/文件资源 |
-| `rule` | YAML + Markdown | 活动规则，由组织者创建 |
-| `user` | YAML | 用户信息 |
-| `group` | YAML | 团队/分组，可用于参赛组队、组织方团队、权限分组等 |
-| `interaction` | YAML | 交互记录（点赞、评论、评分），可指向任意内容类型 |
-
-**七种关系：**
-
-| 关系 | 说明 |
-|------|------|
-| `category : rule` | 活动关联其规则 |
-| `category : post` | 活动关联帖子（报名内容、提交作品等） |
-| `category : group` | 团队在特定活动中的报名绑定 |
-| `post : post` | 帖子间关联（引用、回复等） |
-| `post : resource` | 帖子关联附件资源 |
-| `group : user` | 分组关联成员 |
-| `target : interaction` | 内容对象关联其交互记录（点赞、评论、评分） |
 
 ---
 
@@ -336,7 +300,7 @@ flowchart TD
 
 ### 11.2 编辑他人 Post
 
-> **注意：** 编辑权限请求目前依赖系统级通知机制，不直接映射到 command.md 中定义的内容类型。具体实现可通过 `interaction`（type: comment，附带权限请求语义）或独立的系统通知模块承载。
+> **注意：** 编辑权限请求目前依赖系统级通知机制，不直接映射到 data-types.md 中定义的内容类型。具体实现可通过 `interaction`（type: comment，附带权限请求语义）或独立的系统通知模块承载。
 
 | 步骤 | 用户操作 | 数据操作 | 说明 |
 |------|---------|---------|------|
@@ -376,7 +340,7 @@ flowchart TD
 | 3 | 查看关联关系提示 | — | 系统展示该 Post 的关联信息（所属活动、引用的帖子、附件等） |
 | 4 | 确认删除 | — | 用户确认删除操作 |
 | 5 | 删除关联关系 | `DELETE category:post` + `DELETE post:post` + `DELETE post:resource` | 移除 Post 与 Category、其他 Post、Resource 的关联 |
-| 6 | 删除关联 interaction | `DELETE target:interaction`（目标为该 Post 的所有交互记录） | 级联删除所有点赞、评论、评分；若为父评论则级联删除子回复 |
+| 6 | 删除关联 interaction | 通过 `target:interaction` 关系查找并软删除所有交互记录，然后解除 `target:interaction` 关系 | 级联软删除所有点赞、评论、评分；若为父评论则级联删除子回复 |
 | 7 | 删除 Post | `DELETE post` | 删除 Post 本体 |
 | 8 | （可选）清理孤立资源 | `DELETE resource`（无关联的资源） | 若关联的 Resource 不再被其他 Post 引用，可选择清理 |
 
@@ -394,9 +358,9 @@ flowchart TD
 | 步骤 | 用户操作 | 数据操作 | 说明 |
 |------|---------|---------|------|
 | 1 | 浏览目标内容 | `READ post` / `READ category` | 查看帖子或活动 |
-| 2 | 点击点赞 | `CREATE interaction`（type: like） | 创建点赞交互记录 |
-| 3 | 关联到目标 | `CREATE target:interaction` | 将点赞关联到目标内容 |
-| 4 | （系统自动）更新计数 | `UPDATE post`（like_count +1） | 系统自动维护缓存统计 |
+| 2 | 点击点赞 | `CREATE interaction`（type: like） | 创建点赞交互记录（不含目标信息） |
+| 3 | 关联到目标 | `CREATE target:interaction` | 将点赞关联到目标内容（触发去重校验 + 缓存更新） |
+| — | （系统自动）更新计数 | `UPDATE post`（like_count +1） | 由步骤 3 自动触发缓存统计重算 |
 
 - **结果：** 点赞成功，目标内容的 like_count 实时更新
 
@@ -405,10 +369,10 @@ flowchart TD
 | 步骤 | 用户操作 | 数据操作 | 说明 |
 |------|---------|---------|------|
 | 1 | 浏览目标内容 | `READ post` / `READ category` | 查看帖子或活动 |
-| 2 | 编写评论 | `CREATE interaction`（type: comment, value: 评论文本） | 创建评论交互记录（Markdown 格式） |
-| 3 | 关联到目标 | `CREATE target:interaction` | 将评论关联到目标内容 |
-| 4 | （系统自动）更新计数 | `UPDATE post`（comment_count +1） | 系统自动维护缓存统计 |
-| 5 | （可选）回复评论 | `CREATE interaction`（type: comment, parent_id: 父评论 ID） | 创建嵌套回复，通过 parent_id 指向被回复的评论 |
+| 2 | 编写评论 | `CREATE interaction`（type: comment, value: 评论文本） | 创建评论交互记录（不含目标信息） |
+| 3 | 关联到目标 | `CREATE target:interaction` | 将评论关联到目标内容（触发缓存更新） |
+| — | （系统自动）更新计数 | `UPDATE post`（comment_count +1） | 由步骤 3 自动触发缓存统计重算 |
+| 4 | （可选）回复评论 | `CREATE interaction`（type: comment, parent_id: 父评论 ID） + `CREATE target:interaction` | 创建嵌套回复并关联到同一目标 |
 
 - **结果：** 评论发布成功，支持嵌套回复，comment_count 实时更新
 
@@ -431,9 +395,9 @@ flowchart TD
 | 1 | 进入参赛帖详情 | `READ post` + `READ category:rule` | 查看帖子内容及关联的评分标准 |
 | 2 | 查看评分标准 | `READ rule`（scoring_criteria） | 获取各维度名称、权重、说明 |
 | 3 | 按维度打分 | — | 评委对每个维度独立评分（0-100） |
-| 4 | 提交评分 | `CREATE interaction`（type: rating, value: 多维度评分对象） | value 为对象，Key 与 scoring_criteria.name 一一对应 |
-| 5 | 关联到目标 | `CREATE target:interaction` | 将评分关联到参赛帖 |
-| 6 | （系统自动）更新均分 | `UPDATE post`（average_rating 重算） | 系统按 weight 加权计算总分，更新所有评分的均值 |
+| 4 | 提交评分 | `CREATE interaction`（type: rating, value: 多维度评分对象） | value 为对象，Key 与 scoring_criteria.name 一一对应（不含目标信息） |
+| 5 | 关联到目标 | `CREATE target:interaction` | 将评分关联到参赛帖（触发 average_rating 重算） |
+| — | （系统自动）更新均分 | `UPDATE post`（average_rating 重算） | 由步骤 5 自动触发，按 weight 加权计算总分均值 |
 
 **rating value 示例：**
 
@@ -464,6 +428,7 @@ value:
 | （可扩展更多规则） | — | — |
 
 ### 规则执行流程：Not create Only Select
+
 该规则约束了用户只能选择已有的Post，而不允许新建Post。
 
 ```mermaid
