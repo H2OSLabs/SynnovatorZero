@@ -1,0 +1,2254 @@
+openapi: 3.0.3
+info:
+  title: Synnovator API
+  version: 1.0.0
+  description: API for Synnovator - Activity and Competition Management Platform
+  contact:
+    name: API Support
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+- url: http://localhost:8000
+  description: Development server
+- url: https://api.synnovator.com
+  description: Production server
+tags:
+- name: categories
+  description: Activity and competition categories
+- name: posts
+  description: User posts and submissions
+- name: resources
+  description: File resources and attachments
+- name: rules
+  description: Category rules and scoring criteria
+- name: users
+  description: User management
+- name: groups
+  description: Teams and groups
+- name: interactions
+  description: Likes, comments, and ratings
+- name: admin
+  description: Admin batch operations
+paths:
+  /categories:
+    get:
+      summary: List categories
+      operationId: list_categories
+      tags:
+      - categories
+      parameters:
+      - $ref: '#/components/parameters/SkipParam'
+      - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCategoryList'
+    post:
+      summary: Create category
+      operationId: create_category
+      tags:
+      - categories
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryCreate'
+      responses:
+        '201':
+          description: Category created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /categories/{category_id}:
+    get:
+      summary: Get category
+      operationId: get_category
+      tags:
+      - categories
+      parameters:
+      - name: category_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Category details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      summary: Update category
+      operationId: update_category
+      tags:
+      - categories
+      parameters:
+      - name: category_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryUpdate'
+      responses:
+        '200':
+          description: Category updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete category
+      operationId: delete_category
+      tags:
+      - categories
+      parameters:
+      - name: category_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /categories/{category_id}/rules:
+    get:
+      summary: List category rules
+      operationId: list_category_rules
+      tags:
+      - categories
+      parameters:
+      - name: category_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: List of rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Rule'
+    post:
+      summary: Add rule to category
+      operationId: add_category_rule
+      tags:
+      - categories
+      parameters:
+      - name: category_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRuleAdd'
+      responses:
+        '201':
+          description: Added
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /categories/{category_id}/rules/{rule_id}:
+    delete:
+      summary: Remove rule from category
+      operationId: remove_category_rule
+      tags:
+      - categories
+      parameters:
+      - name: category_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: rule_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Removed
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /categories/{category_id}/posts:
+    get:
+      summary: List category posts
+      operationId: list_category_posts
+      tags:
+      - categories
+      parameters:
+      - name: category_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/SkipParam'
+      - $ref: '#/components/parameters/LimitParam'
+      - name: relation_type
+        in: query
+        schema:
+          type: string
+          enum:
+          - submission
+          - reference
+      responses:
+        '200':
+          description: List of posts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPostList'
+    post:
+      summary: Add post to category
+      operationId: add_category_post
+      tags:
+      - categories
+      parameters:
+      - name: category_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryPostAdd'
+      responses:
+        '201':
+          description: Added
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /categories/{category_id}/groups:
+    get:
+      summary: List category groups
+      operationId: list_category_groups
+      tags:
+      - categories
+      parameters:
+      - name: category_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: List of groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Group'
+    post:
+      summary: Add group to category
+      operationId: add_category_group
+      tags:
+      - categories
+      parameters:
+      - name: category_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryGroupAdd'
+      responses:
+        '201':
+          description: Added
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /posts:
+    get:
+      summary: List posts
+      operationId: list_posts
+      tags:
+      - posts
+      parameters:
+      - $ref: '#/components/parameters/SkipParam'
+      - $ref: '#/components/parameters/LimitParam'
+      - name: type
+        in: query
+        schema:
+          $ref: '#/components/schemas/PostType'
+      - name: status
+        in: query
+        schema:
+          $ref: '#/components/schemas/PostStatus'
+      - name: tags
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        style: form
+        explode: false
+      responses:
+        '200':
+          description: List of posts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPostList'
+    post:
+      summary: Create post
+      operationId: create_post
+      tags:
+      - posts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCreate'
+      responses:
+        '201':
+          description: Post created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /posts/{post_id}:
+    get:
+      summary: Get post
+      operationId: get_post
+      tags:
+      - posts
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Post details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      summary: Update post
+      operationId: update_post
+      tags:
+      - posts
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostUpdate'
+      responses:
+        '200':
+          description: Post updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete post
+      operationId: delete_post
+      tags:
+      - posts
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /posts/{post_id}/like:
+    post:
+      summary: Like post
+      operationId: like_post
+      tags:
+      - interactions
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '201':
+          description: Post liked
+        '409':
+          description: Already liked
+    delete:
+      summary: Unlike post
+      operationId: unlike_post
+      tags:
+      - interactions
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Like removed
+  /posts/{post_id}/comments:
+    get:
+      summary: List post comments
+      operationId: list_post_comments
+      tags:
+      - interactions
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/SkipParam'
+      - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of comments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCommentList'
+    post:
+      summary: Add comment
+      operationId: add_post_comment
+      tags:
+      - interactions
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+      responses:
+        '201':
+          description: Comment added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+  /posts/{post_id}/comments/{comment_id}:
+    patch:
+      summary: Update comment
+      operationId: update_post_comment
+      tags:
+      - interactions
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: comment_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+      responses:
+        '200':
+          description: Comment updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+    delete:
+      summary: Delete comment
+      operationId: delete_post_comment
+      tags:
+      - interactions
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: comment_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Comment deleted
+  /posts/{post_id}/ratings:
+    get:
+      summary: List post ratings
+      operationId: list_post_ratings
+      tags:
+      - interactions
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/SkipParam'
+      - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of ratings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRatingList'
+    post:
+      summary: Submit rating
+      operationId: submit_post_rating
+      tags:
+      - interactions
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingCreate'
+      responses:
+        '201':
+          description: Rating submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rating'
+  /posts/{post_id}/resources:
+    get:
+      summary: List post resources
+      operationId: list_post_resources
+      tags:
+      - posts
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: List of resources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Resource'
+    post:
+      summary: Add resource to post
+      operationId: add_post_resource
+      tags:
+      - posts
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostResourceAdd'
+      responses:
+        '201':
+          description: Added
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /posts/{post_id}/related:
+    get:
+      summary: List post related
+      operationId: list_post_related
+      tags:
+      - posts
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: relation_type
+        in: query
+        schema:
+          type: string
+          enum:
+          - reference
+          - reply
+          - embed
+      responses:
+        '200':
+          description: List of related
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+    post:
+      summary: Add related to post
+      operationId: add_post_related
+      tags:
+      - posts
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostRelationAdd'
+      responses:
+        '201':
+          description: Added
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /resources:
+    get:
+      summary: List resources
+      operationId: list_resources
+      tags:
+      - resources
+      parameters:
+      - $ref: '#/components/parameters/SkipParam'
+      - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of resources
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResourceList'
+    post:
+      summary: Create resource
+      operationId: create_resource
+      tags:
+      - resources
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResourceCreate'
+      responses:
+        '201':
+          description: Resource created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /resources/{resource_id}:
+    get:
+      summary: Get resource
+      operationId: get_resource
+      tags:
+      - resources
+      parameters:
+      - name: resource_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Resource details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete resource
+      operationId: delete_resource
+      tags:
+      - resources
+      parameters:
+      - name: resource_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /rules:
+    get:
+      summary: List rules
+      operationId: list_rules
+      tags:
+      - rules
+      parameters:
+      - $ref: '#/components/parameters/SkipParam'
+      - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of rules
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRuleList'
+    post:
+      summary: Create rule
+      operationId: create_rule
+      tags:
+      - rules
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RuleCreate'
+      responses:
+        '201':
+          description: Rule created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /rules/{rule_id}:
+    get:
+      summary: Get rule
+      operationId: get_rule
+      tags:
+      - rules
+      parameters:
+      - name: rule_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Rule details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      summary: Update rule
+      operationId: update_rule
+      tags:
+      - rules
+      parameters:
+      - name: rule_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RuleUpdate'
+      responses:
+        '200':
+          description: Rule updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rule'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete rule
+      operationId: delete_rule
+      tags:
+      - rules
+      parameters:
+      - name: rule_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users:
+    get:
+      summary: List users
+      operationId: list_users
+      tags:
+      - users
+      parameters:
+      - $ref: '#/components/parameters/SkipParam'
+      - $ref: '#/components/parameters/LimitParam'
+      - name: role
+        in: query
+        schema:
+          $ref: '#/components/schemas/UserRole'
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserList'
+    post:
+      summary: Create user
+      operationId: create_user
+      tags:
+      - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /users/me:
+    get:
+      summary: Get current user
+      operationId: get_current_user
+      tags:
+      - users
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    patch:
+      summary: Update current user
+      operationId: update_current_user
+      tags:
+      - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /users/{user_id}:
+    get:
+      summary: Get user
+      operationId: get_user
+      tags:
+      - users
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      summary: Update user
+      operationId: update_user
+      tags:
+      - users
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete user
+      operationId: delete_user
+      tags:
+      - users
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /groups:
+    get:
+      summary: List groups
+      operationId: list_groups
+      tags:
+      - groups
+      parameters:
+      - $ref: '#/components/parameters/SkipParam'
+      - $ref: '#/components/parameters/LimitParam'
+      - name: visibility
+        in: query
+        schema:
+          $ref: '#/components/schemas/GroupVisibility'
+      responses:
+        '200':
+          description: List of groups
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedGroupList'
+    post:
+      summary: Create group
+      operationId: create_group
+      tags:
+      - groups
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupCreate'
+      responses:
+        '201':
+          description: Group created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /groups/{group_id}:
+    get:
+      summary: Get group
+      operationId: get_group
+      tags:
+      - groups
+      parameters:
+      - name: group_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Group details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      summary: Update group
+      operationId: update_group
+      tags:
+      - groups
+      parameters:
+      - name: group_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupUpdate'
+      responses:
+        '200':
+          description: Group updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete group
+      operationId: delete_group
+      tags:
+      - groups
+      parameters:
+      - name: group_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /groups/{group_id}/members:
+    get:
+      summary: List group members
+      operationId: list_group_members
+      tags:
+      - groups
+      parameters:
+      - name: group_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: status
+        in: query
+        schema:
+          $ref: '#/components/schemas/MemberStatus'
+      responses:
+        '200':
+          description: List of members
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMemberList'
+    post:
+      summary: Add member to group
+      operationId: add_group_member
+      tags:
+      - groups
+      parameters:
+      - name: group_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberAdd'
+      responses:
+        '201':
+          description: Member added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+  /groups/{group_id}/members/{user_id}:
+    patch:
+      summary: Update member
+      operationId: update_group_member
+      tags:
+      - groups
+      parameters:
+      - name: group_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberUpdate'
+      responses:
+        '200':
+          description: Member updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+    delete:
+      summary: Remove member from group
+      operationId: remove_group_member
+      tags:
+      - groups
+      parameters:
+      - name: group_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Member removed
+  /admin/posts:
+    delete:
+      summary: Batch delete posts
+      operationId: batch_delete_posts
+      tags:
+      - admin
+      security:
+      - oauth2:
+        - admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchIds'
+      responses:
+        '200':
+          description: Batch result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResult'
+  /admin/posts/status:
+    patch:
+      summary: Batch update post status
+      operationId: batch_update_post_status
+      tags:
+      - admin
+      security:
+      - oauth2:
+        - admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchStatusUpdate'
+      responses:
+        '200':
+          description: Batch result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResult'
+  /admin/users/role:
+    patch:
+      summary: Batch update user roles
+      operationId: batch_update_user_roles
+      tags:
+      - admin
+      security:
+      - oauth2:
+        - admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchRoleUpdate'
+      responses:
+        '200':
+          description: Batch result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResult'
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: /oauth/authorize
+          tokenUrl: /oauth/token
+          scopes:
+            read: Read access to resources
+            write: Write access to resources
+            admin: Admin access for batch operations
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: object
+          required:
+          - code
+          - message
+          properties:
+            code:
+              type: string
+              example: NOT_FOUND
+            message:
+              type: string
+              example: Resource not found
+            details:
+              type: object
+              additionalProperties: true
+    CategoryType:
+      type: string
+      enum:
+      - competition
+      - operation
+      description: Category type
+    CategoryStatus:
+      type: string
+      enum:
+      - draft
+      - published
+      - closed
+      description: Category status
+    PostType:
+      type: string
+      enum:
+      - profile
+      - team
+      - category
+      - for_category
+      - certificate
+      - general
+      description: Post type
+    PostStatus:
+      type: string
+      enum:
+      - draft
+      - pending_review
+      - published
+      - rejected
+      description: Post status
+    UserRole:
+      type: string
+      enum:
+      - participant
+      - organizer
+      - admin
+      description: User role
+    GroupVisibility:
+      type: string
+      enum:
+      - public
+      - private
+      description: Group visibility
+    InteractionType:
+      type: string
+      enum:
+      - like
+      - comment
+      - rating
+      description: Interaction type
+    MemberRole:
+      type: string
+      enum:
+      - owner
+      - admin
+      - member
+      description: Group member role
+    MemberStatus:
+      type: string
+      enum:
+      - pending
+      - accepted
+      - rejected
+      description: Group membership status
+    CategoryCreate:
+      type: object
+      required:
+      - name
+      - description
+      - type
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          $ref: '#/components/schemas/CategoryType'
+        status:
+          $ref: '#/components/schemas/CategoryStatus'
+        cover_image:
+          type: string
+          format: uri
+        start_date:
+          type: string
+          format: date-time
+        end_date:
+          type: string
+          format: date-time
+        content:
+          type: string
+          description: Markdown content body
+    CategoryUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          $ref: '#/components/schemas/CategoryType'
+        status:
+          $ref: '#/components/schemas/CategoryStatus'
+        cover_image:
+          type: string
+          format: uri
+        start_date:
+          type: string
+          format: date-time
+        end_date:
+          type: string
+          format: date-time
+        content:
+          type: string
+          description: Markdown content body
+    Category:
+      type: object
+      required:
+      - id
+      - name
+      - description
+      - type
+      - status
+      - created_at
+      - updated_at
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          $ref: '#/components/schemas/CategoryType'
+        status:
+          $ref: '#/components/schemas/CategoryStatus'
+        cover_image:
+          type: string
+          format: uri
+        start_date:
+          type: string
+          format: date-time
+        end_date:
+          type: string
+          format: date-time
+        id:
+          type: string
+          example: cat_cat123
+        created_by:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+          default: 'null'
+        content:
+          type: string
+          description: Markdown content body
+    PostCreate:
+      type: object
+      required:
+      - title
+      properties:
+        title:
+          type: string
+        type:
+          $ref: '#/components/schemas/PostType'
+        tags:
+          type: array
+          items: &id001
+            type: string
+          default: '[]'
+        status:
+          $ref: '#/components/schemas/PostStatus'
+        content:
+          type: string
+          description: Markdown content body
+    PostUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        type:
+          $ref: '#/components/schemas/PostType'
+        tags:
+          type: array
+          items: *id001
+          default: '[]'
+        status:
+          $ref: '#/components/schemas/PostStatus'
+        content:
+          type: string
+          description: Markdown content body
+    Post:
+      type: object
+      required:
+      - id
+      - title
+      - type
+      - status
+      - created_at
+      - updated_at
+      properties:
+        title:
+          type: string
+        type:
+          $ref: '#/components/schemas/PostType'
+        tags:
+          type: array
+          items: *id001
+          default: '[]'
+        status:
+          $ref: '#/components/schemas/PostStatus'
+        like_count:
+          type: integer
+          default: 0
+          readOnly: true
+        comment_count:
+          type: integer
+          default: 0
+          readOnly: true
+        average_rating:
+          type: number
+          format: float
+          default: 'null'
+          readOnly: true
+        content:
+          type: string
+          description: Markdown content body
+    ResourceCreate:
+      type: object
+      required:
+      - filename
+      properties:
+        filename:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+    ResourceUpdate:
+      type: object
+      properties:
+        filename:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+    Resource:
+      type: object
+      required:
+      - id
+      - filename
+      - created_at
+      properties:
+        filename:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+        mime_type:
+          type: string
+        size:
+          type: integer
+        url:
+          type: string
+          format: uri
+    RuleCreate:
+      type: object
+      required:
+      - name
+      - description
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        allow_public:
+          type: boolean
+          default: false
+        require_review:
+          type: boolean
+          default: false
+        reviewers:
+          type: array
+          items: &id002
+            type: string
+        submission_start:
+          type: string
+          format: date-time
+        submission_deadline:
+          type: string
+          format: date-time
+        submission_format:
+          type: array
+          items: &id003
+            type: string
+        max_submissions:
+          type: integer
+        min_team_size:
+          type: integer
+        max_team_size:
+          type: integer
+        scoring_criteria:
+          type: array
+          items: &id004
+            type: object
+        content:
+          type: string
+          description: Markdown content body
+    RuleUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        allow_public:
+          type: boolean
+          default: false
+        require_review:
+          type: boolean
+          default: false
+        reviewers:
+          type: array
+          items: *id002
+        submission_start:
+          type: string
+          format: date-time
+        submission_deadline:
+          type: string
+          format: date-time
+        submission_format:
+          type: array
+          items: *id003
+        max_submissions:
+          type: integer
+        min_team_size:
+          type: integer
+        max_team_size:
+          type: integer
+        scoring_criteria:
+          type: array
+          items: *id004
+        content:
+          type: string
+          description: Markdown content body
+    Rule:
+      type: object
+      required:
+      - id
+      - name
+      - description
+      - created_at
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        allow_public:
+          type: boolean
+          default: false
+        require_review:
+          type: boolean
+          default: false
+        reviewers:
+          type: array
+          items: *id002
+        submission_start:
+          type: string
+          format: date-time
+        submission_deadline:
+          type: string
+          format: date-time
+        submission_format:
+          type: array
+          items: *id003
+        max_submissions:
+          type: integer
+        min_team_size:
+          type: integer
+        max_team_size:
+          type: integer
+        scoring_criteria:
+          type: array
+          items: *id004
+        content:
+          type: string
+          description: Markdown content body
+    ScoringCriterion:
+      type: object
+      required:
+      - name
+      - weight
+      properties:
+        name:
+          type: string
+          example: Innovation
+        weight:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 30
+        description:
+          type: string
+    UserCreate:
+      type: object
+      required:
+      - username
+      - email
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        display_name:
+          type: string
+        avatar_url:
+          type: string
+          format: uri
+        bio:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+    UserUpdate:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        display_name:
+          type: string
+        avatar_url:
+          type: string
+          format: uri
+        bio:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+    User:
+      type: object
+      required:
+      - id
+      - username
+      - email
+      - role
+      - created_at
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        display_name:
+          type: string
+        avatar_url:
+          type: string
+          format: uri
+        bio:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+    GroupCreate:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        visibility:
+          $ref: '#/components/schemas/GroupVisibility'
+        max_members:
+          type: integer
+        require_approval:
+          type: boolean
+          default: false
+    GroupUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        visibility:
+          $ref: '#/components/schemas/GroupVisibility'
+        max_members:
+          type: integer
+        require_approval:
+          type: boolean
+          default: false
+    Group:
+      type: object
+      required:
+      - id
+      - name
+      - visibility
+      - created_at
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        visibility:
+          $ref: '#/components/schemas/GroupVisibility'
+        max_members:
+          type: integer
+        require_approval:
+          type: boolean
+          default: false
+    CommentCreate:
+      type: object
+      required:
+      - content
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 2000
+        parent_id:
+          type: string
+          description: Parent comment ID for replies
+    Comment:
+      type: object
+      required:
+      - id
+      - content
+      - created_by
+      - created_at
+      properties:
+        id:
+          type: string
+          example: iact_abc123
+        content:
+          type: string
+        parent_id:
+          type: string
+        created_by:
+          type: string
+        author:
+          $ref: '#/components/schemas/User'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    RatingCreate:
+      type: object
+      required:
+      - scores
+      properties:
+        scores:
+          type: object
+          additionalProperties:
+            type: number
+            minimum: 0
+            maximum: 100
+          example:
+            Innovation: 87
+            Technical: 82
+            Practical: 78
+        comment:
+          type: string
+          description: Optional rating comment
+    Rating:
+      type: object
+      required:
+      - id
+      - scores
+      - created_by
+      - created_at
+      properties:
+        id:
+          type: string
+        scores:
+          type: object
+          additionalProperties:
+            type: number
+        comment:
+          type: string
+        created_by:
+          type: string
+        author:
+          $ref: '#/components/schemas/User'
+        created_at:
+          type: string
+          format: date-time
+    MemberAdd:
+      type: object
+      required:
+      - user_id
+      properties:
+        user_id:
+          type: string
+        role:
+          $ref: '#/components/schemas/MemberRole'
+    MemberUpdate:
+      type: object
+      properties:
+        role:
+          $ref: '#/components/schemas/MemberRole'
+        status:
+          $ref: '#/components/schemas/MemberStatus'
+    Member:
+      type: object
+      required:
+      - user_id
+      - role
+      - status
+      properties:
+        user_id:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+        role:
+          $ref: '#/components/schemas/MemberRole'
+        status:
+          $ref: '#/components/schemas/MemberStatus'
+        joined_at:
+          type: string
+          format: date-time
+        status_changed_at:
+          type: string
+          format: date-time
+    CategoryRuleAdd:
+      type: object
+      required:
+      - rule_id
+      properties:
+        rule_id:
+          type: string
+        priority:
+          type: integer
+          default: 0
+    CategoryPostAdd:
+      type: object
+      required:
+      - post_id
+      properties:
+        post_id:
+          type: string
+        relation_type:
+          type: string
+          enum:
+          - submission
+          - reference
+          default: submission
+    CategoryGroupAdd:
+      type: object
+      required:
+      - group_id
+      properties:
+        group_id:
+          type: string
+    PostResourceAdd:
+      type: object
+      required:
+      - resource_id
+      properties:
+        resource_id:
+          type: string
+        display_type:
+          type: string
+          enum:
+          - attachment
+          - inline
+          default: attachment
+        position:
+          type: integer
+    PostRelationAdd:
+      type: object
+      required:
+      - target_post_id
+      properties:
+        target_post_id:
+          type: string
+        relation_type:
+          type: string
+          enum:
+          - reference
+          - reply
+          - embed
+          default: reference
+        position:
+          type: integer
+    PaginatedCategoryList:
+      type: object
+      required:
+      - items
+      - total
+      - skip
+      - limit
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+        total:
+          type: integer
+          description: Total number of records
+        skip:
+          type: integer
+        limit:
+          type: integer
+    PaginatedPostList:
+      type: object
+      required:
+      - items
+      - total
+      - skip
+      - limit
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Post'
+        total:
+          type: integer
+          description: Total number of records
+        skip:
+          type: integer
+        limit:
+          type: integer
+    PaginatedResourceList:
+      type: object
+      required:
+      - items
+      - total
+      - skip
+      - limit
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Resource'
+        total:
+          type: integer
+          description: Total number of records
+        skip:
+          type: integer
+        limit:
+          type: integer
+    PaginatedRuleList:
+      type: object
+      required:
+      - items
+      - total
+      - skip
+      - limit
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rule'
+        total:
+          type: integer
+          description: Total number of records
+        skip:
+          type: integer
+        limit:
+          type: integer
+    PaginatedUserList:
+      type: object
+      required:
+      - items
+      - total
+      - skip
+      - limit
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        total:
+          type: integer
+          description: Total number of records
+        skip:
+          type: integer
+        limit:
+          type: integer
+    PaginatedGroupList:
+      type: object
+      required:
+      - items
+      - total
+      - skip
+      - limit
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+        total:
+          type: integer
+          description: Total number of records
+        skip:
+          type: integer
+        limit:
+          type: integer
+    PaginatedCommentList:
+      type: object
+      required:
+      - items
+      - total
+      - skip
+      - limit
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+        total:
+          type: integer
+          description: Total number of records
+        skip:
+          type: integer
+        limit:
+          type: integer
+    PaginatedRatingList:
+      type: object
+      required:
+      - items
+      - total
+      - skip
+      - limit
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rating'
+        total:
+          type: integer
+          description: Total number of records
+        skip:
+          type: integer
+        limit:
+          type: integer
+    PaginatedMemberList:
+      type: object
+      required:
+      - items
+      - total
+      - skip
+      - limit
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Member'
+        total:
+          type: integer
+          description: Total number of records
+        skip:
+          type: integer
+        limit:
+          type: integer
+    BatchIds:
+      type: object
+      required:
+      - ids
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 100
+    BatchStatusUpdate:
+      type: object
+      required:
+      - ids
+      - status
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 100
+        status:
+          $ref: '#/components/schemas/PostStatus'
+    BatchRoleUpdate:
+      type: object
+      required:
+      - ids
+      - role
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 100
+        role:
+          $ref: '#/components/schemas/UserRole'
+    BatchResult:
+      type: object
+      required:
+      - success_count
+      - failed_count
+      properties:
+        success_count:
+          type: integer
+        failed_count:
+          type: integer
+        failed_ids:
+          type: array
+          items:
+            type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: string
+  parameters:
+    SkipParam:
+      name: skip
+      in: query
+      schema:
+        type: integer
+        default: 0
+        minimum: 0
+      description: Number of records to skip
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        default: 20
+        minimum: 1
+        maximum: 100
+      description: Maximum number of records to return
+    IncludeDeletedParam:
+      name: include_deleted
+      in: query
+      schema:
+        type: boolean
+        default: false
+      description: Include soft-deleted records (admin only)
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Permission denied
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+security:
+- oauth2:
+  - read
+  - write
