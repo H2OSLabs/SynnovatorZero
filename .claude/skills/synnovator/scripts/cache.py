@@ -30,8 +30,7 @@ def _update_cache_stats(data_dir, target_type, target_id):
         iact_fp = find_record(data_dir, "interaction", rel["interaction_id"])
         if iact_fp:
             iact = load_record(iact_fp)
-            if not iact.get("deleted_at"):
-                all_interactions.append(iact)
+            all_interactions.append(iact)
 
     post["like_count"] = sum(1 for i in all_interactions if i.get("type") == "like")
     post["comment_count"] = sum(1 for i in all_interactions if i.get("type") == "comment")

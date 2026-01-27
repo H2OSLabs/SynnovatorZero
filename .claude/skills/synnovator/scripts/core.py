@@ -46,6 +46,7 @@ ENUMS = {
     "category.status": ["draft", "published", "closed"],
     "post.type": ["profile", "team", "category", "for_category", "certificate", "general"],
     "post.status": ["draft", "pending_review", "published", "rejected"],
+    "post.visibility": ["public", "private"],
     "user.role": ["participant", "organizer", "admin"],
     "group.visibility": ["public", "private"],
     "interaction.type": ["like", "comment", "rating"],
@@ -84,6 +85,33 @@ RELATION_KEYS = {
 PREFIX_MAP = {
     "category": "cat", "post": "post", "resource": "res",
     "rule": "rule", "user": "user", "group": "grp", "interaction": "iact"
+}
+
+# RBAC: which roles can CREATE each content type (None = any authenticated user)
+CREATE_PERMISSIONS = {
+    "category": ("organizer", "admin"),
+    "post": None,
+    "resource": None,
+    "rule": ("organizer", "admin"),
+    "user": None,  # registration: no auth required (handled specially)
+    "group": None,
+    "interaction": None,
+}
+
+# State machine: allowed transitions (current_status -> [allowed_next_statuses])
+# Transitions are strictly one-directional. No reverse transitions allowed.
+VALID_TRANSITIONS = {
+    "category.status": {
+        "draft": ["published"],
+        "published": ["closed"],
+        "closed": [],  # terminal state; to modify, create a new version reset to draft
+    },
+    "post.status": {
+        "draft": ["pending_review", "published"],  # published only for visibility=private (enforced in post.py)
+        "pending_review": ["published", "rejected"],
+        "published": [],  # terminal state; to modify, create a new version reset to draft
+        "rejected": ["draft"],  # rejected posts can be revised back to draft
+    },
 }
 
 
@@ -168,7 +196,7 @@ def find_record(data_dir, content_type, record_id):
     return None
 
 
-def list_records(data_dir, content_type, filters=None, include_deleted=False):
+def list_records(data_dir, content_type, filters=None):
     """List all records of a content type, optionally filtered."""
     folder = data_dir / content_type
     if not folder.exists():
@@ -178,8 +206,6 @@ def list_records(data_dir, content_type, filters=None, include_deleted=False):
         if f.suffix != ".md":
             continue
         rec = load_record(f)
-        if not include_deleted and rec.get("deleted_at"):
-            continue
         if filters:
             match = True
             for k, v in filters.items():
@@ -218,11 +244,95 @@ def validate_uniqueness(data_dir, content_type, data, exclude_id=None):
                 raise ValueError(f"Email '{data['email']}' already exists")
 
 
+def validate_state_transition(content_type, field, current_value, new_value):
+    """Validate that a state transition is allowed by the state machine.
+
+    Raises ValueError if the transition is not permitted.
+    """
+    key = f"{content_type}.{field}"
+    if key not in VALID_TRANSITIONS:
+        return  # no state machine defined for this field
+    transitions = VALID_TRANSITIONS[key]
+    if current_value not in transitions:
+        raise ValueError(
+            f"Unknown current state '{current_value}' for {key}"
+        )
+    allowed = transitions[current_value]
+    if new_value not in allowed:
+        if not allowed:
+            raise ValueError(
+                f"Cannot change {key} from '{current_value}': "
+                f"'{current_value}' is a terminal state. "
+                f"To modify, create a new version (reset to draft)."
+            )
+        raise ValueError(
+            f"Invalid state transition for {key}: "
+            f"'{current_value}' → '{new_value}' is not allowed. "
+            f"Allowed transitions: {current_value} → {', '.join(allowed)}"
+        )
+
+
 def validate_reference_exists(data_dir, content_type, record_id):
     fp = find_record(data_dir, content_type, record_id)
     if not fp:
         raise ValueError(f"Referenced {content_type} '{record_id}' not found")
-    rec = load_record(fp)
-    if rec.get("deleted_at"):
-        raise ValueError(f"Referenced {content_type} '{record_id}' is soft-deleted")
-    return rec
+    return load_record(fp)
+
+
+# === RBAC ===
+
+def get_user_role(data_dir, user_id):
+    """Load the role of a user by ID. Returns None if user not found."""
+    fp = find_record(data_dir, "user", user_id)
+    if fp:
+        rec = load_record(fp)
+        return rec.get("role", "participant")
+    return None
+
+
+def check_permission(data_dir, current_user, operation, content_type, record=None):
+    """Simple RBAC permission check. Raises ValueError if denied.
+
+    Args:
+        data_dir: data directory path
+        current_user: user ID (from --user)
+        operation: "create" | "update" | "delete"
+        content_type: content type string
+        record: existing record dict (for update/delete ownership check)
+    """
+    # CREATE user (registration) does not require authentication
+    if operation == "create" and content_type == "user":
+        return
+
+    # All other operations require authentication
+    if not current_user:
+        raise ValueError(
+            f"Authentication required: --user must be specified for {operation} {content_type}"
+        )
+
+    role = get_user_role(data_dir, current_user)
+    if role is None:
+        raise ValueError(f"User '{current_user}' not found")
+
+    # Admin bypasses all checks
+    if role == "admin":
+        return
+
+    # CREATE: role-based gate
+    if operation == "create":
+        allowed_roles = CREATE_PERMISSIONS.get(content_type)
+        if allowed_roles and role not in allowed_roles:
+            raise ValueError(
+                f"Permission denied: role '{role}' cannot create {content_type}. "
+                f"Required: {', '.join(allowed_roles)}"
+            )
+        return
+
+    # UPDATE / DELETE: ownership check
+    if operation in ("update", "delete") and record:
+        owner = record.get("created_by")
+        if owner and owner != current_user:
+            raise ValueError(
+                f"Permission denied: user '{current_user}' is not the owner of "
+                f"this {content_type} (owned by '{owner}')"
+            )

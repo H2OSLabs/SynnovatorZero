@@ -7,6 +7,20 @@ def on_create(data_dir, data, current_user):
     pass
 
 
+def on_post_create(data_dir, data, current_user):
+    """Auto-create target_interaction relation after interaction creation."""
+    target_type = data.get("target_type")
+    target_id = data.get("target_id")
+    interaction_id = data.get("id")
+    if target_type and target_id and interaction_id:
+        from relations import create_relation
+        create_relation(data_dir, "target_interaction", {
+            "target_type": target_type,
+            "target_id": target_id,
+            "interaction_id": interaction_id,
+        })
+
+
 def on_pre_update(data_dir, record_id, rec, updates):
     pass
 

@@ -21,8 +21,7 @@ def _get_category_rules(data_dir, category_id):
         fp = find_record(data_dir, "rule", rule_id)
         if fp:
             rule = load_record(fp)
-            if not rule.get("deleted_at"):
-                rules.append(rule)
+            rules.append(rule)
     return rules
 
 
@@ -89,7 +88,7 @@ def _validate_submission_rules(data_dir, rule, rule_name, context):
                 post_fp = find_record(data_dir, "post", rel.get("post_id"))
                 if post_fp:
                     post = load_record(post_fp)
-                    if post.get("created_by") == user_id and not post.get("deleted_at"):
+                    if post.get("created_by") == user_id:
                         user_submissions += 1
             if user_submissions >= max_sub:
                 raise ValueError(

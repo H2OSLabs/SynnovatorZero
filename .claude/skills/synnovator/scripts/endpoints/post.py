@@ -3,6 +3,7 @@
 DEFAULTS = {
     "type": "general",
     "status": "draft",
+    "visibility": "public",
     "tags": [],
     "like_count": 0,
     "comment_count": 0,
@@ -18,13 +19,14 @@ def on_create(data_dir, data, current_user):
 
 
 def on_pre_update(data_dir, record_id, rec, updates):
-    """Strip cache fields; handle tag ops; enforce publish rules."""
+    """Strip cache fields; enforce publish rules; validate state transitions."""
     # Strip read-only cache fields
     for cache_field in CACHE_FIELDS:
         updates.pop(cache_field, None)
 
     # Rule enforcement: validate post status transitions
-    if "status" in updates:
+    # Private posts skip category rule checks (can go draft → published directly)
+    if "status" in updates and rec.get("visibility") != "private":
         from relations import read_relation
         from rules import _validate_category_rules
 
@@ -38,10 +40,10 @@ def on_pre_update(data_dir, record_id, rec, updates):
 
 def on_delete_cascade(data_dir, record_id):
     from cascade import (
-        _cascade_soft_delete_interactions,
+        _cascade_hard_delete_interactions,
         _cascade_delete_relations,
     )
-    _cascade_soft_delete_interactions(data_dir, "post", record_id)
+    _cascade_hard_delete_interactions(data_dir, "post", record_id)
     _cascade_delete_relations(data_dir, "category_post", "post_id", record_id)
     _cascade_delete_relations(data_dir, "post_post", "source_post_id", record_id)
     _cascade_delete_relations(data_dir, "post_post", "target_post_id", record_id)

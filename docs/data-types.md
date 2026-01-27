@@ -22,6 +22,9 @@ type: enum                # 活动类型: competition | operation
 # === 可选字段 ===
 status: enum              # 活动状态: draft | published | closed
                           #   默认: draft
+                          #   状态机（严格单向）: draft → published → closed
+                          #   closed 为终态，不可逆转。
+                          #   如需修改已发布/已关闭的活动，应创建新版本（重置为 draft）。
 cover_image: string       # 封面图 URL
 start_date: datetime      # 活动开始时间
 end_date: datetime        # 活动结束时间
@@ -58,8 +61,12 @@ tags: list[string]        # 标签列表（如 ["找队友", "提案", "日记"]
 status: enum              # 帖子状态: draft | pending_review | published | rejected
                           #   draft          = 草稿（默认）
                           #   pending_review = 待审核（Rule 不允许直接发布时）
-                          #   published      = 已发布
-                          #   rejected       = 审核驳回
+                          #   published      = 已发布（终态，不可逆转）
+                          #   rejected       = 审核驳回（可修订后重置为 draft）
+                          #   状态机: draft → pending_review → published | rejected
+                          #           rejected → draft（修订重提）
+                          #           private 帖子可跳过 pending_review: draft → published
+                          #   如需修改已发布帖子，应创建新版本（重置为 draft）。
 visibility: enum          # 可见性: public | private（默认: public）
                           #   public  = 遵循 status 控制的标准可见性规则
                           #   private = 仅作者和 Admin 可见；
@@ -120,7 +127,9 @@ deleted_at: datetime      # 软删除时间（null 表示未删除）
 
 ## rule
 
-活动规则，由组织者创建。格式为 YAML frontmatter + Markdown body。固定 schema。
+活动规则，由组织者创建。格式为 YAML frontmatter + Markdown body。
+
+支持两种约束定义方式：**固定字段**（向后兼容的语法糖）和 **声明式 checks**（可扩展的条件-动作组合）。详见 [rule-engine.md](./rule-engine.md)。
 
 ```yaml
 ---
@@ -149,6 +158,20 @@ scoring_criteria:                 # 评分标准
     weight: number                #   权重（0-100）
     description: string           #   标准说明
 
+# === 可选字段（声明式规则引擎）===
+checks:                           # 声明式条件-动作列表
+  - trigger: string               #   操作点（如 create_relation(category_post)）
+    phase: enum                   #   执行阶段: pre | post
+    condition:                    #   条件定义（pre 阶段必填）
+      type: string                #     条件类型（time_window | count | exists | field_match |
+                                  #       resource_format | resource_required | unique_per_scope | aggregate）
+      params: object              #     条件参数（因类型而异）
+    on_fail: enum                 #   失败行为: deny | warn | flag（默认: deny）
+    action: string                #   动作类型（仅 post 阶段使用: flag_disqualified |
+                                  #     compute_ranking | award_certificate | notify）
+    action_params: object         #   动作参数
+    message: string               #   人类可读提示信息
+
 # === 自动生成字段 ===
 id: string
 created_by: user_id
@@ -159,6 +182,8 @@ deleted_at: datetime      # 软删除时间（null 表示未删除）
 
 <!-- Markdown body: 规则详细说明（面向参赛者展示） -->
 ```
+
+> **固定字段与 checks 的关系：** 固定字段（`submission_deadline`、`max_submissions` 等）是 checks 的语法糖，引擎内部自动展开为等价的 checks 条目。两种方式可混合使用，固定字段展开的 checks 排在用户自定义 checks 之前。详细展开规则见 [rule-engine.md](./rule-engine.md#固定字段展开规则)。
 
 ## user
 
@@ -279,6 +304,10 @@ value:
 | user | role | `participant`, `organizer`, `admin` |
 | group | visibility | `public`, `private` |
 | interaction | type | `like`, `comment`, `rating` |
+| rule.checks | phase | `pre`, `post` |
+| rule.checks | on_fail | `deny`, `warn`, `flag` |
+| rule.checks | condition.type | `time_window`, `count`, `exists`, `field_match`, `resource_format`, `resource_required`, `unique_per_scope`, `aggregate` |
+| rule.checks | action | `flag_disqualified`, `compute_ranking`, `award_certificate`, `notify` |
 
 | 关系 | 字段 | 可选值 |
 |-----|------|-------|

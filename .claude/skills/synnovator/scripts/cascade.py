@@ -2,16 +2,16 @@
 """
 Synnovator Data Engine - Cascade delete helpers.
 
-Uses lazy imports for relations to avoid circular dependencies.
+All deletes are hard deletes (file removal). Uses lazy imports to avoid circular dependencies.
 """
 
-from core import (
-    find_record, load_record, save_record, list_records, now_iso,
-)
+import os
+
+from core import find_record, list_records
 
 
-def _cascade_soft_delete_interactions(data_dir, target_type, target_id):
-    """Soft-delete all interactions linked to a target via target_interaction relations."""
+def _cascade_hard_delete_interactions(data_dir, target_type, target_id):
+    """Hard-delete all interactions linked to a target via target_interaction relations."""
     from relations import read_relation, delete_relation
 
     rels = read_relation(data_dir, "target_interaction", {
@@ -21,49 +21,48 @@ def _cascade_soft_delete_interactions(data_dir, target_type, target_id):
         iact_id = rel.get("interaction_id")
         fp = find_record(data_dir, "interaction", iact_id)
         if fp:
-            rec = load_record(fp)
-            if not rec.get("deleted_at"):
-                rec["deleted_at"] = now_iso()
-                body = rec.pop("_body", "")
-                save_record(fp, rec, body=body)
+            os.remove(fp)
     # Clean up the target_interaction relations
     delete_relation(data_dir, "target_interaction", {
         "target_type": target_type, "target_id": target_id
     })
 
 
-def _cascade_soft_delete_user_interactions(data_dir, user_id):
-    """Soft-delete all interactions by a user and update affected targets' cache stats."""
-    from relations import read_relation
+def _cascade_hard_delete_user_interactions(data_dir, user_id):
+    """Hard-delete all interactions by a user and update affected targets' cache stats."""
+    from relations import read_relation, delete_relation
     from cache import _update_cache_stats
 
     affected_targets = set()
     for rec in list_records(data_dir, "interaction"):
         if rec.get("created_by") == user_id:
-            fp = find_record(data_dir, "interaction", rec["id"])
+            iact_id = rec["id"]
+            # Find targets before deleting
+            rels = read_relation(data_dir, "target_interaction", {"interaction_id": iact_id})
+            for rel in rels:
+                affected_targets.add((rel.get("target_type"), rel.get("target_id")))
+            # Delete target_interaction relation
+            delete_relation(data_dir, "target_interaction", {"interaction_id": iact_id})
+            # Hard-delete the interaction file
+            fp = find_record(data_dir, "interaction", iact_id)
             if fp:
-                # Find this interaction's target via relation
-                rels = read_relation(data_dir, "target_interaction", {
-                    "interaction_id": rec["id"]
-                })
-                for rel in rels:
-                    affected_targets.add((rel.get("target_type"), rel.get("target_id")))
-                rec["deleted_at"] = now_iso()
-                body = rec.pop("_body", "")
-                save_record(fp, rec, body=body)
+                os.remove(fp)
     for target_type, target_id in affected_targets:
         _update_cache_stats(data_dir, target_type, target_id)
 
 
 def _cascade_delete_child_comments(data_dir, parent_id):
+    """Hard-delete all child comments recursively."""
+    from relations import delete_relation
+
     for rec in list_records(data_dir, "interaction"):
         if rec.get("parent_id") == parent_id:
-            fp = find_record(data_dir, "interaction", rec["id"])
+            child_id = rec["id"]
+            _cascade_delete_child_comments(data_dir, child_id)
+            delete_relation(data_dir, "target_interaction", {"interaction_id": child_id})
+            fp = find_record(data_dir, "interaction", child_id)
             if fp:
-                rec["deleted_at"] = now_iso()
-                body = rec.pop("_body", "")
-                save_record(fp, rec, body=body)
-                _cascade_delete_child_comments(data_dir, rec["id"])
+                os.remove(fp)
 
 
 def _cascade_delete_relations(data_dir, relation_type, key_field, key_value):

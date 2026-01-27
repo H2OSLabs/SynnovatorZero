@@ -8,13 +8,29 @@ import os
 from core import (
     RELATION_KEYS, ENUMS, CONTENT_TYPES,
     gen_id, now_iso, find_record, load_record, save_record,
-    validate_reference_exists,
+    validate_reference_exists, get_user_role,
 )
 from rules import _validate_category_rules
 from cache import _update_cache_stats
 
 
-def create_relation(data_dir, relation_type, data):
+def _require_authenticated(data_dir, current_user, operation, relation_type):
+    """Require an authenticated user for relation operations.
+
+    When current_user is None (internal/cascade calls), skip the check.
+    The calling content CRUD function has already verified permissions.
+    """
+    if current_user is None:
+        return None
+    role = get_user_role(data_dir, current_user)
+    if role is None:
+        raise ValueError(f"User '{current_user}' not found")
+    return role
+
+
+def create_relation(data_dir, relation_type, data, current_user=None):
+    _require_authenticated(data_dir, current_user, "create", relation_type)
+
     keys = RELATION_KEYS.get(relation_type)
     if not keys:
         raise ValueError(f"Unknown relation type: {relation_type}")
@@ -73,8 +89,7 @@ def create_relation(data_dir, relation_type, data):
                         if ex_fp:
                             ex_iact = load_record(ex_fp)
                             if (ex_iact.get("type") == "like" and
-                                    ex_iact.get("created_by") == user_id and
-                                    not ex_iact.get("deleted_at")):
+                                    ex_iact.get("created_by") == user_id):
                                 raise ValueError("User already liked this target")
 
     # Self-reference and relationship-specific validation
@@ -158,7 +173,9 @@ def read_relation(data_dir, relation_type, filters=None):
     return results
 
 
-def update_relation(data_dir, relation_type, filters, updates):
+def update_relation(data_dir, relation_type, filters, updates, current_user=None):
+    _require_authenticated(data_dir, current_user, "update", relation_type)
+
     folder = data_dir / "relations" / relation_type
     if not folder.exists():
         raise ValueError(f"No relations of type {relation_type}")
@@ -194,7 +211,9 @@ def update_relation(data_dir, relation_type, filters, updates):
     return updated
 
 
-def delete_relation(data_dir, relation_type, filters):
+def delete_relation(data_dir, relation_type, filters, current_user=None):
+    _require_authenticated(data_dir, current_user, "delete", relation_type)
+
     folder = data_dir / "relations" / relation_type
     if not folder.exists():
         return []

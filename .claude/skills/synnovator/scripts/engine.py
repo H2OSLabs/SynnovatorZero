@@ -36,12 +36,13 @@ import sys
 
 from core import (  # noqa: F401
     CONTENT_TYPES, RELATION_TYPES, BODY_TYPES, ENUMS,
-    REQUIRED_FIELDS, RELATION_KEYS,
+    REQUIRED_FIELDS, RELATION_KEYS, CREATE_PERMISSIONS,
     parse_frontmatter_md, serialize_frontmatter_md,
     get_data_dir, init_dirs, now_iso, gen_id,
     load_record, save_record, find_record, list_records,
     validate_enum, validate_required, validate_uniqueness,
-    validate_reference_exists,
+    validate_reference_exists, validate_state_transition,
+    get_user_role, check_permission,
 )
 from content import (  # noqa: F401
     create_content, read_content, update_content, delete_content,
@@ -68,8 +69,6 @@ def main():
         p.add_argument("--data", default=None, help="JSON data")
         p.add_argument("--body", default=None, help="Markdown body content")
         p.add_argument("--filters", default=None, help="JSON filters")
-        p.add_argument("--hard", action="store_true", help="Hard delete")
-        p.add_argument("--include-deleted", action="store_true", help="Include soft-deleted")
 
     args = parser.parse_args()
 
@@ -101,7 +100,7 @@ def main():
     try:
         if args.command == "create":
             if is_relation:
-                result = create_relation(data_dir, normalized_type, data)
+                result = create_relation(data_dir, normalized_type, data, current_user=args.user)
             else:
                 result = create_content(data_dir, normalized_type, data, current_user=args.user)
         elif args.command == "read":
@@ -112,22 +111,22 @@ def main():
                     data_dir, normalized_type,
                     record_id=args.id,
                     filters=filters or None,
-                    include_deleted=getattr(args, 'include_deleted', False)
+                    current_user=args.user,
                 )
         elif args.command == "update":
             if is_relation:
-                result = update_relation(data_dir, normalized_type, filters, data)
+                result = update_relation(data_dir, normalized_type, filters, data, current_user=args.user)
             else:
                 if not args.id:
                     raise ValueError("--id required for update")
-                result = update_content(data_dir, normalized_type, args.id, data)
+                result = update_content(data_dir, normalized_type, args.id, data, current_user=args.user)
         elif args.command == "delete":
             if is_relation:
-                result = delete_relation(data_dir, normalized_type, filters or data)
+                result = delete_relation(data_dir, normalized_type, filters or data, current_user=args.user)
             else:
                 if not args.id:
                     raise ValueError("--id required for delete")
-                result = delete_content(data_dir, normalized_type, args.id, hard=args.hard)
+                result = delete_content(data_dir, normalized_type, args.id, current_user=args.user)
 
         # Remove _body from JSON output for cleanliness, indicate presence
         def clean_output(obj):

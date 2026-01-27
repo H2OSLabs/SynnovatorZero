@@ -72,8 +72,8 @@
 
 | 操作 | 说明 | 权限 |
 |------|------|------|
-| `UPDATE category` | 更新活动信息或状态变更（draft→published→closed） | 创建者, Admin |
-| `UPDATE post` | 更新帖子内容、添加/修改 tag、状态变更、visibility 变更（private 帖子发布时跳过 pending_review 流程） | 作者（编辑他人帖子需 Rule 允许或副本机制） |
+| `UPDATE category` | 更新活动信息或状态变更（**严格单向**: draft→published→closed，不可逆转；如需修改已发布/已关闭活动，创建新版本） | 创建者, Admin |
+| `UPDATE post` | 更新帖子内容、添加/修改 tag、状态变更（**严格单向**: draft→pending_review→published\|rejected; rejected→draft 允许修订；published 为终态，如需修改创建新版本）、visibility 变更（private 帖子发布时跳过 pending_review 流程） | 作者（编辑他人帖子需 Rule 允许或副本机制） |
 | `UPDATE resource` | 更新资源元信息（display_name, description） | 上传者, Admin |
 | `UPDATE rule` | 更新规则配置 | 创建者, Admin |
 | `UPDATE user` | 更新用户信息 | 本人, Admin |
@@ -91,6 +91,35 @@
 | `UPDATE group:user` | 修改成员角色（如 member→admin）或审批状态（pending→accepted/rejected） |
 | `UPDATE category:category` | 修改赛段序号或关联类型 |
 
+### 状态机约束
+
+引擎层（`content.py`）在执行 UPDATE 操作时强制校验状态转换方向。不允许逆向变更。
+
+**category.status 状态机（严格单向）：**
+
+```
+draft → published → closed
+```
+
+- `closed` 是终态，不可变更。
+- 如需修改已发布或已关闭的活动，应创建新的 category 版本（重置为 `draft`）。
+
+**post.status 状态机：**
+
+```
+draft → pending_review → published
+                       → rejected → draft（修订后重提）
+draft → published（仅 visibility=private 帖子可跳过审核）
+```
+
+- `published` 是终态，不可变更。
+- `rejected` 帖子可修订后重置为 `draft`。
+- 如需修改已发布帖子，应创建新版本（重置为 `draft`）。
+
+**校验位置：** `content.py::update_content()` → `core.py::validate_state_transition()`
+
+---
+
 ### 组队审批操作规范
 
 | 场景 | 操作 | 权限 | status 变更 |
@@ -107,17 +136,30 @@
 
 ### 删除内容
 
-> **默认软删除：** 内容类型的 DELETE 操作默认执行**软删除**（设置 `deleted_at`），详见 [specs/data-integrity.md](../specs/data-integrity.md)。
+> **硬删除：** 内容类型的 DELETE 操作执行**硬删除**（物理移除文件），不设 `deleted_at` 字段。如需恢复，应创建新记录。
 
 | 操作 | 说明 | 权限 | 级联影响 |
 |------|------|------|----------|
-| `DELETE category` | 删除活动 | 创建者, Admin | 解除所有 category:rule、category:post、category:group、category:category 关系，删除关联 interaction |
-| `DELETE post` | 删除帖子 | 作者, Admin | 解除所有 post:post、post:resource、category:post 关系，删除关联 interaction |
-| `DELETE resource` | 删除文件资源 | 上传者, Admin | 解除所有 post:resource 关系，删除关联 interaction |
+| `DELETE category` | 删除活动 | 创建者, Admin | **级联删除** target:interaction 关系及关联 interaction 记录；解除所有 category:rule、category:post、category:group、category:category 关系 |
+| `DELETE post` | 删除帖子 | 作者, Admin | **级联删除** target:interaction 关系及关联 interaction 记录；解除所有 post:post、post:resource、category:post 关系 |
+| `DELETE resource` | 删除文件资源 | 上传者, Admin | **级联删除** target:interaction 关系及关联 interaction 记录；解除所有 post:resource 关系 |
 | `DELETE rule` | 删除规则 | 创建者, Admin | 解除所有 category:rule 关系 |
-| `DELETE user` | 删除/注销用户 | 本人, Admin | 解除所有 group:user、user:user 关系，删除所有该用户的 interaction |
+| `DELETE user` | 删除/注销用户 | 本人, Admin | 解除所有 group:user、user:user 关系；**级联删除**该用户创建的所有 interaction 及其 target:interaction 关系，并更新受影响目标的缓存计数 |
 | `DELETE group` | 删除分组 | Owner, Admin | 解除所有 group:user、category:group 关系 |
-| `DELETE interaction` | 删除交互记录 | 交互发起人, Admin | 若为父评论，级联删除所有子回复 |
+| `DELETE interaction` | 删除交互记录 | 交互发起人, Admin | **级联删除** target:interaction 关系；若为父评论，递归级联删除所有子回复及其 target:interaction 关系；更新受影响目标的缓存计数 |
+
+### target:interaction 级联删除策略
+
+> **统一策略：** 当内容类型（作为 interaction 目标）被删除时，所有指向该内容的 `target:interaction` 关系和对应的 `interaction` 记录一并**级联硬删除**。
+
+| 被删除的目标类型 | 级联行为 | 实现位置 |
+|-----------------|---------|---------|
+| `category` | 删除所有 `target_type=category` 的 target:interaction 关系 + 关联 interaction 记录 | `endpoints/category.py` → `cascade._cascade_hard_delete_interactions()` |
+| `post` | 删除所有 `target_type=post` 的 target:interaction 关系 + 关联 interaction 记录 | `endpoints/post.py` → `cascade._cascade_hard_delete_interactions()` |
+| `resource` | 删除所有 `target_type=resource` 的 target:interaction 关系 + 关联 interaction 记录 | `endpoints/resource.py` → `cascade._cascade_hard_delete_interactions()` |
+| `user`（非目标类型） | 删除该用户**创建的**所有 interaction + 对应 target:interaction 关系，并更新受影响目标的缓存计数 | `endpoints/user.py` → `cascade._cascade_hard_delete_user_interactions()` |
+
+> **注意：** `group` 和 `rule` 不是有效的 `target_interaction.target_type`（枚举值仅含 post、category、resource），因此删除 group/rule 时无需级联 interaction。
 
 ### 删除关系
 
@@ -134,3 +176,112 @@
 | `DELETE target:interaction` | 解除目标对象与交互记录的关联 |
 | `DELETE user:user` | 取消关注或解除拉黑 |
 | `DELETE category:category` | 解除活动间的赛段/赛道/前置条件关联 |
+
+---
+
+## 权限执行层（RBAC）
+
+> **决策：** 权限检查是**引擎层**的责任，在 CRUD 操作执行前由引擎自动校验。上层应用不需要重复校验。
+>
+> **实现状态：** 已实现（FIX-11, 简化版 RBAC）。角色门控 CREATE + 所有权门控 UPDATE/DELETE，admin 跳过所有检查。
+
+### 架构位置
+
+引擎已从 `engine.py` 拆分为多个模块。RBAC 权限检查的实现位置如下：
+
+| 模块 | 职责 | RBAC 切入点 |
+|------|------|------------|
+| `core.py` | 共享基础设施 | 新增 `check_permission(data_dir, current_user, operation, target_type, record=None)` 函数，封装权限矩阵查询逻辑 |
+| `content.py` | 内容 CRUD 分发 | 在 `create_content()`、`read_content()`、`update_content()`、`delete_content()` 入口处调用 `check_permission()` |
+| `relations.py` | 关系 CRUD | 在 `create_relation()`、`update_relation()`、`delete_relation()` 入口处调用 `check_permission()` |
+| `endpoints/*.py` | 类型特定钩子 | 不负责通用权限检查；仅处理业务规则级约束（如 Rule 校验） |
+
+### 权限矩阵
+
+权限矩阵定义在 `core.py` 中，基于 `user.role` 和操作类型进行门控：
+
+| 操作 | participant | organizer | admin |
+|------|------------|-----------|-------|
+| CREATE category | - | Y | Y |
+| CREATE post | Y | Y | Y |
+| CREATE resource | Y | Y | Y |
+| CREATE rule | - | Y | Y |
+| CREATE interaction | Y | Y | Y |
+| UPDATE (own content) | Y | Y | Y |
+| UPDATE (others' content) | - | - | Y |
+| DELETE (own content) | Y | Y | Y |
+| DELETE (others' content) | - | - | Y |
+
+### 所有权检查
+
+对 UPDATE 和 DELETE 操作，除权限矩阵外还需检查 `created_by` 所有权：
+- **本人操作：** `record.created_by == current_user` → 允许
+- **Admin 覆写：** `user.role == "admin"` → 允许
+- **其他情况：** 拒绝
+
+### current_user 参数传递
+
+当前 `current_user` 参数已在部分函数中存在（`create_content`、`read_content`），需扩展到：
+- `update_content(data_dir, content_type, record_id, updates, current_user=None)`
+- `delete_content(data_dir, content_type, record_id, current_user=None)`
+- `create_relation(data_dir, relation_type, data, current_user=None)`
+- `update_relation(data_dir, relation_type, filters, updates, current_user=None)`
+- `delete_relation(data_dir, relation_type, filters, current_user=None)`
+
+CLI 入口（`engine.py`）已接受 `--user` 参数，负责将其传递给所有 CRUD 调用。
+
+---
+
+## Rule Engine Hook Points
+
+> 规则引擎通过 Hook 机制在 CRUD 操作的关键节点自动执行约束校验和后续动作。详细规范见 [rule-engine.md](./rule-engine.md)。
+
+### Hook 执行阶段
+
+| 阶段 | 执行时机 | 失败行为 |
+|------|---------|---------|
+| **pre** | 操作执行前 | 根据 `on_fail` 决定：`deny`（拒绝操作）、`warn`（警告但允许）、`flag`（标记但允许） |
+| **post** | 操作执行成功后 | 不回滚已完成的操作，仅执行后续动作（标记、计算排名、颁奖等） |
+
+### Hook 操作点
+
+| 操作 | Phase | 说明 | 来源 |
+|------|-------|------|------|
+| `CREATE category:post` | pre | 提交帖子到活动前校验（时间窗口、提交次数、格式、团队人数、必要 resource） | 现有 + 扩展 |
+| `CREATE category:post` | post | 提交成功后触发动作（通知等） | 新增 |
+| `CREATE group:user` | pre | 成员加入团队前校验（团队人数上限） | 现有 |
+| `CREATE group:user` | post | 成员加入成功后触发动作 | 新增 |
+| `CREATE category:group` | pre | 团队报名活动前校验（前置条件、入场条件） | 现有 + 扩展 |
+| `CREATE category:group` | post | 团队报名成功后触发动作 | 新增 |
+| `UPDATE post.status` | pre | 帖子状态变更前校验（发布路径、审核流程） | 现有 |
+| `UPDATE post.status` | post | 帖子状态变更后触发动作 | 新增 |
+| `UPDATE category.status` | pre | 活动状态变更前校验 | **新增** |
+| `UPDATE category.status` | post | 活动关闭时触发终审校验、排名计算、奖励发放 | **新增** |
+
+### 校验链
+
+引擎根据操作类型，沿关系链定位关联的 Rule，然后执行匹配 trigger + phase 的所有 checks：
+
+```
+CREATE category_post:
+  post → category_post.category_id → category_rule → rule.checks[trigger=create_relation(category_post)]
+
+CREATE group_user:
+  group → category_group → category → category_rule → rule.checks[trigger=create_relation(group_user)]
+
+CREATE category_group:
+  category → category_category(prerequisite) → prerequisite 检查
+  category → category_rule → rule.checks[trigger=create_relation(category_group)]
+
+UPDATE post.status:
+  post → category_post → category → category_rule → rule.checks[trigger=update_content(post.status)]
+
+UPDATE category.status:
+  category → category_rule → rule.checks[trigger=update_content(category.status)]
+```
+
+### AND 逻辑
+
+- 同一操作点的所有 checks 必须全部通过（AND 逻辑）。
+- 一个活动可关联多条 Rule，所有 Rule 的 checks 合并后按 AND 逻辑执行。
+- 任一 check 的 `on_fail: deny` 失败即拒绝操作。

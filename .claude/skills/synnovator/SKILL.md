@@ -105,31 +105,82 @@ Use `_` or `:` separator: `category_rule` or `category:rule`.
 
 ## Rule Enforcement
 
-Rules linked to a category via `category_rule` are **automatically enforced** as pre-operation hooks. All rules must pass (AND logic); any single violation rejects the operation with a descriptive error.
+Rules linked to a category via `category_rule` are **automatically enforced** via a hook system. Rules support two definition styles: **fixed fields** (backward-compatible shorthand) and **declarative checks** (extensible condition-action pairs). All rules must pass (AND logic); any single violation rejects the operation.
 
 ### Hook Points
 
-| Operation | Check Type | Validations |
-|-----------|-----------|-------------|
-| `create category_post` | submission | Time window (`submission_start`/`submission_deadline`), max submissions per user, submission format, min team size |
-| `create group_user` | team_join | Max team size (checked against all categories the group is registered for) |
-| `create category_group` | prerequisite | All prerequisite categories must be closed before registration |
-| `update post` (status change) | publish | `allow_public` / `require_review` path enforcement |
+| Operation | Phase | Validations |
+|-----------|-------|-------------|
+| `create category_post` | pre | Time window, max submissions, submission format, min team size, resource requirements, entry prerequisites |
+| `create category_post` | post | Post-submission actions (notifications, etc.) |
+| `create group_user` | pre | Max team size (checked against all categories the group is registered for) |
+| `create group_user` | post | Post-join actions |
+| `create category_group` | pre | Prerequisite categories closed, entry conditions (team/proposal existence) |
+| `create category_group` | post | Post-registration actions |
+| `update post.status` | pre | `allow_public` / `require_review` path enforcement |
+| `update post.status` | post | Post-status-change actions |
+| `update category.status` | pre | Pre-closure validation |
+| `update category.status` | post | Closure actions: disqualification flagging, ranking computation, certificate awarding |
+
+### Phases
+
+- **pre**: Runs before the operation. `on_fail: deny` blocks the operation. `on_fail: warn` allows with warning. `on_fail: flag` marks but allows.
+- **post**: Runs after a successful operation. Never blocks. Used for compute/award/notify actions.
 
 ### Validation Chain
 
 ```
-category_post: category → category_rule → rule → validate against post/user context
-group_user:    group → category_group → category → category_rule → rule → validate team size
-post status:   post → category_post → category → category_rule → rule → validate publish path
+category_post:   category → category_rule → rule.checks[trigger=create_relation(category_post)]
+group_user:      group → category_group → category → category_rule → rule.checks[trigger=create_relation(group_user)]
+category_group:  category → category_category(prerequisite) + category_rule → rule.checks[trigger=create_relation(category_group)]
+post.status:     post → category_post → category → category_rule → rule.checks[trigger=update_content(post.status)]
+category.status: category → category_rule → rule.checks[trigger=update_content(category.status)]
 ```
+
+### Fixed Fields as Syntactic Sugar
+
+Fixed fields on Rule (`max_submissions`, `min_team_size`, `submission_format`, etc.) are automatically expanded into equivalent `checks` entries by the engine. User-defined `checks` are appended after expanded entries.
+
+| Fixed Field | Expands To |
+|------------|-----------|
+| `submission_start` / `submission_deadline` | `time_window` check on `create_relation(category_post)` pre |
+| `max_submissions` | `count` check on `create_relation(category_post)` pre |
+| `submission_format` | `resource_format` check on `create_relation(category_post)` pre |
+| `min_team_size` | `count` check on `create_relation(category_post)` pre |
+| `max_team_size` | `count` check on `create_relation(group_user)` pre |
+| `allow_public` / `require_review` | `field_match` check on `update_content(post.status)` pre |
+
+### Condition Types
+
+| Type | Description |
+|------|-------------|
+| `time_window` | Current time within [start, end] |
+| `count` | Entity/relation count satisfies op + value |
+| `exists` | Entity/relation exists (or must not exist) |
+| `field_match` | Entity field matches a predicate |
+| `resource_format` | Post resources match allowed formats |
+| `resource_required` | Post has minimum required resources |
+| `unique_per_scope` | Uniqueness within a scope |
+| `aggregate` | Aggregated value (count/sum/avg) meets threshold |
+
+### Action Types (post phase only)
+
+| Action | Description |
+|--------|-------------|
+| `flag_disqualified` | Mark entities that fail post-closure checks |
+| `compute_ranking` | Calculate rankings from `average_rating` |
+| `award_certificate` | Auto-create certificate resources and posts per rank range |
+| `notify` | Send notifications (reserved, not yet implemented) |
 
 ### Behavior
 
 - **No rules linked** → no constraints, operation proceeds normally.
 - **Rule field absent** → that constraint is skipped (e.g., no `submission_deadline` means no time limit).
-- **Violation** → operation rejected with error: `Rule '<name>': <reason>`.
+- **Violation (pre)** → operation rejected with error: `Rule '<name>': <reason>`.
+- **Violation (post)** → action executes (flag/compute/award), does not rollback.
 - Posts not linked to any category are unconstrained (rules only apply through `category_post`).
+
+See `docs/rule-engine.md` for the full specification.
 
 ## File Format
 
@@ -151,10 +202,42 @@ Markdown content here.
 
 ## Testing
 
-Run all user journey tests:
+Tests are organized as modular files under `scripts/tests/`, one per test-case spec in `specs/testcases/`.
+
 ```bash
-uv run python .claude/skills/synnovator/scripts/test_journeys.py
+# Run all tests
+uv run python .claude/skills/synnovator/scripts/tests/run_all.py
+
+# Run specific test files by number
+uv run python .claude/skills/synnovator/scripts/tests/run_all.py 3 4 11
+
+# Run a single test file directly
+uv run python .claude/skills/synnovator/scripts/tests/test_11_user_journeys.py
 ```
+
+### Test File Map
+
+| # | File | TC Prefix | Coverage |
+|---|------|-----------|----------|
+| 1 | `test_01_user.py` | TC-USER-* | User CRUD |
+| 2 | `test_02_category.py` | TC-CAT-* | Category CRUD |
+| 3 | `test_03_rule.py` | TC-RULE-* | Rule CRUD + enforcement |
+| 4 | `test_04_group.py` | TC-GRP-* | Group CRUD + approval |
+| 5 | `test_05_post.py` | TC-POST-* | Post CRUD + visibility |
+| 6 | `test_06_resource.py` | TC-RES-* | Resource CRUD |
+| 7 | `test_07_interaction.py` | TC-IACT-* | Interaction CRUD |
+| 8 | `test_08_relations.py` | TC-REL-* | All 9 relation types |
+| 9 | `test_09_cascade_delete.py` | TC-DEL-* | Cascade delete |
+| 10 | `test_10_permissions.py` | TC-PERM-* | Access control |
+| 11 | `test_11_user_journeys.py` | TC-JOUR-* | Integration (sequential) |
+| 12 | `test_12_resource_transfer.py` | TC-TRANSFER-* | Resource transfer |
+| 13 | `test_13_user_follow.py` | TC-FRIEND-* | Follow/block |
+| 14 | `test_14_category_association.py` | TC-STAGE/TRACK/PREREQ/CATREL-* | Category associations |
+| 15 | `test_15_entry_rules.py` | TC-ENTRY-* | Entry preconditions |
+| 16 | `test_16_closure_rules.py` | TC-CLOSE-* | Closure rules |
+| 17 | `test_17_rule_engine.py` | TC-ENGINE-* | Rule engine conditions/actions |
+
+Each file uses isolated data directories for parallel-safe execution. Shared fixtures are in `scripts/tests/base.py`.
 
 See [references/endpoints.md](references/endpoints.md) for detailed API examples.
 See [references/schema.md](references/schema.md) for complete field and enum definitions.
@@ -168,10 +251,11 @@ This skill's data model is the **implementation** of the canonical specs in `doc
 | `references/schema.md` | `docs/data-types.md`, `docs/relationships.md` | Field definitions, enums, required fields, relation schemas |
 | `scripts/engine.py` (CRUD logic) | `docs/crud-operations.md`, `specs/data-integrity.md` | CRUD operations, cascade strategies, uniqueness constraints |
 | `scripts/engine.py` (cache) | `specs/cache-strategy.md` | Cache stats triggers, read-only enforcement |
-| `scripts/test_journeys.py` | `docs/user-journeys.md` | User journey steps, data operation sequences |
+| `scripts/tests/test_11_user_journeys.py` | `docs/user-journeys.md` | User journey steps, data operation sequences |
+| `scripts/tests/test_*.py` | `specs/testcases/*.md` | Test cases aligned 1:1 with spec numbering |
 
 **Checklist when updating the skill:**
-1. Update skill code (`engine.py`) and tests (`test_journeys.py`)
+1. Update skill code (`engine.py`) and tests (`scripts/tests/test_*.py`)
 2. Update skill reference docs (`references/schema.md`, `references/endpoints.md`)
 3. Update canonical docs (`docs/data-types.md`, `docs/relationships.md`, `docs/crud-operations.md`, `docs/user-journeys.md`)
-4. Run `uv run python .claude/skills/synnovator/scripts/test_journeys.py` to verify
+4. Run `uv run python .claude/skills/synnovator/scripts/tests/run_all.py` to verify

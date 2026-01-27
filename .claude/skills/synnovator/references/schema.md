@@ -42,21 +42,39 @@
 | id, created_by, created_at, updated_at, deleted_at | — | auto | — | Standard fields |
 
 ### rule
+
+Supports two constraint styles: **fixed fields** (syntactic sugar) and **declarative checks** (extensible). See `docs/rule-engine.md`.
+
 | Field | Type | Required | Default | Notes |
 |-------|------|----------|---------|-------|
 | name | string | yes | — | Rule name |
 | description | string | yes | — | Rule description |
-| allow_public | boolean | no | false | Allow public publishing |
-| require_review | boolean | no | false | Require review |
+| allow_public | boolean | no | false | Allow public publishing (sugar → `checks`) |
+| require_review | boolean | no | false | Require review (sugar → `checks`) |
 | reviewers | list[user_id] | no | — | Reviewer list |
-| submission_start | datetime | no | — | Submission start |
-| submission_deadline | datetime | no | — | Submission deadline |
-| submission_format | list[string] | no | — | Allowed formats |
-| max_submissions | integer | no | — | Max submissions per user/team |
-| min_team_size | integer | no | — | Min team size |
-| max_team_size | integer | no | — | Max team size |
+| submission_start | datetime | no | — | Submission start (sugar → `time_window` check) |
+| submission_deadline | datetime | no | — | Submission deadline (sugar → `time_window` check) |
+| submission_format | list[string] | no | — | Allowed formats (sugar → `resource_format` check) |
+| max_submissions | integer | no | — | Max submissions per user/team (sugar → `count` check) |
+| min_team_size | integer | no | — | Min team size (sugar → `count` check) |
+| max_team_size | integer | no | — | Max team size (sugar → `count` check) |
 | scoring_criteria | list[object] | no | — | `[{name, weight, description}]` |
+| checks | list[object] | no | — | Declarative condition-action rules (see below) |
 | id, created_by, created_at, updated_at, deleted_at | — | auto | — | Standard fields |
+
+**checks element schema:**
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| trigger | string | yes | Hook point: `create_relation(category_post)`, `create_relation(group_user)`, `create_relation(category_group)`, `update_content(post.status)`, `update_content(category.status)` |
+| phase | enum | yes | `pre` \| `post` |
+| condition | object | pre: yes | `{ type: string, params: object }` — see condition types |
+| on_fail | enum | no | `deny` (default) \| `warn` \| `flag` |
+| action | string | no | Post-phase action: `flag_disqualified` \| `compute_ranking` \| `award_certificate` \| `notify` |
+| action_params | object | no | Action-specific parameters |
+| message | string | yes | Human-readable message |
+
+**Condition types:** `time_window`, `count`, `exists`, `field_match`, `resource_format`, `resource_required`, `unique_per_scope`, `aggregate`
 
 ### user
 | Field | Type | Required | Default | Notes |
