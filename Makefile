@@ -1,4 +1,4 @@
-.PHONY: start stop install dev backend frontend clean
+.PHONY: start stop install dev backend frontend clean resetdb
 
 # Default target
 start: install
@@ -23,6 +23,11 @@ stop:
 	@echo "Stopping services..."
 	@pkill -f "uvicorn app.main:app" || true
 	@pkill -f "next dev" || true
+
+resetdb:
+	@echo "Resetting database (schema changed)..."
+	@rm -f data/synnovator.db
+	@echo "Done. Run 'make start' to recreate tables."
 
 clean:
 	@rm -rf app/__pycache__ data/*.db
