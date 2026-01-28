@@ -1,70 +1,98 @@
-# Task Plan: Synnovator 前端-后端集成
+# Task Plan: 前端事件对接 + E2E 浏览器测试
 
 ## Goal
-将前端 Next.js 组件与 FastAPI 后端 API 集成，创建 API mapping 文档，修改前端组件实现真实数据调用，更新测试，启动服务，并使用浏览器自动化进行 E2E 验证。
+将前端 10 个页面组件的 UI 交互（导航、点赞、评论、关注等）绑定到后端 API 端点，然后通过浏览器自动化 E2E 测试验证核心用户旅程。
 
 ## Current Phase
 ALL PHASES COMPLETE
 
 ## Phases
 
-### Phase 1-8: 后端开发 (已完成)
-- [x] 8 层依赖图逐层开发, 293 tests passing
+### Phase 1-13: 已完成
+- [x] 后端开发 (293 tests), API mapping, 组件 API 数据获取, 测试, E2E 截图
 - **Status:** complete
 
-### Phase 9: Task 1 — Frontend-API Mapping 文档
-- [x] 分析前端 10 个页面组件与后端 73 个 API 端点的映射关系
-- [x] 生成 docs/frontend-api-mapping.md
+### Phase 14: 前端事件对接 — 导航 + 写操作
+按组件逐个对接，优先级：高频交互 > 低频操作
+
+**14a. 全局导航 (所有页面共用 header/sidebar)**
+- [x] Header: 品牌名 → `/` (所有 10 个页面)
+- [x] Sidebar: 探索→`/` / 星球→`/categories/1` / 营地→`/team` (所有页面)
+- [x] Card 点击 → 跳转到详情页
+
+**14b. PostDetail — 点赞/评论 (Journey 13: 社区互动)**
+- [x] 点赞按钮: onClick → POST /api/posts/{id}/like, 更新 like_count
+- [x] 评论输入框 + 提交: POST /api/posts/{id}/comments
+- [x] 评论列表: GET /api/posts/{id}/comments 渲染
+
+**14c. ProposalDetail — 点赞/评论/Tab 切换**
+- [x] 同 PostDetail 点赞/评论逻辑
+- [x] Tab 切换: 提案详情/团队信息/评论区/版本历史
+- [x] 返回提案广场导航
+
+**14d. CategoryDetail — Tab 切换 + 数据加载**
+- [x] Tab 切换: 详情/排榜/讨论区/成员/赛程安排/关联活动
+
+**14e. UserProfile — 关注/取关 (Journey: 好友)**
+- [x] 关注按钮: POST /api/users/{id}/follow
+- [x] 取关按钮: DELETE /api/users/{id}/follow
+- [x] Tab 切换: 帖子/提案/收藏
+
+**14f. Team — 成员管理**
+- [x] Tab 切换: 提案/帖子/收藏
+- [x] Sidebar 导航
+
+**14g. FollowingList — Tab 过滤**
+- [x] 已有 activeTab 切换 (全部好友/我关注的)
+- [x] Sidebar 导航
+
+**14h. Home/PostList/ProposalList — 卡片点击导航**
+- [x] 帖子卡片 → /posts/{id}
+- [x] 提案卡片 → /proposals/{id}
+- [x] 队伍卡片 → /team (使用 fallback)
+- [x] "查看更多" → /proposals
+- [x] "找队友" → /posts
+
 - **Status:** complete
 
-### Phase 10: Task 2 — 修改前端组件调用后端 API
-- [x] 创建 frontend/lib/api-client.ts (统一 API 调用封装)
-- [x] 创建 frontend/lib/types.ts (TypeScript 类型定义)
-- [x] 修改 10 个页面组件: 从静态数据改为 API 调用
-- [x] 更新 6 个 app/ page 文件: 传递 URL params 给组件
-- [x] 验证: npx next build 通过 (10/10 routes, 0 errors)
+### Phase 15: 更新前端测试
+- [x] 添加 next/navigation mock 到 jest.setup.ts
+- [x] 验证: npx jest 通过 (64 tests, 11 suites, 0 failures)
 - **Status:** complete
 
-### Phase 11: Task 3 — 修改前端测试
-- [x] 创建 frontend/__mocks__/api-client.ts (全局 API mock)
-- [x] 更新 jest.config.ts moduleNameMapper
-- [x] 更新 8 个失败测试文件: async/waitFor 模式
-- [x] 修复 assets 测试 (tab 名称从 AI/Agent 改为 全部/图片/文件)
-- [x] 修复 following-list 测试 (使用 regex 匹配 "全部好友 (0)")
-- [x] 验证: 11 suites passed, 64 tests passed
+### Phase 16: E2E 浏览器测试
+- [x] 确保后端和前端服务运行
+- [x] 用 API 创建种子数据 (3 users, 1 category, 3 posts, 1 group, 1 follow)
+- [x] agent-browser 测试核心旅程 (10/10 PASS):
+  - TC-JOUR-002: 匿名浏览 — 首页显示种子数据内容卡片 ✅
+  - TC-JOUR-013: 社区互动 — 帖子点赞 (红心+计数) + 评论 (保存+渲染) ✅
+  - TC-JOUR-013: 提案互动 — 提案点赞 + Tab切换评论区 + 评论 ✅
+  - TC-FRIEND-001: 关注用户 — 按钮"关注"→"取消关注" ✅
+  - 导航: 品牌名→首页, 侧边栏→活动详情, 卡片→帖子详情 ✅
+- [x] 记录结果到 plans/e2e_test.md (含 10 张截图)
 - **Status:** complete
 
-### Phase 12: Task 4 — 启动前后端服务
-- [x] make start 启动后端 (port 8000) + 前端 (port 3000)
-- [x] 验证: 后端 /docs (200), /api/users/ (200, paginated)
-- [x] 验证: 前端 / (200, HTML 21KB)
-- **Status:** complete
-
-### Phase 13: Task 5 — 浏览器 E2E 测试
-- [x] 使用 agent-browser 访问全部 10 个前端路由 + 后端 Swagger UI
-- [x] 全部 11 个页面截图验证: 100% 通过, 0 JS 错误
-- [x] 记录结果到 plans/e2e_test.md
-- **Status:** complete
+### Bug Fixes During E2E (Phase 16)
+- [x] api-client.ts: addComment/addRating 缺少 type 字段 → 添加 `type: "comment"` / `type: "rating"`
+- [x] post-detail.tsx + proposal-detail.tsx: addComment 参数双重嵌套 value → 改为 `{ text: commentText }`
+- [x] 创建 /profile/[id] 动态路由支持查看其他用户资料
 
 ## Decisions Made
 | Decision | Rationale |
 |----------|-----------|
-| 使用 fetch API 而非 axios | Next.js 14 原生支持 fetch, 减少依赖 |
-| API client 统一封装 | 集中管理 base URL, headers, 错误处理 |
-| 保留 SSR 数据获取 | 利用 Next.js server components 优势 |
-| 测试中 mock fetch | 隔离前端测试与后端依赖 |
+| 不新建"发帖"页面 | 当前原型无创建表单 UI, 通过 API 创建种子数据 |
+| 使用 useRouter 导航 | Next.js App Router 标准做法 |
+| 点赞/评论/关注用 API client 函数 | 已在 api-client.ts 中定义好 |
+| useRouter mock 在 jest.setup.ts | 所有 10 个页面都用了 useRouter, 全局 mock 最简洁 |
+| 顺序而非并行执行子 agent | 上一次 5 个并行子 agent 导致上下文耗尽，改为顺序执行 |
+| addComment 添加 type 字段 | InteractionCreate schema 要求 type 字段 |
+| 创建 /profile/[id] 动态路由 | 支持查看非当前用户的资料页 |
 
 ## Errors Encountered
 | Error | Attempt | Resolution |
 |-------|---------|------------|
-| lucide-react module not found | 1 | npm install lucide-react (was already in package.json, needed reinstall) |
-| Property 'categoryId' missing in type | 1 | Updated 6 app/ page files to pass URL params as props |
-| 37 tests failing after API integration | 1 | Created __mocks__/api-client.ts + jest.config moduleNameMapper |
-| Assets test: wrong tab names | 1 | Changed assertions from "AI/Agent, 证书, 文件" to "全部, 图片, 文件" |
-| Following-list test: exact text match | 1 | Changed getByText("全部好友") to getByText(/全部好友/) regex |
-
-## Notes
-- 前端当前状态: 10 个页面组件全部使用硬编码静态数据
-- 后端 API base URL: http://localhost:8000/api
-- CORS 已配置允许 http://localhost:3000
-- 认证方式: X-User-Id header (临时方案)
+| Jest tests fail: useRouter not a function | 1 | 添加 next/navigation mock 到 jest.setup.ts |
+| 5 并行子 agent 上下文耗尽 | 1 | 改为顺序单 agent 执行，减少上下文消耗 |
+| addComment 422: missing type field | 1 | api-client.ts 添加 type: "comment" |
+| addComment 422: double-nested value | 1 | 组件调用改为 { text: commentText } |
+| Follow self 422 | 1 | 测试改为访问 /profile/3 (非当前用户) |
