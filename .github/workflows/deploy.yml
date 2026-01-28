@@ -2,7 +2,7 @@ name: Build & Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [feat/deploy]
     paths-ignore:
       - '*.md'
       - 'docs/**'
