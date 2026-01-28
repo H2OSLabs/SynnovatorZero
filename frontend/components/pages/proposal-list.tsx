@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   Menu, Search, Zap, Bell, User,
   Compass, Globe, Mountain, SlidersHorizontal,
@@ -55,6 +56,7 @@ const avatarColors = [
 ]
 
 export function ProposalList() {
+  const router = useRouter()
   const [proposals, setProposals] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -81,7 +83,7 @@ export function ProposalList() {
       <header className="flex items-center justify-between h-14 px-6 border-b border-[var(--nf-dark-bg)] bg-[var(--nf-near-black)]">
         <div className="flex items-center gap-4">
           <Menu className="w-6 h-6 text-[var(--nf-white)]" />
-          <span className="font-heading text-[20px] font-bold text-[var(--nf-lime)]">协创者</span>
+          <span onClick={() => router.push("/")} className="cursor-pointer font-heading text-[20px] font-bold text-[var(--nf-lime)]">协创者</span>
         </div>
         <div className="flex items-center gap-2 w-[400px] bg-[var(--nf-card-bg)] border border-[var(--nf-dark-bg)] rounded-[21px] px-5 py-2.5">
           <Search className="w-4 h-4 text-[var(--nf-muted)]" />
@@ -104,9 +106,9 @@ export function ProposalList() {
       <div className="flex flex-1 overflow-hidden">
         {/* Compact Sidebar */}
         <aside className="w-[60px] bg-[var(--nf-near-black)] flex flex-col items-center gap-3 pt-4 px-3">
-          <Compass className="w-6 h-6 text-[var(--nf-muted)]" />
-          <Globe className="w-6 h-6 text-[var(--nf-muted)]" />
-          <Mountain className="w-6 h-6 text-[var(--nf-muted)]" />
+          <Compass onClick={() => router.push("/")} className="cursor-pointer w-6 h-6 text-[var(--nf-muted)]" />
+          <Globe onClick={() => router.push("/categories/1")} className="cursor-pointer w-6 h-6 text-[var(--nf-muted)]" />
+          <Mountain onClick={() => router.push("/team")} className="cursor-pointer w-6 h-6 text-[var(--nf-muted)]" />
         </aside>
 
         {/* Main Content */}
@@ -149,7 +151,7 @@ export function ProposalList() {
               proposals.map((prop, i) => {
                 const colorSet = avatarColors[i % avatarColors.length]
                 return (
-                  <Card key={prop.id} className="bg-[var(--nf-card-bg)] border-none rounded-[12px] overflow-hidden">
+                  <Card key={prop.id} onClick={() => router.push(`/proposals/${prop.id}`)} className="cursor-pointer bg-[var(--nf-card-bg)] border-none rounded-[12px] overflow-hidden">
                     <div className="w-full h-[180px] bg-[var(--nf-dark-bg)]" />
                     <div className="p-3 flex flex-col gap-2">
                       <p className="text-[13px] font-medium text-[var(--nf-white)]">{prop.title}</p>
@@ -165,7 +167,7 @@ export function ProposalList() {
               })
             ) : (
               fallbackProposals.map((prop, i) => (
-                <Card key={i} className="bg-[var(--nf-card-bg)] border-none rounded-[12px] overflow-hidden">
+                <Card key={i} onClick={() => router.push("/proposals")} className="cursor-pointer bg-[var(--nf-card-bg)] border-none rounded-[12px] overflow-hidden">
                   <div
                     className="w-full h-[180px] bg-cover bg-center"
                     style={{ backgroundImage: `url(${prop.image})` }}

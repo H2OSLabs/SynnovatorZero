@@ -103,7 +103,7 @@ export async function listComments(postId: number, skip = 0, limit = 20): Promis
 export async function addComment(postId: number, value: Record<string, unknown>, userId: number, parentId?: number): Promise<Interaction> {
   return request(`/posts/${postId}/comments`, {
     method: "POST",
-    body: JSON.stringify({ value, parent_id: parentId }),
+    body: JSON.stringify({ type: "comment", value, parent_id: parentId }),
     headers: authHeaders(userId),
   });
 }
@@ -115,7 +115,7 @@ export async function listRatings(postId: number, skip = 0, limit = 20): Promise
 export async function addRating(postId: number, value: Record<string, unknown>, userId: number): Promise<Interaction> {
   return request(`/posts/${postId}/ratings`, {
     method: "POST",
-    body: JSON.stringify({ value }),
+    body: JSON.stringify({ type: "rating", value }),
     headers: authHeaders(userId),
   });
 }

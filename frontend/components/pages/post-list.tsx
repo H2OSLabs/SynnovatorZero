@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   Menu, Search, Plus, Bell, Compass, Globe, Tent,
   Flame, Lightbulb,
@@ -27,6 +28,7 @@ const fallbackIdeaCards = [
 ]
 
 export function PostList() {
+  const router = useRouter()
   const [teams, setTeams] = useState<Group[]>([])
   const [ideas, setIdeas] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
@@ -55,7 +57,7 @@ export function PostList() {
       <header className="flex items-center h-14 px-6 bg-[var(--nf-card-bg)]">
         <div className="flex items-center gap-4">
           <Menu className="w-6 h-6 text-[var(--nf-white)]" />
-          <span className="font-heading text-[18px] font-bold text-[var(--nf-lime)]">协创者</span>
+          <span onClick={() => router.push("/")} className="cursor-pointer font-heading text-[18px] font-bold text-[var(--nf-lime)]">协创者</span>
         </div>
         <div className="flex items-center gap-2 w-[400px] mx-auto bg-[var(--nf-dark-bg)] rounded-[21px] px-4 py-2">
           <Search className="w-4 h-4 text-[var(--nf-muted)]" />
@@ -74,15 +76,15 @@ export function PostList() {
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar */}
         <aside className="w-[180px] bg-[var(--nf-card-bg)] p-4 px-3 flex flex-col gap-1">
-          <div className="flex items-center gap-2.5 px-4 py-2.5 bg-[var(--nf-lime)] rounded-lg">
+          <div onClick={() => router.push("/")} className="cursor-pointer flex items-center gap-2.5 px-4 py-2.5 bg-[var(--nf-lime)] rounded-lg">
             <Compass className="w-5 h-5 text-[var(--nf-surface)]" />
             <span className="text-sm font-semibold text-[var(--nf-surface)]">探索</span>
           </div>
-          <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg">
+          <div onClick={() => router.push("/categories/1")} className="cursor-pointer flex items-center gap-2.5 px-4 py-2.5 rounded-lg">
             <Globe className="w-5 h-5 text-[var(--nf-muted)]" />
             <span className="text-sm text-[var(--nf-muted)]">星球</span>
           </div>
-          <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg">
+          <div onClick={() => router.push("/team")} className="cursor-pointer flex items-center gap-2.5 px-4 py-2.5 rounded-lg">
             <Tent className="w-5 h-5 text-[var(--nf-muted)]" />
             <span className="text-sm text-[var(--nf-muted)]">营地</span>
           </div>
@@ -124,7 +126,7 @@ export function PostList() {
                     }))
                   : fallbackTeamCards
                 ).map((card, i) => (
-                  <Card key={`team-${i}`} className="w-[240px] bg-[var(--nf-card-bg)] border-none rounded-[12px] overflow-hidden">
+                  <Card key={`team-${i}`} onClick={() => router.push("/team")} className="cursor-pointer w-[240px] bg-[var(--nf-card-bg)] border-none rounded-[12px] overflow-hidden">
                     <div
                       className="w-full h-[160px] bg-cover bg-center"
                       style={{ backgroundImage: `url(${card.image})` }}
@@ -156,12 +158,13 @@ export function PostList() {
               <div className="grid grid-cols-4 gap-4">
                 {(ideas.length > 0
                   ? ideas.map((post) => ({
+                      id: post.id,
                       name: post.title,
                       image: "https://images.unsplash.com/photo-1518463732211-f1e67dfcec66?w=400&h=300&fit=crop",
                     }))
                   : fallbackIdeaCards
                 ).map((card, i) => (
-                  <Card key={`idea-${i}`} className="w-[240px] bg-[var(--nf-card-bg)] border-none rounded-[12px] overflow-hidden">
+                  <Card key={`idea-${i}`} onClick={() => router.push("id" in card && card.id ? `/posts/${card.id}` : "/posts")} className="cursor-pointer w-[240px] bg-[var(--nf-card-bg)] border-none rounded-[12px] overflow-hidden">
                     <div
                       className="w-full h-[160px] bg-cover bg-center"
                       style={{ backgroundImage: `url(${card.image})` }}

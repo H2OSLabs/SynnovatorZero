@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   Menu, Search, Zap, Bell, User, Plus,
   Compass, Globe, Mountain, Users, Wallet,
@@ -20,9 +21,11 @@ const assets = [
 ]
 
 export function Team({ groupId }: { groupId: number }) {
+  const router = useRouter()
   const [group, setGroup] = useState<Group | null>(null)
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState("proposals")
 
   useEffect(() => {
     let cancelled = false
@@ -60,7 +63,10 @@ export function Team({ groupId }: { groupId: number }) {
       <header className="flex items-center justify-between h-14 px-6 border-b border-[var(--nf-dark-bg)] bg-[var(--nf-near-black)]">
         <div className="flex items-center gap-4">
           <Menu className="w-6 h-6 text-[var(--nf-white)]" />
-          <span className="font-heading text-[20px] font-bold text-[var(--nf-white)]">
+          <span
+            className="font-heading text-[20px] font-bold text-[var(--nf-white)] cursor-pointer"
+            onClick={() => router.push("/")}
+          >
             协创者
           </span>
         </div>
@@ -86,9 +92,27 @@ export function Team({ groupId }: { groupId: number }) {
       <div className="flex flex-1 overflow-hidden">
         {/* Compact Sidebar - Icon Only */}
         <aside className="w-[60px] bg-[var(--nf-near-black)] flex flex-col items-center pt-4 gap-4">
-          <Compass className="w-5 h-5 text-[var(--nf-muted)]" />
-          <Globe className="w-5 h-5 text-[var(--nf-muted)]" />
-          <Mountain className="w-5 h-5 text-[var(--nf-muted)]" />
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer hover:bg-[var(--nf-dark-bg)]"
+            onClick={() => router.push("/")}
+            title="探索"
+          >
+            <Compass className="w-5 h-5 text-[var(--nf-muted)]" />
+          </div>
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer hover:bg-[var(--nf-dark-bg)]"
+            onClick={() => router.push("/categories/1")}
+            title="星球"
+          >
+            <Globe className="w-5 h-5 text-[var(--nf-muted)]" />
+          </div>
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer hover:bg-[var(--nf-dark-bg)]"
+            onClick={() => router.push("/team")}
+            title="营地"
+          >
+            <Mountain className="w-5 h-5 text-[var(--nf-muted)]" />
+          </div>
         </aside>
 
         {/* Main Content */}
@@ -117,7 +141,10 @@ export function Team({ groupId }: { groupId: number }) {
             </div>
 
             {/* Manage Button */}
-            <Button className="bg-[var(--nf-dark-bg)] text-[var(--nf-light-gray)] hover:bg-[var(--nf-dark-bg)]/80 rounded-lg px-4 py-2">
+            <Button
+              className="bg-[var(--nf-dark-bg)] text-[var(--nf-light-gray)] hover:bg-[var(--nf-dark-bg)]/80 rounded-lg px-4 py-2"
+              onClick={() => console.log("管理面板")}
+            >
               <span className="text-sm">管理面板</span>
             </Button>
           </div>
@@ -186,22 +213,25 @@ export function Team({ groupId }: { groupId: number }) {
           </section>
 
           {/* Tabs */}
-          <Tabs defaultValue="proposals" className="flex flex-col gap-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col gap-4">
             <TabsList className="w-full justify-start bg-transparent border-b border-[var(--nf-dark-bg)] rounded-none h-auto p-0 gap-0">
               <TabsTrigger
                 value="proposals"
+                onClick={() => setActiveTab("proposals")}
                 className="rounded-none border-b-2 border-transparent px-4 py-2.5 text-[15px] font-medium text-[var(--nf-muted)] data-[state=active]:text-[var(--nf-lime)] data-[state=active]:border-[var(--nf-lime)] data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none"
               >
                 提案
               </TabsTrigger>
               <TabsTrigger
                 value="posts"
+                onClick={() => setActiveTab("posts")}
                 className="rounded-none border-b-2 border-transparent px-4 py-2.5 text-[15px] font-medium text-[var(--nf-muted)] data-[state=active]:text-[var(--nf-lime)] data-[state=active]:border-[var(--nf-lime)] data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none"
               >
                 帖子
               </TabsTrigger>
               <TabsTrigger
                 value="favorites"
+                onClick={() => setActiveTab("favorites")}
                 className="rounded-none border-b-2 border-transparent px-4 py-2.5 text-[15px] font-medium text-[var(--nf-muted)] data-[state=active]:text-[var(--nf-lime)] data-[state=active]:border-[var(--nf-lime)] data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none"
               >
                 收藏

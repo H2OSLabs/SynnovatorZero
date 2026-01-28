@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   Menu, Search, Zap, Bell, User,
   Compass, Globe, Mountain,
@@ -15,6 +16,8 @@ import type { Category, CategoryPost, CategoryGroup } from "@/lib/types"
 const detailTabs = ["详情", "排榜", "讨论区", "成员", "赛程安排", "关联活动"]
 
 export function CategoryDetail({ categoryId }: { categoryId: number }) {
+  const router = useRouter()
+  const [activeTab, setActiveTab] = useState("详情")
   const [category, setCategory] = useState<Category | null>(null)
   const [posts, setPosts] = useState<CategoryPost[]>([])
   const [groups, setGroups] = useState<CategoryGroup[]>([])
@@ -58,7 +61,7 @@ export function CategoryDetail({ categoryId }: { categoryId: number }) {
       <header className="flex items-center justify-between h-14 px-6 border-b border-[var(--nf-dark-bg)] bg-[var(--nf-near-black)]">
         <div className="flex items-center gap-4">
           <Menu className="w-6 h-6 text-[var(--nf-white)]" />
-          <span className="font-heading text-[20px] font-bold text-[var(--nf-lime)]">协创者</span>
+          <span className="font-heading text-[20px] font-bold text-[var(--nf-lime)] cursor-pointer" onClick={() => router.push("/")}>协创者</span>
         </div>
         <div className="flex items-center gap-2 w-[400px] bg-[var(--nf-card-bg)] border border-[var(--nf-dark-bg)] rounded-[21px] px-5 py-2.5">
           <Search className="w-4 h-4 text-[var(--nf-muted)]" />
@@ -81,15 +84,15 @@ export function CategoryDetail({ categoryId }: { categoryId: number }) {
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar */}
         <aside className="w-[140px] bg-[var(--nf-near-black)] p-4 px-3 flex flex-col gap-1">
-          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-full">
+          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-full cursor-pointer" onClick={() => router.push("/")}>
             <Compass className="w-[18px] h-[18px] text-[var(--nf-muted)]" />
             <span className="text-sm text-[var(--nf-muted)]">探索</span>
           </div>
-          <div className="flex items-center gap-2.5 px-3 py-2.5 bg-[var(--nf-lime)] rounded-full">
+          <div className="flex items-center gap-2.5 px-3 py-2.5 bg-[var(--nf-lime)] rounded-full cursor-pointer" onClick={() => router.push("/categories/1")}>
             <Globe className="w-[18px] h-[18px] text-[var(--nf-surface)]" />
             <span className="text-sm font-semibold text-[var(--nf-surface)]">星球</span>
           </div>
-          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-full">
+          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-full cursor-pointer" onClick={() => router.push("/team")}>
             <Mountain className="w-[18px] h-[18px] text-[var(--nf-muted)]" />
             <span className="text-sm text-[var(--nf-muted)]">营地</span>
           </div>
@@ -123,7 +126,7 @@ export function CategoryDetail({ categoryId }: { categoryId: number }) {
           </div>
 
           {/* Detail Tabs */}
-          <Tabs defaultValue="详情" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="w-full justify-start bg-transparent border-b border-[var(--nf-dark-bg)] rounded-none h-auto p-0 gap-0">
               {detailTabs.map((tab) => (
                 <TabsTrigger

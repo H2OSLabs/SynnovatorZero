@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   Menu, Search, Zap, Bell, ChevronDown, ChevronLeft,
   Compass, Globe, Tent, User, Eye, Heart, MessageSquare,
@@ -12,7 +13,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
-import { getPost, getUser, listComments, listRatings } from "@/lib/api-client"
+import { Input } from "@/components/ui/input"
+import { getPost, getUser, listComments, listRatings, likePost, unlikePost, addComment } from "@/lib/api-client"
 import type { Post, User as UserType, Interaction } from "@/lib/types"
 
 const detailTabs = ["提案详情", "团队信息", "评论区", "版本历史"]
@@ -73,9 +75,14 @@ const milestones = [
 ]
 
 export function ProposalDetail({ postId }: { postId: number }) {
+  const router = useRouter()
   const [post, setPost] = useState<Post | null>(null)
   const [author, setAuthor] = useState<UserType | null>(null)
+  const [activeTab, setActiveTab] = useState("提案详情")
+  const [liked, setLiked] = useState(false)
+  const [likeCount, setLikeCount] = useState(0)
   const [comments, setComments] = useState<Interaction[]>([])
+  const [commentText, setCommentText] = useState("")
   const [ratings, setRatings] = useState<Interaction[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -97,6 +104,7 @@ export function ProposalDetail({ postId }: { postId: number }) {
         setAuthor(fetchedUser)
         setComments(fetchedComments.items)
         setRatings(fetchedRatings.items)
+        setLikeCount(fetchedPost.like_count || 0)
       } catch (err) {
         console.error("Failed to fetch proposal detail:", err)
       } finally {
@@ -107,8 +115,35 @@ export function ProposalDetail({ postId }: { postId: number }) {
     return () => { cancelled = true }
   }, [postId])
 
+  async function handleLike() {
+    try {
+      if (liked) {
+        await unlikePost(postId, 1)
+        setLikeCount((p) => Math.max(0, p - 1))
+      } else {
+        await likePost(postId, 1)
+        setLikeCount((p) => p + 1)
+      }
+      setLiked(!liked)
+    } catch (err) {
+      console.error("Like failed:", err)
+    }
+  }
+
+  async function handleComment() {
+    if (!commentText.trim()) return
+    try {
+      await addComment(postId, { text: commentText }, 1)
+      setCommentText("")
+      const updated = await listComments(postId, 0, 20)
+      setComments(updated.items || [])
+    } catch (err) {
+      console.error("Comment failed:", err)
+    }
+  }
+
   const displayName = author?.display_name || author?.username || "LIGHTNING鲸"
-  const likeCount = post?.like_count ?? 234
+  const displayLikeCount = likeCount || (post?.like_count ?? 234)
   const commentCount = post?.comment_count ?? 56
   const postTitle = post?.title || "善意百宝——一人人需要扫有轮AI直辅学习平台"
   const postBody = post?.body || "善意百宝是一个面向所有人的AI辅助学习平台，旨在通过人工智能技术降低教育门槛，让每个人都能获得个性化、高质量的学习体验。平台融合了自然语言处理、知识图谱和自适应学习算法，为用户提供从基础知识到专业技能的全方位学习支持。我们相信，教育的未来在于让AI成为每个人的专属导师，帮助学习者以最适合自己的方式和节奏掌握知识。"
@@ -128,7 +163,7 @@ export function ProposalDetail({ postId }: { postId: number }) {
       <header className="flex items-center justify-between h-14 px-6 border-b border-[var(--nf-dark-bg)] bg-[var(--nf-near-black)]">
         <div className="flex items-center gap-4">
           <Menu className="w-6 h-6 text-[var(--nf-white)]" />
-          <span className="font-heading text-[20px] font-bold text-[var(--nf-lime)]">协创者</span>
+          <span className="font-heading text-[20px] font-bold text-[var(--nf-lime)] cursor-pointer" onClick={() => router.push("/")}>协创者</span>
         </div>
         <div className="flex items-center gap-2 w-[420px] bg-[var(--nf-card-bg)] border border-[var(--nf-dark-bg)] rounded-[21px] px-5 py-2.5">
           <Search className="w-4 h-4 text-[var(--nf-muted)]" />
@@ -150,13 +185,13 @@ export function ProposalDetail({ postId }: { postId: number }) {
       <div className="flex flex-1 overflow-hidden">
         {/* Compact Sidebar */}
         <aside className="w-14 bg-[var(--nf-near-black)] border-r border-[var(--nf-dark-bg)] flex flex-col items-center gap-2 pt-4">
-          <div className="w-10 h-10 rounded-lg bg-[var(--nf-lime)] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-[var(--nf-lime)] flex items-center justify-center cursor-pointer" onClick={() => router.push("/")}>
             <Compass className="w-5 h-5 text-[var(--nf-surface)]" />
           </div>
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer" onClick={() => router.push("/categories/1")}>
             <Globe className="w-5 h-5 text-[var(--nf-muted)]" />
           </div>
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer" onClick={() => router.push("/team")}>
             <Tent className="w-5 h-5 text-[var(--nf-muted)]" />
           </div>
         </aside>
@@ -166,7 +201,7 @@ export function ProposalDetail({ postId }: { postId: number }) {
           {/* Left Column */}
           <div className="flex-1 flex flex-col gap-5">
             {/* Back Link */}
-            <div className="flex items-center gap-1 cursor-pointer group">
+            <div className="flex items-center gap-1 cursor-pointer group" onClick={() => router.push("/proposals")}>
               <ChevronLeft className="w-4 h-4 text-[var(--nf-muted)] group-hover:text-[var(--nf-lime)]" />
               <span className="text-[13px] text-[var(--nf-muted)] group-hover:text-[var(--nf-lime)]">返回提案广场</span>
             </div>
@@ -194,9 +229,9 @@ export function ProposalDetail({ postId }: { postId: number }) {
                     <Eye className="w-4 h-4 text-[var(--nf-muted)]" />
                     <span className="font-mono text-[13px] text-[var(--nf-muted)]">1.2k</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <Heart className="w-4 h-4 text-[var(--nf-muted)]" />
-                    <span className="font-mono text-[13px] text-[var(--nf-muted)]">{likeCount}</span>
+                  <div className="flex items-center gap-1.5 cursor-pointer" onClick={handleLike}>
+                    <Heart className={`w-4 h-4 ${liked ? "text-[var(--nf-pink)] fill-[var(--nf-pink)]" : "text-[var(--nf-muted)]"}`} />
+                    <span className="font-mono text-[13px] text-[var(--nf-muted)]">{displayLikeCount}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <MessageSquare className="w-4 h-4 text-[var(--nf-muted)]" />
@@ -219,7 +254,7 @@ export function ProposalDetail({ postId }: { postId: number }) {
             </div>
 
             {/* Tabs */}
-            <Tabs defaultValue="提案详情" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="w-full justify-start bg-transparent border-b border-[var(--nf-dark-bg)] rounded-none h-auto p-0 gap-0">
                 {detailTabs.map((tab) => (
                   <TabsTrigger
@@ -320,8 +355,47 @@ export function ProposalDetail({ postId }: { postId: number }) {
               </TabsContent>
 
               <TabsContent value="评论区" className="mt-5">
-                <Card className="bg-[var(--nf-card-bg)] border-none rounded-[12px] p-6">
-                  <p className="text-sm text-[var(--nf-muted)]">评论区内容区域</p>
+                <Card className="bg-[var(--nf-card-bg)] border-none rounded-[12px] p-6 flex flex-col gap-4">
+                  {/* Comment Input */}
+                  <div className="flex items-center gap-3">
+                    <Input
+                      placeholder="写下你的评论..."
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleComment() }}
+                      className="flex-1 bg-[var(--nf-dark-bg)] border-[var(--nf-dark-bg)] text-[var(--nf-white)] placeholder:text-[var(--nf-muted)] rounded-lg"
+                    />
+                    <Button
+                      onClick={handleComment}
+                      className="bg-[var(--nf-lime)] text-[var(--nf-surface)] hover:bg-[var(--nf-lime)]/90 rounded-lg px-4"
+                    >
+                      发送
+                    </Button>
+                  </div>
+                  {/* Comment List */}
+                  {comments.length === 0 ? (
+                    <p className="text-sm text-[var(--nf-muted)] text-center py-4">暂无评论，来发表第一条评论吧</p>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      {comments.map((comment) => (
+                        <div key={comment.id} className="flex items-start gap-3 p-3 rounded-lg bg-[var(--nf-dark-bg)]">
+                          <Avatar className="w-8 h-8 bg-[var(--nf-blue)] shrink-0">
+                            <AvatarFallback className="bg-[var(--nf-blue)] text-xs font-semibold text-[var(--nf-white)]">
+                              {String(comment.created_by).charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col gap-1 min-w-0">
+                            <span className="text-[13px] font-medium text-[var(--nf-white)]">用户 {comment.created_by}</span>
+                            <p className="text-[13px] text-[var(--nf-light-gray)]">
+                              {typeof comment.value === "object" && comment.value !== null
+                                ? (comment.value as Record<string, unknown>).text as string
+                                : String(comment.value)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </Card>
               </TabsContent>
 

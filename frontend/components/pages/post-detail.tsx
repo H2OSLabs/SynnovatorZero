@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   Menu, Search, Plus, Bell, ChevronDown, ChevronLeft, ChevronRight,
   Compass, Globe, Tent, User, Heart, Share2, Ellipsis,
@@ -8,10 +9,11 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { getPost, getUser, listComments } from "@/lib/api-client"
+import { getPost, getUser, listComments, likePost, unlikePost, addComment } from "@/lib/api-client"
 import type { Post, User as UserType, Interaction } from "@/lib/types"
 
 const fallbackTags = ["通知公告", "我的学校/公...", "通知公告", "活动信息..."]
@@ -32,10 +34,14 @@ const hotItems = [
 const weekDays = ["日", "一", "二", "三", "四", "五", "六"]
 
 export function PostDetail({ postId }: { postId: number }) {
+  const router = useRouter()
   const [post, setPost] = useState<Post | null>(null)
   const [author, setAuthor] = useState<UserType | null>(null)
   const [comments, setComments] = useState<Interaction[]>([])
   const [loading, setLoading] = useState(true)
+  const [liked, setLiked] = useState(false)
+  const [likeCount, setLikeCount] = useState(0)
+  const [commentText, setCommentText] = useState("")
 
   useEffect(() => {
     let cancelled = false
@@ -45,10 +51,11 @@ export function PostDetail({ postId }: { postId: number }) {
         const fetchedPost = await getPost(postId)
         if (cancelled) return
         setPost(fetchedPost)
+        setLikeCount(fetchedPost.like_count || 0)
 
         const [fetchedUser, fetchedComments] = await Promise.all([
           getUser(fetchedPost.created_by),
-          listComments(postId),
+          listComments(postId, 0, 20),
         ])
         if (cancelled) return
         setAuthor(fetchedUser)
@@ -63,9 +70,36 @@ export function PostDetail({ postId }: { postId: number }) {
     return () => { cancelled = true }
   }, [postId])
 
+  async function handleLike() {
+    try {
+      if (liked) {
+        await unlikePost(postId, 1)
+        setLikeCount(prev => Math.max(0, prev - 1))
+      } else {
+        await likePost(postId, 1)
+        setLikeCount(prev => prev + 1)
+      }
+      setLiked(!liked)
+    } catch (err) {
+      console.error("Like failed:", err)
+    }
+  }
+
+  async function handleComment() {
+    if (!commentText.trim()) return
+    try {
+      await addComment(postId, { text: commentText }, 1)
+      setCommentText("")
+      // Refresh comments
+      const updated = await listComments(postId, 0, 20)
+      setComments(updated.items || [])
+    } catch (err) {
+      console.error("Comment failed:", err)
+    }
+  }
+
   const tags = post?.tags ?? fallbackTags
   const displayName = author?.display_name || author?.username || "LIGHTNING鲸"
-  const likeCount = post?.like_count ?? 234
   const commentCount = post?.comment_count ?? 0
 
   if (loading) {
@@ -81,7 +115,7 @@ export function PostDetail({ postId }: { postId: number }) {
       <header className="flex items-center justify-between h-14 px-6 border-b border-[var(--nf-dark-bg)] bg-[var(--nf-near-black)]">
         <div className="flex items-center gap-4">
           <Menu className="w-6 h-6 text-[var(--nf-white)]" />
-          <span className="font-heading text-[20px] font-bold text-[var(--nf-lime)]">协创者</span>
+          <span className="font-heading text-[20px] font-bold text-[var(--nf-lime)] cursor-pointer" onClick={() => router.push("/")}>协创者</span>
         </div>
         <div className="flex items-center gap-2 w-[420px] bg-[var(--nf-card-bg)] border border-[var(--nf-dark-bg)] rounded-[21px] px-5 py-2.5">
           <Search className="w-4 h-4 text-[var(--nf-muted)]" />
@@ -103,13 +137,13 @@ export function PostDetail({ postId }: { postId: number }) {
       <div className="flex flex-1 overflow-hidden">
         {/* Compact Sidebar */}
         <aside className="w-14 bg-[var(--nf-near-black)] border-r border-[var(--nf-dark-bg)] flex flex-col items-center gap-2 pt-4">
-          <div className="w-10 h-10 rounded-lg bg-[var(--nf-lime)] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-[var(--nf-lime)] flex items-center justify-center cursor-pointer" onClick={() => router.push("/")}>
             <Compass className="w-5 h-5 text-[var(--nf-surface)]" />
           </div>
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer" onClick={() => router.push("/categories/1")}>
             <Globe className="w-5 h-5 text-[var(--nf-muted)]" />
           </div>
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer" onClick={() => router.push("/team")}>
             <Tent className="w-5 h-5 text-[var(--nf-muted)]" />
           </div>
         </aside>
@@ -128,9 +162,9 @@ export function PostDetail({ postId }: { postId: number }) {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1">
-                  <Heart className="w-4 h-4 text-[var(--nf-muted)]" />
-                  <span className="font-mono text-[13px] text-[var(--nf-muted)]">{likeCount}</span>
+                <div className="flex items-center gap-1 cursor-pointer" onClick={handleLike}>
+                  <Heart className={`w-4 h-4 ${liked ? "text-red-500 fill-red-500" : "text-[var(--nf-muted)]"}`} />
+                  <span className={`font-mono text-[13px] ${liked ? "text-red-500" : "text-[var(--nf-muted)]"}`}>{likeCount}</span>
                 </div>
                 <Share2 className="w-4 h-4 text-[var(--nf-muted)]" />
                 <Ellipsis className="w-4 h-4 text-[var(--nf-muted)]" />
@@ -185,6 +219,27 @@ export function PostDetail({ postId }: { postId: number }) {
                 </p>
                 <p className="text-[13px] text-[var(--nf-muted)]">Divesee — 创意灵感参考</p>
               </Card>
+            </div>
+
+            {/* Comment Section */}
+            <div className="flex flex-col gap-3 mt-4">
+              <h3 className="text-[16px] font-semibold text-[var(--nf-white)]">评论 ({comments.length})</h3>
+              <div className="flex gap-2">
+                <Input
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleComment()}
+                  placeholder="写下你的评论..."
+                  className="flex-1 bg-[var(--nf-card-bg)] border-[var(--nf-dark-bg)] text-[var(--nf-white)] placeholder:text-[var(--nf-muted)]"
+                />
+                <Button onClick={handleComment} className="bg-[var(--nf-lime)] text-[var(--nf-surface)]">发送</Button>
+              </div>
+              {comments.map((c) => (
+                <div key={c.id} className="bg-[var(--nf-card-bg)] rounded-lg p-3">
+                  <span className="text-[12px] text-[var(--nf-muted)]">用户 {c.created_by}</span>
+                  <p className="text-[13px] text-[var(--nf-white)] mt-1">{typeof c.value === "object" && c.value ? (c.value as any).text : String(c.value)}</p>
+                </div>
+              ))}
             </div>
           </div>
 

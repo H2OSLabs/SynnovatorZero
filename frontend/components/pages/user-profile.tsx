@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   Menu, Search, Zap, Bell, User,
   Compass, Globe, Mountain,
@@ -11,7 +12,7 @@ import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { getUser, getFollowing, getFollowers } from "@/lib/api-client"
+import { getUser, getFollowing, getFollowers, followUser, unfollowUser } from "@/lib/api-client"
 import type { User as UserType, UserUserRelation } from "@/lib/types"
 
 const assets = [
@@ -23,10 +24,26 @@ const assets = [
 const profileTabs = ["帖子", "提案", "收藏", "更多"]
 
 export function UserProfile({ userId }: { userId: number }) {
+  const router = useRouter()
   const [user, setUser] = useState<UserType | null>(null)
   const [following, setFollowing] = useState<UserUserRelation[]>([])
   const [followers, setFollowers] = useState<UserUserRelation[]>([])
   const [loading, setLoading] = useState(true)
+  const [isFollowing, setIsFollowing] = useState(false)
+  const [activeTab, setActiveTab] = useState("帖子")
+
+  async function handleFollow() {
+    try {
+      if (isFollowing) {
+        await unfollowUser(userId, 1)
+      } else {
+        await followUser(userId, 1)
+      }
+      setIsFollowing(!isFollowing)
+    } catch (err) {
+      console.error("Follow action failed:", err)
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -72,7 +89,10 @@ export function UserProfile({ userId }: { userId: number }) {
       <header className="flex items-center justify-between h-14 px-6 border-b border-[var(--nf-dark-bg)] bg-[var(--nf-near-black)]">
         <div className="flex items-center gap-4">
           <Menu className="w-6 h-6 text-[var(--nf-white)]" />
-          <span className="font-heading text-[20px] font-bold text-[var(--nf-lime)]">
+          <span
+            className="font-heading text-[20px] font-bold text-[var(--nf-lime)] cursor-pointer"
+            onClick={() => router.push("/")}
+          >
             协创者
           </span>
         </div>
@@ -98,13 +118,25 @@ export function UserProfile({ userId }: { userId: number }) {
       <div className="flex flex-1 overflow-hidden">
         {/* Compact Sidebar */}
         <aside className="w-[60px] bg-[var(--nf-near-black)] border-r border-[var(--nf-dark-bg)] flex flex-col items-center gap-2 pt-4">
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer hover:bg-[var(--nf-dark-bg)]"
+            onClick={() => router.push("/")}
+            title="探索"
+          >
             <Compass className="w-5 h-5 text-[var(--nf-muted)]" />
           </div>
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer hover:bg-[var(--nf-dark-bg)]"
+            onClick={() => router.push("/categories/1")}
+            title="星球"
+          >
             <Globe className="w-5 h-5 text-[var(--nf-muted)]" />
           </div>
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer hover:bg-[var(--nf-dark-bg)]"
+            onClick={() => router.push("/team")}
+            title="营地"
+          >
             <Mountain className="w-5 h-5 text-[var(--nf-muted)]" />
           </div>
         </aside>
@@ -138,8 +170,15 @@ export function UserProfile({ userId }: { userId: number }) {
             {/* Actions */}
             <div className="flex items-center gap-3 shrink-0">
               <span className="text-[12px] text-[var(--nf-muted)]">粉丝相互</span>
-              <Button className="bg-[var(--nf-lime)] text-[var(--nf-surface)] hover:bg-[var(--nf-lime)]/90 rounded-lg px-5 py-2 text-sm font-medium">
-                关注
+              <Button
+                className={
+                  isFollowing
+                    ? "bg-[var(--nf-dark-bg)] text-[var(--nf-light-gray)] hover:bg-[var(--nf-dark-bg)]/80 rounded-lg px-5 py-2 text-sm font-medium"
+                    : "bg-[var(--nf-lime)] text-[var(--nf-surface)] hover:bg-[var(--nf-lime)]/90 rounded-lg px-5 py-2 text-sm font-medium"
+                }
+                onClick={handleFollow}
+              >
+                {isFollowing ? "取消关注" : "关注"}
               </Button>
               <Button className="bg-[var(--nf-dark-bg)] text-[var(--nf-light-gray)] hover:bg-[var(--nf-dark-bg)]/80 rounded-lg px-3 py-2">
                 <Share2 className="w-4 h-4" />
@@ -181,12 +220,13 @@ export function UserProfile({ userId }: { userId: number }) {
           </div>
 
           {/* Tabs */}
-          <Tabs defaultValue="帖子" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="w-full justify-start bg-transparent border-b border-[var(--nf-dark-bg)] rounded-none h-auto p-0 gap-0">
               {profileTabs.map((tab) => (
                 <TabsTrigger
                   key={tab}
                   value={tab}
+                  onClick={() => setActiveTab(tab)}
                   className="rounded-none border-b-2 border-transparent px-4 py-2.5 text-sm text-[var(--nf-muted)] data-[state=active]:text-[var(--nf-lime)] data-[state=active]:border-[var(--nf-lime)] data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none"
                 >
                   {tab}

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   Menu, Search, Zap, Bell, User, ChevronDown,
   Compass, Globe, Mountain, Wallet,
@@ -60,6 +61,7 @@ const fallbackAssetCards = [
 ]
 
 export function Assets() {
+  const router = useRouter()
   const [resources, setResources] = useState<Resource[]>([])
   const [loading, setLoading] = useState(true)
   const [activeFilter, setActiveFilter] = useState<string>("all")
@@ -100,7 +102,10 @@ export function Assets() {
       <header className="flex items-center justify-between h-14 px-6 border-b border-[var(--nf-dark-bg)] bg-[var(--nf-near-black)]">
         <div className="flex items-center gap-4">
           <Menu className="w-6 h-6 text-[var(--nf-white)]" />
-          <span className="font-heading text-[20px] font-bold text-[var(--nf-lime)]">
+          <span
+            className="font-heading text-[20px] font-bold text-[var(--nf-lime)] cursor-pointer"
+            onClick={() => router.push("/")}
+          >
             协创者
           </span>
         </div>
@@ -127,15 +132,24 @@ export function Assets() {
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar */}
         <aside className="w-[140px] bg-[var(--nf-near-black)] p-4 px-3 flex flex-col gap-1">
-          <div className="flex items-center gap-2.5 px-3 py-2.5 bg-[var(--nf-lime)] rounded-full">
+          <div
+            className="flex items-center gap-2.5 px-3 py-2.5 bg-[var(--nf-lime)] rounded-full cursor-pointer"
+            onClick={() => router.push("/")}
+          >
             <Compass className="w-[18px] h-[18px] text-[var(--nf-surface)]" />
             <span className="text-sm font-semibold text-[var(--nf-surface)]">探索</span>
           </div>
-          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-full">
+          <div
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-full cursor-pointer hover:bg-[var(--nf-card-bg)]"
+            onClick={() => router.push("/categories/1")}
+          >
             <Globe className="w-[18px] h-[18px] text-[var(--nf-muted)]" />
             <span className="text-sm text-[var(--nf-muted)]">星球</span>
           </div>
-          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-full">
+          <div
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-full cursor-pointer hover:bg-[var(--nf-card-bg)]"
+            onClick={() => router.push("/team")}
+          >
             <Mountain className="w-[18px] h-[18px] text-[var(--nf-muted)]" />
             <span className="text-sm text-[var(--nf-muted)]">营地</span>
           </div>
