@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import {
   Menu, Search, Zap, Bell, ChevronDown, ChevronLeft,
   Compass, Globe, Tent, User, Eye, Heart, MessageSquare,
@@ -11,6 +12,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
+import { getPost, getUser, listComments, listRatings } from "@/lib/api-client"
+import type { Post, User as UserType, Interaction } from "@/lib/types"
 
 const detailTabs = ["提案详情", "团队信息", "评论区", "版本历史"]
 
@@ -69,7 +72,56 @@ const milestones = [
   { date: "2025/12", label: "正式版发布", status: "upcoming" },
 ]
 
-export function ProposalDetail() {
+export function ProposalDetail({ postId }: { postId: number }) {
+  const [post, setPost] = useState<Post | null>(null)
+  const [author, setAuthor] = useState<UserType | null>(null)
+  const [comments, setComments] = useState<Interaction[]>([])
+  const [ratings, setRatings] = useState<Interaction[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    async function fetchData() {
+      setLoading(true)
+      try {
+        const fetchedPost = await getPost(postId)
+        if (cancelled) return
+        setPost(fetchedPost)
+
+        const [fetchedUser, fetchedComments, fetchedRatings] = await Promise.all([
+          getUser(fetchedPost.created_by),
+          listComments(postId),
+          listRatings(postId),
+        ])
+        if (cancelled) return
+        setAuthor(fetchedUser)
+        setComments(fetchedComments.items)
+        setRatings(fetchedRatings.items)
+      } catch (err) {
+        console.error("Failed to fetch proposal detail:", err)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchData()
+    return () => { cancelled = true }
+  }, [postId])
+
+  const displayName = author?.display_name || author?.username || "LIGHTNING鲸"
+  const likeCount = post?.like_count ?? 234
+  const commentCount = post?.comment_count ?? 56
+  const postTitle = post?.title || "善意百宝——一人人需要扫有轮AI直辅学习平台"
+  const postBody = post?.body || "善意百宝是一个面向所有人的AI辅助学习平台，旨在通过人工智能技术降低教育门槛，让每个人都能获得个性化、高质量的学习体验。平台融合了自然语言处理、知识图谱和自适应学习算法，为用户提供从基础知识到专业技能的全方位学习支持。我们相信，教育的未来在于让AI成为每个人的专属导师，帮助学习者以最适合自己的方式和节奏掌握知识。"
+  const postTags = post?.tags ?? ["AI教育", "创新项目"]
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[var(--nf-near-black)]">
+        <span className="text-[var(--nf-muted)] text-lg">加载中...</span>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col h-screen bg-[var(--nf-near-black)]">
       {/* Header */}
@@ -125,7 +177,7 @@ export function ProposalDetail() {
             {/* Title Section */}
             <div className="flex flex-col gap-3">
               <h1 className="font-heading text-[22px] font-bold text-[var(--nf-white)] leading-tight">
-                善意百宝——一人人需要扫有轮AI直辅学习平台
+                {postTitle}
               </h1>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -133,8 +185,8 @@ export function ProposalDetail() {
                     <AvatarFallback className="bg-[var(--nf-lime)] text-sm font-semibold text-[var(--nf-surface)]">L</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col">
-                    <span className="text-[14px] font-semibold text-[var(--nf-white)]">LIGHTNING鲸</span>
-                    <span className="text-[12px] text-[var(--nf-muted)]">Alibaba team</span>
+                    <span className="text-[14px] font-semibold text-[var(--nf-white)]">{displayName}</span>
+                    <span className="text-[12px] text-[var(--nf-muted)]">{author?.bio || "Alibaba team"}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
@@ -144,11 +196,11 @@ export function ProposalDetail() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Heart className="w-4 h-4 text-[var(--nf-muted)]" />
-                    <span className="font-mono text-[13px] text-[var(--nf-muted)]">234</span>
+                    <span className="font-mono text-[13px] text-[var(--nf-muted)]">{likeCount}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <MessageSquare className="w-4 h-4 text-[var(--nf-muted)]" />
-                    <span className="font-mono text-[13px] text-[var(--nf-muted)]">56</span>
+                    <span className="font-mono text-[13px] text-[var(--nf-muted)]">{commentCount}</span>
                   </div>
                 </div>
               </div>
@@ -156,15 +208,14 @@ export function ProposalDetail() {
 
             {/* Tags */}
             <div className="flex items-center gap-2">
-              <Badge className="bg-[var(--nf-lime)] text-[var(--nf-surface)] hover:bg-[var(--nf-lime)]/90 rounded-sm px-2.5 py-1 text-[12px] font-medium">
-                AI教育
-              </Badge>
-              <Badge className="bg-[var(--nf-lime)] text-[var(--nf-surface)] hover:bg-[var(--nf-lime)]/90 rounded-sm px-2.5 py-1 text-[12px] font-medium">
-                创新项目
-              </Badge>
-              <Badge className="bg-[var(--nf-orange)] text-[var(--nf-white)] hover:bg-[var(--nf-orange)]/90 rounded-sm px-2.5 py-1 text-[12px] font-medium">
-                协创大赛
-              </Badge>
+              {postTags.map((tag, i) => (
+                <Badge
+                  key={i}
+                  className={`${i < postTags.length - 1 ? "bg-[var(--nf-lime)] text-[var(--nf-surface)] hover:bg-[var(--nf-lime)]/90" : "bg-[var(--nf-orange)] text-[var(--nf-white)] hover:bg-[var(--nf-orange)]/90"} rounded-sm px-2.5 py-1 text-[12px] font-medium`}
+                >
+                  {tag}
+                </Badge>
+              ))}
             </div>
 
             {/* Tabs */}
@@ -190,7 +241,7 @@ export function ProposalDetail() {
                   </div>
                   <Card className="bg-[var(--nf-card-bg)] border-none rounded-[12px] p-5">
                     <p className="text-sm text-[var(--nf-light-gray)] leading-relaxed">
-                      善意百宝是一个面向所有人的AI辅助学习平台，旨在通过人工智能技术降低教育门槛，让每个人都能获得个性化、高质量的学习体验。平台融合了自然语言处理、知识图谱和自适应学习算法，为用户提供从基础知识到专业技能的全方位学习支持。我们相信，教育的未来在于让AI成为每个人的专属导师，帮助学习者以最适合自己的方式和节奏掌握知识。
+                      {postBody}
                     </p>
                   </Card>
                 </div>

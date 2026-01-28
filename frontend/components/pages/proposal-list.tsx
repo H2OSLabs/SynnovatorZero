@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import {
   Menu, Search, Zap, Bell, User,
   Compass, Globe, Mountain, SlidersHorizontal,
@@ -8,10 +9,12 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { listPosts } from "@/lib/api-client"
+import type { Post } from "@/lib/types"
 
 const tabs = ["帖子", "提案广场", "资源", "团队", "活动", "找队友", "找点子", "官方"]
 
-const proposals = [
+const fallbackProposals = [
   {
     title: "善意百宝——一人人需要扫有轮AI直辅学习平台",
     author: "LIGHTNING鲸",
@@ -42,7 +45,36 @@ const proposals = [
   },
 ]
 
+// Rotating avatar colors for API-fetched proposals
+const avatarColors = [
+  { bg: "bg-[var(--nf-lime)]", text: "text-[var(--nf-surface)]" },
+  { bg: "bg-[var(--nf-blue)]", text: "text-[var(--nf-white)]" },
+  { bg: "bg-[var(--nf-orange)]", text: "text-[var(--nf-white)]" },
+  { bg: "bg-[var(--nf-pink)]", text: "text-[var(--nf-white)]" },
+  { bg: "bg-[var(--nf-cyan)]", text: "text-[var(--nf-surface)]" },
+]
+
 export function ProposalList() {
+  const [proposals, setProposals] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    async function fetchData() {
+      setLoading(true)
+      try {
+        const result = await listPosts({ limit: 10, type: "for_category", status: "published" })
+        if (cancelled) return
+        setProposals(result.items)
+      } catch (err) {
+        console.error("Failed to fetch proposals:", err)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchData()
+    return () => { cancelled = true }
+  }, [])
   return (
     <div className="flex flex-col h-screen bg-[var(--nf-near-black)]">
       {/* Header */}
@@ -109,23 +141,47 @@ export function ProposalList() {
 
           {/* Proposal Grid */}
           <div className="grid grid-cols-2 gap-4">
-            {proposals.map((prop, i) => (
-              <Card key={i} className="bg-[var(--nf-card-bg)] border-none rounded-[12px] overflow-hidden">
-                <div
-                  className="w-full h-[180px] bg-cover bg-center"
-                  style={{ backgroundImage: `url(${prop.image})` }}
-                />
-                <div className="p-3 flex flex-col gap-2">
-                  <p className="text-[13px] font-medium text-[var(--nf-white)]">{prop.title}</p>
-                  <div className="flex items-center gap-2">
-                    <div className={`w-5 h-5 rounded-full ${prop.avatarColor} flex items-center justify-center`}>
-                      <User className="w-2.5 h-2.5" />
+            {loading ? (
+              <div className="col-span-2 flex items-center justify-center py-12">
+                <span className="text-[var(--nf-muted)] text-lg">加载中...</span>
+              </div>
+            ) : proposals.length > 0 ? (
+              proposals.map((prop, i) => {
+                const colorSet = avatarColors[i % avatarColors.length]
+                return (
+                  <Card key={prop.id} className="bg-[var(--nf-card-bg)] border-none rounded-[12px] overflow-hidden">
+                    <div className="w-full h-[180px] bg-[var(--nf-dark-bg)]" />
+                    <div className="p-3 flex flex-col gap-2">
+                      <p className="text-[13px] font-medium text-[var(--nf-white)]">{prop.title}</p>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-5 h-5 rounded-full ${colorSet.bg} flex items-center justify-center`}>
+                          <User className="w-2.5 h-2.5" />
+                        </div>
+                        <span className="text-[11px] text-[var(--nf-muted)]">{"User " + prop.created_by}</span>
+                      </div>
                     </div>
-                    <span className="text-[11px] text-[var(--nf-muted)]">{prop.author}</span>
+                  </Card>
+                )
+              })
+            ) : (
+              fallbackProposals.map((prop, i) => (
+                <Card key={i} className="bg-[var(--nf-card-bg)] border-none rounded-[12px] overflow-hidden">
+                  <div
+                    className="w-full h-[180px] bg-cover bg-center"
+                    style={{ backgroundImage: `url(${prop.image})` }}
+                  />
+                  <div className="p-3 flex flex-col gap-2">
+                    <p className="text-[13px] font-medium text-[var(--nf-white)]">{prop.title}</p>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-5 h-5 rounded-full ${prop.avatarColor} flex items-center justify-center`}>
+                        <User className="w-2.5 h-2.5" />
+                      </div>
+                      <span className="text-[11px] text-[var(--nf-muted)]">{prop.author}</span>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))
+            )}
           </div>
         </main>
       </div>

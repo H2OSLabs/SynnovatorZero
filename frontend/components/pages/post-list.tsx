@@ -1,22 +1,25 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import {
   Menu, Search, Plus, Bell, Compass, Globe, Tent,
   Flame, Lightbulb,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { listGroups, listPosts } from "@/lib/api-client"
+import type { Post, Group } from "@/lib/types"
 
 const mainTabs = ["帖子", "提案广场", "资源", "团队", "活动", "找队友", "找点子", "官方"]
 
-const teamCards = [
+const fallbackTeamCards = [
   { name: "金发发前端", image: "https://images.unsplash.com/photo-1640183295767-d237218daafd?w=400&h=300&fit=crop" },
   { name: "你意想不到的", image: "https://images.unsplash.com/photo-1543132220-e7fef0b974e7?w=400&h=300&fit=crop" },
   { name: "JioNan", image: "https://images.unsplash.com/photo-1593579491833-457b2c451e38?w=400&h=300&fit=crop" },
   { name: "JioNan", image: "https://images.unsplash.com/photo-1717494760896-3c2f7b173c40?w=400&h=300&fit=crop" },
 ]
 
-const ideaCards = [
+const fallbackIdeaCards = [
   { name: "金发发前端", image: "https://images.unsplash.com/photo-1518463732211-f1e67dfcec66?w=400&h=300&fit=crop" },
   { name: "你意想不到的", image: "https://images.unsplash.com/photo-1671250216070-0c61aa9eb854?w=400&h=300&fit=crop" },
   { name: "JioNan", image: "https://images.unsplash.com/photo-1679485322984-4270db63261e?w=400&h=300&fit=crop" },
@@ -24,6 +27,28 @@ const ideaCards = [
 ]
 
 export function PostList() {
+  const [teams, setTeams] = useState<Group[]>([])
+  const [ideas, setIdeas] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [groupsRes, postsRes] = await Promise.all([
+          listGroups({ limit: 4, visibility: "public" }),
+          listPosts({ limit: 4, status: "published" }),
+        ])
+        setTeams(groupsRes.items)
+        setIdeas(postsRes.items)
+      } catch (err) {
+        console.error("Failed to fetch post-list data:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
   return (
     <div className="flex flex-col h-screen bg-[var(--nf-near-black)]">
       {/* Header */}
@@ -86,20 +111,32 @@ export function PostList() {
               </div>
               <span className="text-[13px] text-[var(--nf-muted)] cursor-pointer">查看更多</span>
             </div>
-            <div className="grid grid-cols-4 gap-4">
-              {teamCards.map((card, i) => (
-                <Card key={`team-${i}`} className="w-[240px] bg-[var(--nf-card-bg)] border-none rounded-[12px] overflow-hidden">
-                  <div
-                    className="w-full h-[160px] bg-cover bg-center"
-                    style={{ backgroundImage: `url(${card.image})` }}
-                  />
-                  <div className="flex items-center gap-1.5 px-3 py-2.5">
-                    <div className="w-6 h-6 rounded-full bg-[#555555]" />
-                    <span className="text-[12px] text-[var(--nf-white)]">{card.name}</span>
-                  </div>
-                </Card>
-              ))}
-            </div>
+            {loading ? (
+              <div className="flex items-center justify-center h-[160px] text-[var(--nf-muted)] text-sm">
+                加载中...
+              </div>
+            ) : (
+              <div className="grid grid-cols-4 gap-4">
+                {(teams.length > 0
+                  ? teams.map((group) => ({
+                      name: group.name,
+                      image: "https://images.unsplash.com/photo-1640183295767-d237218daafd?w=400&h=300&fit=crop",
+                    }))
+                  : fallbackTeamCards
+                ).map((card, i) => (
+                  <Card key={`team-${i}`} className="w-[240px] bg-[var(--nf-card-bg)] border-none rounded-[12px] overflow-hidden">
+                    <div
+                      className="w-full h-[160px] bg-cover bg-center"
+                      style={{ backgroundImage: `url(${card.image})` }}
+                    />
+                    <div className="flex items-center gap-1.5 px-3 py-2.5">
+                      <div className="w-6 h-6 rounded-full bg-[#555555]" />
+                      <span className="text-[12px] text-[var(--nf-white)]">{card.name}</span>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </section>
 
           {/* Section: 找点子 */}
@@ -111,20 +148,32 @@ export function PostList() {
               </div>
               <span className="text-[13px] text-[var(--nf-muted)] cursor-pointer">查看更多</span>
             </div>
-            <div className="grid grid-cols-4 gap-4">
-              {ideaCards.map((card, i) => (
-                <Card key={`idea-${i}`} className="w-[240px] bg-[var(--nf-card-bg)] border-none rounded-[12px] overflow-hidden">
-                  <div
-                    className="w-full h-[160px] bg-cover bg-center"
-                    style={{ backgroundImage: `url(${card.image})` }}
-                  />
-                  <div className="flex items-center gap-1.5 px-3 py-2.5">
-                    <div className="w-6 h-6 rounded-full bg-[#555555]" />
-                    <span className="text-[12px] text-[var(--nf-white)]">{card.name}</span>
-                  </div>
-                </Card>
-              ))}
-            </div>
+            {loading ? (
+              <div className="flex items-center justify-center h-[160px] text-[var(--nf-muted)] text-sm">
+                加载中...
+              </div>
+            ) : (
+              <div className="grid grid-cols-4 gap-4">
+                {(ideas.length > 0
+                  ? ideas.map((post) => ({
+                      name: post.title,
+                      image: "https://images.unsplash.com/photo-1518463732211-f1e67dfcec66?w=400&h=300&fit=crop",
+                    }))
+                  : fallbackIdeaCards
+                ).map((card, i) => (
+                  <Card key={`idea-${i}`} className="w-[240px] bg-[var(--nf-card-bg)] border-none rounded-[12px] overflow-hidden">
+                    <div
+                      className="w-full h-[160px] bg-cover bg-center"
+                      style={{ backgroundImage: `url(${card.image})` }}
+                    />
+                    <div className="flex items-center gap-1.5 px-3 py-2.5">
+                      <div className="w-6 h-6 rounded-full bg-[#555555]" />
+                      <span className="text-[12px] text-[var(--nf-white)]">{card.name}</span>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </section>
         </main>
       </div>

@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import {
   Menu, Search, Zap, Bell, User,
   Compass, Globe, Mountain,
@@ -10,12 +11,8 @@ import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-
-const stats = [
-  { value: "12", label: "帖子" },
-  { value: "6", label: "关注" },
-  { value: "6", label: "粉丝" },
-]
+import { getUser, getFollowing, getFollowers } from "@/lib/api-client"
+import type { User as UserType, UserUserRelation } from "@/lib/types"
 
 const assets = [
   { title: "AI/Agent", detail: "0 TOPS" },
@@ -25,7 +22,50 @@ const assets = [
 
 const profileTabs = ["帖子", "提案", "收藏", "更多"]
 
-export function UserProfile() {
+export function UserProfile({ userId }: { userId: number }) {
+  const [user, setUser] = useState<UserType | null>(null)
+  const [following, setFollowing] = useState<UserUserRelation[]>([])
+  const [followers, setFollowers] = useState<UserUserRelation[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    async function fetchData() {
+      setLoading(true)
+      try {
+        const [userData, followingData, followersData] = await Promise.all([
+          getUser(userId),
+          getFollowing(userId),
+          getFollowers(userId),
+        ])
+        if (!cancelled) {
+          setUser(userData)
+          setFollowing(followingData)
+          setFollowers(followersData)
+        }
+      } catch (err) {
+        console.error("Failed to fetch user data:", err)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchData()
+    return () => { cancelled = true }
+  }, [userId])
+
+  const stats = [
+    { value: "12", label: "帖子" },
+    { value: String(following.length || 6), label: "关注" },
+    { value: String(followers.length || 6), label: "粉丝" },
+  ]
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[var(--nf-near-black)]">
+        <span className="text-[var(--nf-muted)] text-lg">加载中...</span>
+      </div>
+    )
+  }
   return (
     <div className="flex flex-col h-screen bg-[var(--nf-near-black)]">
       {/* Header */}
@@ -79,7 +119,7 @@ export function UserProfile() {
             {/* Info */}
             <div className="flex flex-col gap-2 flex-1">
               <span className="text-[22px] font-semibold text-[var(--nf-white)]">
-                他人名字
+                {user?.display_name || user?.username || "他人名字"}
               </span>
               <div className="flex items-center gap-6">
                 {stats.map((stat) => (
@@ -109,8 +149,13 @@ export function UserProfile() {
 
           {/* Bio */}
           <p className="text-[13px] text-[var(--nf-muted)]">
-            Personal Signature：大学在读生，热爱编程和设计，欢迎互相交流合作！
+            {user?.bio ?? "Personal Signature：大学在读生，热爱编程和设计，欢迎互相交流合作！"}
           </p>
+          {user?.role && (
+            <Badge variant="outline" className="w-fit bg-[var(--nf-card-bg)] border-[var(--nf-dark-bg)] text-[var(--nf-light-gray)] text-[12px] px-2.5 py-1 rounded-sm">
+              {user.role === "participant" ? "参赛者" : user.role === "organizer" ? "组织者" : user.role === "admin" ? "管理员" : user.role}
+            </Badge>
+          )}
 
           {/* Asset Section */}
           <div className="flex flex-col gap-3">

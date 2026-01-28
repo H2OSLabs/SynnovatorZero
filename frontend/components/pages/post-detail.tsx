@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import {
   Menu, Search, Plus, Bell, ChevronDown, ChevronLeft, ChevronRight,
   Compass, Globe, Tent, User, Heart, Share2, Ellipsis,
@@ -10,8 +11,10 @@ import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { getPost, getUser, listComments } from "@/lib/api-client"
+import type { Post, User as UserType, Interaction } from "@/lib/types"
 
-const tags = ["通知公告", "我的学校/公...", "通知公告", "活动信息..."]
+const fallbackTags = ["通知公告", "我的学校/公...", "通知公告", "活动信息..."]
 
 const hotItems = [
   { rank: 1, title: "热点标题内容热点标题内容", color: "text-[var(--nf-orange)]" },
@@ -28,7 +31,50 @@ const hotItems = [
 
 const weekDays = ["日", "一", "二", "三", "四", "五", "六"]
 
-export function PostDetail() {
+export function PostDetail({ postId }: { postId: number }) {
+  const [post, setPost] = useState<Post | null>(null)
+  const [author, setAuthor] = useState<UserType | null>(null)
+  const [comments, setComments] = useState<Interaction[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    async function fetchData() {
+      setLoading(true)
+      try {
+        const fetchedPost = await getPost(postId)
+        if (cancelled) return
+        setPost(fetchedPost)
+
+        const [fetchedUser, fetchedComments] = await Promise.all([
+          getUser(fetchedPost.created_by),
+          listComments(postId),
+        ])
+        if (cancelled) return
+        setAuthor(fetchedUser)
+        setComments(fetchedComments.items)
+      } catch (err) {
+        console.error("Failed to fetch post detail:", err)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchData()
+    return () => { cancelled = true }
+  }, [postId])
+
+  const tags = post?.tags ?? fallbackTags
+  const displayName = author?.display_name || author?.username || "LIGHTNING鲸"
+  const likeCount = post?.like_count ?? 234
+  const commentCount = post?.comment_count ?? 0
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[var(--nf-near-black)]">
+        <span className="text-[var(--nf-muted)] text-lg">加载中...</span>
+      </div>
+    )
+  }
   return (
     <div className="flex flex-col h-screen bg-[var(--nf-near-black)]">
       {/* Header */}
@@ -77,14 +123,14 @@ export function PostDetail() {
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[var(--nf-dark-bg)]" />
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-[16px] font-semibold text-[var(--nf-white)]">LIGHTNING鲸</span>
-                  <span className="text-[12px] text-[var(--nf-muted)]">Alibaba team</span>
+                  <span className="text-[16px] font-semibold text-[var(--nf-white)]">{displayName}</span>
+                  <span className="text-[12px] text-[var(--nf-muted)]">{author?.bio || "Alibaba team"}</span>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1">
                   <Heart className="w-4 h-4 text-[var(--nf-muted)]" />
-                  <span className="font-mono text-[13px] text-[var(--nf-muted)]">234</span>
+                  <span className="font-mono text-[13px] text-[var(--nf-muted)]">{likeCount}</span>
                 </div>
                 <Share2 className="w-4 h-4 text-[var(--nf-muted)]" />
                 <Ellipsis className="w-4 h-4 text-[var(--nf-muted)]" />
@@ -93,7 +139,7 @@ export function PostDetail() {
 
             {/* Post Title */}
             <h1 className="font-heading text-[24px] font-bold text-[var(--nf-white)]">
-              帖子名帖子名帖子名帖子名帖子名帖子名帖子名帖子名
+              {post?.title || "帖子名帖子名帖子名帖子名帖子名帖子名帖子名帖子名"}
             </h1>
 
             {/* Tags */}
@@ -135,7 +181,7 @@ export function PostDetail() {
               </div>
               <Card className="bg-[var(--nf-card-bg)] border-none rounded-[12px] p-6 flex flex-col gap-4">
                 <p className="text-sm text-[var(--nf-light-gray)]">
-                  帖子内容详情将在此处展示。包括用户发布的文字、图片等多媒体内容。帖子可以包含文字描述、图片附件和标签分类等信息。
+                  {post?.body || "帖子内容详情将在此处展示。包括用户发布的文字、图片等多媒体内容。帖子可以包含文字描述、图片附件和标签分类等信息。"}
                 </p>
                 <p className="text-[13px] text-[var(--nf-muted)]">Divesee — 创意灵感参考</p>
               </Card>

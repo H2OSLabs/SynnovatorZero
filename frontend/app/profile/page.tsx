@@ -1,5 +1,8 @@
+"use client"
+
 import { UserProfile } from "@/components/pages/user-profile"
 
 export default function ProfilePage() {
-  return <UserProfile />
+  // TODO: Get userId from auth context; defaulting to 1 for prototype
+  return <UserProfile userId={1} />
 }
