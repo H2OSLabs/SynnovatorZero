@@ -1,0 +1,147 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - '.claude/**'
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Force rebuild without cache'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  DEPLOY_DIR: deploy
+  COMPOSE_PROJECT_NAME: synnovator-zero
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    timeout-minutes: 15
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          clean: true
+
+      - name: Prepare .env file
+        run: |
+          cat > .env << 'ENVEOF'
+          POSTGRES_USER=${{ secrets.POSTGRES_USER || 'postgres' }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD || 'postgres' }}
+          POSTGRES_DB=${{ secrets.POSTGRES_DB || 'synnovator_zero' }}
+          ENVEOF
+
+          # Append extra env vars if configured
+          if [ -n "${{ secrets.DEPLOY_ENV }}" ]; then
+            echo "${{ secrets.DEPLOY_ENV }}" >> .env
+          fi
+
+      - name: Tag current images for rollback
+        working-directory: ${{ env.DEPLOY_DIR }}
+        run: |
+          # Tag current running images so we can rollback if needed
+          for svc in frontend backend; do
+            img="${COMPOSE_PROJECT_NAME}-${svc}:latest"
+            if docker image inspect "$img" > /dev/null 2>&1; then
+              docker tag "$img" "$img-prev" || true
+              echo "Tagged $img -> $img-prev"
+            fi
+          done
+
+      - name: Build and deploy
+        working-directory: ${{ env.DEPLOY_DIR }}
+        run: |
+          BUILD_ARGS=""
+          if [ "${{ inputs.force_rebuild }}" = "true" ]; then
+            BUILD_ARGS="--no-cache"
+          fi
+
+          echo "==> Building images..."
+          docker compose build $BUILD_ARGS
+
+          echo "==> Starting services..."
+          docker compose up -d
+
+          echo "==> Waiting for services to stabilize..."
+          sleep 10
+
+      - name: Health check
+        working-directory: ${{ env.DEPLOY_DIR }}
+        run: |
+          MAX_RETRIES=12
+          RETRY_INTERVAL=5
+          HEALTH_URL="http://localhost:9080/health"
+
+          echo "==> Checking service health at $HEALTH_URL"
+          for i in $(seq 1 $MAX_RETRIES); do
+            if curl -sf --max-time 5 "$HEALTH_URL" > /dev/null 2>&1; then
+              echo "Health check passed (attempt $i/$MAX_RETRIES)"
+              exit 0
+            fi
+            echo "Attempt $i/$MAX_RETRIES failed, retrying in ${RETRY_INTERVAL}s..."
+            sleep $RETRY_INTERVAL
+          done
+
+          echo "::error::Health check failed after $MAX_RETRIES attempts"
+          exit 1
+
+      - name: Rollback on failure
+        if: failure()
+        working-directory: ${{ env.DEPLOY_DIR }}
+        run: |
+          echo "::warning::Deployment failed, attempting rollback..."
+
+          # Restore previous images
+          for svc in frontend backend; do
+            img="${COMPOSE_PROJECT_NAME}-${svc}:latest"
+            prev="$img-prev"
+            if docker image inspect "$prev" > /dev/null 2>&1; then
+              docker tag "$prev" "$img" || true
+              echo "Restored $prev -> $img"
+            fi
+          done
+
+          # Restart with previous images
+          docker compose up -d
+          sleep 10
+
+          # Verify rollback
+          if curl -sf --max-time 5 "http://localhost:9080/health" > /dev/null 2>&1; then
+            echo "Rollback successful"
+          else
+            echo "::error::Rollback also failed - manual intervention required"
+          fi
+
+      - name: Cleanup old images
+        if: success()
+        run: |
+          # Remove previous backup tags
+          for svc in frontend backend; do
+            img="${COMPOSE_PROJECT_NAME}-${svc}:latest-prev"
+            docker rmi "$img" 2>/dev/null || true
+          done
+
+          # Prune dangling images (older than 24h)
+          docker image prune -f --filter "until=24h" || true
+
+      - name: Print deployment info
+        if: always()
+        working-directory: ${{ env.DEPLOY_DIR }}
+        run: |
+          echo "==> Deployment Status"
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Triggered by: ${{ github.actor }}"
+          echo ""
+          echo "==> Container Status"
+          docker compose ps
