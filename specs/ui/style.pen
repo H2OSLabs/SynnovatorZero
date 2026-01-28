@@ -1897,11 +1897,11 @@
               "height": 540,
               "fill": "$near-black",
               "cornerRadius": 12,
-              "layout": "none",
               "stroke": {
                 "thickness": 1,
                 "fill": "$secondary-bg"
               },
+              "layout": "none",
               "children": [
                 {
                   "type": "rectangle",
@@ -1912,12 +1912,12 @@
                     12
                   ],
                   "id": "ibBRS",
+                  "x": 0,
+                  "y": 0,
                   "name": "Nav",
                   "fill": "#BBFD3B18",
                   "width": 101,
                   "height": 540,
-                  "x": 0,
-                  "y": 0,
                   "stroke": {
                     "thickness": 1,
                     "fill": "$lime-primary"
@@ -1932,12 +1932,12 @@
                     0
                   ],
                   "id": "rqxFc",
+                  "x": 0,
+                  "y": 0,
                   "name": "Search",
                   "fill": "#BBFD3B18",
                   "width": 864,
                   "height": 36,
-                  "x": 0,
-                  "y": 0,
                   "stroke": {
                     "thickness": 1,
                     "fill": "$lime-primary"
@@ -1947,12 +1947,12 @@
                   "type": "rectangle",
                   "cornerRadius": 8,
                   "id": "JcVLs",
+                  "x": 113,
+                  "y": 50,
                   "name": "Content",
                   "fill": "#BBFD3B20",
                   "width": 514,
                   "height": 490,
-                  "x": 113,
-                  "y": 50,
                   "stroke": {
                     "thickness": 1,
                     "fill": "$lime-primary"
@@ -1962,12 +1962,12 @@
                   "type": "rectangle",
                   "cornerRadius": 8,
                   "id": "nn25s",
+                  "x": 646,
+                  "y": 86,
                   "name": "Sidebar",
                   "fill": "#74FFBB20",
                   "width": 197,
                   "height": 432,
-                  "x": 646,
-                  "y": 86,
                   "stroke": {
                     "thickness": 1,
                     "fill": "$mint"
@@ -1976,9 +1976,9 @@
                 {
                   "type": "text",
                   "id": "mS0XX",
-                  "name": "navLabel",
                   "x": 14,
                   "y": 240,
+                  "name": "navLabel",
                   "fill": "$lime-primary",
                   "content": "导航栏",
                   "fontFamily": "Noto Sans SC",
@@ -1988,9 +1988,9 @@
                 {
                   "type": "text",
                   "id": "6yb5c",
-                  "name": "navSize",
                   "x": 14,
                   "y": 262,
+                  "name": "navSize",
                   "fill": "$muted",
                   "content": "168×900",
                   "fontFamily": "Poppins",
@@ -2000,9 +2000,9 @@
                 {
                   "type": "text",
                   "id": "Oay4w",
-                  "name": "searchLabel",
                   "x": 400,
                   "y": 8,
+                  "name": "searchLabel",
                   "fill": "$lime-primary",
                   "content": "搜索区",
                   "fontFamily": "Noto Sans SC",
@@ -2012,9 +2012,9 @@
                 {
                   "type": "text",
                   "id": "w7fjW",
-                  "name": "searchSize",
                   "x": 446,
                   "y": 10,
+                  "name": "searchSize",
                   "fill": "$muted",
                   "content": "1440×60",
                   "fontFamily": "Poppins",
@@ -2024,9 +2024,9 @@
                 {
                   "type": "text",
                   "id": "uYdKJ",
-                  "name": "contentLabel",
                   "x": 320,
                   "y": 260,
+                  "name": "contentLabel",
                   "fill": "$lime-primary",
                   "content": "内容区",
                   "fontFamily": "Noto Sans SC",
@@ -2036,9 +2036,9 @@
                 {
                   "type": "text",
                   "id": "tNanf",
-                  "name": "contentSize",
                   "x": 328,
                   "y": 290,
+                  "name": "contentSize",
                   "fill": "$muted",
                   "content": "宽 856",
                   "fontFamily": "Noto Sans SC",
@@ -2048,9 +2048,9 @@
                 {
                   "type": "text",
                   "id": "he1h6",
-                  "name": "sidebarLabel",
                   "x": 696,
                   "y": 270,
+                  "name": "sidebarLabel",
                   "fill": "$mint",
                   "content": "多功能区",
                   "fontFamily": "Noto Sans SC",
@@ -2060,9 +2060,9 @@
                 {
                   "type": "text",
                   "id": "y96Rp",
-                  "name": "sidebarSize",
                   "x": 700,
                   "y": 298,
+                  "name": "sidebarSize",
                   "fill": "$muted",
                   "content": "328×720",
                   "fontFamily": "Poppins",
@@ -2072,9 +2072,9 @@
                 {
                   "type": "text",
                   "id": "Y072d",
-                  "name": "gap-nav-content",
                   "x": 102,
                   "y": 270,
+                  "name": "gap-nav-content",
                   "fill": "$cyan",
                   "content": "20",
                   "fontFamily": "Poppins",
@@ -2084,9 +2084,9 @@
                 {
                   "type": "text",
                   "id": "dFX6X",
-                  "name": "gap-search-content",
                   "x": 300,
                   "y": 38,
+                  "name": "gap-search-content",
                   "fill": "$cyan",
                   "content": "24",
                   "fontFamily": "Poppins",
@@ -2096,9 +2096,9 @@
                 {
                   "type": "text",
                   "id": "IeiRa",
-                  "name": "gap-content-sidebar",
                   "x": 628,
                   "y": 270,
+                  "name": "gap-content-sidebar",
                   "fill": "$cyan",
                   "content": "32",
                   "fontFamily": "Poppins",
@@ -2108,9 +2108,9 @@
                 {
                   "type": "text",
                   "id": "9otRr",
-                  "name": "gap-search-sidebar",
                   "x": 760,
                   "y": 55,
+                  "name": "gap-search-sidebar",
                   "fill": "$cyan",
                   "content": "84",
                   "fontFamily": "Poppins",
@@ -2120,9 +2120,9 @@
                 {
                   "type": "text",
                   "id": "BCG4q",
-                  "name": "gap-sidebar-right",
                   "x": 846,
                   "y": 290,
+                  "name": "gap-sidebar-right",
                   "fill": "$cyan",
                   "content": "36",
                   "fontFamily": "Poppins",
@@ -2132,9 +2132,9 @@
                 {
                   "type": "text",
                   "id": "zaU9V",
-                  "name": "gap-sidebar-bottom",
                   "x": 740,
                   "y": 522,
+                  "name": "gap-sidebar-bottom",
                   "fill": "$cyan",
                   "content": "36",
                   "fontFamily": "Poppins",
@@ -2184,7 +2184,7 @@
                           "type": "rectangle",
                           "cornerRadius": 2,
                           "id": "Qk8yy",
-                          "name": "region-search_bar",
+                          "name": "r1bar",
                           "fill": "$lime-primary",
                           "width": 4,
                           "height": 16
@@ -2192,7 +2192,7 @@
                         {
                           "type": "text",
                           "id": "79f6C",
-                          "name": "region-search_text",
+                          "name": "r1text",
                           "fill": "$light-gray",
                           "content": "搜索区 Search Bar — 1440 × 60",
                           "fontFamily": "Inter",
@@ -2213,7 +2213,7 @@
                           "type": "rectangle",
                           "cornerRadius": 2,
                           "id": "ABfkP",
-                          "name": "region-nav_bar",
+                          "name": "r2bar",
                           "fill": "$lime-primary",
                           "width": 4,
                           "height": 16
@@ -2221,7 +2221,7 @@
                         {
                           "type": "text",
                           "id": "tatiT",
-                          "name": "region-nav_text",
+                          "name": "r2text",
                           "fill": "$light-gray",
                           "content": "导航栏 Navigation — 168 × 900 (full height)",
                           "fontFamily": "Inter",
@@ -2242,7 +2242,7 @@
                           "type": "rectangle",
                           "cornerRadius": 2,
                           "id": "C8rUU",
-                          "name": "region-content_bar",
+                          "name": "r3bar",
                           "fill": "$lime-primary",
                           "width": 4,
                           "height": 16
@@ -2250,7 +2250,7 @@
                         {
                           "type": "text",
                           "id": "ncAGN",
-                          "name": "region-content_text",
+                          "name": "r3text",
                           "fill": "$light-gray",
                           "content": "内容区 Content — W: 856, starts at (188, 84)",
                           "fontFamily": "Inter",
@@ -2271,7 +2271,7 @@
                           "type": "rectangle",
                           "cornerRadius": 2,
                           "id": "zIvZy",
-                          "name": "region-sidebar_bar",
+                          "name": "r4bar",
                           "fill": "$mint",
                           "width": 4,
                           "height": 16
@@ -2279,7 +2279,7 @@
                         {
                           "type": "text",
                           "id": "zDT0V",
-                          "name": "region-sidebar_text",
+                          "name": "r4text",
                           "fill": "$light-gray",
                           "content": "多功能区 Sidebar — 328 × 720, starts at (1076, 144)",
                           "fontFamily": "Inter",
@@ -2324,7 +2324,7 @@
                           "type": "rectangle",
                           "cornerRadius": 2,
                           "id": "Htsb0",
-                          "name": "sp-nav-content_bar",
+                          "name": "s1bar",
                           "fill": "$cyan",
                           "width": 20,
                           "height": 16
@@ -2332,7 +2332,7 @@
                         {
                           "type": "text",
                           "id": "jC3Lb",
-                          "name": "sp-nav-content_text",
+                          "name": "s1text",
                           "fill": "$light-gray",
                           "content": "导航栏 → 内容区 — 20px",
                           "fontFamily": "Inter",
@@ -2353,7 +2353,7 @@
                           "type": "rectangle",
                           "cornerRadius": 2,
                           "id": "mLKZ9",
-                          "name": "sp-search-content_bar",
+                          "name": "s2bar",
                           "fill": "$cyan",
                           "width": 24,
                           "height": 16
@@ -2361,7 +2361,7 @@
                         {
                           "type": "text",
                           "id": "fek2X",
-                          "name": "sp-search-content_text",
+                          "name": "s2text",
                           "fill": "$light-gray",
                           "content": "搜索区 → 内容区 — 24px",
                           "fontFamily": "Inter",
@@ -2382,7 +2382,7 @@
                           "type": "rectangle",
                           "cornerRadius": 2,
                           "id": "d4RMM",
-                          "name": "sp-content-sidebar_bar",
+                          "name": "s3bar",
                           "fill": "$cyan",
                           "width": 32,
                           "height": 16
@@ -2390,7 +2390,7 @@
                         {
                           "type": "text",
                           "id": "0GaJW",
-                          "name": "sp-content-sidebar_text",
+                          "name": "s3text",
                           "fill": "$light-gray",
                           "content": "内容区 → 多功能区 — 32px",
                           "fontFamily": "Inter",
@@ -2411,7 +2411,7 @@
                           "type": "rectangle",
                           "cornerRadius": 2,
                           "id": "60E55",
-                          "name": "sp-search-sidebar_bar",
+                          "name": "s4bar",
                           "fill": "$cyan",
                           "width": 40,
                           "height": 16
@@ -2419,7 +2419,7 @@
                         {
                           "type": "text",
                           "id": "f8fq1",
-                          "name": "sp-search-sidebar_text",
+                          "name": "s4text",
                           "fill": "$light-gray",
                           "content": "搜索区 → 多功能区 — 84px",
                           "fontFamily": "Inter",
@@ -2440,7 +2440,7 @@
                           "type": "rectangle",
                           "cornerRadius": 2,
                           "id": "047GZ",
-                          "name": "sp-sidebar-edge_bar",
+                          "name": "s5bar",
                           "fill": "$cyan",
                           "width": 36,
                           "height": 16
@@ -2448,7 +2448,7 @@
                         {
                           "type": "text",
                           "id": "EL6jD",
-                          "name": "sp-sidebar-edge_text",
+                          "name": "s5text",
                           "fill": "$light-gray",
                           "content": "多功能区 → 右边缘/底边缘 — 36px",
                           "fontFamily": "Inter",
@@ -2571,33 +2571,13 @@
       "type": "color",
       "value": "#FFFFFF"
     },
-    "layout-page-width": {
-      "type": "number",
-      "value": 1440
-    },
-    "layout-page-height": {
-      "type": "number",
-      "value": 900
-    },
-    "layout-nav-width": {
-      "type": "number",
-      "value": 168
-    },
-    "layout-search-height": {
-      "type": "number",
-      "value": 60
-    },
     "layout-content-width": {
       "type": "number",
       "value": 856
     },
-    "layout-sidebar-width": {
+    "layout-gap-content-sidebar": {
       "type": "number",
-      "value": 328
-    },
-    "layout-sidebar-height": {
-      "type": "number",
-      "value": 720
+      "value": 32
     },
     "layout-gap-nav-content": {
       "type": "number",
@@ -2607,21 +2587,41 @@
       "type": "number",
       "value": 24
     },
-    "layout-gap-content-sidebar": {
-      "type": "number",
-      "value": 32
-    },
     "layout-gap-search-sidebar": {
       "type": "number",
       "value": 84
+    },
+    "layout-nav-width": {
+      "type": "number",
+      "value": 168
+    },
+    "layout-page-height": {
+      "type": "number",
+      "value": 900
+    },
+    "layout-page-width": {
+      "type": "number",
+      "value": 1440
+    },
+    "layout-search-height": {
+      "type": "number",
+      "value": 60
+    },
+    "layout-sidebar-height": {
+      "type": "number",
+      "value": 720
+    },
+    "layout-sidebar-margin-bottom": {
+      "type": "number",
+      "value": 36
     },
     "layout-sidebar-margin-right": {
       "type": "number",
       "value": 36
     },
-    "layout-sidebar-margin-bottom": {
+    "layout-sidebar-width": {
       "type": "number",
-      "value": 36
+      "value": 328
     },
     "spacing-xxl": {
       "type": "number",
