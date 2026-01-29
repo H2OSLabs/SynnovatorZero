@@ -17,7 +17,7 @@
           "id": "sh2O2",
           "name": "pdHeader",
           "width": "fill_container",
-          "height": 56,
+          "height": 60,
           "fill": "#181818",
           "stroke": {
             "align": "inside",
@@ -190,7 +190,7 @@
               "type": "frame",
               "id": "dx2J3",
               "name": "pdSide",
-              "width": 140,
+              "width": 168,
               "height": "fill_container",
               "fill": "#181818",
               "layout": "vertical",

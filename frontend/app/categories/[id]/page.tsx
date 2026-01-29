@@ -1,3 +1,5 @@
+"use client"
+
 import { CategoryDetail } from "@/components/pages/category-detail"
 
 export default function CategoryDetailPage({ params }: { params: { id: string } }) {
