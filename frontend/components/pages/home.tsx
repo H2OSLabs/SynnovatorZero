@@ -1,5 +1,7 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   Menu, Search, Zap, Bell, User, ChevronDown,
   Compass, Globe, Mountain, Flame, Users,
@@ -11,10 +13,12 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
+import { listPosts, listCategories } from "@/lib/api-client"
+import type { Post, Category } from "@/lib/types"
 
 const tabs = ["热门", "提案广场", "资源", "提案专区", "找队友", "找点子", "官方"]
 
-const cards = [
+const fallbackCards = [
   {
     title: "西建·滇水源 | 热帖神评选好礼!",
     author: "西建创新",
@@ -32,7 +36,7 @@ const cards = [
   },
 ]
 
-const proposals = [
+const fallbackProposals = [
   {
     title: "百变一次创作者有创造数字身份协会AI声音数据效应同步竞赛",
     desc: "赛道推出系统的数字创作产品配套综合数据服务平台",
@@ -56,13 +60,36 @@ const quickLinks = [
 ]
 
 export function Home() {
+  const router = useRouter()
+  const [posts, setPosts] = useState<Post[]>([])
+  const [proposals, setProposals] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [postsRes, proposalsRes] = await Promise.all([
+          listPosts({ limit: 6, status: "published" }),
+          listPosts({ limit: 4, type: "for_category", status: "published" }),
+        ])
+        setPosts(postsRes.items)
+        setProposals(proposalsRes.items)
+      } catch (err) {
+        console.error("Failed to fetch home data:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
   return (
     <div className="flex flex-col h-screen bg-[var(--nf-near-black)]">
       {/* Header */}
       <header className="flex items-center justify-between h-14 px-6 border-b border-[var(--nf-dark-bg)] bg-[var(--nf-near-black)]">
         <div className="flex items-center gap-4">
           <Menu className="w-6 h-6 text-[var(--nf-white)]" />
-          <span className="font-heading text-[20px] font-bold text-[var(--nf-lime)]">
+          <span onClick={() => router.push("/")} className="cursor-pointer font-heading text-[20px] font-bold text-[var(--nf-lime)]">
             协创者
           </span>
         </div>
@@ -89,15 +116,15 @@ export function Home() {
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar */}
         <aside className="w-[140px] bg-[var(--nf-near-black)] p-4 px-3 flex flex-col gap-1">
-          <div className="flex items-center gap-2.5 px-3 py-2.5 bg-[var(--nf-lime)] rounded-full">
+          <div onClick={() => router.push("/")} className="cursor-pointer flex items-center gap-2.5 px-3 py-2.5 bg-[var(--nf-lime)] rounded-full">
             <Compass className="w-[18px] h-[18px] text-[var(--nf-surface)]" />
             <span className="text-sm font-semibold text-[var(--nf-surface)]">探索</span>
           </div>
-          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-full">
+          <div onClick={() => router.push("/categories/1")} className="cursor-pointer flex items-center gap-2.5 px-3 py-2.5 rounded-full">
             <Globe className="w-[18px] h-[18px] text-[var(--nf-muted)]" />
             <span className="text-sm text-[var(--nf-muted)]">星球</span>
           </div>
-          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-full">
+          <div onClick={() => router.push("/team")} className="cursor-pointer flex items-center gap-2.5 px-3 py-2.5 rounded-full">
             <Mountain className="w-[18px] h-[18px] text-[var(--nf-muted)]" />
             <span className="text-sm text-[var(--nf-muted)]">营地</span>
           </div>
@@ -124,23 +151,37 @@ export function Home() {
           </div>
 
           {/* Card Grid */}
-          <div className="grid grid-cols-3 gap-4">
-            {cards.map((card) => (
-              <Card key={card.title} className="bg-[var(--nf-card-bg)] border-none rounded-[12px] overflow-hidden">
-                <div
-                  className="w-full h-[180px] bg-cover bg-center"
-                  style={{ backgroundImage: `url(${card.image})` }}
-                />
-                <div className="p-3 flex flex-col gap-1.5">
-                  <p className="text-[13px] font-medium text-[var(--nf-white)]">{card.title}</p>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-[18px] h-[18px] rounded-full bg-[#555555]" />
-                    <span className="text-[11px] text-[var(--nf-muted)]">{card.author}</span>
+          {loading ? (
+            <div className="flex items-center justify-center h-[180px] text-[var(--nf-muted)] text-sm">
+              加载中...
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-4">
+              {(posts.length > 0
+                ? posts.map((post) => ({
+                    id: post.id,
+                    title: post.title,
+                    author: "User " + post.created_by,
+                    image: "https://images.unsplash.com/photo-1718408954920-22f83687ea40?w=400&h=300&fit=crop",
+                  }))
+                : fallbackCards
+              ).map((card) => (
+                <Card key={card.title} onClick={() => router.push("id" in card && card.id ? `/posts/${card.id}` : "/posts")} className="cursor-pointer bg-[var(--nf-card-bg)] border-none rounded-[12px] overflow-hidden">
+                  <div
+                    className="w-full h-[180px] bg-cover bg-center"
+                    style={{ backgroundImage: `url(${card.image})` }}
+                  />
+                  <div className="p-3 flex flex-col gap-1.5">
+                    <p className="text-[13px] font-medium text-[var(--nf-white)]">{card.title}</p>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-[18px] h-[18px] rounded-full bg-[#555555]" />
+                      <span className="text-[11px] text-[var(--nf-muted)]">{card.author}</span>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+                </Card>
+              ))}
+            </div>
+          )}
 
           {/* Hot Proposals Header */}
           <div className="flex items-center justify-between">
@@ -148,13 +189,23 @@ export function Home() {
               <Flame className="w-5 h-5 text-[var(--nf-orange)]" />
               <span className="text-[18px] font-semibold text-[var(--nf-white)]">热门提案</span>
             </div>
-            <span className="text-[13px] text-[var(--nf-muted)] cursor-pointer">查看更多 &gt;</span>
+            <span onClick={() => router.push("/proposals")} className="text-[13px] text-[var(--nf-muted)] cursor-pointer">查看更多 &gt;</span>
           </div>
 
           {/* Proposal Grid */}
           <div className="grid grid-cols-2 gap-4">
-            {proposals.map((prop) => (
-              <Card key={prop.title} className="bg-[var(--nf-card-bg)] border-none rounded-[12px] p-3 flex gap-3">
+            {(proposals.length > 0
+              ? proposals.map((post) => ({
+                  id: post.id,
+                  title: post.title,
+                  desc: post.body || "",
+                  author: "User " + post.created_by,
+                  avatarColor: "bg-[var(--nf-blue)]",
+                  image: "https://images.unsplash.com/photo-1603201866527-18fd9ff8fb9a?w=200&h=200&fit=crop",
+                }))
+              : fallbackProposals
+            ).map((prop) => (
+              <Card key={prop.title} onClick={() => router.push("id" in prop && prop.id ? `/proposals/${prop.id}` : "/proposals")} className="cursor-pointer bg-[var(--nf-card-bg)] border-none rounded-[12px] p-3 flex gap-3">
                 <div
                   className="w-[100px] h-[100px] rounded-lg bg-cover bg-center shrink-0"
                   style={{ backgroundImage: `url(${prop.image})` }}
@@ -188,12 +239,13 @@ export function Home() {
 
           {/* Action Buttons */}
           <div className="flex gap-2">
-            <Button className="flex-1 bg-[var(--nf-lime)] text-[var(--nf-surface)] hover:bg-[var(--nf-lime)]/90 rounded-full gap-1.5 py-2">
+            <Button onClick={() => router.push("/posts")} className="flex-1 bg-[var(--nf-lime)] text-[var(--nf-surface)] hover:bg-[var(--nf-lime)]/90 rounded-full gap-1.5 py-2">
               <Users className="w-3.5 h-3.5" />
               <span className="text-[13px] font-semibold">找队友</span>
             </Button>
             <Button
               variant="outline"
+              onClick={() => router.push("/posts")}
               className="flex-1 bg-[var(--nf-card-bg)] border-[var(--nf-dark-bg)] text-[var(--nf-light-gray)] hover:bg-[var(--nf-dark-bg)] rounded-full gap-1.5 py-2"
             >
               <Lightbulb className="w-3.5 h-3.5" />
@@ -205,7 +257,7 @@ export function Home() {
           <div className="flex flex-col gap-2 py-3">
             <span className="text-sm font-semibold text-[var(--nf-white)]">发布提案</span>
             <span className="text-[12px] text-[var(--nf-muted)]">快来发布一个让世界惊艳的提案吧。</span>
-            <Button className="bg-[var(--nf-dark-bg)] text-[var(--nf-light-gray)] hover:bg-[var(--nf-dark-bg)]/80 rounded-lg py-2.5">
+            <Button onClick={() => router.push("/proposals")} className="bg-[var(--nf-dark-bg)] text-[var(--nf-light-gray)] hover:bg-[var(--nf-dark-bg)]/80 rounded-lg py-2.5">
               <span className="text-[13px] font-medium">立即发布</span>
             </Button>
           </div>

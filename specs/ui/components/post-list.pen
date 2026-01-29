@@ -17,12 +17,20 @@
           "id": "jh68n",
           "name": "header",
           "width": "fill_container",
-          "height": 56,
-          "fill": "#222222",
+          "height": 60,
+          "fill": "#181818",
+          "stroke": {
+            "align": "inside",
+            "thickness": {
+              "bottom": 1
+            },
+            "fill": "#333333"
+          },
           "padding": [
             0,
             24
           ],
+          "justifyContent": "space_between",
           "alignItems": "center",
           "children": [
             {
@@ -59,12 +67,16 @@
               "id": "6OmcB",
               "name": "searchBar",
               "width": 400,
-              "fill": "#333333",
+              "fill": "#222222",
               "cornerRadius": 21,
+              "stroke": {
+                "thickness": 1,
+                "fill": "#333333"
+              },
               "gap": 8,
               "padding": [
-                8,
-                16
+                10,
+                20
               ],
               "alignItems": "center",
               "children": [
@@ -165,9 +177,9 @@
               "type": "frame",
               "id": "YVaM2",
               "name": "sidebar",
-              "width": 180,
+              "width": 168,
               "height": "fill_container",
-              "fill": "#222222",
+              "fill": "#181818",
               "layout": "vertical",
               "gap": 4,
               "padding": [

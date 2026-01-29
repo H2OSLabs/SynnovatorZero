@@ -13,21 +13,29 @@ Synnovator is a creative collaboration platform (协创者) being rebuilt from s
 ## Commands
 
 ```bash
-# Run Python
-uv run python main.py
+# Start all services (backend + frontend)
+make start
 
-# Add a dependency
+# Start backend only (FastAPI on port 8000)
+make backend
+
+# Start frontend only (Next.js on port 3000)
+make frontend
+
+# Add a Python dependency
 uv add <package>
 
 # Sync dependencies from lock file
 uv sync
-```
 
-No test framework is configured yet. When tests are added, use `uv run pytest`.
+# Run tests
+uv run pytest
+```
 
 ## Project Structure
 
 ```
+<<<<<<< Updated upstream
 docs/               # Functional documentation
   data-types.md     #   Content type schemas (7 types)
   relationships.md  #   Relationship schemas (9 relations)
@@ -45,6 +53,19 @@ specs/              # Development standards and guidelines
 main.py             # Entry point (placeholder)
 pyproject.toml      # Python project config
 uv.toml             # UV package manager config (Tsinghua mirror)
+=======
+app/            # FastAPI backend (package name matches api-builder templates)
+frontend/       # Next.js 14 frontend
+docs/           # Functional documentation (data model, user journeys)
+specs/          # Development standards and guidelines
+specs/ui/       # Design system (.pen files: style guide + components)
+.claude/        # Claude Code configuration, skills, plugins
+.synnovator/    # Platform data (YAML+Markdown) and generated OpenAPI spec
+deploy/         # Docker & deployment configs
+pyproject.toml  # Python project config
+uv.toml         # UV package manager config (Tsinghua mirror)
+Makefile        # Build automation (make start/stop/clean)
+>>>>>>> Stashed changes
 ```
 
 ## Architecture

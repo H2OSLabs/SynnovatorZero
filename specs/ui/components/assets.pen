@@ -17,7 +17,7 @@
           "id": "NpNuq",
           "name": "header",
           "width": "fill_container",
-          "height": 56,
+          "height": 60,
           "fill": "#181818",
           "stroke": {
             "align": "inside",
@@ -192,7 +192,7 @@
               "type": "frame",
               "id": "RRBVk",
               "name": "sidebar",
-              "width": 140,
+              "width": 168,
               "height": "fill_container",
               "fill": "#181818",
               "layout": "vertical",
@@ -1063,9 +1063,9 @@
               "type": "frame",
               "id": "EYfV7",
               "name": "rightPanel",
-              "width": 360,
+              "width": 328,
               "height": "fill_container",
-              "fill": "#F5F5F5",
+              "fill": "#222222",
               "cornerRadius": 12
             }
           ]

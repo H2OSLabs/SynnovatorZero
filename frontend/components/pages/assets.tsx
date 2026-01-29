@@ -1,5 +1,7 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   Menu, Search, Zap, Bell, User, ChevronDown,
   Compass, Globe, Mountain, Wallet,
@@ -8,8 +10,10 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { listResources } from "@/lib/api-client"
+import type { Resource } from "@/lib/types"
 
-const assetCards = [
+const fallbackAssetCards = [
   {
     title: "大赛官方天翼云算力",
     tags: [
@@ -57,13 +61,51 @@ const assetCards = [
 ]
 
 export function Assets() {
+  const router = useRouter()
+  const [resources, setResources] = useState<Resource[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeFilter, setActiveFilter] = useState<string>("all")
+
+  useEffect(() => {
+    let cancelled = false
+    async function fetchData() {
+      setLoading(true)
+      try {
+        const data = await listResources(0, 20)
+        if (!cancelled) {
+          setResources(data.items)
+        }
+      } catch (err) {
+        console.error("Failed to fetch resources:", err)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchData()
+    return () => { cancelled = true }
+  }, [])
+
+  const filteredResources = activeFilter === "all"
+    ? resources
+    : resources.filter((r) => r.mime_type?.startsWith(activeFilter))
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[var(--nf-near-black)]">
+        <span className="text-[var(--nf-muted)] text-lg">加载中...</span>
+      </div>
+    )
+  }
   return (
     <div className="flex flex-col h-screen bg-[var(--nf-near-black)]">
       {/* Header */}
       <header className="flex items-center justify-between h-14 px-6 border-b border-[var(--nf-dark-bg)] bg-[var(--nf-near-black)]">
         <div className="flex items-center gap-4">
           <Menu className="w-6 h-6 text-[var(--nf-white)]" />
-          <span className="font-heading text-[20px] font-bold text-[var(--nf-lime)]">
+          <span
+            className="font-heading text-[20px] font-bold text-[var(--nf-lime)] cursor-pointer"
+            onClick={() => router.push("/")}
+          >
             协创者
           </span>
         </div>
@@ -90,15 +132,24 @@ export function Assets() {
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar */}
         <aside className="w-[140px] bg-[var(--nf-near-black)] p-4 px-3 flex flex-col gap-1">
-          <div className="flex items-center gap-2.5 px-3 py-2.5 bg-[var(--nf-lime)] rounded-full">
+          <div
+            className="flex items-center gap-2.5 px-3 py-2.5 bg-[var(--nf-lime)] rounded-full cursor-pointer"
+            onClick={() => router.push("/")}
+          >
             <Compass className="w-[18px] h-[18px] text-[var(--nf-surface)]" />
             <span className="text-sm font-semibold text-[var(--nf-surface)]">探索</span>
           </div>
-          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-full">
+          <div
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-full cursor-pointer hover:bg-[var(--nf-card-bg)]"
+            onClick={() => router.push("/categories/1")}
+          >
             <Globe className="w-[18px] h-[18px] text-[var(--nf-muted)]" />
             <span className="text-sm text-[var(--nf-muted)]">星球</span>
           </div>
-          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-full">
+          <div
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-full cursor-pointer hover:bg-[var(--nf-card-bg)]"
+            onClick={() => router.push("/team")}
+          >
             <Mountain className="w-[18px] h-[18px] text-[var(--nf-muted)]" />
             <span className="text-sm text-[var(--nf-muted)]">营地</span>
           </div>
@@ -116,29 +167,38 @@ export function Assets() {
 
           {/* Category Tabs */}
           <div className="grid grid-cols-3 gap-4">
-            {/* AI/Agent - Active */}
-            <Card className="h-[100px] bg-[var(--nf-card-bg)] border-2 border-[var(--nf-lime)] rounded-[12px] p-4 flex items-center gap-4">
+            {/* All - Filter */}
+            <Card
+              className={`h-[100px] bg-[var(--nf-card-bg)] rounded-[12px] p-4 flex items-center gap-4 cursor-pointer ${activeFilter === "all" ? "border-2 border-[var(--nf-lime)]" : "border border-[var(--nf-dark-bg)]"}`}
+              onClick={() => setActiveFilter("all")}
+            >
               <div className="w-[60px] h-[60px] rounded-lg bg-[var(--nf-dark-bg)] shrink-0" />
               <div className="flex flex-col gap-1">
-                <span className="text-[16px] font-bold text-[var(--nf-lime)]">
-                  AI/Agent
+                <span className={`text-[16px] font-bold ${activeFilter === "all" ? "text-[var(--nf-lime)]" : "text-[var(--nf-white)]"}`}>
+                  全部
                 </span>
                 <span className="font-mono text-[13px] text-[var(--nf-light-gray)]">
-                  0 TOPS
+                  {resources.length} 个资源
                 </span>
               </div>
             </Card>
 
-            {/* 证书 - Inactive */}
-            <Card className="h-[100px] bg-[var(--nf-card-bg)] border border-[var(--nf-dark-bg)] rounded-[12px] flex items-center justify-center">
-              <span className="text-[16px] font-semibold text-[var(--nf-white)]">
-                证书
+            {/* Image Filter */}
+            <Card
+              className={`h-[100px] bg-[var(--nf-card-bg)] rounded-[12px] flex items-center justify-center cursor-pointer ${activeFilter === "image" ? "border-2 border-[var(--nf-lime)]" : "border border-[var(--nf-dark-bg)]"}`}
+              onClick={() => setActiveFilter("image")}
+            >
+              <span className={`text-[16px] font-semibold ${activeFilter === "image" ? "text-[var(--nf-lime)]" : "text-[var(--nf-white)]"}`}>
+                图片
               </span>
             </Card>
 
-            {/* 文件 - Inactive */}
-            <Card className="h-[100px] bg-[var(--nf-card-bg)] border border-[var(--nf-dark-bg)] rounded-[12px] flex items-center justify-center">
-              <span className="text-[16px] font-semibold text-[var(--nf-white)]">
+            {/* Document Filter */}
+            <Card
+              className={`h-[100px] bg-[var(--nf-card-bg)] rounded-[12px] flex items-center justify-center cursor-pointer ${activeFilter === "application" ? "border-2 border-[var(--nf-lime)]" : "border border-[var(--nf-dark-bg)]"}`}
+              onClick={() => setActiveFilter("application")}
+            >
+              <span className={`text-[16px] font-semibold ${activeFilter === "application" ? "text-[var(--nf-lime)]" : "text-[var(--nf-white)]"}`}>
                 文件
               </span>
             </Card>
@@ -146,7 +206,49 @@ export function Assets() {
 
           {/* Assets Grid */}
           <div className="grid grid-cols-2 gap-4">
-            {assetCards.map((asset, index) => (
+            {filteredResources.length > 0 ? filteredResources.map((resource) => (
+              <Card
+                key={resource.id}
+                className="bg-[var(--nf-card-bg)] border border-[var(--nf-dark-bg)] rounded-[12px] p-4 flex flex-col gap-2"
+              >
+                <span className="text-[15px] font-semibold text-[var(--nf-white)]">
+                  {resource.display_name || resource.filename}
+                </span>
+
+                <div className="flex items-center gap-2">
+                  {resource.mime_type && (
+                    <Badge
+                      className="rounded-sm px-2 py-0.5 text-[11px] border-transparent bg-[var(--nf-lime)] text-[var(--nf-surface)]"
+                    >
+                      {resource.mime_type.split("/")[1] || resource.mime_type}
+                    </Badge>
+                  )}
+                  {resource.file_size && (
+                    <Badge
+                      className="rounded-sm px-2 py-0.5 text-[11px] border-transparent bg-[var(--nf-orange)] text-[var(--nf-white)]"
+                    >
+                      {(resource.file_size / 1024).toFixed(1)} KB
+                    </Badge>
+                  )}
+                </div>
+
+                <p className="text-[12px] text-[var(--nf-muted)]">
+                  {resource.description || "暂无描述"}
+                </p>
+
+                <div className="flex items-center justify-between mt-auto">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#00B42A]" />
+                    <span className="text-[11px] text-[#00B42A]">可用</span>
+                  </div>
+                  {resource.created_at && (
+                    <span className="text-[11px] text-[var(--nf-muted)]">
+                      创建于: {new Date(resource.created_at).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+              </Card>
+            )) : fallbackAssetCards.map((asset, index) => (
               <Card
                 key={index}
                 className="bg-[var(--nf-card-bg)] border border-[var(--nf-dark-bg)] rounded-[12px] p-4 flex flex-col gap-2"

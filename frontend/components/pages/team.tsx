@@ -1,5 +1,7 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   Menu, Search, Zap, Bell, User, Plus,
   Compass, Globe, Mountain, Users, Wallet,
@@ -9,11 +11,8 @@ import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-
-const members = [
-  { id: 1, color: "bg-[#555555]" },
-  { id: 2, color: "bg-[#777777]" },
-]
+import { getGroup, listGroupMembers } from "@/lib/api-client"
+import type { Group, Member } from "@/lib/types"
 
 const assets = [
   { label: "AI/Agent", value: "0", unit: "TOPS", highlight: true },
@@ -21,14 +20,53 @@ const assets = [
   { label: "文件", value: "16", unit: "个文件", highlight: false },
 ]
 
-export function Team() {
+export function Team({ groupId }: { groupId: number }) {
+  const router = useRouter()
+  const [group, setGroup] = useState<Group | null>(null)
+  const [members, setMembers] = useState<Member[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState("proposals")
+
+  useEffect(() => {
+    let cancelled = false
+    async function fetchData() {
+      setLoading(true)
+      try {
+        const [groupData, membersData] = await Promise.all([
+          getGroup(groupId),
+          listGroupMembers(groupId),
+        ])
+        if (!cancelled) {
+          setGroup(groupData)
+          setMembers(membersData.items)
+        }
+      } catch (err) {
+        console.error("Failed to fetch team data:", err)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchData()
+    return () => { cancelled = true }
+  }, [groupId])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[var(--nf-near-black)]">
+        <span className="text-[var(--nf-muted)] text-lg">加载中...</span>
+      </div>
+    )
+  }
   return (
     <div className="flex flex-col h-screen bg-[var(--nf-near-black)]">
       {/* Header */}
       <header className="flex items-center justify-between h-14 px-6 border-b border-[var(--nf-dark-bg)] bg-[var(--nf-near-black)]">
         <div className="flex items-center gap-4">
           <Menu className="w-6 h-6 text-[var(--nf-white)]" />
-          <span className="font-heading text-[20px] font-bold text-[var(--nf-white)]">
+          <span
+            className="font-heading text-[20px] font-bold text-[var(--nf-white)] cursor-pointer"
+            onClick={() => router.push("/")}
+          >
             协创者
           </span>
         </div>
@@ -54,9 +92,27 @@ export function Team() {
       <div className="flex flex-1 overflow-hidden">
         {/* Compact Sidebar - Icon Only */}
         <aside className="w-[60px] bg-[var(--nf-near-black)] flex flex-col items-center pt-4 gap-4">
-          <Compass className="w-5 h-5 text-[var(--nf-muted)]" />
-          <Globe className="w-5 h-5 text-[var(--nf-muted)]" />
-          <Mountain className="w-5 h-5 text-[var(--nf-muted)]" />
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer hover:bg-[var(--nf-dark-bg)]"
+            onClick={() => router.push("/")}
+            title="探索"
+          >
+            <Compass className="w-5 h-5 text-[var(--nf-muted)]" />
+          </div>
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer hover:bg-[var(--nf-dark-bg)]"
+            onClick={() => router.push("/categories/1")}
+            title="星球"
+          >
+            <Globe className="w-5 h-5 text-[var(--nf-muted)]" />
+          </div>
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer hover:bg-[var(--nf-dark-bg)]"
+            onClick={() => router.push("/team")}
+            title="营地"
+          >
+            <Mountain className="w-5 h-5 text-[var(--nf-muted)]" />
+          </div>
         </aside>
 
         {/* Main Content */}
@@ -69,23 +125,26 @@ export function Team() {
             {/* Team Info */}
             <div className="flex flex-col gap-1.5 flex-1">
               <h1 className="text-[22px] font-semibold text-[var(--nf-white)]">
-                团队
+                {group?.name ?? "团队"}
               </h1>
               <div className="flex items-center gap-4">
                 <span className="text-[13px] text-[var(--nf-muted)]">
-                  <span className="font-mono text-[var(--nf-white)]">12</span> 帖子
+                  <span className="font-mono text-[var(--nf-white)]">{members.length || 12}</span> 成员
                 </span>
                 <span className="text-[13px] text-[var(--nf-muted)]">
-                  <span className="font-mono text-[var(--nf-white)]">6</span> 关注
+                  <span className="font-mono text-[var(--nf-white)]">{group?.visibility === "public" ? "公开" : "私密"}</span>
                 </span>
               </div>
               <p className="text-[13px] text-[var(--nf-muted)]">
-                未来的协会与创新型创新技术开发运营企业
+                {group?.description ?? "未来的协会与创新型创新技术开发运营企业"}
               </p>
             </div>
 
             {/* Manage Button */}
-            <Button className="bg-[var(--nf-dark-bg)] text-[var(--nf-light-gray)] hover:bg-[var(--nf-dark-bg)]/80 rounded-lg px-4 py-2">
+            <Button
+              className="bg-[var(--nf-dark-bg)] text-[var(--nf-light-gray)] hover:bg-[var(--nf-dark-bg)]/80 rounded-lg px-4 py-2"
+              onClick={() => console.log("管理面板")}
+            >
               <span className="text-sm">管理面板</span>
             </Button>
           </div>
@@ -97,12 +156,26 @@ export function Team() {
               <span className="text-[16px] font-semibold text-[var(--nf-white)]">队员</span>
             </div>
             <div className="flex items-center gap-3">
-              {members.map((member) => (
+              {members.length > 0 ? members.map((member) => (
                 <div
                   key={member.id}
-                  className={`w-[48px] h-[48px] rounded-full ${member.color}`}
-                />
-              ))}
+                  className="w-[48px] h-[48px] rounded-full bg-[#555555] flex items-center justify-center relative"
+                  title={`用户 ${member.user_id} (${member.role})`}
+                >
+                  <User className="w-5 h-5 text-[var(--nf-muted)]" />
+                  {member.role === "owner" && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[var(--nf-lime)] text-[var(--nf-surface)] text-[9px] flex items-center justify-center font-bold">主</span>
+                  )}
+                  {member.role === "admin" && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[var(--nf-blue)] text-[var(--nf-white)] text-[9px] flex items-center justify-center font-bold">管</span>
+                  )}
+                </div>
+              )) : (
+                <>
+                  <div className="w-[48px] h-[48px] rounded-full bg-[#555555]" />
+                  <div className="w-[48px] h-[48px] rounded-full bg-[#777777]" />
+                </>
+              )}
               {/* Add Member Button */}
               <button className="w-[48px] h-[48px] rounded-full bg-[var(--nf-card-bg)] border border-[var(--nf-dark-bg)] flex items-center justify-center">
                 <Plus className="w-5 h-5 text-[var(--nf-muted)]" />
@@ -140,22 +213,25 @@ export function Team() {
           </section>
 
           {/* Tabs */}
-          <Tabs defaultValue="proposals" className="flex flex-col gap-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col gap-4">
             <TabsList className="w-full justify-start bg-transparent border-b border-[var(--nf-dark-bg)] rounded-none h-auto p-0 gap-0">
               <TabsTrigger
                 value="proposals"
+                onClick={() => setActiveTab("proposals")}
                 className="rounded-none border-b-2 border-transparent px-4 py-2.5 text-[15px] font-medium text-[var(--nf-muted)] data-[state=active]:text-[var(--nf-lime)] data-[state=active]:border-[var(--nf-lime)] data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none"
               >
                 提案
               </TabsTrigger>
               <TabsTrigger
                 value="posts"
+                onClick={() => setActiveTab("posts")}
                 className="rounded-none border-b-2 border-transparent px-4 py-2.5 text-[15px] font-medium text-[var(--nf-muted)] data-[state=active]:text-[var(--nf-lime)] data-[state=active]:border-[var(--nf-lime)] data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none"
               >
                 帖子
               </TabsTrigger>
               <TabsTrigger
                 value="favorites"
+                onClick={() => setActiveTab("favorites")}
                 className="rounded-none border-b-2 border-transparent px-4 py-2.5 text-[15px] font-medium text-[var(--nf-muted)] data-[state=active]:text-[var(--nf-lime)] data-[state=active]:border-[var(--nf-lime)] data-[state=active]:font-semibold data-[state=active]:bg-transparent data-[state=active]:shadow-none"
               >
                 收藏
