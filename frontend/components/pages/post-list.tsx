@@ -6,14 +6,14 @@ import { AppLayout } from "@/components/layout/app-layout"
 
 const mainTabs = ["帖子", "提案广场", "资源", "团队", "活动", "找队友", "找点子", "官方"]
 
-const teamCards = [
+const fallbackTeamCards = [
   { name: "金发发前端", image: "https://images.unsplash.com/photo-1640183295767-d237218daafd?w=400&h=300&fit=crop" },
   { name: "你意想不到的", image: "https://images.unsplash.com/photo-1543132220-e7fef0b974e7?w=400&h=300&fit=crop" },
   { name: "JioNan", image: "https://images.unsplash.com/photo-1593579491833-457b2c451e38?w=400&h=300&fit=crop" },
   { name: "JioNan", image: "https://images.unsplash.com/photo-1717494760896-3c2f7b173c40?w=400&h=300&fit=crop" },
 ]
 
-const ideaCards = [
+const fallbackIdeaCards = [
   { name: "金发发前端", image: "https://images.unsplash.com/photo-1518463732211-f1e67dfcec66?w=400&h=300&fit=crop" },
   { name: "你意想不到的", image: "https://images.unsplash.com/photo-1671250216070-0c61aa9eb854?w=400&h=300&fit=crop" },
   { name: "JioNan", image: "https://images.unsplash.com/photo-1679485322984-4270db63261e?w=400&h=300&fit=crop" },
@@ -21,6 +21,29 @@ const ideaCards = [
 ]
 
 export function PostList() {
+  const router = useRouter()
+  const [teams, setTeams] = useState<Group[]>([])
+  const [ideas, setIdeas] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [groupsRes, postsRes] = await Promise.all([
+          listGroups({ limit: 4, visibility: "public" }),
+          listPosts({ limit: 4, status: "published" }),
+        ])
+        setTeams(groupsRes.items)
+        setIdeas(postsRes.items)
+      } catch (err) {
+        console.error("Failed to fetch post-list data:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
   return (
     <AppLayout>
       {/* Tabs Row */}

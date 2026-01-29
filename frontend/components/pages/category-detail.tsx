@@ -7,7 +7,46 @@ import { AppLayout } from "@/components/layout/app-layout"
 
 const detailTabs = ["详情", "排榜", "讨论区", "成员", "赛程安排", "关联活动"]
 
-export function CategoryDetail() {
+export function CategoryDetail({ categoryId }: { categoryId: number }) {
+  const router = useRouter()
+  const [activeTab, setActiveTab] = useState("详情")
+  const [category, setCategory] = useState<Category | null>(null)
+  const [posts, setPosts] = useState<CategoryPost[]>([])
+  const [groups, setGroups] = useState<CategoryGroup[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    async function fetchData() {
+      setLoading(true)
+      try {
+        const [cat, catPosts, catGroups] = await Promise.all([
+          getCategory(categoryId),
+          listCategoryPosts(categoryId),
+          listCategoryGroups(categoryId),
+        ])
+        if (!cancelled) {
+          setCategory(cat)
+          setPosts(catPosts)
+          setGroups(catGroups)
+        }
+      } catch (err) {
+        console.error("Failed to fetch category data:", err)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchData()
+    return () => { cancelled = true }
+  }, [categoryId])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[var(--nf-near-black)]">
+        <span className="text-[var(--nf-muted)] text-lg">加载中...</span>
+      </div>
+    )
+  }
   return (
     <AppLayout activeNav="星球">
       {/* Banner Row */}

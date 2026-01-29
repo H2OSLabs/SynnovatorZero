@@ -17,7 +17,43 @@ const assets = [
   { label: "文件", value: "16", unit: "个文件", highlight: false },
 ]
 
-export function Team() {
+export function Team({ groupId }: { groupId: number }) {
+  const router = useRouter()
+  const [group, setGroup] = useState<Group | null>(null)
+  const [members, setMembers] = useState<Member[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState("proposals")
+
+  useEffect(() => {
+    let cancelled = false
+    async function fetchData() {
+      setLoading(true)
+      try {
+        const [groupData, membersData] = await Promise.all([
+          getGroup(groupId),
+          listGroupMembers(groupId),
+        ])
+        if (!cancelled) {
+          setGroup(groupData)
+          setMembers(membersData.items)
+        }
+      } catch (err) {
+        console.error("Failed to fetch team data:", err)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchData()
+    return () => { cancelled = true }
+  }, [groupId])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[var(--nf-near-black)]">
+        <span className="text-[var(--nf-muted)] text-lg">加载中...</span>
+      </div>
+    )
+  }
   return (
     <AppLayout navMode="compact" activeNav="探索">
       {/* Team Header Row */}

@@ -20,7 +20,66 @@ const assets = [
 
 const profileTabs = ["帖子", "提案", "收藏", "更多"]
 
-export function UserProfile() {
+export function UserProfile({ userId }: { userId: number }) {
+  const router = useRouter()
+  const [user, setUser] = useState<UserType | null>(null)
+  const [following, setFollowing] = useState<UserUserRelation[]>([])
+  const [followers, setFollowers] = useState<UserUserRelation[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isFollowing, setIsFollowing] = useState(false)
+  const [activeTab, setActiveTab] = useState("帖子")
+
+  async function handleFollow() {
+    try {
+      if (isFollowing) {
+        await unfollowUser(userId, 1)
+      } else {
+        await followUser(userId, 1)
+      }
+      setIsFollowing(!isFollowing)
+    } catch (err) {
+      console.error("Follow action failed:", err)
+    }
+  }
+
+  useEffect(() => {
+    let cancelled = false
+    async function fetchData() {
+      setLoading(true)
+      try {
+        const [userData, followingData, followersData] = await Promise.all([
+          getUser(userId),
+          getFollowing(userId),
+          getFollowers(userId),
+        ])
+        if (!cancelled) {
+          setUser(userData)
+          setFollowing(followingData)
+          setFollowers(followersData)
+        }
+      } catch (err) {
+        console.error("Failed to fetch user data:", err)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchData()
+    return () => { cancelled = true }
+  }, [userId])
+
+  const stats = [
+    { value: "12", label: "帖子" },
+    { value: String(following.length || 6), label: "关注" },
+    { value: String(followers.length || 6), label: "粉丝" },
+  ]
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[var(--nf-near-black)]">
+        <span className="text-[var(--nf-muted)] text-lg">加载中...</span>
+      </div>
+    )
+  }
   return (
     <AppLayout
       navMode="compact"

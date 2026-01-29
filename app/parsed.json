@@ -1,0 +1,6447 @@
+{
+  "openapi_version": "3.0.3",
+  "info": {
+    "title": "Synnovator API",
+    "version": "1.0.0",
+    "description": "API for Synnovator - Activity and Competition Management Platform"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.synnovator.com",
+      "description": "Production server"
+    }
+  ],
+  "schemas": {
+    "Error": {
+      "name": "Error",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "error",
+          "type": "object",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "error"
+      ],
+      "enums": []
+    },
+    "CategoryType": {
+      "name": "CategoryType",
+      "type": "string",
+      "description": "Category type",
+      "properties": [],
+      "required": [],
+      "enums": [
+        {
+          "name": "Enum",
+          "values": [
+            "competition",
+            "operation"
+          ]
+        }
+      ]
+    },
+    "CategoryStatus": {
+      "name": "CategoryStatus",
+      "type": "string",
+      "description": "Category status",
+      "properties": [],
+      "required": [],
+      "enums": [
+        {
+          "name": "Enum",
+          "values": [
+            "draft",
+            "published",
+            "closed"
+          ]
+        }
+      ]
+    },
+    "PostType": {
+      "name": "PostType",
+      "type": "string",
+      "description": "Post type",
+      "properties": [],
+      "required": [],
+      "enums": [
+        {
+          "name": "Enum",
+          "values": [
+            "profile",
+            "team",
+            "category",
+            "for_category",
+            "certificate",
+            "general"
+          ]
+        }
+      ]
+    },
+    "PostStatus": {
+      "name": "PostStatus",
+      "type": "string",
+      "description": "Post status",
+      "properties": [],
+      "required": [],
+      "enums": [
+        {
+          "name": "Enum",
+          "values": [
+            "draft",
+            "pending_review",
+            "published",
+            "rejected"
+          ]
+        }
+      ]
+    },
+    "UserRole": {
+      "name": "UserRole",
+      "type": "string",
+      "description": "User role",
+      "properties": [],
+      "required": [],
+      "enums": [
+        {
+          "name": "Enum",
+          "values": [
+            "participant",
+            "organizer",
+            "admin"
+          ]
+        }
+      ]
+    },
+    "GroupVisibility": {
+      "name": "GroupVisibility",
+      "type": "string",
+      "description": "Group visibility",
+      "properties": [],
+      "required": [],
+      "enums": [
+        {
+          "name": "Enum",
+          "values": [
+            "public",
+            "private"
+          ]
+        }
+      ]
+    },
+    "InteractionType": {
+      "name": "InteractionType",
+      "type": "string",
+      "description": "Interaction type",
+      "properties": [],
+      "required": [],
+      "enums": [
+        {
+          "name": "Enum",
+          "values": [
+            "like",
+            "comment",
+            "rating"
+          ]
+        }
+      ]
+    },
+    "MemberRole": {
+      "name": "MemberRole",
+      "type": "string",
+      "description": "Group member role",
+      "properties": [],
+      "required": [],
+      "enums": [
+        {
+          "name": "Enum",
+          "values": [
+            "owner",
+            "admin",
+            "member"
+          ]
+        }
+      ]
+    },
+    "MemberStatus": {
+      "name": "MemberStatus",
+      "type": "string",
+      "description": "Group membership status",
+      "properties": [],
+      "required": [],
+      "enums": [
+        {
+          "name": "Enum",
+          "values": [
+            "pending",
+            "accepted",
+            "rejected"
+          ]
+        }
+      ]
+    },
+    "CategoryCreate": {
+      "name": "CategoryCreate",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "name",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/CategoryType"
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/CategoryStatus"
+        },
+        {
+          "name": "cover_image",
+          "type": "string",
+          "format": "uri",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "start_date",
+          "type": "string",
+          "format": "date-time",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "end_date",
+          "type": "string",
+          "format": "date-time",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "content",
+          "type": "string",
+          "format": null,
+          "description": "Markdown content body",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "name",
+        "description",
+        "type"
+      ],
+      "enums": []
+    },
+    "CategoryUpdate": {
+      "name": "CategoryUpdate",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "name",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/CategoryType"
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/CategoryStatus"
+        },
+        {
+          "name": "cover_image",
+          "type": "string",
+          "format": "uri",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "start_date",
+          "type": "string",
+          "format": "date-time",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "end_date",
+          "type": "string",
+          "format": "date-time",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "content",
+          "type": "string",
+          "format": null,
+          "description": "Markdown content body",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [],
+      "enums": []
+    },
+    "Category": {
+      "name": "Category",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "name",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/CategoryType"
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/CategoryStatus"
+        },
+        {
+          "name": "cover_image",
+          "type": "string",
+          "format": "uri",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "start_date",
+          "type": "string",
+          "format": "date-time",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "end_date",
+          "type": "string",
+          "format": "date-time",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "id",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "created_by",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "created_at",
+          "type": "string",
+          "format": "date-time",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "updated_at",
+          "type": "string",
+          "format": "date-time",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "deleted_at",
+          "type": "string",
+          "format": "date-time",
+          "description": "",
+          "nullable": false,
+          "default": "null",
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "content",
+          "type": "string",
+          "format": null,
+          "description": "Markdown content body",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "id",
+        "name",
+        "description",
+        "type",
+        "status",
+        "created_at",
+        "updated_at"
+      ],
+      "enums": []
+    },
+    "PostCreate": {
+      "name": "PostCreate",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "title",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/PostType"
+        },
+        {
+          "name": "tags",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": "[]",
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "type": "string"
+          },
+          "$ref": null
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/PostStatus"
+        },
+        {
+          "name": "content",
+          "type": "string",
+          "format": null,
+          "description": "Markdown content body",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "title"
+      ],
+      "enums": []
+    },
+    "PostUpdate": {
+      "name": "PostUpdate",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "title",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/PostType"
+        },
+        {
+          "name": "tags",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": "[]",
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "type": "string"
+          },
+          "$ref": null
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/PostStatus"
+        },
+        {
+          "name": "content",
+          "type": "string",
+          "format": null,
+          "description": "Markdown content body",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [],
+      "enums": []
+    },
+    "Post": {
+      "name": "Post",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "title",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/PostType"
+        },
+        {
+          "name": "tags",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": "[]",
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "type": "string"
+          },
+          "$ref": null
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/PostStatus"
+        },
+        {
+          "name": "like_count",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": 0,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "comment_count",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": 0,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "average_rating",
+          "type": "number",
+          "format": "float",
+          "description": "",
+          "nullable": false,
+          "default": "null",
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "content",
+          "type": "string",
+          "format": null,
+          "description": "Markdown content body",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "id",
+        "title",
+        "type",
+        "status",
+        "created_at",
+        "updated_at"
+      ],
+      "enums": []
+    },
+    "ResourceCreate": {
+      "name": "ResourceCreate",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "filename",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "display_name",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "filename"
+      ],
+      "enums": []
+    },
+    "ResourceUpdate": {
+      "name": "ResourceUpdate",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "filename",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "display_name",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [],
+      "enums": []
+    },
+    "Resource": {
+      "name": "Resource",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "filename",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "display_name",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "mime_type",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "size",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "format": "uri",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "id",
+        "filename",
+        "created_at"
+      ],
+      "enums": []
+    },
+    "RuleCreate": {
+      "name": "RuleCreate",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "name",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "allow_public",
+          "type": "boolean",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": false,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "require_review",
+          "type": "boolean",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": false,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "reviewers",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "type": "string"
+          },
+          "$ref": null
+        },
+        {
+          "name": "submission_start",
+          "type": "string",
+          "format": "date-time",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "submission_deadline",
+          "type": "string",
+          "format": "date-time",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "submission_format",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "type": "string"
+          },
+          "$ref": null
+        },
+        {
+          "name": "max_submissions",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "min_team_size",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "max_team_size",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "scoring_criteria",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "type": "object"
+          },
+          "$ref": null
+        },
+        {
+          "name": "content",
+          "type": "string",
+          "format": null,
+          "description": "Markdown content body",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "name",
+        "description"
+      ],
+      "enums": []
+    },
+    "RuleUpdate": {
+      "name": "RuleUpdate",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "name",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "allow_public",
+          "type": "boolean",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": false,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "require_review",
+          "type": "boolean",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": false,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "reviewers",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "type": "string"
+          },
+          "$ref": null
+        },
+        {
+          "name": "submission_start",
+          "type": "string",
+          "format": "date-time",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "submission_deadline",
+          "type": "string",
+          "format": "date-time",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "submission_format",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "type": "string"
+          },
+          "$ref": null
+        },
+        {
+          "name": "max_submissions",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "min_team_size",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "max_team_size",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "scoring_criteria",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "type": "object"
+          },
+          "$ref": null
+        },
+        {
+          "name": "content",
+          "type": "string",
+          "format": null,
+          "description": "Markdown content body",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [],
+      "enums": []
+    },
+    "Rule": {
+      "name": "Rule",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "name",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "allow_public",
+          "type": "boolean",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": false,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "require_review",
+          "type": "boolean",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": false,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "reviewers",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "type": "string"
+          },
+          "$ref": null
+        },
+        {
+          "name": "submission_start",
+          "type": "string",
+          "format": "date-time",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "submission_deadline",
+          "type": "string",
+          "format": "date-time",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "submission_format",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "type": "string"
+          },
+          "$ref": null
+        },
+        {
+          "name": "max_submissions",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "min_team_size",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "max_team_size",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "scoring_criteria",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "type": "object"
+          },
+          "$ref": null
+        },
+        {
+          "name": "content",
+          "type": "string",
+          "format": null,
+          "description": "Markdown content body",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "id",
+        "name",
+        "description",
+        "created_at"
+      ],
+      "enums": []
+    },
+    "ScoringCriterion": {
+      "name": "ScoringCriterion",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "name",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "weight",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": 0,
+          "maximum": 100,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "name",
+        "weight"
+      ],
+      "enums": []
+    },
+    "UserCreate": {
+      "name": "UserCreate",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "username",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "format": "email",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "display_name",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "avatar_url",
+          "type": "string",
+          "format": "uri",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "bio",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/UserRole"
+        }
+      ],
+      "required": [
+        "username",
+        "email"
+      ],
+      "enums": []
+    },
+    "UserUpdate": {
+      "name": "UserUpdate",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "username",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "format": "email",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "display_name",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "avatar_url",
+          "type": "string",
+          "format": "uri",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "bio",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/UserRole"
+        }
+      ],
+      "required": [],
+      "enums": []
+    },
+    "User": {
+      "name": "User",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "username",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "format": "email",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "display_name",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "avatar_url",
+          "type": "string",
+          "format": "uri",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "bio",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/UserRole"
+        }
+      ],
+      "required": [
+        "id",
+        "username",
+        "email",
+        "role",
+        "created_at"
+      ],
+      "enums": []
+    },
+    "GroupCreate": {
+      "name": "GroupCreate",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "name",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "visibility",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/GroupVisibility"
+        },
+        {
+          "name": "max_members",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "require_approval",
+          "type": "boolean",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": false,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "name"
+      ],
+      "enums": []
+    },
+    "GroupUpdate": {
+      "name": "GroupUpdate",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "name",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "visibility",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/GroupVisibility"
+        },
+        {
+          "name": "max_members",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "require_approval",
+          "type": "boolean",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": false,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [],
+      "enums": []
+    },
+    "Group": {
+      "name": "Group",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "name",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "visibility",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/GroupVisibility"
+        },
+        {
+          "name": "max_members",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "require_approval",
+          "type": "boolean",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": false,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "id",
+        "name",
+        "visibility",
+        "created_at"
+      ],
+      "enums": []
+    },
+    "CommentCreate": {
+      "name": "CommentCreate",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "content",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": 1,
+          "maxLength": 2000,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "parent_id",
+          "type": "string",
+          "format": null,
+          "description": "Parent comment ID for replies",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "content"
+      ],
+      "enums": []
+    },
+    "Comment": {
+      "name": "Comment",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "id",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "content",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "parent_id",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "created_by",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "author",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/User"
+        },
+        {
+          "name": "created_at",
+          "type": "string",
+          "format": "date-time",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "updated_at",
+          "type": "string",
+          "format": "date-time",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "id",
+        "content",
+        "created_by",
+        "created_at"
+      ],
+      "enums": []
+    },
+    "RatingCreate": {
+      "name": "RatingCreate",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "scores",
+          "type": "object",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "comment",
+          "type": "string",
+          "format": null,
+          "description": "Optional rating comment",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "scores"
+      ],
+      "enums": []
+    },
+    "Rating": {
+      "name": "Rating",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "id",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "scores",
+          "type": "object",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "comment",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "created_by",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "author",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/User"
+        },
+        {
+          "name": "created_at",
+          "type": "string",
+          "format": "date-time",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "id",
+        "scores",
+        "created_by",
+        "created_at"
+      ],
+      "enums": []
+    },
+    "MemberAdd": {
+      "name": "MemberAdd",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "user_id",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/MemberRole"
+        }
+      ],
+      "required": [
+        "user_id"
+      ],
+      "enums": []
+    },
+    "MemberUpdate": {
+      "name": "MemberUpdate",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "role",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/MemberRole"
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/MemberStatus"
+        }
+      ],
+      "required": [],
+      "enums": []
+    },
+    "Member": {
+      "name": "Member",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "user_id",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "user",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/User"
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/MemberRole"
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/MemberStatus"
+        },
+        {
+          "name": "joined_at",
+          "type": "string",
+          "format": "date-time",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "status_changed_at",
+          "type": "string",
+          "format": "date-time",
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "user_id",
+        "role",
+        "status"
+      ],
+      "enums": []
+    },
+    "CategoryRuleAdd": {
+      "name": "CategoryRuleAdd",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "rule_id",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "priority",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": 0,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "rule_id"
+      ],
+      "enums": []
+    },
+    "CategoryPostAdd": {
+      "name": "CategoryPostAdd",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "post_id",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "relation_type",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": "submission",
+          "enum": [
+            "submission",
+            "reference"
+          ],
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "post_id"
+      ],
+      "enums": [
+        {
+          "name": "Relation_typeEnum",
+          "values": [
+            "submission",
+            "reference"
+          ]
+        }
+      ]
+    },
+    "CategoryGroupAdd": {
+      "name": "CategoryGroupAdd",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "group_id",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "group_id"
+      ],
+      "enums": []
+    },
+    "PostResourceAdd": {
+      "name": "PostResourceAdd",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "resource_id",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "display_type",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": "attachment",
+          "enum": [
+            "attachment",
+            "inline"
+          ],
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "position",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "resource_id"
+      ],
+      "enums": [
+        {
+          "name": "Display_typeEnum",
+          "values": [
+            "attachment",
+            "inline"
+          ]
+        }
+      ]
+    },
+    "PostRelationAdd": {
+      "name": "PostRelationAdd",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "target_post_id",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "relation_type",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": "reference",
+          "enum": [
+            "reference",
+            "reply",
+            "embed"
+          ],
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "position",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "target_post_id"
+      ],
+      "enums": [
+        {
+          "name": "Relation_typeEnum",
+          "values": [
+            "reference",
+            "reply",
+            "embed"
+          ]
+        }
+      ]
+    },
+    "PaginatedCategoryList": {
+      "name": "PaginatedCategoryList",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "items",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "$ref": "#/components/schemas/Category"
+          },
+          "$ref": null
+        },
+        {
+          "name": "total",
+          "type": "integer",
+          "format": null,
+          "description": "Total number of records",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "skip",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "items",
+        "total",
+        "skip",
+        "limit"
+      ],
+      "enums": []
+    },
+    "PaginatedPostList": {
+      "name": "PaginatedPostList",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "items",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "$ref": "#/components/schemas/Post"
+          },
+          "$ref": null
+        },
+        {
+          "name": "total",
+          "type": "integer",
+          "format": null,
+          "description": "Total number of records",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "skip",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "items",
+        "total",
+        "skip",
+        "limit"
+      ],
+      "enums": []
+    },
+    "PaginatedResourceList": {
+      "name": "PaginatedResourceList",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "items",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "$ref": "#/components/schemas/Resource"
+          },
+          "$ref": null
+        },
+        {
+          "name": "total",
+          "type": "integer",
+          "format": null,
+          "description": "Total number of records",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "skip",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "items",
+        "total",
+        "skip",
+        "limit"
+      ],
+      "enums": []
+    },
+    "PaginatedRuleList": {
+      "name": "PaginatedRuleList",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "items",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "$ref": "#/components/schemas/Rule"
+          },
+          "$ref": null
+        },
+        {
+          "name": "total",
+          "type": "integer",
+          "format": null,
+          "description": "Total number of records",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "skip",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "items",
+        "total",
+        "skip",
+        "limit"
+      ],
+      "enums": []
+    },
+    "PaginatedUserList": {
+      "name": "PaginatedUserList",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "items",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "$ref": "#/components/schemas/User"
+          },
+          "$ref": null
+        },
+        {
+          "name": "total",
+          "type": "integer",
+          "format": null,
+          "description": "Total number of records",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "skip",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "items",
+        "total",
+        "skip",
+        "limit"
+      ],
+      "enums": []
+    },
+    "PaginatedGroupList": {
+      "name": "PaginatedGroupList",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "items",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "$ref": "#/components/schemas/Group"
+          },
+          "$ref": null
+        },
+        {
+          "name": "total",
+          "type": "integer",
+          "format": null,
+          "description": "Total number of records",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "skip",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "items",
+        "total",
+        "skip",
+        "limit"
+      ],
+      "enums": []
+    },
+    "PaginatedCommentList": {
+      "name": "PaginatedCommentList",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "items",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "$ref": "#/components/schemas/Comment"
+          },
+          "$ref": null
+        },
+        {
+          "name": "total",
+          "type": "integer",
+          "format": null,
+          "description": "Total number of records",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "skip",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "items",
+        "total",
+        "skip",
+        "limit"
+      ],
+      "enums": []
+    },
+    "PaginatedRatingList": {
+      "name": "PaginatedRatingList",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "items",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "$ref": "#/components/schemas/Rating"
+          },
+          "$ref": null
+        },
+        {
+          "name": "total",
+          "type": "integer",
+          "format": null,
+          "description": "Total number of records",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "skip",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "items",
+        "total",
+        "skip",
+        "limit"
+      ],
+      "enums": []
+    },
+    "PaginatedMemberList": {
+      "name": "PaginatedMemberList",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "items",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "$ref": "#/components/schemas/Member"
+          },
+          "$ref": null
+        },
+        {
+          "name": "total",
+          "type": "integer",
+          "format": null,
+          "description": "Total number of records",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "skip",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "items",
+        "total",
+        "skip",
+        "limit"
+      ],
+      "enums": []
+    },
+    "BatchIds": {
+      "name": "BatchIds",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "ids",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "type": "string"
+          },
+          "$ref": null
+        }
+      ],
+      "required": [
+        "ids"
+      ],
+      "enums": []
+    },
+    "BatchStatusUpdate": {
+      "name": "BatchStatusUpdate",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "ids",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "type": "string"
+          },
+          "$ref": null
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/PostStatus"
+        }
+      ],
+      "required": [
+        "ids",
+        "status"
+      ],
+      "enums": []
+    },
+    "BatchRoleUpdate": {
+      "name": "BatchRoleUpdate",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "ids",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "type": "string"
+          },
+          "$ref": null
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": "#/components/schemas/UserRole"
+        }
+      ],
+      "required": [
+        "ids",
+        "role"
+      ],
+      "enums": []
+    },
+    "BatchResult": {
+      "name": "BatchResult",
+      "type": "object",
+      "description": "",
+      "properties": [
+        {
+          "name": "success_count",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "failed_count",
+          "type": "integer",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        },
+        {
+          "name": "failed_ids",
+          "type": "array",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": {
+            "type": "string"
+          },
+          "$ref": null
+        },
+        {
+          "name": "errors",
+          "type": "object",
+          "format": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": null,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "pattern": null,
+          "items": null,
+          "$ref": null
+        }
+      ],
+      "required": [
+        "success_count",
+        "failed_count"
+      ],
+      "enums": []
+    }
+  },
+  "paths": {
+    "categories": [
+      {
+        "path": "/categories",
+        "method": "get",
+        "operationId": "list_categories",
+        "summary": "List categories",
+        "description": "",
+        "tags": [
+          "categories"
+        ],
+        "parameters": {
+          "path": [],
+          "query": [
+            {
+              "name": null,
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            },
+            {
+              "name": null,
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            }
+          ],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "List of categories",
+            "schema": "#/components/schemas/PaginatedCategoryList",
+            "schema_name": "PaginatedCategoryList"
+          }
+        }
+      },
+      {
+        "path": "/categories",
+        "method": "post",
+        "operationId": "create_category",
+        "summary": "Create category",
+        "description": "",
+        "tags": [
+          "categories"
+        ],
+        "parameters": {
+          "path": [],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/CategoryCreate",
+          "schema_name": "CategoryCreate"
+        },
+        "responses": {
+          "201": {
+            "description": "Category created",
+            "schema": "#/components/schemas/Category",
+            "schema_name": "Category"
+          },
+          "422": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/categories/{category_id}",
+        "method": "get",
+        "operationId": "get_category",
+        "summary": "Get category",
+        "description": "",
+        "tags": [
+          "categories"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "category_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "Category details",
+            "schema": "#/components/schemas/Category",
+            "schema_name": "Category"
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/categories/{category_id}",
+        "method": "patch",
+        "operationId": "update_category",
+        "summary": "Update category",
+        "description": "",
+        "tags": [
+          "categories"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "category_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/CategoryUpdate",
+          "schema_name": "CategoryUpdate"
+        },
+        "responses": {
+          "200": {
+            "description": "Category updated",
+            "schema": "#/components/schemas/Category",
+            "schema_name": "Category"
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/categories/{category_id}",
+        "method": "delete",
+        "operationId": "delete_category",
+        "summary": "Delete category",
+        "description": "",
+        "tags": [
+          "categories"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "category_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "204": {
+            "description": "Deleted",
+            "schema": "",
+            "schema_name": null
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/categories/{category_id}/rules",
+        "method": "get",
+        "operationId": "list_category_rules",
+        "summary": "List category rules",
+        "description": "",
+        "tags": [
+          "categories"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "category_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "List of rules",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/categories/{category_id}/rules",
+        "method": "post",
+        "operationId": "add_category_rule",
+        "summary": "Add rule to category",
+        "description": "",
+        "tags": [
+          "categories"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "category_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/CategoryRuleAdd",
+          "schema_name": "CategoryRuleAdd"
+        },
+        "responses": {
+          "201": {
+            "description": "Added",
+            "schema": "",
+            "schema_name": null
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/categories/{category_id}/rules/{rule_id}",
+        "method": "delete",
+        "operationId": "remove_category_rule",
+        "summary": "Remove rule from category",
+        "description": "",
+        "tags": [
+          "categories"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "category_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            },
+            {
+              "name": "rule_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "204": {
+            "description": "Removed",
+            "schema": "",
+            "schema_name": null
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/categories/{category_id}/posts",
+        "method": "get",
+        "operationId": "list_category_posts",
+        "summary": "List category posts",
+        "description": "",
+        "tags": [
+          "categories"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "category_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [
+            {
+              "name": null,
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            },
+            {
+              "name": null,
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            },
+            {
+              "name": "relation_type",
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            }
+          ],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "List of posts",
+            "schema": "#/components/schemas/PaginatedPostList",
+            "schema_name": "PaginatedPostList"
+          }
+        }
+      },
+      {
+        "path": "/categories/{category_id}/posts",
+        "method": "post",
+        "operationId": "add_category_post",
+        "summary": "Add post to category",
+        "description": "",
+        "tags": [
+          "categories"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "category_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/CategoryPostAdd",
+          "schema_name": "CategoryPostAdd"
+        },
+        "responses": {
+          "201": {
+            "description": "Added",
+            "schema": "",
+            "schema_name": null
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/categories/{category_id}/groups",
+        "method": "get",
+        "operationId": "list_category_groups",
+        "summary": "List category groups",
+        "description": "",
+        "tags": [
+          "categories"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "category_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "List of groups",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/categories/{category_id}/groups",
+        "method": "post",
+        "operationId": "add_category_group",
+        "summary": "Add group to category",
+        "description": "",
+        "tags": [
+          "categories"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "category_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/CategoryGroupAdd",
+          "schema_name": "CategoryGroupAdd"
+        },
+        "responses": {
+          "201": {
+            "description": "Added",
+            "schema": "",
+            "schema_name": null
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      }
+    ],
+    "posts": [
+      {
+        "path": "/posts",
+        "method": "get",
+        "operationId": "list_posts",
+        "summary": "List posts",
+        "description": "",
+        "tags": [
+          "posts"
+        ],
+        "parameters": {
+          "path": [],
+          "query": [
+            {
+              "name": null,
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            },
+            {
+              "name": null,
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            },
+            {
+              "name": "type",
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            },
+            {
+              "name": "status",
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            },
+            {
+              "name": "tags",
+              "type": "array",
+              "required": false,
+              "description": "",
+              "default": null
+            }
+          ],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "List of posts",
+            "schema": "#/components/schemas/PaginatedPostList",
+            "schema_name": "PaginatedPostList"
+          }
+        }
+      },
+      {
+        "path": "/posts",
+        "method": "post",
+        "operationId": "create_post",
+        "summary": "Create post",
+        "description": "",
+        "tags": [
+          "posts"
+        ],
+        "parameters": {
+          "path": [],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/PostCreate",
+          "schema_name": "PostCreate"
+        },
+        "responses": {
+          "201": {
+            "description": "Post created",
+            "schema": "#/components/schemas/Post",
+            "schema_name": "Post"
+          },
+          "422": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/posts/{post_id}",
+        "method": "get",
+        "operationId": "get_post",
+        "summary": "Get post",
+        "description": "",
+        "tags": [
+          "posts"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "post_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "Post details",
+            "schema": "#/components/schemas/Post",
+            "schema_name": "Post"
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/posts/{post_id}",
+        "method": "patch",
+        "operationId": "update_post",
+        "summary": "Update post",
+        "description": "",
+        "tags": [
+          "posts"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "post_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/PostUpdate",
+          "schema_name": "PostUpdate"
+        },
+        "responses": {
+          "200": {
+            "description": "Post updated",
+            "schema": "#/components/schemas/Post",
+            "schema_name": "Post"
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/posts/{post_id}",
+        "method": "delete",
+        "operationId": "delete_post",
+        "summary": "Delete post",
+        "description": "",
+        "tags": [
+          "posts"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "post_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "204": {
+            "description": "Deleted",
+            "schema": "",
+            "schema_name": null
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/posts/{post_id}/resources",
+        "method": "get",
+        "operationId": "list_post_resources",
+        "summary": "List post resources",
+        "description": "",
+        "tags": [
+          "posts"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "post_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "List of resources",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/posts/{post_id}/resources",
+        "method": "post",
+        "operationId": "add_post_resource",
+        "summary": "Add resource to post",
+        "description": "",
+        "tags": [
+          "posts"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "post_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/PostResourceAdd",
+          "schema_name": "PostResourceAdd"
+        },
+        "responses": {
+          "201": {
+            "description": "Added",
+            "schema": "",
+            "schema_name": null
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/posts/{post_id}/related",
+        "method": "get",
+        "operationId": "list_post_related",
+        "summary": "List post related",
+        "description": "",
+        "tags": [
+          "posts"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "post_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [
+            {
+              "name": "relation_type",
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            }
+          ],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "List of related",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/posts/{post_id}/related",
+        "method": "post",
+        "operationId": "add_post_related",
+        "summary": "Add related to post",
+        "description": "",
+        "tags": [
+          "posts"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "post_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/PostRelationAdd",
+          "schema_name": "PostRelationAdd"
+        },
+        "responses": {
+          "201": {
+            "description": "Added",
+            "schema": "",
+            "schema_name": null
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      }
+    ],
+    "interactions": [
+      {
+        "path": "/posts/{post_id}/like",
+        "method": "post",
+        "operationId": "like_post",
+        "summary": "Like post",
+        "description": "",
+        "tags": [
+          "interactions"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "post_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "201": {
+            "description": "Post liked",
+            "schema": "",
+            "schema_name": null
+          },
+          "409": {
+            "description": "Already liked",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/posts/{post_id}/like",
+        "method": "delete",
+        "operationId": "unlike_post",
+        "summary": "Unlike post",
+        "description": "",
+        "tags": [
+          "interactions"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "post_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "204": {
+            "description": "Like removed",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/posts/{post_id}/comments",
+        "method": "get",
+        "operationId": "list_post_comments",
+        "summary": "List post comments",
+        "description": "",
+        "tags": [
+          "interactions"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "post_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [
+            {
+              "name": null,
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            },
+            {
+              "name": null,
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            }
+          ],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "List of comments",
+            "schema": "#/components/schemas/PaginatedCommentList",
+            "schema_name": "PaginatedCommentList"
+          }
+        }
+      },
+      {
+        "path": "/posts/{post_id}/comments",
+        "method": "post",
+        "operationId": "add_post_comment",
+        "summary": "Add comment",
+        "description": "",
+        "tags": [
+          "interactions"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "post_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/CommentCreate",
+          "schema_name": "CommentCreate"
+        },
+        "responses": {
+          "201": {
+            "description": "Comment added",
+            "schema": "#/components/schemas/Comment",
+            "schema_name": "Comment"
+          }
+        }
+      },
+      {
+        "path": "/posts/{post_id}/comments/{comment_id}",
+        "method": "patch",
+        "operationId": "update_post_comment",
+        "summary": "Update comment",
+        "description": "",
+        "tags": [
+          "interactions"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "post_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            },
+            {
+              "name": "comment_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/CommentCreate",
+          "schema_name": "CommentCreate"
+        },
+        "responses": {
+          "200": {
+            "description": "Comment updated",
+            "schema": "#/components/schemas/Comment",
+            "schema_name": "Comment"
+          }
+        }
+      },
+      {
+        "path": "/posts/{post_id}/comments/{comment_id}",
+        "method": "delete",
+        "operationId": "delete_post_comment",
+        "summary": "Delete comment",
+        "description": "",
+        "tags": [
+          "interactions"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "post_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            },
+            {
+              "name": "comment_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "204": {
+            "description": "Comment deleted",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/posts/{post_id}/ratings",
+        "method": "get",
+        "operationId": "list_post_ratings",
+        "summary": "List post ratings",
+        "description": "",
+        "tags": [
+          "interactions"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "post_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [
+            {
+              "name": null,
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            },
+            {
+              "name": null,
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            }
+          ],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "List of ratings",
+            "schema": "#/components/schemas/PaginatedRatingList",
+            "schema_name": "PaginatedRatingList"
+          }
+        }
+      },
+      {
+        "path": "/posts/{post_id}/ratings",
+        "method": "post",
+        "operationId": "submit_post_rating",
+        "summary": "Submit rating",
+        "description": "",
+        "tags": [
+          "interactions"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "post_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/RatingCreate",
+          "schema_name": "RatingCreate"
+        },
+        "responses": {
+          "201": {
+            "description": "Rating submitted",
+            "schema": "#/components/schemas/Rating",
+            "schema_name": "Rating"
+          }
+        }
+      }
+    ],
+    "resources": [
+      {
+        "path": "/resources",
+        "method": "get",
+        "operationId": "list_resources",
+        "summary": "List resources",
+        "description": "",
+        "tags": [
+          "resources"
+        ],
+        "parameters": {
+          "path": [],
+          "query": [
+            {
+              "name": null,
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            },
+            {
+              "name": null,
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            }
+          ],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "List of resources",
+            "schema": "#/components/schemas/PaginatedResourceList",
+            "schema_name": "PaginatedResourceList"
+          }
+        }
+      },
+      {
+        "path": "/resources",
+        "method": "post",
+        "operationId": "create_resource",
+        "summary": "Create resource",
+        "description": "",
+        "tags": [
+          "resources"
+        ],
+        "parameters": {
+          "path": [],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/ResourceCreate",
+          "schema_name": "ResourceCreate"
+        },
+        "responses": {
+          "201": {
+            "description": "Resource created",
+            "schema": "#/components/schemas/Resource",
+            "schema_name": "Resource"
+          },
+          "422": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/resources/{resource_id}",
+        "method": "get",
+        "operationId": "get_resource",
+        "summary": "Get resource",
+        "description": "",
+        "tags": [
+          "resources"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "resource_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "Resource details",
+            "schema": "#/components/schemas/Resource",
+            "schema_name": "Resource"
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/resources/{resource_id}",
+        "method": "delete",
+        "operationId": "delete_resource",
+        "summary": "Delete resource",
+        "description": "",
+        "tags": [
+          "resources"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "resource_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "204": {
+            "description": "Deleted",
+            "schema": "",
+            "schema_name": null
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      }
+    ],
+    "rules": [
+      {
+        "path": "/rules",
+        "method": "get",
+        "operationId": "list_rules",
+        "summary": "List rules",
+        "description": "",
+        "tags": [
+          "rules"
+        ],
+        "parameters": {
+          "path": [],
+          "query": [
+            {
+              "name": null,
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            },
+            {
+              "name": null,
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            }
+          ],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "List of rules",
+            "schema": "#/components/schemas/PaginatedRuleList",
+            "schema_name": "PaginatedRuleList"
+          }
+        }
+      },
+      {
+        "path": "/rules",
+        "method": "post",
+        "operationId": "create_rule",
+        "summary": "Create rule",
+        "description": "",
+        "tags": [
+          "rules"
+        ],
+        "parameters": {
+          "path": [],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/RuleCreate",
+          "schema_name": "RuleCreate"
+        },
+        "responses": {
+          "201": {
+            "description": "Rule created",
+            "schema": "#/components/schemas/Rule",
+            "schema_name": "Rule"
+          },
+          "422": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/rules/{rule_id}",
+        "method": "get",
+        "operationId": "get_rule",
+        "summary": "Get rule",
+        "description": "",
+        "tags": [
+          "rules"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "rule_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "Rule details",
+            "schema": "#/components/schemas/Rule",
+            "schema_name": "Rule"
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/rules/{rule_id}",
+        "method": "patch",
+        "operationId": "update_rule",
+        "summary": "Update rule",
+        "description": "",
+        "tags": [
+          "rules"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "rule_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/RuleUpdate",
+          "schema_name": "RuleUpdate"
+        },
+        "responses": {
+          "200": {
+            "description": "Rule updated",
+            "schema": "#/components/schemas/Rule",
+            "schema_name": "Rule"
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/rules/{rule_id}",
+        "method": "delete",
+        "operationId": "delete_rule",
+        "summary": "Delete rule",
+        "description": "",
+        "tags": [
+          "rules"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "rule_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "204": {
+            "description": "Deleted",
+            "schema": "",
+            "schema_name": null
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      }
+    ],
+    "users": [
+      {
+        "path": "/users",
+        "method": "get",
+        "operationId": "list_users",
+        "summary": "List users",
+        "description": "",
+        "tags": [
+          "users"
+        ],
+        "parameters": {
+          "path": [],
+          "query": [
+            {
+              "name": null,
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            },
+            {
+              "name": null,
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            },
+            {
+              "name": "role",
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            }
+          ],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "List of users",
+            "schema": "#/components/schemas/PaginatedUserList",
+            "schema_name": "PaginatedUserList"
+          }
+        }
+      },
+      {
+        "path": "/users",
+        "method": "post",
+        "operationId": "create_user",
+        "summary": "Create user",
+        "description": "",
+        "tags": [
+          "users"
+        ],
+        "parameters": {
+          "path": [],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/UserCreate",
+          "schema_name": "UserCreate"
+        },
+        "responses": {
+          "201": {
+            "description": "User created",
+            "schema": "#/components/schemas/User",
+            "schema_name": "User"
+          },
+          "422": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/users/me",
+        "method": "get",
+        "operationId": "get_current_user",
+        "summary": "Get current user",
+        "description": "",
+        "tags": [
+          "users"
+        ],
+        "parameters": {
+          "path": [],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "Current user",
+            "schema": "#/components/schemas/User",
+            "schema_name": "User"
+          }
+        }
+      },
+      {
+        "path": "/users/me",
+        "method": "patch",
+        "operationId": "update_current_user",
+        "summary": "Update current user",
+        "description": "",
+        "tags": [
+          "users"
+        ],
+        "parameters": {
+          "path": [],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/UserUpdate",
+          "schema_name": "UserUpdate"
+        },
+        "responses": {
+          "200": {
+            "description": "User updated",
+            "schema": "#/components/schemas/User",
+            "schema_name": "User"
+          }
+        }
+      },
+      {
+        "path": "/users/{user_id}",
+        "method": "get",
+        "operationId": "get_user",
+        "summary": "Get user",
+        "description": "",
+        "tags": [
+          "users"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "user_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "User details",
+            "schema": "#/components/schemas/User",
+            "schema_name": "User"
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/users/{user_id}",
+        "method": "patch",
+        "operationId": "update_user",
+        "summary": "Update user",
+        "description": "",
+        "tags": [
+          "users"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "user_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/UserUpdate",
+          "schema_name": "UserUpdate"
+        },
+        "responses": {
+          "200": {
+            "description": "User updated",
+            "schema": "#/components/schemas/User",
+            "schema_name": "User"
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/users/{user_id}",
+        "method": "delete",
+        "operationId": "delete_user",
+        "summary": "Delete user",
+        "description": "",
+        "tags": [
+          "users"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "user_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "204": {
+            "description": "Deleted",
+            "schema": "",
+            "schema_name": null
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      }
+    ],
+    "groups": [
+      {
+        "path": "/groups",
+        "method": "get",
+        "operationId": "list_groups",
+        "summary": "List groups",
+        "description": "",
+        "tags": [
+          "groups"
+        ],
+        "parameters": {
+          "path": [],
+          "query": [
+            {
+              "name": null,
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            },
+            {
+              "name": null,
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            },
+            {
+              "name": "visibility",
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            }
+          ],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "List of groups",
+            "schema": "#/components/schemas/PaginatedGroupList",
+            "schema_name": "PaginatedGroupList"
+          }
+        }
+      },
+      {
+        "path": "/groups",
+        "method": "post",
+        "operationId": "create_group",
+        "summary": "Create group",
+        "description": "",
+        "tags": [
+          "groups"
+        ],
+        "parameters": {
+          "path": [],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/GroupCreate",
+          "schema_name": "GroupCreate"
+        },
+        "responses": {
+          "201": {
+            "description": "Group created",
+            "schema": "#/components/schemas/Group",
+            "schema_name": "Group"
+          },
+          "422": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/groups/{group_id}",
+        "method": "get",
+        "operationId": "get_group",
+        "summary": "Get group",
+        "description": "",
+        "tags": [
+          "groups"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "group_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "Group details",
+            "schema": "#/components/schemas/Group",
+            "schema_name": "Group"
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/groups/{group_id}",
+        "method": "patch",
+        "operationId": "update_group",
+        "summary": "Update group",
+        "description": "",
+        "tags": [
+          "groups"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "group_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/GroupUpdate",
+          "schema_name": "GroupUpdate"
+        },
+        "responses": {
+          "200": {
+            "description": "Group updated",
+            "schema": "#/components/schemas/Group",
+            "schema_name": "Group"
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/groups/{group_id}",
+        "method": "delete",
+        "operationId": "delete_group",
+        "summary": "Delete group",
+        "description": "",
+        "tags": [
+          "groups"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "group_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "204": {
+            "description": "Deleted",
+            "schema": "",
+            "schema_name": null
+          },
+          "404": {
+            "description": "",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      },
+      {
+        "path": "/groups/{group_id}/members",
+        "method": "get",
+        "operationId": "list_group_members",
+        "summary": "List group members",
+        "description": "",
+        "tags": [
+          "groups"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "group_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [
+            {
+              "name": "status",
+              "type": "string",
+              "required": false,
+              "description": "",
+              "default": null
+            }
+          ],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "200": {
+            "description": "List of members",
+            "schema": "#/components/schemas/PaginatedMemberList",
+            "schema_name": "PaginatedMemberList"
+          }
+        }
+      },
+      {
+        "path": "/groups/{group_id}/members",
+        "method": "post",
+        "operationId": "add_group_member",
+        "summary": "Add member to group",
+        "description": "",
+        "tags": [
+          "groups"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "group_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/MemberAdd",
+          "schema_name": "MemberAdd"
+        },
+        "responses": {
+          "201": {
+            "description": "Member added",
+            "schema": "#/components/schemas/Member",
+            "schema_name": "Member"
+          }
+        }
+      },
+      {
+        "path": "/groups/{group_id}/members/{user_id}",
+        "method": "patch",
+        "operationId": "update_group_member",
+        "summary": "Update member",
+        "description": "",
+        "tags": [
+          "groups"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "group_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            },
+            {
+              "name": "user_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/MemberUpdate",
+          "schema_name": "MemberUpdate"
+        },
+        "responses": {
+          "200": {
+            "description": "Member updated",
+            "schema": "#/components/schemas/Member",
+            "schema_name": "Member"
+          }
+        }
+      },
+      {
+        "path": "/groups/{group_id}/members/{user_id}",
+        "method": "delete",
+        "operationId": "remove_group_member",
+        "summary": "Remove member from group",
+        "description": "",
+        "tags": [
+          "groups"
+        ],
+        "parameters": {
+          "path": [
+            {
+              "name": "group_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            },
+            {
+              "name": "user_id",
+              "type": "string",
+              "required": true,
+              "description": "",
+              "default": null
+            }
+          ],
+          "query": [],
+          "header": []
+        },
+        "requestBody": null,
+        "responses": {
+          "204": {
+            "description": "Member removed",
+            "schema": "",
+            "schema_name": null
+          }
+        }
+      }
+    ],
+    "admin": [
+      {
+        "path": "/admin/posts",
+        "method": "delete",
+        "operationId": "batch_delete_posts",
+        "summary": "Batch delete posts",
+        "description": "",
+        "tags": [
+          "admin"
+        ],
+        "parameters": {
+          "path": [],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/BatchIds",
+          "schema_name": "BatchIds"
+        },
+        "responses": {
+          "200": {
+            "description": "Batch result",
+            "schema": "#/components/schemas/BatchResult",
+            "schema_name": "BatchResult"
+          }
+        }
+      },
+      {
+        "path": "/admin/posts/status",
+        "method": "patch",
+        "operationId": "batch_update_post_status",
+        "summary": "Batch update post status",
+        "description": "",
+        "tags": [
+          "admin"
+        ],
+        "parameters": {
+          "path": [],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/BatchStatusUpdate",
+          "schema_name": "BatchStatusUpdate"
+        },
+        "responses": {
+          "200": {
+            "description": "Batch result",
+            "schema": "#/components/schemas/BatchResult",
+            "schema_name": "BatchResult"
+          }
+        }
+      },
+      {
+        "path": "/admin/users/role",
+        "method": "patch",
+        "operationId": "batch_update_user_roles",
+        "summary": "Batch update user roles",
+        "description": "",
+        "tags": [
+          "admin"
+        ],
+        "parameters": {
+          "path": [],
+          "query": [],
+          "header": []
+        },
+        "requestBody": {
+          "required": true,
+          "description": "",
+          "schema": "#/components/schemas/BatchRoleUpdate",
+          "schema_name": "BatchRoleUpdate"
+        },
+        "responses": {
+          "200": {
+            "description": "Batch result",
+            "schema": "#/components/schemas/BatchResult",
+            "schema_name": "BatchResult"
+          }
+        }
+      }
+    ]
+  }
+}

@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { AppLayout } from "@/components/layout/app-layout"
 
-const userCards = [
+const fallbackUserCards = [
   { name: "个人", followers: 12 },
   { name: "个人", followers: 8 },
   { name: "个人", followers: 5 },
@@ -20,7 +20,45 @@ const galleryCards = [
   { name: "设计师小王", image: "" },
 ]
 
-export function FollowingList() {
+export function FollowingList({ userId }: { userId: number }) {
+  const router = useRouter()
+  const [following, setFollowing] = useState<UserUserRelation[]>([])
+  const [followers, setFollowers] = useState<UserUserRelation[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<"all" | "following">("all")
+
+  useEffect(() => {
+    let cancelled = false
+    async function fetchData() {
+      setLoading(true)
+      try {
+        const [followingData, followersData] = await Promise.all([
+          getFollowing(userId),
+          getFollowers(userId),
+        ])
+        if (!cancelled) {
+          setFollowing(followingData)
+          setFollowers(followersData)
+        }
+      } catch (err) {
+        console.error("Failed to fetch following data:", err)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchData()
+    return () => { cancelled = true }
+  }, [userId])
+
+  const displayRelations = activeTab === "following" ? following : [...following, ...followers]
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[var(--nf-near-black)]">
+        <span className="text-[var(--nf-muted)] text-lg">加载中...</span>
+      </div>
+    )
+  }
   return (
     <AppLayout
       sidebar={

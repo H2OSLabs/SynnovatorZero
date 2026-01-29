@@ -1,5 +1,7 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   ChevronLeft, Eye, Heart, MessageSquare,
   Star, Code, BarChart3, Clock, ArrowRight,

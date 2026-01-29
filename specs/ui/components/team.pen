@@ -8,6 +8,7 @@
       "y": 0,
       "name": "Team",
       "width": 1440,
+      "height": 900,
       "fill": "#181818",
       "layout": "vertical",
       "children": [
@@ -16,7 +17,7 @@
           "id": "7rXvZ",
           "name": "header",
           "width": "fill_container",
-          "height": 56,
+          "height": 60,
           "fill": "#181818",
           "stroke": {
             "align": "inside",
@@ -67,15 +68,15 @@
               "name": "sBar",
               "width": 400,
               "fill": "#222222",
-              "cornerRadius": 8,
+              "cornerRadius": 21,
               "stroke": {
                 "thickness": 1,
                 "fill": "#333333"
               },
               "gap": 8,
               "padding": [
-                8,
-                16
+                10,
+                20
               ],
               "alignItems": "center",
               "children": [
@@ -191,11 +192,11 @@
               "type": "frame",
               "id": "GRz5p",
               "name": "side",
-              "width": 60,
+              "width": 168,
               "height": "fill_container",
               "fill": "#181818",
               "layout": "vertical",
-              "gap": 12,
+              "gap": 4,
               "padding": [
                 16,
                 12
@@ -203,34 +204,110 @@
               "alignItems": "center",
               "children": [
                 {
-                  "type": "icon_font",
-                  "id": "o8eWk",
-                  "name": "si1",
-                  "width": 24,
-                  "height": 24,
-                  "iconFontName": "compass",
-                  "iconFontFamily": "lucide",
-                  "fill": "#8E8E8E"
+                  "type": "frame",
+                  "id": "GEV0f",
+                  "name": "navExplore",
+                  "width": "fill_container",
+                  "fill": "#BBFD3B",
+                  "cornerRadius": 50,
+                  "gap": 10,
+                  "padding": [
+                    10,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "n06nw",
+                      "name": "navExploreIcon",
+                      "width": 18,
+                      "height": 18,
+                      "iconFontName": "compass",
+                      "iconFontFamily": "lucide",
+                      "fill": "#00000E"
+                    },
+                    {
+                      "type": "text",
+                      "id": "yzjb2",
+                      "name": "navExploreText",
+                      "fill": "#00000E",
+                      "content": "探索",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
                 },
                 {
-                  "type": "icon_font",
-                  "id": "fCEtq",
-                  "name": "si2",
-                  "width": 24,
-                  "height": 24,
-                  "iconFontName": "globe",
-                  "iconFontFamily": "lucide",
-                  "fill": "#8E8E8E"
+                  "type": "frame",
+                  "id": "foNOv",
+                  "name": "navPlanet",
+                  "width": "fill_container",
+                  "cornerRadius": 50,
+                  "gap": 10,
+                  "padding": [
+                    10,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "5KL6h",
+                      "name": "navPlanetIcon",
+                      "width": 18,
+                      "height": 18,
+                      "iconFontName": "globe",
+                      "iconFontFamily": "lucide",
+                      "fill": "#8E8E8E"
+                    },
+                    {
+                      "type": "text",
+                      "id": "HW0mJ",
+                      "name": "navPlanetText",
+                      "fill": "#8E8E8E",
+                      "content": "星球",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
                 },
                 {
-                  "type": "icon_font",
-                  "id": "i4ZVj",
-                  "name": "si3",
-                  "width": 24,
-                  "height": 24,
-                  "iconFontName": "mountain",
-                  "iconFontFamily": "lucide",
-                  "fill": "#8E8E8E"
+                  "type": "frame",
+                  "id": "ViwA7",
+                  "name": "navCamp",
+                  "width": "fill_container",
+                  "cornerRadius": 50,
+                  "gap": 10,
+                  "padding": [
+                    10,
+                    12
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "8awSp",
+                      "name": "navCampIcon",
+                      "width": 18,
+                      "height": 18,
+                      "iconFontName": "mountain",
+                      "iconFontFamily": "lucide",
+                      "fill": "#8E8E8E"
+                    },
+                    {
+                      "type": "text",
+                      "id": "48JUb",
+                      "name": "navCampText",
+                      "fill": "#8E8E8E",
+                      "content": "营地",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
                 }
               ]
             },

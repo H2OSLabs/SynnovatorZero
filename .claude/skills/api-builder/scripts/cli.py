@@ -97,7 +97,7 @@ def validate_spec(spec_file: str, skip_validation: bool) -> bool:
     validate_script = script_dir / "validate_spec.py"
 
     return run_command(
-        ["python3", str(validate_script), spec_file],
+        [sys.executable, str(validate_script), spec_file],
         "Validation"
     )
 
@@ -110,7 +110,7 @@ def parse_spec(spec_file: str, output_file: str) -> bool:
     parse_script = script_dir / "parse_openapi.py"
 
     return run_command(
-        ["python3", str(parse_script), spec_file, "--output", output_file],
+        [sys.executable, str(parse_script), spec_file, "--output", output_file],
         "Parsing"
     )
 
@@ -171,7 +171,7 @@ def generate_code(parsed_file: str, output_dir: str, templates_dir: str) -> bool
 
     return run_command(
         [
-            "python3", str(generate_script),
+            sys.executable, str(generate_script),
             "--parsed-data", parsed_file,
             "--output-dir", output_dir,
             "--templates-dir", templates_dir
@@ -189,7 +189,7 @@ def generate_client(parsed_file: str, output_file: str, templates_dir: str) -> b
 
     return run_command(
         [
-            "python3", str(generate_client_script),
+            sys.executable, str(generate_client_script),
             "--parsed-data", parsed_file,
             "--output", output_file,
             "--templates-dir", templates_dir

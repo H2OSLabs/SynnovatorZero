@@ -1,5 +1,7 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   Flame, Users, User,
   Lightbulb, FileText, Ellipsis,
@@ -11,7 +13,7 @@ import { AppLayout } from "@/components/layout/app-layout"
 
 const tabs = ["热门", "提案广场", "资源", "提案专区", "找队友", "找点子", "官方"]
 
-const cards = [
+const fallbackCards = [
   {
     title: "西建·滇水源 | 热帖神评选好礼!",
     author: "西建创新",
@@ -29,7 +31,7 @@ const cards = [
   },
 ]
 
-const proposals = [
+const fallbackProposals = [
   {
     title: "百变一次创作者有创造数字身份协会AI声音数据效应同步竞赛",
     desc: "赛道推出系统的数字创作产品配套综合数据服务平台",
@@ -53,6 +55,29 @@ const quickLinks = [
 ]
 
 export function Home() {
+  const router = useRouter()
+  const [posts, setPosts] = useState<Post[]>([])
+  const [proposals, setProposals] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [postsRes, proposalsRes] = await Promise.all([
+          listPosts({ limit: 6, status: "published" }),
+          listPosts({ limit: 4, type: "for_category", status: "published" }),
+        ])
+        setPosts(postsRes.items)
+        setProposals(proposalsRes.items)
+      } catch (err) {
+        console.error("Failed to fetch home data:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
   return (
     <AppLayout
       sidebar={
@@ -69,12 +94,13 @@ export function Home() {
 
           {/* Action Buttons */}
           <div className="flex gap-2">
-            <Button className="flex-1 bg-[var(--nf-lime)] text-[var(--nf-surface)] hover:bg-[var(--nf-lime)]/90 rounded-full gap-1.5 py-2">
+            <Button onClick={() => router.push("/posts")} className="flex-1 bg-[var(--nf-lime)] text-[var(--nf-surface)] hover:bg-[var(--nf-lime)]/90 rounded-full gap-1.5 py-2">
               <Users className="w-3.5 h-3.5" />
               <span className="text-[13px] font-semibold">找队友</span>
             </Button>
             <Button
               variant="outline"
+              onClick={() => router.push("/posts")}
               className="flex-1 bg-[var(--nf-card-bg)] border-[var(--nf-dark-bg)] text-[var(--nf-light-gray)] hover:bg-[var(--nf-dark-bg)] rounded-full gap-1.5 py-2"
             >
               <Lightbulb className="w-3.5 h-3.5" />
@@ -86,7 +112,7 @@ export function Home() {
           <div className="flex flex-col gap-2 py-3">
             <span className="text-sm font-semibold text-[var(--nf-white)]">发布提案</span>
             <span className="text-[12px] text-[var(--nf-muted)]">快来发布一个让世界惊艳的提案吧。</span>
-            <Button className="bg-[var(--nf-dark-bg)] text-[var(--nf-light-gray)] hover:bg-[var(--nf-dark-bg)]/80 rounded-lg py-2.5">
+            <Button onClick={() => router.push("/proposals")} className="bg-[var(--nf-dark-bg)] text-[var(--nf-light-gray)] hover:bg-[var(--nf-dark-bg)]/80 rounded-lg py-2.5">
               <span className="text-[13px] font-medium">立即发布</span>
             </Button>
           </div>

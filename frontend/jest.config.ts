@@ -4,6 +4,7 @@ const config: Config.InitialOptions = {
   testEnvironment: "jsdom",
   roots: ["<rootDir>"],
   moduleNameMapper: {
+    "^@/lib/api-client$": "<rootDir>/__mocks__/api-client.ts",
     "^@/(.*)$": "<rootDir>/$1",
   },
   transform: {

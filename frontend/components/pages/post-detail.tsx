@@ -1,5 +1,7 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
   ChevronLeft, ChevronRight,
   Heart, Share2, Ellipsis,
@@ -10,7 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { AppLayout } from "@/components/layout/app-layout"
 
-const tags = ["通知公告", "我的学校/公...", "通知公告", "活动信息..."]
+const fallbackTags = ["通知公告", "我的学校/公...", "通知公告", "活动信息..."]
 
 const hotItems = [
   { rank: 1, title: "热点标题内容热点标题内容", color: "text-[var(--nf-orange)]" },

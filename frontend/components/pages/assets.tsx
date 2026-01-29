@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { AppLayout } from "@/components/layout/app-layout"
 
-const assetCards = [
+const fallbackAssetCards = [
   {
     title: "大赛官方天翼云算力",
     tags: [
@@ -53,6 +53,41 @@ const assetCards = [
 ]
 
 export function Assets() {
+  const router = useRouter()
+  const [resources, setResources] = useState<Resource[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeFilter, setActiveFilter] = useState<string>("all")
+
+  useEffect(() => {
+    let cancelled = false
+    async function fetchData() {
+      setLoading(true)
+      try {
+        const data = await listResources(0, 20)
+        if (!cancelled) {
+          setResources(data.items)
+        }
+      } catch (err) {
+        console.error("Failed to fetch resources:", err)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchData()
+    return () => { cancelled = true }
+  }, [])
+
+  const filteredResources = activeFilter === "all"
+    ? resources
+    : resources.filter((r) => r.mime_type?.startsWith(activeFilter))
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[var(--nf-near-black)]">
+        <span className="text-[var(--nf-muted)] text-lg">加载中...</span>
+      </div>
+    )
+  }
   return (
     <AppLayout
       sidebar={

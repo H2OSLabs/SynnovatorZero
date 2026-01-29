@@ -7,7 +7,7 @@ import { AppLayout } from "@/components/layout/app-layout"
 
 const tabs = ["帖子", "提案广场", "资源", "团队", "活动", "找队友", "找点子", "官方"]
 
-const proposals = [
+const fallbackProposals = [
   {
     title: "善意百宝——一人人需要扫有轮AI直辅学习平台",
     author: "LIGHTNING鲸",
@@ -38,7 +38,37 @@ const proposals = [
   },
 ]
 
+// Rotating avatar colors for API-fetched proposals
+const avatarColors = [
+  { bg: "bg-[var(--nf-lime)]", text: "text-[var(--nf-surface)]" },
+  { bg: "bg-[var(--nf-blue)]", text: "text-[var(--nf-white)]" },
+  { bg: "bg-[var(--nf-orange)]", text: "text-[var(--nf-white)]" },
+  { bg: "bg-[var(--nf-pink)]", text: "text-[var(--nf-white)]" },
+  { bg: "bg-[var(--nf-cyan)]", text: "text-[var(--nf-surface)]" },
+]
+
 export function ProposalList() {
+  const router = useRouter()
+  const [proposals, setProposals] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    async function fetchData() {
+      setLoading(true)
+      try {
+        const result = await listPosts({ limit: 10, type: "for_category", status: "published" })
+        if (cancelled) return
+        setProposals(result.items)
+      } catch (err) {
+        console.error("Failed to fetch proposals:", err)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchData()
+    return () => { cancelled = true }
+  }, [])
   return (
     <AppLayout navMode="compact" activeNav="探索">
       {/* Tabs */}

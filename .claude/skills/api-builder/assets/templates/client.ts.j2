@@ -7,7 +7,7 @@
 
 {% for enum in enums %}
 export enum {{ enum.name }} {
-  {% for value in enum.values %}{{ value.name }} = "{{ value.value }}",
+  {% for value in enum['values'] %}{{ value.name }} = "{{ value.value }}",
   {% endfor %}}
 
 {% endfor %}
