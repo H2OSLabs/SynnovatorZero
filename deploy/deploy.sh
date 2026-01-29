@@ -53,9 +53,9 @@ deploy() {
   log "Building and starting services..."
   cd "$SCRIPT_DIR"
   docker compose build
-  docker compose up -d
+  docker compose up -d --force-recreate
   log "Containers started, waiting for stabilization..."
-  sleep 10
+  sleep 15
 }
 
 # --- Health Check ---
@@ -91,8 +91,8 @@ rollback() {
     fi
   done
 
-  docker compose up -d
-  sleep 10
+  docker compose up -d --force-recreate
+  sleep 15
 
   if curl -sf --max-time 5 "$HEALTH_URL" > /dev/null 2>&1; then
     log "Rollback successful"
