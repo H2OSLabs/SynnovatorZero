@@ -81,6 +81,17 @@
   --nf-pink: #FF74A7;
   --nf-orange: #FB7A38;
 
+  /* Layout tokens from style.pen Page Layout spec */
+  --nf-header-height: 60px;
+  --nf-nav-width: 168px;
+  --nf-nav-compact-width: 60px;
+  --nf-sidebar-width: 328px;
+  --nf-gap-nav-content: 20px;
+  --nf-gap-search-content: 24px;
+  --nf-gap-content-sidebar: 32px;
+  --nf-sidebar-margin-right: 36px;
+  --nf-sidebar-margin-bottom: 36px;
+
   --radius: 0.625rem;
 
   --background: oklch(1 0 0);
