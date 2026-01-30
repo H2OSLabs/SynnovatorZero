@@ -9,7 +9,7 @@ Usage:
     uv run python generate_openapi.py [--output PATH] [--schema PATH]
 
 Output:
-    Writes openapi.yaml to the specified path (default: .synnovator/openapi.yaml)
+    Writes openapi.yaml to the specified path (default: .synnovator/generated/openapi.yaml)
 """
 
 import argparse
@@ -981,8 +981,8 @@ def to_yaml(spec: dict) -> str:
 
 def main():
     parser = argparse.ArgumentParser(description="Generate OpenAPI spec from Synnovator schema.md")
-    parser.add_argument("--output", "-o", default=".synnovator/openapi.yaml",
-                        help="Output file path (default: .synnovator/openapi.yaml)")
+    parser.add_argument("--output", "-o", default=".synnovator/generated/openapi.yaml",
+                        help="Output file path (default: .synnovator/generated/openapi.yaml)")
     parser.add_argument("--schema", "-s", default=".claude/skills/synnovator/references/schema.md",
                         help="Path to schema.md (default: .claude/skills/synnovator/references/schema.md)")
     parser.add_argument("--title", default="Synnovator API", help="API title")

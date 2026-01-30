@@ -1,0 +1,68 @@
+# Flow: Like Content
+name: 点赞内容
+category: content
+description: 用户点赞帖子、评论或其他内容
+
+trigger: click like-btn
+preconditions:
+  - user.is_authenticated (soft - show login prompt if not)
+
+steps:
+  - step: 1
+    component: like-btn
+    trigger: click
+    condition: user.is_authenticated
+    result:
+      action: optimistic_update
+      updates:
+        - field: liked
+          operation: toggle
+        - field: like_count
+          operation: "{liked ? decrement : increment}"
+
+  - step: 1b
+    component: like-btn
+    trigger: click
+    condition: "!user.is_authenticated"
+    result:
+      action: show_modal
+      target: login-prompt-modal
+
+  - step: 2
+    condition: user.is_authenticated
+    api_call:
+      liked_true:
+        method: DELETE
+        endpoint: "/api/posts/{target_id}/like"
+        headers:
+          X-User-Id: "{current_user.id}"
+      liked_false:
+        method: POST
+        endpoint: "/api/posts/{target_id}/like"
+        headers:
+          X-User-Id: "{current_user.id}"
+
+  - step: 3a
+    condition: success
+    result:
+      action: none
+      note: 乐观更新已生效，无需额外操作
+
+  - step: 3b
+    condition: error
+    result:
+      - action: rollback_optimistic_update
+      - action: show_toast
+        message: "操作失败，请重试"
+        type: error
+
+animations:
+  like:
+    trigger: success
+    target: like-btn
+    animation: pulse
+    duration: 300
+  unlike:
+    trigger: success
+    target: like-btn
+    animation: none

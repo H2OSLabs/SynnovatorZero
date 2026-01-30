@@ -248,8 +248,8 @@ This skill's data model is the **implementation** of the canonical specs in `doc
 
 | Skill file | Canonical docs | Sync what |
 |-----------|---------------|-----------|
-| `references/schema.md` | `docs/data-types.md`, `docs/relationships.md` | Field definitions, enums, required fields, relation schemas |
-| `scripts/engine.py` (CRUD logic) | `docs/crud-operations.md`, `specs/data-integrity.md` | CRUD operations, cascade strategies, uniqueness constraints |
+| `references/schema.md` | `specs/data/types.md`, `specs/data/relationships.md` | Field definitions, enums, required fields, relation schemas |
+| `scripts/engine.py` (CRUD logic) | `specs/data/crud-operations.md`, `specs/data-integrity.md` | CRUD operations, cascade strategies, uniqueness constraints |
 | `scripts/engine.py` (cache) | `specs/cache-strategy.md` | Cache stats triggers, read-only enforcement |
 | `scripts/tests/test_11_user_journeys.py` | `docs/user-journeys.md` | User journey steps, data operation sequences |
 | `scripts/tests/test_*.py` | `specs/testcases/*.md` | Test cases aligned 1:1 with spec numbering |
@@ -257,5 +257,5 @@ This skill's data model is the **implementation** of the canonical specs in `doc
 **Checklist when updating the skill:**
 1. Update skill code (`engine.py`) and tests (`scripts/tests/test_*.py`)
 2. Update skill reference docs (`references/schema.md`, `references/endpoints.md`)
-3. Update canonical docs (`docs/data-types.md`, `docs/relationships.md`, `docs/crud-operations.md`, `docs/user-journeys.md`)
+3. Update canonical docs (`specs/data/types.md`, `specs/data/relationships.md`, `specs/data/crud-operations.md`, `docs/user-journeys.md`)
 4. Run `uv run python .claude/skills/synnovator/scripts/tests/run_all.py` to verify

@@ -2,7 +2,7 @@
 name: openapi-to-components
 description: >
   Convert Synnovator OpenAPI spec into fully integrated Next.js frontend components.
-  Reads .synnovator/openapi.yaml and frontend/components/pages/*.tsx, then generates
+  Reads .synnovator/generated/openapi.yaml and frontend/components/pages/*.tsx, then generates
   API client (lib/api-client.ts), TypeScript types (lib/types.ts), server-side data
   fetching functions (lib/api/*.ts), and updates existing page components to replace
   hardcoded mock data with real API calls using Next.js App Router Server Components.
@@ -19,7 +19,7 @@ Generate API client code and update Synnovator frontend components to fetch real
 
 ## Prerequisites
 
-- OpenAPI spec at `.synnovator/openapi.yaml`
+- OpenAPI spec at `.synnovator/generated/openapi.yaml`
 - Frontend components at `frontend/components/pages/*.tsx`
 - Mapping reference at `docs/frontend-api-mapping.md` or [references/frontend-api-mapping.md](references/frontend-api-mapping.md)
 
@@ -27,7 +27,7 @@ Generate API client code and update Synnovator frontend components to fetch real
 
 ### Phase 1: Read Inputs
 
-1. Read `.synnovator/openapi.yaml` to get all endpoints, schemas, and enums
+1. Read `.synnovator/generated/openapi.yaml` to get all endpoints, schemas, and enums
 2. Read the target component(s) in `frontend/components/pages/` to identify mock data variables and hardcoded values
 3. Read [references/frontend-api-mapping.md](references/frontend-api-mapping.md) for the line-by-line mapping of mock data to API endpoints
 

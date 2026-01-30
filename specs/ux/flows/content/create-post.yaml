@@ -1,0 +1,98 @@
+# Flow: Create Post
+name: 发布新帖子
+category: content
+description: 用户从首页发布新帖子的完整流程
+
+trigger: click header-right.publish-btn
+preconditions:
+  - user.is_authenticated
+
+steps:
+  - step: 1
+    page: home
+    component: header-right.publish-btn
+    trigger: click
+    result:
+      action: show_panel
+      target: publish-center
+
+  - step: 2
+    page: home
+    panel: publish-center
+    component: find-teammate-card | find-idea-card | publish-proposal-card
+    trigger: click
+    result:
+      action: navigate
+      target: "/posts/create?type={selected_type}"
+    type_mapping:
+      find-teammate-card: general
+      find-idea-card: general
+      publish-proposal-card: for_category
+
+  - step: 3
+    page: post-create
+    component: post-form
+    trigger: fill_form
+    fields:
+      - name: title
+        required: true
+        validation:
+          min_length: 1
+          max_length: 200
+      - name: body
+        required: true
+        type: markdown
+      - name: tags
+        required: false
+        type: tag-array
+        max: 10
+      - name: cover_image
+        required: false
+        type: image-upload
+
+  - step: 4
+    page: post-create
+    component: submit-btn
+    trigger: click
+    api_call:
+      method: POST
+      endpoint: "/api/posts"
+      body:
+        title: "{form.title}"
+        body: "{form.body}"
+        type: "{query.type || 'general'}"
+        tags: "{form.tags}"
+      headers:
+        X-User-Id: "{current_user.id}"
+    loading_state: submit-btn
+
+  - step: 5a
+    condition: success
+    result:
+      - action: navigate
+        target: "/posts/{response.id}"
+      - action: show_toast
+        message: "发布成功"
+        type: success
+
+  - step: 5b
+    condition: error
+    result:
+      - action: show_form_errors
+        target: post-form
+        errors: "{error.details}"
+      - action: show_toast
+        message: "{error.message}"
+        type: error
+
+error_handling:
+  validation_error:
+    action: highlight_invalid_fields
+  network_error:
+    action: show_toast
+    message: "网络错误，请重试"
+    type: error
+    retry_button: true
+  auth_error:
+    action: redirect
+    target: "/login?redirect=/posts/create"

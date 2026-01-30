@@ -1,0 +1,47 @@
+# Component: Share Button
+name: share-button
+category: action
+description: 分享按钮，支持复制链接和社交分享
+
+props:
+  share_url:
+    type: string
+    required: true
+  share_title:
+    type: string
+    required: false
+
+states:
+  default:
+    icon: share
+    color: text-secondary
+  copied:
+    icon: check
+    color: success
+    duration: 2000
+
+interactions:
+  - trigger: click
+    action: show_dropdown
+    options:
+      - label: 复制链接
+        icon: link
+        action: copy_to_clipboard
+        content: "{share_url}"
+        on_success:
+          action: show_toast
+          message: "链接已复制"
+          type: success
+      - label: 分享到微信
+        icon: wechat
+        action: open_share
+        platform: wechat
+      - label: 分享到微博
+        icon: weibo
+        action: open_share
+        platform: weibo
+
+accessibility:
+  role: button
+  aria-label: "分享"
+  aria-haspopup: menu

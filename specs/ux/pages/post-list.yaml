@@ -1,0 +1,78 @@
+# Page: Post List
+route: /posts
+description: 帖子列表页，展示帖子列表，支持筛选和分类
+uses_shared: [global-header, sidebar-nav, multi-function-panel]
+
+query_params:
+  tag:
+    type: string
+    required: false
+  type:
+    type: string
+    required: false
+
+data_fetching:
+  - id: posts
+    api: listPosts
+    params:
+      status: published
+      type: general
+      skip: 0
+      limit: 20
+    revalidate: 60
+
+sections:
+  post-filter-tabs:
+    description: 帖子筛选栏
+    component_ref: tabs
+    props:
+      options:
+        - label: 找队友
+          filter: tag=find-teammate
+          active: "{query.tag == 'find-teammate'}"
+        - label: 找点子
+          filter: tag=find-idea
+          active: "{query.tag == 'find-idea'}"
+    interactions:
+      - trigger: tab_change
+        action: update_url_param
+        param: tag
+        value: "{selected_tab.filter.split('=')[1]}"
+
+  post-grid:
+    description: 帖子网格
+    data_source: posts
+    field: items
+    layout: grid
+    columns: 3
+    gap: 24
+    item_component: post-card
+    item_interactions:
+      - trigger: click
+        action: navigate
+        target: "/posts/{id}"
+    pagination:
+      type: infinite_scroll
+      page_size: 20
+      loading_component: loading
+      props:
+        variant: spinner
+
+loading_states:
+  posts:
+    type: skeleton
+    preset: card
+    count: 9
+
+error_states:
+  posts:
+    message: 加载帖子失败
+    retry_button: true
+
+empty_states:
+  posts:
+    icon: inbox
+    message: 暂无帖子
+    action:
+      label: 发布第一篇帖子
+      target: "/posts/create"

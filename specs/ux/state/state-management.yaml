@@ -1,0 +1,237 @@
+# State Management
+version: "1.0"
+description: 全局状态管理与错误处理规范
+
+# ============================================================
+# 加载状态
+# ============================================================
+loading_indicators:
+  # 按钮加载
+  - component: "*-btn"
+    type: spinner
+    size: small
+    disable_while_loading: true
+    position: replace-content
+
+  # 列表加载
+  - component: "*-list"
+    type: skeleton
+    count: 5
+    preset: list-item
+
+  # 卡片网格加载
+  - component: "*-grid"
+    type: skeleton
+    preset: card
+    count: 6
+
+  # 页面级加载
+  - component: page
+    type: progress-bar
+    position: top
+    color: "#BBFD3B"
+
+  # 表单提交
+  - component: form
+    type: overlay
+    message: "提交中..."
+
+# ============================================================
+# 错误处理
+# ============================================================
+error_handling:
+  # 网络错误
+  network_error:
+    action: show_toast
+    type: error
+    message: "网络连接失败，请检查网络后重试"
+    duration: 5000
+    retry_button: true
+
+  # 认证错误
+  auth_required:
+    status_codes: [401]
+    action: show_modal
+    target: login-prompt-modal
+    props:
+      message: "请登录后继续操作"
+      redirect_after_login: "{current_url}"
+
+  # 权限错误
+  permission_denied:
+    status_codes: [403]
+    action: show_toast
+    type: error
+    message: "您没有权限执行此操作"
+    duration: 3000
+
+  # 资源不存在
+  not_found:
+    status_codes: [404]
+    action: navigate
+    target: "/404"
+
+  # 请求参数错误
+  validation_error:
+    status_codes: [422]
+    action: show_form_errors
+    extract_errors: "{response.detail}"
+
+  # 服务器错误
+  server_error:
+    status_codes: [500, 502, 503]
+    action: show_toast
+    type: error
+    message: "服务器错误，请稍后重试"
+    duration: 5000
+
+  # 默认错误
+  default:
+    action: show_toast
+    type: error
+    message: "{error.message || '操作失败，请重试'}"
+    duration: 3000
+
+# ============================================================
+# Toast 配置
+# ============================================================
+toast:
+  position: top-center
+  offset_y: 80
+  max_visible: 3
+  types:
+    success:
+      background: "#52C41A"
+      icon: check-circle
+      duration: 3000
+    error:
+      background: "#FF4D4F"
+      icon: x-circle
+      duration: 5000
+    warning:
+      background: "#FAAD14"
+      icon: alert-triangle
+      duration: 4000
+    info:
+      background: "#1890FF"
+      icon: info
+      duration: 3000
+
+# ============================================================
+# Modal 配置
+# ============================================================
+modals:
+  login-prompt-modal:
+    title: 登录提示
+    width: 400
+    closable: true
+    mask_closable: true
+    content:
+      message: "请登录后继续操作"
+      actions:
+        - label: 登录
+          variant: primary
+          action: navigate
+          target: "/login?redirect={redirect_url}"
+        - label: 取消
+          variant: ghost
+          action: close_modal
+
+  confirm-modal:
+    title: 确认操作
+    width: 400
+    closable: true
+    mask_closable: false
+    content:
+      message: "{message}"
+      actions:
+        - label: "{confirm_label || '确认'}"
+          variant: primary
+          action: confirm
+        - label: "{cancel_label || '取消'}"
+          variant: ghost
+          action: cancel
+
+# ============================================================
+# 乐观更新
+# ============================================================
+optimistic_updates:
+  rollback_on_error: true
+  rollback_delay: 0
+  show_error_toast: true
+
+# ============================================================
+# 缓存策略
+# ============================================================
+cache:
+  # 数据缓存
+  data:
+    users:
+      ttl: 300  # 5 minutes
+      stale_while_revalidate: true
+    posts:
+      ttl: 60   # 1 minute
+      stale_while_revalidate: true
+    categories:
+      ttl: 300  # 5 minutes
+      stale_while_revalidate: true
+
+  # 草稿缓存
+  drafts:
+    storage: localStorage
+    ttl: 604800  # 7 days
+    key_pattern: "draft_{type}_{user_id}"
+
+# ============================================================
+# 分页配置
+# ============================================================
+pagination:
+  default_page_size: 20
+  max_page_size: 100
+  types:
+    infinite_scroll:
+      threshold: 200  # px from bottom
+      loading_component: spinner
+    load_more:
+      button_label: 加载更多
+      loading_label: 加载中...
+    pagination:
+      show_quick_jumper: true
+      show_size_changer: true
+      size_options: [10, 20, 50, 100]
+
+# ============================================================
+# 占位状态
+# ============================================================
+placeholders:
+  # 未设计的页面
+  - page: login
+    status: not_designed
+    required_interactions:
+      - email input validation
+      - password input
+      - submit form
+      - OAuth buttons (微信, 微博)
+
+  - page: register
+    status: not_designed
+
+  - page: post-create
+    status: not_designed
+
+  # API 缺口
+  - feature: user_search
+    status: api_gap
+    note: "需要用户搜索端点"
+
+  - feature: group_following
+    status: api_gap
+    note: "需要团队关注端点"
+
+  - feature: category_category_relation
+    status: api_gap
+    note: "需要活动关联端点"
+
+  - feature: resource_transfer
+    status: api_gap
+    note: "需要资源转移端点"

@@ -1,0 +1,73 @@
+# Component: Loading
+name: loading
+category: feedback
+description: 加载状态指示器
+
+variants:
+  spinner:
+    description: 旋转加载器
+    animation: rotate
+    duration: 1000
+  skeleton:
+    description: 骨架屏
+    animation: shimmer
+    duration: 1500
+  progress:
+    description: 进度条
+    animation: progress
+    show_percentage: true
+
+props:
+  variant:
+    type: string
+    enum: [spinner, skeleton, progress]
+    default: spinner
+  size:
+    type: string
+    enum: [small, medium, large]
+    default: medium
+  text:
+    type: string
+    required: false
+  fullscreen:
+    type: boolean
+    default: false
+
+sizes:
+  small:
+    spinner: 16
+    skeleton_height: 16
+  medium:
+    spinner: 24
+    skeleton_height: 24
+  large:
+    spinner: 48
+    skeleton_height: 32
+
+skeleton_presets:
+  text:
+    lines: 3
+    widths: [100%, 80%, 60%]
+  card:
+    image: { width: 100%, height: 200 }
+    title: { width: 80% }
+    description: { lines: 2 }
+  list:
+    items: 5
+    item_height: 60
+
+interactions:
+  - trigger: mount
+    condition: fullscreen
+    action: prevent_scroll
+    target: body
+
+  - trigger: unmount
+    condition: fullscreen
+    action: restore_scroll
+    target: body
+
+accessibility:
+  role: status
+  aria-live: polite
+  aria-label: "加载中"

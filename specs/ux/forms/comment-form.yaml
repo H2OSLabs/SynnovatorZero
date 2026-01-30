@@ -1,0 +1,81 @@
+# Form: Comment
+description: 评论表单，支持回复
+
+context:
+  post_id:
+    type: number
+    required: true
+  parent_id:
+    type: number
+    required: false
+    description: 回复的评论 ID，为空表示顶级评论
+
+fields:
+  content:
+    type: textarea
+    label: null
+    required: true
+    placeholder: "写下你的评论..."
+    rows: 3
+    auto_resize: true
+    validation:
+      min_length: 1
+      max_length: 2000
+    interactions:
+      - trigger: focus
+        condition: "!user.is_authenticated"
+        action: show_modal
+        target: login-prompt-modal
+      - trigger: input
+        action: update_char_count
+        show_remaining: true
+      - trigger: input
+        action: enable_submit
+        condition: "content.length > 0"
+
+  mentions:
+    type: hidden
+    description: 被 @ 的用户 ID 列表
+    extract_from: content
+    pattern: "@([a-zA-Z0-9_]+)"
+
+submit:
+  label: 发送
+  variant: primary
+  size: small
+  disabled_initially: true
+  trigger: click
+  validation: validate_all_fields
+  on_valid:
+    api_call:
+      method: POST
+      endpoint: "/api/posts/{context.post_id}/comments"
+      body:
+        type: comment
+        value:
+          content: "{form.content}"
+        parent_id: "{context.parent_id}"
+      headers:
+        X-User-Id: "{current_user.id}"
+    loading_state: submit-btn
+    on_success:
+      - action: prepend_to_list
+        target: "{context.parent_id ? 'replies-' + context.parent_id : 'comment-list'}"
+        data: "{response}"
+      - action: clear_input
+        target: content
+      - action: disable_submit
+      - action: collapse_reply_form
+        condition: "context.parent_id"
+  on_invalid:
+    action: shake_field
+    target: content
+
+keyboard_shortcuts:
+  - keys: [Ctrl, Enter]
+    action: submit
+  - keys: [Cmd, Enter]
+    action: submit
+  - keys: [Escape]
+    action: blur
+    condition: "context.parent_id"

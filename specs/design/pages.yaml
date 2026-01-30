@@ -2,6 +2,388 @@
 # 生成时间: 2025-01-29
 # 数据来源: specs/ui/pages.md, specs/ui/assets/images/*.png, specs/testcases/*.md
 
+# ============================================================
+# 全局共享组件
+# ============================================================
+shared_components:
+  - id: global-header
+    name: 顶部导航栏
+    position: top
+    layout: horizontal
+    notes: 全局顶部导航栏，固定在页面顶部，高度60px，所有页面共享
+
+    components:
+      - id: header-left
+        name: Logo 区域
+        type: header-section
+        layout: horizontal
+        components:
+          - id: menu-toggle
+            name: 菜单切换按钮
+            type: icon-button
+            icon: menu
+            actions:
+              - toggle_sidebar
+
+          - id: site-logo
+            name: 网站 Logo
+            type: brand-logo
+            content: 协创者
+            style:
+              color: "#BBFD3B"
+              font_family: Space Grotesk
+              font_weight: 700
+            actions:
+              - navigate_to: /
+
+      - id: search-bar
+        name: 全局搜索框
+        type: search-input
+        placeholder: 搜索
+        width: 400
+        style:
+          background: "#222222"
+          border_radius: 21
+          border_color: "#333333"
+        actions:
+          - navigate_to: /search?q={query}
+
+      - id: header-right
+        name: 右侧功能区
+        type: header-section
+        layout: horizontal
+        components:
+          - id: publish-btn
+            name: 发布新内容按钮
+            type: button
+            variant: primary
+            icon: zap
+            label: 发布新内容
+            style:
+              background: "#BBFD3B"
+              text_color: "#00000E"
+              border_radius: 50
+            actions:
+              - open_modal: publish-menu
+            notes: 点击后展开发布菜单，可选择发布帖子或提案
+
+          - id: notification-btn
+            name: 通知中心按钮
+            type: icon-button
+            icon: bell
+            badge_source: notification
+            filter: read=false
+            actions:
+              - navigate_to: /notifications
+            notes: 显示未读通知数量角标
+
+          - id: user-menu
+            name: 用户信息按钮
+            type: dropdown-trigger
+            components:
+              - id: user-avatar
+                name: 用户头像
+                type: avatar
+                size: 32
+                data_source: current_user
+                fields:
+                  - avatar
+
+              - id: dropdown-indicator
+                name: 下拉指示器
+                type: icon
+                icon: chevron-down
+
+            dropdown_menu:
+              - label: 个人主页
+                action: navigate_to:/users/{current_user.id}
+              - label: 我的资产
+                action: navigate_to:/assets
+              - label: 设置
+                action: navigate_to:/settings
+              - divider: true
+              - label: 退出登录
+                action: logout
+
+  - id: sidebar-nav
+    name: 左侧导航栏
+    position: left
+    layout: vertical
+    notes: 全局左侧导航栏，可折叠，所有页面共享
+
+    components:
+      - id: nav-explore
+        name: 探索入口
+        type: nav-item
+        icon: compass
+        label: 探索
+        actions:
+          - navigate_to: /
+
+      - id: nav-planet
+        name: 星球入口
+        type: nav-item
+        icon: globe
+        label: 星球
+        actions:
+          - navigate_to: /categories
+
+      - id: nav-camp
+        name: 营地入口
+        type: nav-item
+        icon: mountain
+        label: 营地
+        actions:
+          - navigate_to: /groups
+
+  - id: multi-function-panel
+    name: 多功能区
+    position: right
+    layout: vertical
+    figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=14392-17870
+    notes: |
+      右侧多功能区，宽328px，高720px，包含三个可切换的面板。
+      通过顶部导航栏的按钮触发切换：发布按钮→发布中心，通知按钮→通知中心，默认显示热点榜。
+    style:
+      width: 328
+      height: 720
+      border_radius: 20
+
+    panels:
+      # ------------------------------
+      # 发布中心面板
+      # ------------------------------
+      - id: publish-center
+        name: 发布中心
+        figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=15068-40174
+        trigger: header-right.publish-btn
+        style:
+          background: linear-gradient(-35deg, #FFFFFF 13%, #F7FEFF 89%, #47FFB2 100%)
+          border_radius: 20
+
+        components:
+          - id: publish-banner
+            name: 发布中心横幅
+            type: banner
+            content: 来协创，创个业
+            subtitle: 大家都在Synnovator寻找机会
+            style:
+              title_font: Space Grotesk
+              title_weight: 700
+
+          - id: quick-publish-actions
+            name: 快捷发布操作区
+            type: action-grid
+            layout: 2-column
+            items:
+              - id: find-teammate-card
+                name: 找队友卡片
+                icon: teammates
+                label: 找队友
+                description: 找呀找呀找朋友～
+                style:
+                  background: "#74FFBB"
+                  border_radius: 12
+                actions:
+                  - navigate_to: /posts?tag=find-teammate
+
+              - id: find-idea-card
+                name: 找点子卡片
+                icon: lightbulb
+                label: 找点子
+                description: 找个好点子～
+                style:
+                  background: "#BBFD3B"
+                  border_radius: 12
+                actions:
+                  - navigate_to: /posts?tag=find-idea
+
+          - id: publish-proposal-card
+            name: 发布提案卡片
+            type: action-card
+            icon: document
+            label: 发布提案
+            description: 发布一个小提案啦啦啦啦啦～
+            style:
+              background: "#41FAF4"
+              border_radius: 12
+            actions:
+              - navigate_to: /posts/create?type=for_category
+
+          - id: media-actions
+            name: 媒体操作区
+            type: action-grid
+            layout: 2-column
+            items:
+              - id: social-media-card
+                name: 社交媒体卡片
+                icon: share
+                label: 社交媒体
+                description: 发布一个小媒体啦啦啦啦啦～
+                style:
+                  background: "#8AFF80"
+                  border_radius: 12
+                actions:
+                  - open_modal: social-share
+
+              - id: team-media-card
+                name: 团队媒体卡片
+                icon: users
+                label: 团队媒体
+                description: 团队相关哦
+                style:
+                  background: "#74FFBB"
+                  border_radius: 12
+                actions:
+                  - navigate_to: /groups/{current_user.team_id}
+
+          - id: create-team-card
+            name: 创建团队卡片
+            type: action-card
+            icon: plus-users
+            label: 创建团队
+            description: 我要找志同道合的朋友们
+            style:
+              background: "#FF74A7"
+              border_radius: 12
+            actions:
+              - open_modal: create-team
+            secondary_action:
+              label: 加入队伍
+              style:
+                background: "#00000E"
+                text_color: "#FFFFFF"
+                border_radius: 15.75
+              actions:
+                - navigate_to: /groups?join=true
+
+      # ------------------------------
+      # 通知中心面板
+      # ------------------------------
+      - id: notification-center
+        name: 通知中心
+        figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=14342-228793
+        trigger: header-right.notification-btn
+        style:
+          width: 304
+          background: "#181818"
+
+        components:
+          - id: notification-list
+            name: 通知列表
+            type: notification-list
+            data_source: interaction
+            filter: target_user={current_user.id}&type=notification
+            sort: created_at:desc
+            categories:
+              - id: community-interaction
+                name: 社区互动
+                icon: community
+                icon_color: "#41FAF4"
+                types:
+                  - comment_proposal  # 评论了你的提案
+                  - like_post         # 点赞了你的帖子
+                  - reply_comment     # 回复了你的评论
+
+              - id: system-announcement
+                name: 系统公告
+                icon: system
+                icon_color: "#BBFD3B"
+                types:
+                  - event_reminder    # 赛程提醒
+                  - system_notice     # 系统通知
+
+              - id: team-related
+                name: 团队相关
+                icon: team
+                icon_color: "#FB7A38"
+                types:
+                  - team_invitation   # 团队邀请
+                  - invitation_accepted  # 接受邀请
+                  - join_success      # 成功加入团队
+
+            item_fields:
+              - category_icon
+              - category_name
+              - unread_indicator
+              - timestamp
+              - delete_btn
+              - avatar
+              - message
+            item_actions:
+              - mark_read
+              - delete
+              - navigate_to_target
+
+      # ------------------------------
+      # 热点榜面板
+      # ------------------------------
+      - id: hot-ranking
+        name: 协创热点榜
+        figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=15051-38800
+        default: true
+        style:
+          width: 328
+          height: 688
+          background: "#333333"
+          border_radius: 12
+
+        components:
+          - id: ranking-header
+            name: 热点榜头部
+            type: section-header
+            title: 协创热点榜
+            style:
+              title_image: true  # 使用艺术字图片
+              background: "#FB7A38"
+              border_radius_top: 12
+
+          - id: ranking-tabs
+            name: 榜单类型切换
+            type: toggle-tabs
+            style:
+              background: "#DCDCDC"
+              active_background: "#FB7A38"
+              border_radius: 4
+            options:
+              - label: 提案
+                filter: type=for_category
+                default: true
+              - label: 帖子
+                filter: type=general
+
+          - id: ranking-list
+            name: 排行榜列表
+            type: ranking-list
+            data_source: post
+            sort: like_count:desc
+            limit: 20
+            fields:
+              - rank
+              - title
+              - tag
+              - view_count
+            rank_styles:
+              1-3:
+                rank_color: "#FB7A38"
+                font_weight: 700
+              4-10:
+                rank_color: "#FAAD14"
+              11-20:
+                rank_color: "#DCDCDC"
+            tags:
+              - value: hot
+                label: 热
+                color: "#FB7A38"
+              - value: recommended
+                label: 荐
+                color: "#FF74A7"
+              - value: new
+                label: 新
+                color: "#FAAD14"
+            actions:
+              - navigate_to: /posts/{id}
+
 pages:
   # ============================================================
   # 主页
@@ -13,35 +395,9 @@ pages:
     figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=15249-66821
     image: assets/images/首页.png
     description: 平台首页，展示热门活动、提案和社区入口
+    uses_shared: [global-header, sidebar-nav, multi-function-panel]
 
     sections:
-      - id: sidebar-nav
-        name: 左侧导航栏
-        position: left
-        layout: vertical
-
-        components:
-          - id: nav-explore
-            name: 探索入口
-            type: nav-item
-            icon: explore
-            actions:
-              - navigate_to: /explore
-
-          - id: nav-planet
-            name: 星球入口
-            type: nav-item
-            icon: planet
-            actions:
-              - navigate_to: /categories
-
-          - id: nav-camp
-            name: 营地入口
-            type: nav-item
-            icon: camp
-            actions:
-              - navigate_to: /groups
-
       - id: main-tabs
         name: 主内容 Tab 栏
         position: top
@@ -162,6 +518,7 @@ pages:
     figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=14649-69348
     image: assets/images/星球-1.png
     description: 展示活动详情、奖金、时间线、参赛团队和排行榜
+    uses_shared: [global-header, sidebar-nav, multi-function-panel]
 
     sections:
       - id: category-header
@@ -284,6 +641,7 @@ pages:
     figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=14335-195078
     image: assets/images/他人主页.png
     description: 展示用户资料、资产和作品
+    uses_shared: [global-header, sidebar-nav, multi-function-panel]
 
     sections:
       - id: user-header
@@ -398,6 +756,7 @@ pages:
     figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=14999-52503
     image: assets/images/个人关注列表.png
     description: 展示用户关注的人和团队
+    uses_shared: [global-header, sidebar-nav, multi-function-panel]
 
     sections:
       - id: following-tabs
@@ -463,6 +822,7 @@ pages:
     figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=14580-64676
     image: assets/images/团队.png
     description: 展示团队信息、成员和资产
+    uses_shared: [global-header, sidebar-nav, multi-function-panel]
 
     sections:
       - id: team-header
@@ -585,6 +945,7 @@ pages:
     figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=14343-229423
     image: assets/images/帖子列表.png
     description: 展示帖子列表，支持筛选和分类
+    uses_shared: [global-header, sidebar-nav, multi-function-panel]
 
     sections:
       - id: post-filter-tabs
@@ -639,6 +1000,7 @@ pages:
     figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=15159-78311
     image: assets/images/用户贴子.png
     description: 展示帖子详情、关联卡片和评论区
+    uses_shared: [global-header, sidebar-nav, multi-function-panel]
 
     sections:
       - id: post-header
@@ -809,6 +1171,7 @@ pages:
     figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=14343-229423
     image: assets/images/提案列表.png
     description: 展示参赛提案列表
+    uses_shared: [global-header, sidebar-nav, multi-function-panel]
 
     sections:
       - id: proposal-filter
@@ -870,6 +1233,7 @@ pages:
     figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=15159-78311
     image: assets/images/提案.png
     description: 展示参赛提案详情，包含日历、热点榜和评分
+    uses_shared: [global-header, sidebar-nav, multi-function-panel]
 
     sections:
       - id: proposal-header
@@ -1050,6 +1414,7 @@ pages:
     figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=14405-45956
     image: assets/images/资产.png
     description: 展示用户拥有的资产（AI Agent、证书、文件）
+    uses_shared: [global-header, sidebar-nav, multi-function-panel]
 
     sections:
       - id: assets-header
@@ -1136,15 +1501,17 @@ missing_pages:
     name: 登录页
     route: /login
     status: not_designed
+    uses_shared: []  # 登录页不需要全局导航
     required_by:
       - TC-USER-001 (用户创建)
       - TC-USER-004 (用户读取)
-    notes: 需要设计登录/注册表单，支持邮箱登录
+    notes: 需要设计登录/注册表单，支持邮箱登录，独立布局无需全局导航
 
   - id: post-create
     name: 帖子创建页
     route: /posts/create
     status: not_designed
+    uses_shared: [global-header, sidebar-nav, multi-function-panel]
     required_by:
       - TC-POST-001 (最小字段创建帖子)
       - TC-POST-002 (显式发布帖子)
@@ -1155,6 +1522,7 @@ missing_pages:
     name: 活动创建页
     route: /categories/create
     status: not_designed
+    uses_shared: [global-header, sidebar-nav, multi-function-panel]
     required_by:
       - TC-CAT-001 (创建活动)
     notes: 仅 Organizer/Admin 可访问，需要活动信息表单
@@ -1163,6 +1531,7 @@ missing_pages:
     name: 团队管理页
     route: /groups/{id}/manage
     status: not_designed
+    uses_shared: [global-header, sidebar-nav, multi-function-panel]
     required_by:
       - TC-GRP-004 (成员申请)
       - TC-GRP-005 (Owner批准)
@@ -1173,6 +1542,7 @@ missing_pages:
     name: 通知页
     route: /notifications
     status: not_designed
+    uses_shared: [global-header, sidebar-nav, multi-function-panel]
     required_by:
       - TC-GRP-004 (申请通知)
       - TC-GRP-005 (审批通知)
@@ -1182,6 +1552,7 @@ missing_pages:
     name: 搜索结果页
     route: /search
     status: not_designed
+    uses_shared: [global-header, sidebar-nav, multi-function-panel]
     required_by:
       - TC-JOUR-002 (匿名浏览筛选)
     notes: 全局搜索结果，支持按类型筛选

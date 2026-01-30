@@ -1,0 +1,98 @@
+# Page: Following List
+route: /users/{id}/following
+description: 关注列表页，展示用户关注的人和团队
+uses_shared: [global-header, sidebar-nav, multi-function-panel]
+
+params:
+  id:
+    type: number
+    required: true
+
+query_params:
+  type:
+    type: string
+    enum: [user, group]
+    default: user
+
+data_fetching:
+  - id: user
+    api: getUser
+    params:
+      id: "{params.id}"
+
+  - id: following_users
+    api: getFollowing
+    params:
+      userId: "{params.id}"
+    condition: "query.type == 'user'"
+
+  - id: following_groups
+    # TODO: API gap - no group following endpoint
+    placeholder: true
+    condition: "query.type == 'group'"
+
+sections:
+  following-tabs:
+    description: 关注类型切换
+    component_ref: tabs
+    props:
+      options:
+        - label: 我关注的用户
+          value: user
+          active: "{query.type == 'user'}"
+        - label: 关注的团队
+          value: group
+          active: "{query.type == 'group'}"
+    interactions:
+      - trigger: tab_change
+        action: update_url_param
+        param: type
+        value: "{selected.value}"
+
+  following-users:
+    description: 关注用户列表
+    condition: "query.type == 'user'"
+    data_source: following_users
+    layout: grid
+    columns: 4
+    gap: 16
+    item_component: user-card
+    item_props:
+      show_follow_btn: true
+    item_interactions:
+      - trigger: click
+        action: navigate
+        target: "/users/{target_user_id}"
+      - trigger: click
+        target_element: unfollow-btn
+        action: unfollow
+        api_call:
+          method: DELETE
+          endpoint: "/api/users/{target_user_id}/follow"
+          headers:
+            X-User-Id: "{current_user.id}"
+        on_success:
+          action: remove_element
+          target: self
+        stop_propagation: true
+
+  following-teams:
+    description: 关注团队列表
+    condition: "query.type == 'group'"
+    # TODO: API gap - no group following endpoint
+    placeholder: true
+    message: 团队关注功能开发中
+
+loading_states:
+  following_users:
+    type: skeleton
+    preset: card
+    count: 8
+
+empty_states:
+  following_users:
+    icon: users
+    message: 暂未关注任何用户
+    action:
+      label: 去发现
+      target: "/"

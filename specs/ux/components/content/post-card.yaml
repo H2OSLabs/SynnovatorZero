@@ -1,0 +1,50 @@
+# Component: Post Card
+name: post-card
+category: content
+description: 帖子卡片，展示帖子摘要信息
+
+props:
+  post:
+    type: Post
+    required: true
+  show_author:
+    type: boolean
+    default: true
+
+data_fields:
+  - cover_image
+  - title
+  - author.avatar
+  - author.display_name
+  - like_count
+  - tags
+
+interactions:
+  - trigger: click
+    target_element: card-body
+    action: navigate
+    target: "/posts/{post.id}"
+
+  - trigger: click
+    target_element: author-avatar
+    action: navigate
+    target: "/users/{post.created_by}"
+    stop_propagation: true
+
+  - trigger: click
+    target_element: like-btn
+    action: toggle_like
+    stop_propagation: true
+    component_ref: like-button
+    props:
+      target_type: post
+      target_id: "{post.id}"
+      initial_count: "{post.like_count}"
+
+  - trigger: hover
+    action: elevate
+    target: self
+
+accessibility:
+  role: article
+  aria-label: "{post.title}"

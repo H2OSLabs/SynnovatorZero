@@ -1,0 +1,140 @@
+# Form: Post Create
+route: /posts/create
+description: 创建新帖子表单
+
+query_params:
+  type:
+    type: string
+    enum: [general, for_category]
+    default: general
+
+fields:
+  title:
+    type: text
+    label: 标题
+    required: true
+    placeholder: 请输入标题
+    validation:
+      min_length: 1
+      max_length: 200
+    interactions:
+      - trigger: input
+        action: validate_field
+        debounce: 300
+      - trigger: blur
+        action: show_error_if_invalid
+
+  body:
+    type: markdown-editor
+    label: 正文
+    required: true
+    placeholder: 输入内容，支持 Markdown 格式...
+    component_ref: markdown-editor
+    interactions:
+      - trigger: input
+        action: auto_save_draft
+        debounce: 3000
+        storage: localStorage
+        key: "draft_post_{current_user.id}"
+      - trigger: paste_image
+        action: upload_image
+        api_call:
+          method: POST
+          endpoint: "/api/resources"
+          body: FormData
+          headers:
+            X-User-Id: "{current_user.id}"
+        on_success:
+          action: insert_markdown
+          template: "![{filename}]({url})"
+
+  tags:
+    type: tag-input
+    label: 标签
+    required: false
+    max_tags: 10
+    component_ref: tag-input
+    suggestions_endpoint: "/api/tags"
+    interactions:
+      - trigger: input
+        action: search_suggestions
+        debounce: 200
+      - trigger: select
+        action: add_tag
+      - trigger: enter
+        action: add_custom_tag
+
+  cover_image:
+    type: image-upload
+    label: 封面图片
+    required: false
+    accept: "image/*"
+    max_size: 5MB
+    aspect_ratio: 16/9
+    interactions:
+      - trigger: file_selected
+        action: preview_image
+      - trigger: file_selected
+        action: upload_image
+        api_call:
+          method: POST
+          endpoint: "/api/resources"
+          body: FormData
+        on_success:
+          action: set_field_value
+          field: cover_image_url
+          value: "{response.url}"
+
+  category_id:
+    type: select
+    label: 参赛活动
+    required: true
+    condition: "query.type == 'for_category'"
+    data_source: categories
+    filter: status=published
+    option_fields:
+      label: name
+      value: id
+    placeholder: 选择要参加的活动
+
+submit:
+  label: 发布
+  variant: primary
+  trigger: click
+  validation: validate_all_fields
+  on_valid:
+    api_call:
+      method: POST
+      endpoint: "/api/posts"
+      body:
+        title: "{form.title}"
+        body: "{form.body}"
+        type: "{query.type}"
+        tags: "{form.tags}"
+        cover_image: "{form.cover_image_url}"
+        category_id: "{form.category_id}"
+      headers:
+        X-User-Id: "{current_user.id}"
+    loading_state: submit-btn
+    on_success:
+      - action: clear_draft
+        key: "draft_post_{current_user.id}"
+      - action: navigate
+        target: "/posts/{response.id}"
+      - action: show_toast
+        message: "发布成功"
+        type: success
+  on_invalid:
+    action: scroll_to_first_error
+
+draft_recovery:
+  on_mount:
+    action: check_draft
+    key: "draft_post_{current_user.id}"
+    on_found:
+      action: show_confirm
+      message: "检测到未保存的草稿，是否恢复？"
+      confirm_action:
+        action: restore_draft
+      cancel_action:
+        action: clear_draft

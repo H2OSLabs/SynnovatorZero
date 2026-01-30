@@ -1,0 +1,52 @@
+# Component: User Card
+name: user-card
+category: content
+description: 用户卡片，展示用户基本信息
+
+props:
+  user:
+    type: User
+    required: true
+  show_follow_btn:
+    type: boolean
+    default: true
+  compact:
+    type: boolean
+    default: false
+
+data_fields:
+  - avatar
+  - display_name
+  - username
+  - bio
+  - follower_count
+  - following_count
+
+interactions:
+  - trigger: click
+    target_element: card-body
+    action: navigate
+    target: "/users/{user.id}"
+
+  - trigger: click
+    target_element: follow-btn
+    condition: "user.id != current_user.id"
+    action: toggle_follow
+    stop_propagation: true
+    component_ref: follow-button
+    props:
+      target_user_id: "{user.id}"
+
+  - trigger: hover
+    action: show_preview
+    target: user-preview-popup
+    delay: 500
+    content:
+      - avatar
+      - display_name
+      - bio
+      - follower_count
+
+accessibility:
+  role: article
+  aria-label: "用户: {user.display_name}"

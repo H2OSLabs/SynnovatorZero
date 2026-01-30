@@ -1,0 +1,86 @@
+# Flow: Comment
+name: 发表评论
+category: social
+description: 用户在帖子下发表评论或回复
+
+trigger: submit comment-form
+preconditions:
+  - user.is_authenticated
+
+steps:
+  - step: 1
+    component: comment-input
+    trigger: focus
+    condition: "!user.is_authenticated"
+    result:
+      action: show_modal
+      target: login-prompt-modal
+
+  - step: 2
+    component: comment-input
+    trigger: input
+    result:
+      action: enable_submit
+      condition: "input.length > 0"
+
+  - step: 3
+    component: comment-form
+    trigger: submit
+    validation:
+      content:
+        required: true
+        min_length: 1
+        max_length: 2000
+    api_call:
+      method: POST
+      endpoint: "/api/posts/{post.id}/comments"
+      body:
+        type: comment
+        value:
+          content: "{input_value}"
+        parent_id: "{reply_to_id || null}"
+      headers:
+        X-User-Id: "{current_user.id}"
+    loading_state: submit-btn
+
+  - step: 4a
+    condition: success
+    result:
+      - action: prepend_to_list
+        target: comment-list
+        data:
+          id: "{response.id}"
+          author:
+            id: "{current_user.id}"
+            avatar: "{current_user.avatar}"
+            display_name: "{current_user.display_name}"
+          value:
+            content: "{input_value}"
+          created_at: "{now}"
+          like_count: 0
+      - action: clear_input
+        target: comment-input
+      - action: increment_count
+        target: comment-count
+      - action: show_toast
+        message: "评论成功"
+        type: success
+
+  - step: 4b
+    condition: error
+    result:
+      action: show_toast
+      message: "{error.message}"
+      type: error
+
+notification:
+  on_comment:
+    recipients:
+      - post.author
+    type: new_comment
+    message: "{current_user.display_name} 评论了你的帖子"
+  on_reply:
+    recipients:
+      - parent_comment.author
+    type: comment_reply
+    message: "{current_user.display_name} 回复了你的评论"

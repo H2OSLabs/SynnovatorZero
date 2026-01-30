@@ -1,0 +1,211 @@
+# Page: Proposal Detail
+route: /proposals/{id}
+description: 提案详情页，展示参赛提案详情，包含日历、热点榜和评分
+uses_shared: [global-header, sidebar-nav, multi-function-panel]
+
+params:
+  id:
+    type: number
+    required: true
+
+data_fetching:
+  - id: post
+    api: getPost
+    params:
+      id: "{params.id}"
+      userId: "{current_user?.id}"
+
+  - id: author
+    api: getUser
+    params:
+      id: "{post.created_by}"
+    depends_on: post
+
+  - id: comments
+    api: listComments
+    params:
+      postId: "{params.id}"
+      skip: 0
+      limit: 20
+
+  - id: ratings
+    api: listRatings
+    params:
+      postId: "{params.id}"
+    condition: "post.category_status == 'closed'"
+
+  - id: resources
+    api: listPostResources
+    params:
+      postId: "{params.id}"
+
+sections:
+  proposal-header:
+    description: 提案头部
+    components:
+      cover-image:
+        data_source: post
+        field: cover_image
+        type: image
+        aspect_ratio: 16/9
+
+      author-team-info:
+        layout: horizontal
+        components:
+          author-avatar:
+            data_source: author
+            field: avatar
+            type: avatar
+            size: 40
+            interactions:
+              - trigger: click
+                action: navigate
+                target: "/users/{author.id}"
+          author-name:
+            data_source: author
+            field: display_name
+          team-badge:
+            condition: "post.team_id"
+            # TODO: Fetch team info
+            placeholder: true
+
+      proposal-meta:
+        data_source: post
+        fields:
+          - title
+          - id
+          - like_count
+        actions:
+          - component_ref: like-button
+            props:
+              target_type: post
+              target_id: "{params.id}"
+          - component_ref: share-button
+            props:
+              share_url: "{window.location.href}"
+
+      track-tags:
+        data_source: post
+        field: tags
+        filter: tag_type=track
+        type: tag-list
+
+  proposal-sidebar:
+    description: 提案右侧边栏
+    position: right
+    width: 328
+    components:
+      activity-calendar:
+        type: calendar
+        # TODO: API gap - need category info from post
+        placeholder: true
+        message: 活动日历开发中
+
+      hot-ranking:
+        type: ranking-widget
+        reference: global.multi-function-panel.hot-ranking
+
+  proposal-body:
+    description: 提案正文区
+    components:
+      section-header:
+        type: section-header
+        label: 内容详情
+
+      markdown-content:
+        data_source: post
+        field: body
+        type: markdown-viewer
+
+      comment-link:
+        type: link-button
+        icon: comment
+        label: 前往「评论区」
+        interactions:
+          - trigger: click
+            action: scroll_to
+            target: comment-section
+
+  proposal-gallery:
+    description: 提案图库
+    data_source: resources
+    filter: mime_type^=image/
+    condition: "resources.length > 0"
+    layout: horizontal-scroll
+    item_type: image-thumbnail
+    item_interactions:
+      - trigger: click
+        action: open_lightbox
+        images: "{resources}"
+        start_index: "{index}"
+
+  rating-section:
+    description: 评分区
+    condition: "current_user?.role == 'organizer' && post.category_status == 'closed'"
+    components:
+      rating-form:
+        type: rating-form
+        dimensions:
+          - label: 创新性
+            field: innovation
+            weight: 0.30
+            max: 100
+          - label: 技术实现
+            field: technical
+            weight: 0.30
+            max: 100
+          - label: 实用价值
+            field: practicality
+            weight: 0.25
+            max: 100
+          - label: 演示效果
+            field: presentation
+            weight: 0.15
+            max: 100
+        interactions:
+          - trigger: submit
+            action: submit_rating
+            api_call:
+              method: POST
+              endpoint: "/api/posts/{params.id}/ratings"
+              body:
+                type: rating
+                value: "{form_data}"
+              headers:
+                X-User-Id: "{current_user.id}"
+            on_success:
+              action: show_toast
+              message: "评分提交成功"
+              type: success
+
+  comment-section:
+    description: 评论区
+    id: comment-section
+    components:
+      comment-input:
+        component_ref: text-input
+        props:
+          name: comment
+          placeholder: "写下你的评论..."
+          multiline: true
+
+      comment-list:
+        data_source: comments
+        field: items
+        type: nested-list
+        item_component: comment-item
+
+loading_states:
+  post:
+    type: skeleton
+    preset: article
+  comments:
+    type: skeleton
+    preset: list
+    count: 5
+
+error_states:
+  post:
+    404:
+      action: navigate
+      target: "/404"

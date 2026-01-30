@@ -1,0 +1,56 @@
+# Component: Sidebar
+name: sidebar
+category: navigation
+description: 左侧导航栏，可折叠
+
+props:
+  collapsed:
+    type: boolean
+    default: false
+  active_route:
+    type: string
+    required: false
+
+layout:
+  position: fixed
+  left: 0
+  top: 60
+  width:
+    expanded: 240
+    collapsed: 64
+  background: "#181818"
+
+nav_items:
+  - id: explore
+    label: 探索
+    icon: compass
+    route: /
+  - id: planet
+    label: 星球
+    icon: globe
+    route: /categories
+  - id: camp
+    label: 营地
+    icon: mountain
+    route: /groups
+
+interactions:
+  - trigger: click
+    target_element: nav-item
+    action: navigate
+    target: "{item.route}"
+
+  - trigger: click
+    target_element: collapse-toggle
+    action: toggle_collapse
+    target: self
+
+  - trigger: hover
+    target_element: nav-item
+    condition: collapsed
+    action: show_tooltip
+    content: "{item.label}"
+
+accessibility:
+  role: navigation
+  aria-label: 侧边导航

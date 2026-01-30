@@ -1,10 +1,10 @@
-# Task Plan: 前端事件对接 + E2E 浏览器测试
+# Task Plan: 前端原型完整验证
 
 ## Goal
-将前端 10 个页面组件的 UI 交互（导航、点赞、评论、关注等）绑定到后端 API 端点，然后通过浏览器自动化 E2E 测试验证核心用户旅程。
+验证前端原型所有功能正常，确保从阶段 4a 到阶段 6 的所有成功标准都满足。
 
 ## Current Phase
-ALL PHASES COMPLETE
+**Phase 17: 最终验证与 CI/CD 配置**
 
 ## Phases
 
@@ -96,3 +96,26 @@ ALL PHASES COMPLETE
 | addComment 422: missing type field | 1 | api-client.ts 添加 type: "comment" |
 | addComment 422: double-nested value | 1 | 组件调用改为 { text: commentText } |
 | Follow self 422 | 1 | 测试改为访问 /profile/3 (非当前用户) |
+| Backend: email-validator not installed | 1 | 在父项目 SynnovatorZero/.venv 中安装 email-validator |
+
+### Phase 17: 最终验证与 CI/CD 配置
+- [x] 修复 frontend tsconfig.json (排除 jest 测试文件)
+- [x] 修复 backend 依赖 (email-validator 安装到正确的 venv)
+- [x] 验证 `npm run build` 成功 (10 pages built)
+- [x] 验证 backend health: `GET /health` → `{"status":"ok"}`
+- [x] 验证 API 数据: 4 users, 4 posts, 4 categories
+- [x] 验证 frontend 启动: `localhost:3000` 响应 200
+- [x] CI/CD 配置: `.github/workflows/ci.yml` 已创建
+- [x] 环境变量模板: `.env.example` 已创建
+- **Status:** complete
+
+## Final Verification Summary
+| Check | Status | Details |
+|-------|--------|---------|
+| Backend health | ✅ | `{"status":"ok"}` on port 8000 |
+| API endpoints | ✅ | /api/users, /api/posts, /api/categories 返回数据 |
+| Frontend build | ✅ | 10 pages, 0 errors |
+| Frontend dev | ✅ | localhost:3000 正常响应 |
+| Jest tests | ✅ | 64 tests passed (Phase 15) |
+| E2E tests | ✅ | 10/10 scenarios passed (Phase 16) |
+| CI/CD config | ✅ | GitHub Actions workflow created |

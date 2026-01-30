@@ -1,0 +1,106 @@
+# Page: Home
+route: /
+description: 首页，展示热门活动、提案和社区入口
+uses_shared: [global-header, sidebar-nav, multi-function-panel]
+
+data_fetching:
+  - id: posts
+    api: listPosts
+    params:
+      status: published
+      limit: 20
+    revalidate: 60
+
+  - id: categories
+    api: listCategories
+    params:
+      status: published
+      limit: 10
+    revalidate: 300
+
+sections:
+  main-tabs:
+    description: 主内容 Tab 栏
+    component_ref: tabs
+    props:
+      options:
+        - label: 热门
+          filter: sort=hot
+          default: true
+        - label: 原创广场
+          filter: type=original
+        - label: 最新
+          filter: sort=latest
+        - label: 找队友
+          filter: tag=find-teammate
+        - label: 找点子
+          filter: tag=find-idea
+    interactions:
+      - trigger: tab_change
+        action: refetch_data
+        target: posts
+        params:
+          filter: "{selected_tab.filter}"
+
+  hot-activities-banner:
+    description: 热点活动横幅
+    data_source: categories
+    layout: horizontal-scroll
+    item_component: activity-card
+    item_interactions:
+      - trigger: click
+        action: navigate
+        target: "/categories/{id}"
+
+  hot-proposals:
+    description: 热门提案区
+    data_source: posts
+    filter: type=for_category
+    layout: grid
+    columns: 3
+    item_component: proposal-card
+    item_interactions:
+      - trigger: click
+        action: navigate
+        target: "/posts/{id}"
+      - trigger: click
+        target_element: like-btn
+        component_ref: like-button
+        stop_propagation: true
+
+  right-sidebar:
+    description: 右侧边栏
+    components:
+      cta-banner:
+        content: 来协创,创个业
+        subtitle: 来看看 Synnovator 有什么好活动
+
+      quick-actions:
+        items:
+          - label: 找队友
+            action: navigate
+            target: "/posts?tag=find-teammate"
+          - label: 找点子
+            action: navigate
+            target: "/posts?tag=find-idea"
+
+      publish-proposal-btn:
+        label: 发布提案
+        variant: primary
+        action: navigate
+        target: "/posts/create?type=for_category"
+
+loading_states:
+  posts:
+    type: skeleton
+    preset: card
+    count: 6
+  categories:
+    type: skeleton
+    preset: card
+    count: 4
+
+error_states:
+  posts:
+    message: 加载帖子失败
+    retry_button: true

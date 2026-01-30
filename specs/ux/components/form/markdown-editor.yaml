@@ -1,0 +1,107 @@
+# Component: Markdown Editor
+name: markdown-editor
+category: form
+description: Markdown 编辑器，支持实时预览和图片上传
+
+props:
+  name:
+    type: string
+    required: true
+  placeholder:
+    type: string
+    default: "输入内容，支持 Markdown 格式..."
+  auto_save:
+    type: boolean
+    default: true
+  auto_save_interval:
+    type: number
+    default: 3000
+
+states:
+  edit:
+    show_preview: false
+  preview:
+    show_preview: true
+  split:
+    show_editor: true
+    show_preview: true
+
+toolbar_actions:
+  - id: bold
+    icon: bold
+    shortcut: Ctrl+B
+    action: insert_markdown
+    template: "**{selection}**"
+  - id: italic
+    icon: italic
+    shortcut: Ctrl+I
+    action: insert_markdown
+    template: "*{selection}*"
+  - id: heading
+    icon: heading
+    action: insert_markdown
+    template: "## {selection}"
+  - id: link
+    icon: link
+    shortcut: Ctrl+K
+    action: show_dialog
+    dialog: link-dialog
+  - id: image
+    icon: image
+    action: trigger_upload
+    target: image-upload
+  - id: code
+    icon: code
+    action: insert_markdown
+    template: "`{selection}`"
+  - id: quote
+    icon: quote
+    action: insert_markdown
+    template: "> {selection}"
+  - id: list
+    icon: list
+    action: insert_markdown
+    template: "- {selection}"
+
+interactions:
+  - trigger: input
+    action: auto_save_draft
+    debounce: "{auto_save_interval}"
+    condition: auto_save
+    storage: localStorage
+    key: "draft_{form_id}"
+
+  - trigger: paste
+    condition: "clipboard.type == 'image'"
+    action: upload_image
+    api_call:
+      method: POST
+      endpoint: "/api/resources"
+      body: FormData
+      headers:
+        X-User-Id: "{current_user.id}"
+    on_success:
+      action: insert_markdown
+      template: "![{filename}]({url})"
+
+  - trigger: drop
+    condition: "event.dataTransfer.files.length > 0"
+    action: upload_files
+    accept: "image/*"
+    api_call:
+      method: POST
+      endpoint: "/api/resources"
+      body: FormData
+    on_success:
+      action: insert_markdown
+      template: "![{filename}]({url})"
+
+  - trigger: click
+    target_element: toggle-preview
+    action: toggle_state
+    between: [edit, split, preview]
+
+accessibility:
+  role: textbox
+  aria-label: Markdown 编辑器
+  aria-multiline: true

@@ -1,0 +1,41 @@
+# Component: Header
+name: header
+category: navigation
+description: 全局顶部导航栏
+
+props:
+  show_search:
+    type: boolean
+    default: true
+  show_publish:
+    type: boolean
+    default: true
+
+layout:
+  position: fixed
+  top: 0
+  height: 60
+  z_index: 100
+  background: "#181818"
+
+sections:
+  left:
+    components:
+      - menu-toggle
+      - site-logo
+  center:
+    components:
+      - search-bar
+  right:
+    components:
+      - publish-btn
+      - notification-btn
+      - user-menu
+
+interactions:
+  # 参见 global/shared-components.yaml 中的详细定义
+  reference: global.global-header
+
+accessibility:
+  role: banner
+  aria-label: 主导航

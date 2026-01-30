@@ -1,5 +1,9 @@
 # 系统页面
 
+> **注意：** 本文件是 Figma 设计链接的快速参考索引。
+> 页面规格的**唯一来源**是 `pages.yaml`，由 `ui-spec-generator` skill 生成。
+> 本文件用于人工快速查找 Figma 设计稿链接和对应的 .pen 组件文件。
+
 ## 主页
 
 - **Figma:** https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=15249-66821

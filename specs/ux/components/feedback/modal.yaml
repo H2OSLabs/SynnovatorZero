@@ -1,0 +1,66 @@
+# Component: Modal
+name: modal
+category: feedback
+description: 模态对话框
+
+props:
+  title:
+    type: string
+    required: false
+  closable:
+    type: boolean
+    default: true
+  mask_closable:
+    type: boolean
+    default: true
+  width:
+    type: number
+    default: 520
+
+states:
+  closed:
+    visible: false
+  open:
+    visible: true
+  loading:
+    visible: true
+    loading: true
+
+animations:
+  mask:
+    enter: { opacity: 0 } -> { opacity: 1 }
+    exit: { opacity: 1 } -> { opacity: 0 }
+    duration: 200
+  content:
+    enter: { opacity: 0, scale: 0.95 } -> { opacity: 1, scale: 1 }
+    exit: { opacity: 1, scale: 1 } -> { opacity: 0, scale: 0.95 }
+    duration: 200
+
+interactions:
+  - trigger: click
+    target_element: mask
+    condition: mask_closable
+    action: close
+
+  - trigger: click
+    target_element: close-btn
+    condition: closable
+    action: close
+
+  - trigger: keyboard
+    key: Escape
+    condition: closable
+    action: close
+
+  - trigger: mount
+    action: focus_trap
+    target: modal-content
+
+  - trigger: unmount
+    action: restore_focus
+    target: trigger_element
+
+accessibility:
+  role: dialog
+  aria-modal: true
+  aria-labelledby: "{title_id}"

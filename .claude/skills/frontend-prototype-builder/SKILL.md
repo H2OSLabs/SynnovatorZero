@@ -11,7 +11,7 @@ description: |
   (4) "端到端测试前端" or "E2E test frontend"
   (5) Need to create testable UI for PM/designers
 
-  Inputs: specs/ui/pages.yaml, specs/ui/figma/, specs/testcases/*.md
+  Inputs: specs/design/pages.yaml, specs/design/figma/, specs/testcases/*.md
   Outputs: Working frontend pages in frontend/app/ and frontend/components/pages/
 ---
 
@@ -22,9 +22,9 @@ Build 70-80% deployable prototypes from Figma designs + test cases that PMs and 
 ## Prerequisites
 
 Before starting, ensure:
-- [ ] `specs/ui/pages.yaml` exists (run `ux-spec-generator` if missing)
-- [ ] `specs/ui/figma/` has design docs (run `figma-resource-extractor` if missing)
-- [ ] `.synnovator/openapi.yaml` exists (run `schema-to-openapi` if missing)
+- [ ] `specs/design/pages.yaml` exists (run `ux-spec-generator` if missing)
+- [ ] `specs/design/figma/` has design docs (run `figma-resource-extractor` if missing)
+- [ ] `.synnovator/generated/openapi.yaml` exists (run `schema-to-openapi` if missing)
 - [ ] `frontend/lib/api-client.ts` exists (run `openapi-to-components` if missing)
 
 ## Workflow Overview
@@ -53,8 +53,8 @@ Phase 6: Fix Issues & Iterate
 
 ```bash
 # Check if critical files exist
-ls -la specs/ui/pages.yaml
-ls -la .synnovator/openapi.yaml
+ls -la specs/design/pages.yaml
+ls -la .synnovator/generated/openapi.yaml
 ls -la frontend/lib/api-client.ts
 ls -la frontend/lib/types.ts
 ```
@@ -153,7 +153,7 @@ curl http://localhost:8000/api/users | jq '.items[0]'
 
 ### 3.1 Identify Pages to Generate
 
-Read `specs/ui/pages.yaml` and check which pages exist:
+Read `specs/design/pages.yaml` and check which pages exist:
 
 ```yaml
 # pages.yaml structure
@@ -273,8 +273,8 @@ Use agent-browser to capture current state:
 ### 4.2 Compare with Figma
 
 Check screenshots against:
-- `specs/ui/figma/pages/*.md` for expected layout
-- `specs/ui/pages.yaml` for component structure
+- `specs/design/figma/pages/*.md` for expected layout
+- `specs/design/pages.yaml` for component structure
 
 ---
 

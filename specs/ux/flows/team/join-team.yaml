@@ -1,0 +1,70 @@
+# Flow: Join Team
+name: 加入团队
+category: team
+description: 用户申请加入公开团队的流程
+
+trigger: click join-btn
+preconditions:
+  - user.is_authenticated
+  - group.visibility == 'public'
+  - "!user.is_member_of(group)"
+
+steps:
+  - step: 1
+    page: team-detail
+    component: join-btn
+    trigger: click
+    result:
+      action: show_confirm
+      title: 申请加入团队
+      message: "确定要申请加入「{group.name}」吗？"
+      confirm_label: 确认申请
+      cancel_label: 取消
+
+  - step: 2
+    condition: confirm
+    api_call:
+      method: POST
+      endpoint: "/api/groups/{group.id}/members"
+      body:
+        user_id: "{current_user.id}"
+        role: member
+        status: pending
+      headers:
+        X-User-Id: "{current_user.id}"
+    loading_state: join-btn
+
+  - step: 3a
+    condition: success
+    result:
+      - action: update_button
+        target: join-btn
+        label: 申请中
+        disabled: true
+      - action: show_toast
+        message: "申请已提交，等待审批"
+        type: success
+
+  - step: 3b
+    condition: error
+    error_codes:
+      already_member:
+        action: show_toast
+        message: "您已是团队成员"
+        type: warning
+      team_full:
+        action: show_toast
+        message: "团队人数已满"
+        type: error
+      default:
+        action: show_toast
+        message: "{error.message}"
+        type: error
+
+notification:
+  on_success:
+    recipients:
+      - group.owner
+      - group.admins
+    type: team_join_request
+    message: "{current_user.display_name} 申请加入团队「{group.name}」"

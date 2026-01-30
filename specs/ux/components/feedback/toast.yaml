@@ -1,0 +1,69 @@
+# Component: Toast
+name: toast
+category: feedback
+description: 消息提示，用于操作反馈
+
+props:
+  message:
+    type: string
+    required: true
+  type:
+    type: string
+    enum: [success, error, warning, info]
+    default: info
+  duration:
+    type: number
+    default: 3000
+  closable:
+    type: boolean
+    default: true
+
+styles:
+  success:
+    background: "#52C41A"
+    icon: check-circle
+  error:
+    background: "#FF4D4F"
+    icon: x-circle
+  warning:
+    background: "#FAAD14"
+    icon: alert-triangle
+  info:
+    background: "#1890FF"
+    icon: info
+
+position:
+  default: top-center
+  offset_y: 80
+
+animations:
+  enter:
+    from: { opacity: 0, transform: "translateY(-20px)" }
+    to: { opacity: 1, transform: "translateY(0)" }
+    duration: 200
+  exit:
+    from: { opacity: 1, transform: "translateY(0)" }
+    to: { opacity: 0, transform: "translateY(-20px)" }
+    duration: 200
+
+interactions:
+  - trigger: mount
+    action: start_timer
+    duration: "{duration}"
+    on_complete:
+      action: dismiss
+
+  - trigger: click
+    target_element: close-btn
+    condition: closable
+    action: dismiss
+
+  - trigger: hover
+    action: pause_timer
+
+  - trigger: hover_end
+    action: resume_timer
+
+accessibility:
+  role: alert
+  aria-live: polite

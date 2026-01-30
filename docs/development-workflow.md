@@ -32,7 +32,7 @@
 │ 阶段 0: 项目初始化                                              │
 │  - 定义技术栈                                                   │
 │  - 创建项目结构                                                 │
-│  - 配置开发环境                                                 │
+│  - 配置开发环境 + CI/CD 基础配置                                │
 │  - [planning-with-files] 初始化规划文件                         │
 └────────────────────────────────────────────────────────────────┘
                             ↓
@@ -49,9 +49,10 @@
 │                                                                │
 │  [schema-to-openapi skill] ← 读取 synnovator + docs + specs   │
 │      ↓                                                        │
-│  OpenAPI 3.x 规范 (.synnovator/openapi.yaml)                  │
+│  OpenAPI 3.x 规范 (.synnovator/generated/openapi.yaml)         │
 │                                                                │
 │  ✅ [tests-kit] 验证数据模型测试用例                             │
+│  ⚠️ 如果失败: 检查 schema 定义，修复后重新生成 OpenAPI           │
 └────────────────────────────────────────────────────────────────┘
                             ↓
 ┌────────────────────────────────────────────────────────────────┐
@@ -70,9 +71,21 @@
 │  SQLite database (空表结构)                                    │
 │                                                                │
 │  ✅ [tests-kit] 按模块增量测试后端代码                           │
-│      ├─→ 用户模块完成 → 测试用户模块                           │
-│      ├─→ 活动模块完成 → 测试活动模块                           │
-│      └─→ 每完成一个模块，立即运行对应测试                       │
+│  ⚠️ 如果失败: 检查 ORM 模型，修复后重新运行迁移                  │
+└────────────────────────────────────────────────────────────────┘
+                            ↓
+┌────────────────────────────────────────────────────────────────┐
+│ 阶段 2.5: 认证集成 (可选但推荐)                                  │
+│  [oneauth-oauth2 skill]                                       │
+│      ↓                                                        │
+│  OAuth2/OIDC 认证集成                                         │
+│      ├─→ app/auth/ (认证模块)                                │
+│      ├─→ JWT Token 管理                                      │
+│      ├─→ 用户会话处理                                        │
+│      └─→ 权限中间件                                          │
+│                                                                │
+│  ✅ 验证登录/登出流程正常工作                                   │
+│  ⚠️ 如果失败: 检查 OAuth 配置，确认回调 URL 正确                │
 └────────────────────────────────────────────────────────────────┘
                             ↓
 ┌────────────────────────────────────────────────────────────────┐
@@ -85,11 +98,12 @@
 │      └─→ 跳过重复记录                                         │
 │                                                                │
 │  ✅ [tests-kit] 验证导入数据与测试用例一致                       │
+│  ⚠️ 如果失败: 检查外键约束，确认导入顺序正确                     │
 └────────────────────────────────────────────────────────────────┘
                             ↓
 ┌────────────────────────────────────────────────────────────────┐
 │ 阶段 4a: 前端客户端生成                                         │
-│  [前置] 安装 Tailwind CSS + shadcn/ui                          │
+│  [前置] 安装 Tailwind CSS + shadcn/ui + Neon Forge 主题        │
 │                                                                │
 │  [api-builder --generate-client]                              │
 │      ↓                                                        │
@@ -103,23 +117,26 @@
 │  frontend/lib/api-client.ts + frontend/lib/types.ts           │
 │                                                                │
 │  ✅ [tests-kit] 验证前端集成测试用例                             │
+│  ⚠️ 如果失败: 检查 TypeScript 类型，确认 API 端点匹配           │
 └────────────────────────────────────────────────────────────────┘
                             ↓
 ┌────────────────────────────────────────────────────────────────┐
 │ 阶段 4b: Figma 设计提取与 UI 规格生成                           │
 │  Figma 设计稿                                                  │
 │      ↓ [figma-resource-extractor skill]                      │
-│  specs/ui/figma/ (设计资源文档)                               │
+│  specs/design/figma/ (设计资源文档)                            │
 │      ├─→ icons.md, components.md, layouts.md                │
 │      └─→ pages/*.md (按类别分组的页面设计)                   │
 │                                                                │
 │  [ui-spec-generator skill]                                    │
 │      ↓                                                        │
-│  specs/ui/pages.yaml (页面组件结构 + 数据源 + 操作)            │
+│  specs/design/pages.yaml (页面规格唯一来源)                    │
 │                                                                │
-│  [ux-spec-generator skill]                                    │
+│  [ux-spec-generator skill] ← 复杂交互时必需                    │
 │      ↓                                                        │
 │  specs/ux/ (交互规格：组件、页面、流程、表单、状态)             │
+│                                                                │
+│  ⚠️ 如果失败: 检查 Figma 权限，确认 node-id 正确               │
 └────────────────────────────────────────────────────────────────┘
                             ↓
 ┌────────────────────────────────────────────────────────────────┐
@@ -127,8 +144,8 @@
 │  [frontend-prototype-builder skill]                           │
 │                                                                │
 │  输入:                                                         │
-│      ├─→ specs/ui/pages.yaml (页面结构)                      │
-│      ├─→ specs/ux/ (交互规格)                                │
+│      ├─→ specs/design/pages.yaml (页面结构 - 必需)             │
+│      ├─→ specs/ux/ (交互规格 - 复杂页面必需)                 │
 │      ├─→ frontend/lib/api-client.ts (API 客户端)             │
 │      └─→ specs/testcases/*.md (测试用例)                     │
 │                                                                │
@@ -137,6 +154,7 @@
 │      └─→ frontend/components/pages/*.tsx (页面组件)          │
 │                                                                │
 │  ✅ 组件与 API 正确连接，事件处理器已绑定                        │
+│  ⚠️ 如果失败: 检查 pages.yaml 结构，确认组件映射正确            │
 └────────────────────────────────────────────────────────────────┘
                             ↓
 ┌────────────────────────────────────────────────────────────────┐
@@ -161,32 +179,117 @@
 │      └─→ 重新测试直到通过                                    │
 │                                                                │
 │  ✅ [tests-kit] 最终 Guard 检查，确保所有测试用例通过            │
+│  ⚠️ 如果失败: 参考"常见问题修复模式"章节                        │
 └────────────────────────────────────────────────────────────────┘
+                            ↓
+┌────────────────────────────────────────────────────────────────┐
+│ 阶段 6: CI/CD 配置与部署准备                                    │
+│                                                                │
+│  6a. GitHub Actions 配置                                       │
+│      ├─→ .github/workflows/ci.yml (CI 流水线)               │
+│      ├─→ 自动运行 pytest + playwright                        │
+│      └─→ 代码质量检查 (lint, type-check)                     │
+│                                                                │
+│  6b. 部署配置                                                  │
+│      ├─→ deploy/docker-compose.yml                           │
+│      ├─→ 环境变量模板 (.env.example)                         │
+│      └─→ 生产数据库迁移脚本                                   │
+│                                                                │
+│  ✅ CI 流水线绿色，所有检查通过                                 │
+└────────────────────────────────────────────────────────────────┘
+```
+
+## Skill 依赖关系图
+
+```mermaid
+flowchart TD
+    subgraph 数据层
+        SYNNOV[synnovator skill<br/>.synnovator/*.md]
+        DOCS[docs/<br/>功能文档]
+        SPECS[specs/<br/>规范文档]
+    end
+
+    subgraph 后端生成
+        S2O[schema-to-openapi<br/>→ openapi.yaml]
+        API[api-builder<br/>→ app/]
+        AUTH[oneauth-oauth2<br/>→ app/auth/]
+        IMP[data-importer<br/>→ SQLite]
+    end
+
+    subgraph 前端生成
+        FIGMA[figma-resource-extractor<br/>→ specs/design/figma/]
+        UISPEC[ui-spec-generator<br/>→ pages.yaml]
+        UXSPEC[ux-spec-generator<br/>→ specs/ux/]
+        O2C[openapi-to-components<br/>→ frontend/lib/]
+        FPB[frontend-prototype-builder<br/>→ frontend/app/]
+    end
+
+    subgraph 测试验证
+        TESTS[tests-kit<br/>Guard/Insert]
+        BROWSER[agent-browser<br/>E2E 测试]
+    end
+
+    SYNNOV --> S2O
+    DOCS --> S2O
+    SPECS --> S2O
+    S2O --> API
+    API --> AUTH
+    API --> IMP
+    SYNNOV --> IMP
+
+    S2O --> O2C
+    FIGMA --> UISPEC
+    UISPEC --> UXSPEC
+    UISPEC --> FPB
+    UXSPEC --> FPB
+    O2C --> FPB
+
+    API --> TESTS
+    FPB --> TESTS
+    FPB --> BROWSER
 ```
 
 ## 使用的 Skills
 
 ### 后端开发 Skills
 
-| Skill | 用途 | 状态 |
-|-------|------|------|
-| **planning-with-files** | 文件化规划：创建 task_plan.md / findings.md / progress.md，防止上下文丢失和中断失忆 | ✅ 可用 |
-| **synnovator** | 管理 .synnovator/*.md 文件数据（CRUD），是平台原型能力的完整参考实现 | ✅ 可用 |
-| **schema-to-openapi** | 从 synnovator skill + docs/ + specs/ 综合生成 OpenAPI 3.0 规范 | ✅ 可用 |
-| **api-builder** | 从 OpenAPI 生成 FastAPI 后端 + 迁移 + 测试 + TypeScript 客户端 | ✅ 可用 |
-| **data-importer** | 从 .synnovator 导入数据到 SQLite | ✅ 可用 |
-| **tests-kit** | 增量测试管理：Guard 模式验证已有测试用例，Insert 模式添加新测试用例 | ✅ 可用 |
+| Skill | 用途 | 阶段 | 状态 |
+|-------|------|------|------|
+| **planning-with-files** | 文件化规划：创建 task_plan.md / findings.md / progress.md，防止上下文丢失和中断失忆 | 贯穿全流程 | ✅ 可用 |
+| **synnovator** | 管理 .synnovator/*.md 文件数据（CRUD），是平台原型能力的完整参考实现 | 阶段 1 | ✅ 可用 |
+| **schema-to-openapi** | 从 synnovator skill + docs/ + specs/ 综合生成 OpenAPI 3.0 规范 | 阶段 1 | ✅ 可用 |
+| **api-builder** | 从 OpenAPI 生成 FastAPI 后端 + 迁移 + 测试 + TypeScript 客户端 | 阶段 2, 4a | ✅ 可用 |
+| **oneauth-oauth2** | OAuth2/OIDC 认证集成：JWT Token、用户会话、权限中间件 | 阶段 2.5 | ✅ 可用 |
+| **data-importer** | 从 .synnovator 导入数据到 SQLite | 阶段 3 | ✅ 可用 |
+| **tests-kit** | 增量测试管理：Guard 模式验证已有测试用例，Insert 模式添加新测试用例 | 贯穿全流程 | ✅ 可用 |
 
 ### 前端开发 Skills
 
-| Skill | 用途 | 状态 |
+| Skill | 用途 | 阶段 | 状态 |
+|-------|------|------|------|
+| **figma-resource-extractor** | 从 Figma 设计稿提取资源，生成结构化 Markdown 文档到 `specs/design/figma/` | 阶段 4b | ✅ 可用 |
+| **ui-spec-generator** | 从设计资源和测试用例生成页面规格文件 `specs/design/pages.yaml` | 阶段 4b | ✅ 可用 |
+| **ux-spec-generator** | 从 UI 设计和测试用例生成交互规格到 `specs/ux/`（复杂交互必需） | 阶段 4b | ✅ 可用 |
+| **openapi-to-components** | 从 OpenAPI 生成 TypeScript 类型和 API 客户端，转换页面组件为 Server Components | 阶段 4a | ✅ 可用 |
+| **frontend-prototype-builder** | 完整前端原型构建 SOP：服务启动 → 数据验证 → 页面生成 → E2E 测试 | 阶段 4c | ✅ 可用 |
+| **agent-browser** | 浏览器自动化：截图、表单填写、E2E 测试、数据提取 | 阶段 5 | ✅ 可用 |
+
+### Skill 输入/输出矩阵
+
+| Skill | 输入 | 输出 |
 |-------|------|------|
-| **figma-resource-extractor** | 从 Figma 设计稿提取资源，生成结构化 Markdown 文档到 `specs/ui/figma/` | ✅ 可用 |
-| **ui-spec-generator** | 从设计资源和测试用例生成页面规格文件 `specs/ui/pages.yaml` | ✅ 可用 |
-| **ux-spec-generator** | 从 UI 设计和测试用例生成交互规格到 `specs/ux/` | ✅ 可用 |
-| **openapi-to-components** | 从 OpenAPI 生成 TypeScript 类型和 API 客户端，转换页面组件为 Server Components | ✅ 可用 |
-| **frontend-prototype-builder** | 完整前端原型构建 SOP：服务启动 → 数据验证 → 页面生成 → E2E 测试 | ✅ 可用 |
-| **agent-browser** | 浏览器自动化：截图、表单填写、E2E 测试、数据提取 | ✅ 可用 |
+| synnovator | 用户命令 | `.synnovator/*.md` |
+| schema-to-openapi | synnovator + docs/ + specs/ | `.synnovator/generated/openapi.yaml` |
+| api-builder | `openapi.yaml` | `app/` (FastAPI 后端) |
+| oneauth-oauth2 | `app/` | `app/auth/` (认证模块) |
+| data-importer | `.synnovator/*.md` + `app/models/` | SQLite 数据库 |
+| figma-resource-extractor | Figma URL | `specs/design/figma/` |
+| ui-spec-generator | `specs/design/figma/` + `specs/testcases/` | `specs/design/pages.yaml` |
+| ux-spec-generator | `specs/design/pages.yaml` + `specs/testcases/` | `specs/ux/` |
+| openapi-to-components | `openapi.yaml` | `frontend/lib/api-client.ts` + `types.ts` |
+| frontend-prototype-builder | `pages.yaml` + `specs/ux/` + `api-client.ts` | `frontend/app/` + `frontend/components/` |
+| tests-kit | `specs/testcases/` | 测试验证报告 |
+| agent-browser | 页面 URL | 截图 + 测试结果 |
 
 ---
 
@@ -421,8 +524,8 @@ python3 .claude/skills/planning-with-files/scripts/session-catchup.py "$(pwd)"
 - **user_user**: 用户间关系（关注/屏蔽）
 - **target_interaction**: 内容-交互绑定
 
-详细字段定义见 `docs/data-types.md` 和 `docs/relationships.md`。
-CRUD 操作与权限见 `docs/crud-operations.md`。
+详细字段定义见 `specs/data/types.md` 和 `specs/data/relationships.md`。
+CRUD 操作与权限见 `specs/data/crud-operations.md`。
 数据完整性约束见 `specs/data-integrity.md`。
 
 #### 1.2 创建示例数据
@@ -510,13 +613,13 @@ uv run python .claude/skills/schema-to-openapi/scripts/generate_openapi.py
 
 # 指定输出路径和格式
 uv run python .claude/skills/schema-to-openapi/scripts/generate_openapi.py \
-  --output .synnovator/openapi.yaml \
+  --output .synnovator/generated/openapi.yaml \
   --title "Synnovator API" \
   --version "1.0.0" \
   --format yaml
 ```
 
-**输出：** `.synnovator/openapi.yaml`
+**输出：** `.synnovator/generated/openapi.yaml`
 
 生成的规范包括:
 - 7 种内容类型的 CRUD endpoints (`/users`, `/categories`, `/posts`, 等)
@@ -558,7 +661,7 @@ uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 ```bash
 # 从生成的 OpenAPI 规范创建后端（输出到 app/ 目录）
 uv run python .claude/skills/api-builder/scripts/cli.py \
-  --spec .synnovator/openapi.yaml \
+  --spec .synnovator/generated/openapi.yaml \
   --output app \
   --setup-alembic \
   --run-migrations
@@ -676,6 +779,122 @@ uv run pytest app/tests/test_api/test_posts_api.py -v
 
 ---
 
+### 阶段 2.5: 认证集成（可选但推荐）
+
+> **何时使用**：如果原型需要用户登录/登出功能，或需要区分不同角色的权限，则必须完成此阶段。
+> 如果只是纯展示型原型，可跳过此阶段。
+
+#### 2.5.1 使用 oneauth-oauth2 skill 集成认证
+
+```bash
+# 触发方式（在 Claude Code 中）
+/oneauth-oauth2
+```
+
+**生成内容：**
+
+```
+app/
+├── auth/
+│   ├── __init__.py
+│   ├── oauth2.py          # OAuth2 配置
+│   ├── jwt.py             # JWT Token 处理
+│   ├── dependencies.py    # FastAPI 依赖注入
+│   └── middleware.py      # 认证中间件
+├── routers/
+│   └── auth.py            # 登录/登出/刷新 Token 路由
+└── schemas/
+    └── auth.py            # 认证相关 Pydantic schemas
+```
+
+#### 2.5.2 配置 OAuth2 Provider
+
+**环境变量配置（`.env`）：**
+
+```bash
+# OAuth2 配置
+OAUTH2_CLIENT_ID=your-client-id
+OAUTH2_CLIENT_SECRET=your-client-secret
+OAUTH2_AUTHORIZE_URL=https://auth.example.com/oauth2/authorize
+OAUTH2_TOKEN_URL=https://auth.example.com/oauth2/token
+OAUTH2_USERINFO_URL=https://auth.example.com/userinfo
+OAUTH2_REDIRECT_URI=http://localhost:8000/auth/callback
+
+# JWT 配置
+JWT_SECRET_KEY=your-secret-key
+JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
+```
+
+#### 2.5.3 保护 API 端点
+
+```python
+# app/routers/posts.py
+from app.auth.dependencies import get_current_user, require_role
+
+@router.post("/", response_model=PostResponse)
+def create_post(
+    post: PostCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # 需要登录
+):
+    return crud_post.create(db, post, created_by=current_user.id)
+
+@router.delete("/{post_id}")
+def delete_post(
+    post_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(["admin", "organizer"]))  # 需要特定角色
+):
+    return crud_post.delete(db, post_id)
+```
+
+#### 2.5.4 前端认证集成
+
+```typescript
+// frontend/lib/auth.ts
+export async function login() {
+  window.location.href = `${API_URL}/auth/login`;
+}
+
+export async function logout() {
+  await fetch(`${API_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
+  window.location.href = '/';
+}
+
+export async function getSession() {
+  const res = await fetch(`${API_URL}/auth/session`, { credentials: 'include' });
+  if (!res.ok) return null;
+  return res.json();
+}
+```
+
+#### 2.5.5 验证认证流程
+
+```bash
+# 1. 启动后端
+make backend
+
+# 2. 测试登录流程
+open http://localhost:8000/auth/login
+
+# 3. 验证 Token 刷新
+curl -X POST http://localhost:8000/auth/refresh \
+  -H "Authorization: Bearer <refresh_token>"
+
+# 4. 验证受保护端点
+curl http://localhost:8000/api/posts \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**⚠️ 如果失败：**
+- 检查 OAuth2 Provider 配置是否正确
+- 确认回调 URL 已在 OAuth2 Provider 中注册
+- 验证 JWT 密钥配置
+
+---
+
 ### 阶段 3: 数据注入
 
 #### 3.1 使用 data-importer 导入测试数据
@@ -776,33 +995,149 @@ uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 
 ### 阶段 4a: 前端客户端生成
 
-#### 4a.0 前置：安装前端样式框架
+#### 4a.0 前置：安装前端样式框架 + Neon Forge 主题
 
 > **必须在开始前端 UI 开发前完成！**
+
+##### Step 1: 安装依赖
 
 ```bash
 cd frontend
 
-# 安装 Tailwind CSS
+# 安装 Tailwind CSS v4
 npm install -D tailwindcss @tailwindcss/postcss postcss
 
-# 初始化 shadcn/ui（按提示配置）
+# 安装 Google Fonts
+npm install @fontsource/space-grotesk @fontsource/inter @fontsource/poppins
+
+# 初始化 shadcn/ui（选择 New York 风格，dark 主题）
 npx shadcn@latest init
 
 cd ..
 ```
 
-Neon Forge 设计系统配色（参考 `specs/ui/style.pen`）：
-- Primary accent: `#BBFD3B` (Lime Green)
-- Surface: `#181818`, Dark: `#222222`, Secondary: `#333333`
-- Fonts: Space Grotesk (headings), Inter (body), Poppins (numbers), Noto Sans SC (Chinese)
+##### Step 2: 配置 Neon Forge 主题
+
+**Neon Forge 设计系统配色（参考 `specs/design/style.pen`）：**
+
+| Token | 颜色值 | 用途 |
+|-------|--------|------|
+| Primary Accent | `#BBFD3B` | 主色调（Lime Green） |
+| Surface | `#181818` | 主背景色 |
+| Dark | `#222222` | 卡片/组件背景 |
+| Secondary | `#333333` | 次级背景 |
+| Text Primary | `#FFFFFF` | 主文字颜色 |
+| Text Secondary | `#9CA3AF` | 次级文字颜色 |
+| Border | `#3F3F46` | 边框颜色 |
+
+**创建 `frontend/app/globals.css`：**
+
+```css
+@import "tailwindcss";
+@import "@fontsource/space-grotesk/400.css";
+@import "@fontsource/space-grotesk/700.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/poppins/600.css";
+
+@theme {
+  /* Neon Forge 颜色变量 */
+  --color-primary: #BBFD3B;
+  --color-primary-hover: #A8E635;
+  --color-surface: #181818;
+  --color-dark: #222222;
+  --color-secondary: #333333;
+  --color-border: #3F3F46;
+
+  /* 字体 */
+  --font-heading: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "Poppins", ui-monospace, monospace;
+
+  /* 间距 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* 圆角 */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 21px;
+  --radius-pill: 50px;
+}
+
+/* 全局暗色主题 */
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: white;
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+code, pre, .mono {
+  font-family: var(--font-mono);
+}
+```
+
+**更新 `frontend/components.json`（shadcn 配置）：**
+
+```json
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.ts",
+    "css": "app/globals.css",
+    "baseColor": "zinc",
+    "cssVariables": true
+  },
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  }
+}
+```
+
+##### Step 3: 验证主题配置
+
+```bash
+cd frontend
+
+# 启动开发服务器
+npm run dev
+
+# 验证：
+# 1. 背景色应为 #181818
+# 2. 字体应为 Space Grotesk (标题) / Inter (正文)
+# 3. 主色调应为 #BBFD3B (Lime Green)
+```
+
+**⚠️ 如果主题未生效：**
+- 检查 `globals.css` 是否在 `layout.tsx` 中导入
+- 确认 `@theme` 块语法正确（Tailwind v4）
+- 验证字体文件已正确安装
 
 #### 4a.1 生成 TypeScript API 客户端
 
 ```bash
 # 使用 schema-to-openapi 生成的规范
 uv run python .claude/skills/api-builder/scripts/cli.py \
-  --spec .synnovator/openapi.yaml \
+  --spec .synnovator/generated/openapi.yaml \
   --output app \
   --generate-client \
   --client-output frontend/lib/api/api-client.ts
@@ -979,10 +1314,10 @@ npx playwright test
 
 **输入：** Figma 设计稿 URL
 
-**输出：** `specs/ui/figma/` 目录结构
+**输出：** `specs/design/figma/` 目录结构
 
 ```
-specs/ui/figma/
+specs/design/figma/
 ├── README.md              # 资源总览与索引
 ├── icons.md               # 图标组件列表
 ├── components.md          # UI 组件列表
@@ -1011,13 +1346,13 @@ specs/ui/figma/
 ```
 
 **输入：**
-- `specs/ui/figma/pages/*.md` — Figma 设计文档
+- `specs/design/figma/pages/*.md` — Figma 设计文档
 - `specs/testcases/*.md` — 测试用例（提取期望的组件和操作）
 
-**输出：** `specs/ui/pages.yaml`
+**输出：** `specs/design/pages.yaml`
 
 ```yaml
-# specs/ui/pages.yaml 示例结构
+# specs/design/pages.yaml 示例结构
 shared_components:
   - id: global-header
     components:
@@ -1092,7 +1427,7 @@ specs/ux/
 
 ```bash
 # 必须存在
-ls specs/ui/pages.yaml           # 页面规格
+ls specs/design/pages.yaml           # 页面规格
 ls frontend/lib/api-client.ts    # API 客户端
 ls frontend/lib/types.ts         # TypeScript 类型
 
@@ -1169,7 +1504,7 @@ export function PostDetail({ postId }: { postId: number }) {
 
 #### 4c.3 页面生成检查清单
 
-对于 `specs/ui/pages.yaml` 中的每个页面：
+对于 `specs/design/pages.yaml` 中的每个页面：
 
 | 步骤 | 检查项 | 缺失时操作 |
 |------|--------|-----------|
@@ -1420,6 +1755,280 @@ bash .claude/skills/planning-with-files/scripts/check-complete.sh
 
 ---
 
+### 阶段 6: CI/CD 配置与部署准备
+
+> **本阶段将原型转化为可持续交付的项目**，配置自动化测试、代码质量检查和部署流水线。
+
+#### 6.1 GitHub Actions CI 配置
+
+**创建 `.github/workflows/ci.yml`：**
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [main, feat/*]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Run linter
+        run: uv run ruff check app/
+
+      - name: Run type checker
+        run: uv run mypy app/
+
+      - name: Run tests
+        run: uv run pytest app/tests/ -v --cov=app --cov-report=xml
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+
+  frontend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run linter
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Run type check
+        working-directory: frontend
+        run: npx tsc --noEmit
+
+      - name: Install Playwright
+        working-directory: frontend
+        run: npx playwright install --with-deps
+
+      - name: Run E2E tests
+        working-directory: frontend
+        run: npx playwright test
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+
+  build:
+    needs: [backend-tests, frontend-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker images
+        run: docker compose -f deploy/docker-compose.yml build
+```
+
+#### 6.2 代码质量工具配置
+
+**后端代码质量（`pyproject.toml` 追加）：**
+
+```toml
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["app/tests"]
+addopts = "-v --tb=short"
+```
+
+**前端代码质量（`frontend/package.json` scripts）：**
+
+```json
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "type-check": "tsc --noEmit",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui"
+  }
+}
+```
+
+#### 6.3 部署配置
+
+**创建 `deploy/docker-compose.yml`：**
+
+```yaml
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./data/synnovator.db
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    volumes:
+      - ../data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../deploy/Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+```
+
+**创建 `.env.example`（环境变量模板）：**
+
+```bash
+# Backend
+DATABASE_URL=sqlite:///./data/synnovator.db
+JWT_SECRET_KEY=your-secret-key-here
+JWT_ALGORITHM=HS256
+
+# OAuth2 (可选)
+OAUTH2_CLIENT_ID=
+OAUTH2_CLIENT_SECRET=
+OAUTH2_AUTHORIZE_URL=
+OAUTH2_TOKEN_URL=
+
+# Frontend
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+#### 6.4 Pre-commit Hooks 配置
+
+**创建 `.pre-commit-config.yaml`：**
+
+```yaml
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.4
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.10.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-all]
+
+  - repo: local
+    hooks:
+      - id: frontend-lint
+        name: Frontend Lint
+        entry: bash -c 'cd frontend && npm run lint'
+        language: system
+        files: ^frontend/
+        pass_filenames: false
+```
+
+**安装 pre-commit：**
+
+```bash
+uv add --dev pre-commit
+uv run pre-commit install
+```
+
+#### 6.5 验证 CI/CD 配置
+
+```bash
+# 1. 本地运行 pre-commit
+uv run pre-commit run --all-files
+
+# 2. 本地运行完整测试套件
+uv run pytest app/tests/ -v
+cd frontend && npm run lint && npx tsc --noEmit && npx playwright test
+
+# 3. 构建 Docker 镜像
+docker compose -f deploy/docker-compose.yml build
+
+# 4. 启动并验证
+docker compose -f deploy/docker-compose.yml up -d
+curl http://localhost:8000/health
+curl -I http://localhost:3000
+```
+
+**⚠️ 如果 CI 失败：**
+- 检查 Python/Node.js 版本是否匹配
+- 确认依赖锁文件已提交（`uv.lock`, `package-lock.json`）
+- 验证环境变量配置正确
+
+---
+
+## 错误恢复指南
+
+> **每个阶段失败时的快速恢复步骤**
+
+| 阶段 | 常见错误 | 恢复方法 |
+|------|----------|----------|
+| **阶段 1** | Schema 定义不一致 | 检查 `specs/data/types.md`，重新运行 schema-to-openapi |
+| **阶段 2** | ORM 模型错误 | 删除 `app/models/`，重新生成；检查 SQLAlchemy 版本 |
+| **阶段 2.5** | OAuth 回调失败 | 检查回调 URL 配置，验证 Provider 设置 |
+| **阶段 3** | 外键约束失败 | 检查导入顺序，确认依赖数据已存在 |
+| **阶段 4a** | TypeScript 类型不匹配 | 重新生成 API 客户端，检查 OpenAPI spec |
+| **阶段 4b** | Figma API 权限错误 | 检查 Figma token，确认 file/node ID 正确 |
+| **阶段 4c** | 组件无法渲染 | 检查 pages.yaml 结构，验证组件导入路径 |
+| **阶段 5** | E2E 测试失败 | 确认服务已启动，检查 API 端点，验证测试数据 |
+| **阶段 6** | CI 流水线失败 | 检查依赖版本，验证环境变量配置 |
+
+**3-Strike Protocol（三次尝试失败升级）：**
+
+1. **第一次失败**：检查错误日志，尝试快速修复
+2. **第二次失败**：回滚到上一个稳定状态，重新分析问题
+3. **第三次失败**：记录到 `findings.md`，寻求帮助或重新评估方案
+
+---
+
 ## 数据模型更新流程
 
 ### 场景 1: 添加新字段
@@ -1428,7 +2037,7 @@ bash .claude/skills/planning-with-files/scripts/check-complete.sh
 # 0. [tests-kit Guard] 先检查现有测试用例
 uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 
-# 1. 更新 docs/data-types.md（内容类型字段定义）
+# 1. 更新 specs/data/types.md（内容类型字段定义）
 # 2. 同步更新 synnovator skill 相关文件（references/schema.md、endpoints/*.py）
 
 # 3. 重新生成 OpenAPI spec（自动读取 synnovator skill + docs/ + specs/）
@@ -1436,7 +2045,7 @@ uv run python .claude/skills/schema-to-openapi/scripts/generate_openapi.py
 
 # 4. 重新生成后端代码
 uv run python .claude/skills/api-builder/scripts/cli.py \
-  --spec .synnovator/openapi.yaml --output app
+  --spec .synnovator/generated/openapi.yaml --output app
 
 # 5. 生成数据库迁移
 cd app && uv run alembic revision --autogenerate -m "Add new field"
@@ -1463,13 +2072,13 @@ uv run pytest app/tests/ -v
 # 0. [tests-kit Guard] 先检查现有测试用例
 uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 
-# 1. 更新 docs/data-types.md 和 docs/relationships.md
+# 1. 更新 specs/data/types.md 和 specs/data/relationships.md
 # 2. 同步更新 synnovator skill（references/schema.md、新增 endpoints/*.py）
 # 3. 重新生成 OpenAPI spec
 uv run python .claude/skills/schema-to-openapi/scripts/generate_openapi.py
 # 4. 重新生成后端
 uv run python .claude/skills/api-builder/scripts/cli.py \
-  --spec .synnovator/openapi.yaml --output app
+  --spec .synnovator/generated/openapi.yaml --output app
 # 5. 更新 data-importer（在 IMPORT_ORDER 中添加新类型）
 # 6. 创建测试数据
 # 7. 导入并测试
@@ -1485,13 +2094,13 @@ uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 # 0. [tests-kit Guard] 先检查现有测试用例（重点关注 TC-REL-*）
 uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 
-# 1. 更新 docs/relationships.md
+# 1. 更新 specs/data/relationships.md
 # 2. 同步更新 synnovator skill（references/schema.md）
 # 3. 重新生成 OpenAPI spec
 uv run python .claude/skills/schema-to-openapi/scripts/generate_openapi.py
 # 4. 重新生成后端
 uv run python .claude/skills/api-builder/scripts/cli.py \
-  --spec .synnovator/openapi.yaml --output app
+  --spec .synnovator/generated/openapi.yaml --output app
 # 5. 生成迁移（可能需要手动调整）
 cd app && uv run alembic revision --autogenerate -m "Update relations"
 uv run alembic upgrade head && cd ..
@@ -1636,13 +2245,14 @@ async def upload_file(file: UploadFile = File(...)):
 - **synnovator**: 平台原型参考实现 + 文件数据管理（CRUD 操作）
 - **schema-to-openapi**: 从 synnovator skill + docs/ + specs/ 综合生成 OpenAPI 3.0 规范
 - **api-builder**: 后端代码生成（FastAPI + SQLAlchemy + Alembic + 测试 + TypeScript 客户端）
+- **oneauth-oauth2**: OAuth2/OIDC 认证集成（JWT Token、用户会话、权限中间件）
 - **data-importer**: 数据导入（.synnovator → SQLite）
 - **tests-kit**: 增量测试管理（Guard 验证 + Insert 添加）
 
 **前端开发：**
-- **figma-resource-extractor**: Figma 设计提取 → `specs/ui/figma/`
-- **ui-spec-generator**: 页面规格生成 → `specs/ui/pages.yaml`
-- **ux-spec-generator**: 交互规格生成 → `specs/ux/`
+- **figma-resource-extractor**: Figma 设计提取 → `specs/design/figma/`
+- **ui-spec-generator**: 页面规格生成 → `specs/design/pages.yaml`（页面规格唯一来源）
+- **ux-spec-generator**: 交互规格生成 → `specs/ux/`（复杂交互必需）
 - **openapi-to-components**: API 客户端 + 类型 → `frontend/lib/`
 - **frontend-prototype-builder**: 完整前端原型构建 SOP
 - **agent-browser**: E2E 浏览器测试与截图
@@ -1651,37 +2261,74 @@ async def upload_file(file: UploadFile = File(...)):
 
 ## 总结
 
-完整开发流程 8 个阶段（贯穿 planning-with-files 规划管理）：
+完整开发流程 **10 个阶段**（贯穿 planning-with-files 规划管理）：
 
-0. **项目初始化** - 创建结构、配置环境、初始化规划文件
-1. **需求设计** - synnovator skill 为原型参考，综合 docs/ + specs/ 生成 OpenAPI spec
-2. **后端生成** - 使用 api-builder 生成 FastAPI 到 `app/` + 迁移
-3. **数据注入** - 使用 data-importer 导入测试数据
-4a. **前端客户端** - 生成 TypeScript API 客户端和类型定义
-4b. **设计提取** - 从 Figma 提取设计资源，生成 UI/UX 规格
-4c. **页面生成** - 基于规格生成 React 页面组件，连接 API
-5. **E2E 测试** - 服务健康检查 → 视觉验证 → 浏览器测试 → 迭代修复
+| 阶段 | 名称 | 输出 | 验证 |
+|------|------|------|------|
+| **0** | 项目初始化 | 项目结构 + 环境配置 | 依赖安装成功 |
+| **1** | 需求设计与数据建模 | `openapi.yaml` | tests-kit 验证 |
+| **2** | 后端代码生成 | `app/` (FastAPI) | pytest 测试通过 |
+| **2.5** | 认证集成 (可选) | `app/auth/` | 登录流程正常 |
+| **3** | 数据注入 | SQLite 数据库 | 数据查询正确 |
+| **4a** | 前端客户端生成 | `frontend/lib/` | TypeScript 编译通过 |
+| **4b** | Figma 设计提取 | `specs/design/` + `specs/ux/` | 文件生成完整 |
+| **4c** | 前端页面组件生成 | `frontend/app/` | 组件渲染正常 |
+| **5** | 原型验证与 E2E 测试 | 测试报告 | 所有测试通过 |
+| **6** | CI/CD 配置 | `.github/workflows/` | CI 流水线绿色 |
 
-**Skill 调用链（从设计到原型）：**
+**Skill 调用链（从数据到原型）：**
 
 ```
-figma-resource-extractor  → specs/ui/figma/
-         ↓
-ui-spec-generator         → specs/ui/pages.yaml
-         ↓
-ux-spec-generator         → specs/ux/
-         ↓
-openapi-to-components     → frontend/lib/api-client.ts + types.ts
-         ↓
-frontend-prototype-builder → frontend/app/ + frontend/components/pages/
-         ↓
-agent-browser             → E2E 验证
+┌─────────────────────────────────────────────────────────────────┐
+│                         后端数据流                               │
+├─────────────────────────────────────────────────────────────────┤
+│  synnovator + docs/ + specs/                                    │
+│         ↓                                                       │
+│  schema-to-openapi      → .synnovator/generated/openapi.yaml   │
+│         ↓                                                       │
+│  api-builder            → app/ (FastAPI 后端)                  │
+│         ↓                                                       │
+│  oneauth-oauth2         → app/auth/ (认证模块)                 │
+│         ↓                                                       │
+│  data-importer          → SQLite database                      │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                         前端数据流                               │
+├─────────────────────────────────────────────────────────────────┤
+│  Figma 设计稿                                                   │
+│         ↓                                                       │
+│  figma-resource-extractor → specs/design/figma/                │
+│         ↓                                                       │
+│  ui-spec-generator        → specs/design/pages.yaml            │
+│         ↓                                                       │
+│  ux-spec-generator        → specs/ux/ (复杂交互必需)            │
+│         ↓                                                       │
+│  openapi-to-components    → frontend/lib/api-client.ts         │
+│         ↓                                                       │
+│  frontend-prototype-builder → frontend/app/ + components/      │
+│         ↓                                                       │
+│  agent-browser            → E2E 验证                           │
+└─────────────────────────────────────────────────────────────────┘
 ```
+
+**关键文件（单一来源）：**
+
+| 文件 | 用途 | 生成方 |
+|------|------|--------|
+| `.synnovator/generated/openapi.yaml` | API 规范唯一来源 | schema-to-openapi |
+| `specs/design/pages.yaml` | 页面规格唯一来源 | ui-spec-generator |
+| `frontend/lib/api-client.ts` | API 客户端唯一来源 | openapi-to-components |
 
 这个流程确保：
-- **设计到代码的自动转换**，减少手工编写
-- **从设计到实现的一致性**，规格文件作为桥梁
-- **自动化代码生成**，减少重复工作
+- ✅ **设计到代码的自动转换**，减少手工编写
+- ✅ **从设计到实现的一致性**，规格文件作为桥梁
+- ✅ **自动化代码生成**，减少重复工作
+- ✅ **增量测试**，每个模块完成后立即验证
+- ✅ **文件化规划**，防止上下文丢失和中断失忆
+- ✅ **CI/CD 集成**，确保代码质量和可持续交付
+- ✅ **错误恢复指南**，快速定位和修复问题
+- ✅ **70-80% 可部署原型**，PM/设计师可实际点击测试
 - **增量测试**，每个模块完成后立即验证
 - **文件化规划**，防止上下文丢失和中断失忆
 - **70-80% 可部署原型**，PM/设计师可实际点击测试

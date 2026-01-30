@@ -1,0 +1,186 @@
+# Page: Category Detail
+route: /categories/{id}
+description: 活动详情页，展示活动详情、奖金、时间线、参赛团队和排行榜
+uses_shared: [global-header, sidebar-nav, multi-function-panel]
+
+params:
+  id:
+    type: number
+    required: true
+
+data_fetching:
+  - id: category
+    api: getCategory
+    params:
+      id: "{params.id}"
+      userId: "{current_user?.id}"
+
+  - id: rules
+    api: listCategoryRules
+    params:
+      categoryId: "{params.id}"
+
+  - id: posts
+    api: listCategoryPosts
+    params:
+      categoryId: "{params.id}"
+      relationType: submission
+      userId: "{current_user?.id}"
+
+  - id: groups
+    api: listCategoryGroups
+    params:
+      categoryId: "{params.id}"
+
+sections:
+  category-header:
+    description: 活动头部信息
+    components:
+      cover-image:
+        data_source: category
+        field: cover_image
+        type: image
+        size: large
+        fallback: /images/category-placeholder.png
+
+      category-info:
+        data_source: category
+        fields:
+          - title
+          - prize_amount
+          - start_date
+          - end_date
+          - status
+        status_badges:
+          draft: { label: 草稿, color: gray }
+          published: { label: 进行中, color: green }
+          closed: { label: 已结束, color: red }
+
+      category-tags:
+        data_source: category
+        field: tags
+        type: tag-list
+
+  category-tabs:
+    description: 活动内容 Tab
+    component_ref: tabs
+    props:
+      options:
+        - label: 简介
+          panel: description
+          default: true
+        - label: 排行榜
+          panel: leaderboard
+        - label: 参赛团队
+          panel: teams
+        - label: 发现更多
+          panel: related
+
+  category-body:
+    description: 活动正文区
+    panels:
+      description:
+        components:
+          markdown-content:
+            data_source: category
+            field: body
+            type: markdown-viewer
+
+          rules-section:
+            condition: "rules.length > 0"
+            type: collapsible-section
+            title: 活动规则
+            data_source: rules
+            item_fields:
+              - title
+              - description
+              - scoring_criteria
+
+      leaderboard:
+        components:
+          leaderboard-list:
+            data_source: posts
+            sort: average_rating:desc
+            type: ranking-list
+            fields:
+              - rank
+              - title
+              - author.display_name
+              - average_rating
+            rank_styles:
+              1: { color: gold, icon: crown }
+              2: { color: silver }
+              3: { color: bronze }
+            item_interactions:
+              - trigger: click
+                action: navigate
+                target: "/posts/{id}"
+
+      teams:
+        components:
+          team-grid:
+            data_source: groups
+            layout: grid
+            columns: 4
+            item_fields:
+              - avatar
+              - name
+              - member_count
+            item_interactions:
+              - trigger: click
+                action: navigate
+                target: "/groups/{id}"
+
+      related:
+        components:
+          related-categories:
+            type: card-grid
+            # TODO: API gap - no category-category relation endpoint
+            placeholder: true
+            message: 相关活动功能开发中
+
+  category-actions:
+    description: 活动操作区
+    position: bottom
+    sticky: true
+    components:
+      register-btn:
+        label: 报名参赛
+        variant: primary
+        condition: "category.status == 'published' && current_user?.has_team"
+        interactions:
+          - trigger: click
+            action: show_confirm
+            message: "确定要报名参加「{category.title}」吗？"
+            confirm_action:
+              api_call:
+                method: POST
+                endpoint: "/api/categories/{params.id}/groups"
+                body:
+                  group_id: "{current_user.team_id}"
+              on_success:
+                action: show_toast
+                message: "报名成功"
+                type: success
+
+      like-btn:
+        component_ref: like-button
+        props:
+          target_type: category
+          target_id: "{params.id}"
+          initial_count: "{category.like_count}"
+
+loading_states:
+  category:
+    type: skeleton
+    components:
+      cover: { type: rectangle, width: "100%", height: 300 }
+      title: { type: text, width: 200 }
+      info: { type: text, lines: 3 }
+
+error_states:
+  category:
+    404:
+      message: 活动不存在
+      action: navigate
+      target: "/categories"

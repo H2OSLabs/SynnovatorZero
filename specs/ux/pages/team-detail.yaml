@@ -1,0 +1,198 @@
+# Page: Team Detail
+route: /groups/{id}
+description: 团队详情页，展示团队信息、成员和资产
+uses_shared: [global-header, sidebar-nav, multi-function-panel]
+
+params:
+  id:
+    type: number
+    required: true
+
+data_fetching:
+  - id: group
+    api: getGroup
+    params:
+      id: "{params.id}"
+      userId: "{current_user?.id}"
+
+  - id: members
+    api: listGroupMembers
+    params:
+      groupId: "{params.id}"
+      status: accepted
+
+  - id: pending_members
+    api: listGroupMembers
+    params:
+      groupId: "{params.id}"
+      status: pending
+    condition: is_owner
+
+sections:
+  team-header:
+    description: 团队头部信息
+    components:
+      team-avatar:
+        data_source: group
+        field: avatar
+        type: avatar
+        size: large
+        fallback: /images/team-placeholder.png
+
+      team-info:
+        data_source: group
+        fields:
+          - name
+          - description
+          - member_count
+          - max_members
+          - visibility
+        visibility_badge:
+          public: { label: 公开, color: green }
+          private: { label: 私密, color: gray }
+
+      join-btn:
+        condition: "!is_member && group.visibility == 'public'"
+        label: 申请加入
+        variant: primary
+        interactions:
+          - trigger: click
+            action: show_confirm
+            message: "确定要申请加入「{group.name}」吗？"
+            confirm_action:
+              api_call:
+                method: POST
+                endpoint: "/api/groups/{params.id}/members"
+                body:
+                  user_id: "{current_user.id}"
+                  role: member
+                  status: pending
+                headers:
+                  X-User-Id: "{current_user.id}"
+              on_success:
+                action: show_toast
+                message: "申请已提交，等待审批"
+                type: success
+
+  team-members:
+    description: 团队成员区
+    components:
+      member-grid:
+        data_source: members
+        field: items
+        layout: avatar-grid
+        max_display: 8
+        item_fields:
+          - user.avatar
+          - user.display_name
+          - role
+        role_badges:
+          owner: { label: 队长, color: gold }
+          admin: { label: 管理员, color: blue }
+          member: { label: 成员, color: gray }
+        item_interactions:
+          - trigger: click
+            action: navigate
+            target: "/users/{user_id}"
+
+      add-member-btn:
+        condition: is_owner
+        type: icon-button
+        icon: plus
+        interactions:
+          - trigger: click
+            action: open_modal
+            target: invite-member-modal
+
+      pending-badge:
+        condition: "is_owner && pending_members.total > 0"
+        type: badge
+        count: "{pending_members.total}"
+        label: 待审批
+        interactions:
+          - trigger: click
+            action: open_modal
+            target: pending-requests-modal
+
+  team-assets:
+    description: 团队资产区
+    layout: horizontal
+    gap: 16
+    components:
+      asset-cards:
+        type: asset-card-group
+        categories:
+          - type: agent
+            label: AI Agent
+            count: 0
+            color: pink
+          - type: certificate
+            label: 证书
+            count: 0
+            color: yellow
+          - type: file
+            label: 文件
+            count: 0
+            color: lime
+
+  team-works:
+    description: 团队作品区
+    components:
+      team-posts:
+        # TODO: API gap - no posts filtered by group
+        placeholder: true
+        message: 团队作品功能开发中
+
+modals:
+  invite-member-modal:
+    title: 邀请成员
+    components:
+      user-search:
+        type: search-input
+        placeholder: 搜索用户名或邮箱
+        # TODO: API gap - no user search endpoint
+      invite-btn:
+        label: 发送邀请
+        variant: primary
+        disabled: true
+
+  pending-requests-modal:
+    title: 待审批申请
+    data_source: pending_members
+    item_fields:
+      - user.avatar
+      - user.display_name
+      - created_at
+    item_actions:
+      - label: 批准
+        variant: primary
+        api_call:
+          method: PATCH
+          endpoint: "/api/groups/{params.id}/members/{user_id}"
+          body:
+            status: accepted
+      - label: 拒绝
+        variant: danger
+        api_call:
+          method: PATCH
+          endpoint: "/api/groups/{params.id}/members/{user_id}"
+          body:
+            status: rejected
+
+loading_states:
+  group:
+    type: skeleton
+    components:
+      avatar: { type: circle, size: 96 }
+      name: { type: text, width: 150 }
+  members:
+    type: skeleton
+    preset: avatar-grid
+    count: 8
+
+error_states:
+  group:
+    404:
+      message: 团队不存在
+      action: navigate
+      target: "/groups"

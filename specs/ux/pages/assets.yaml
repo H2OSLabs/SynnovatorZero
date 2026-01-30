@@ -1,0 +1,167 @@
+# Page: Assets
+route: /assets
+description: 资产页，展示用户拥有的资产（AI Agent、证书、文件）
+uses_shared: [global-header, sidebar-nav, multi-function-panel]
+
+data_fetching:
+  - id: resources
+    api: listResources
+    params:
+      owner_id: "{current_user.id}"
+      skip: 0
+      limit: 50
+    revalidate: 60
+
+sections:
+  assets-header:
+    description: 资产页头部
+    components:
+      page-title:
+        type: heading
+        level: 1
+        label: 我的资产
+
+  asset-type-cards:
+    description: 资产类型卡片区
+    layout: horizontal
+    gap: 24
+    components:
+      agent-card:
+        type: asset-type-card
+        icon: ufo
+        label: AI Agent
+        subtitle: 0 TOPS
+        count: "{resources.items.filter(r => r.type == 'agent').length}"
+        color: gradient-pink
+        interactions:
+          - trigger: click
+            action: filter_list
+            target: asset-list
+            filter: type=agent
+
+      cert-card:
+        type: asset-type-card
+        icon: certificate
+        label: 证书
+        count: "{resources.items.filter(r => r.type == 'certificate').length}"
+        color: yellow
+        interactions:
+          - trigger: click
+            action: filter_list
+            target: asset-list
+            filter: type=certificate
+
+      file-card:
+        type: asset-type-card
+        icon: file
+        label: 文件
+        count: "{resources.items.filter(r => r.type == 'file').length}"
+        color: lime
+        interactions:
+          - trigger: click
+            action: filter_list
+            target: asset-list
+            filter: type=file
+
+  asset-list:
+    description: 资产列表
+    data_source: resources
+    field: items
+    layout: table
+    columns:
+      - field: title
+        label: 名称
+        sortable: true
+      - field: type
+        label: 类型
+        render: badge
+      - field: category.name
+        label: 来源活动
+      - field: status
+        label: 状态
+        render: status-badge
+        status_config:
+          available: { label: 可用, color: green }
+          transferred: { label: 已转移, color: gray }
+          expired: { label: 已过期, color: red }
+      - field: expires_at
+        label: 有效期
+        render: date
+      - field: actions
+        label: 操作
+        render: action-buttons
+    item_actions:
+      - label: 查看详情
+        icon: eye
+        action: open_modal
+        target: asset-detail-modal
+      - label: 转移
+        icon: send
+        condition: "item.status == 'available'"
+        action: open_modal
+        target: transfer-modal
+      - label: 下载
+        icon: download
+        condition: "item.type == 'file'"
+        action: download
+        url: "{item.url}"
+    pagination:
+      type: pagination
+      page_size: 20
+
+modals:
+  asset-detail-modal:
+    title: 资产详情
+    width: 600
+    components:
+      detail-view:
+        type: detail-view
+        fields:
+          - label: 名称
+            field: title
+          - label: 类型
+            field: type
+          - label: 来源活动
+            field: category.name
+          - label: 获得时间
+            field: created_at
+            render: datetime
+          - label: 有效期
+            field: expires_at
+            render: datetime
+          - label: 状态
+            field: status
+
+  transfer-modal:
+    title: 转移资产
+    width: 480
+    components:
+      recipient-input:
+        type: user-search
+        label: 接收人
+        placeholder: 搜索用户名或邮箱
+      confirm-btn:
+        label: 确认转移
+        variant: primary
+        interactions:
+          - trigger: click
+            action: show_confirm
+            message: "确定要将「{asset.title}」转移给 {recipient.display_name} 吗？此操作不可撤销。"
+            confirm_action:
+              # TODO: API gap - no transfer endpoint
+              placeholder: true
+
+loading_states:
+  resources:
+    type: skeleton
+    preset: table
+    rows: 10
+
+empty_states:
+  resources:
+    icon: inbox
+    message: 暂无资产
+    description: 参加活动获得证书和奖励
+    action:
+      label: 浏览活动
+      target: "/categories"

@@ -1,7 +1,7 @@
 # pages.yaml 输出格式规范
 
 ## 文件位置
-`specs/ui/pages.yaml`
+`specs/design/pages.yaml`
 
 ## 结构说明
 
@@ -93,7 +93,7 @@ pages:
 
 ## 数据类型引用
 
-支持的 data_source 值（对应 docs/data-types.md）：
+支持的 data_source 值（对应 specs/data/types.md）：
 - `category` - 活动/赛事
 - `post` - 帖子/提案
 - `user` - 用户

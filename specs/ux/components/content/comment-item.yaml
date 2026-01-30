@@ -1,0 +1,96 @@
+# Component: Comment Item
+name: comment-item
+category: content
+description: 评论条目，支持嵌套回复
+
+props:
+  comment:
+    type: Interaction
+    required: true
+    filter: type=comment
+  depth:
+    type: number
+    default: 0
+    max: 3
+
+data_fields:
+  - author.avatar
+  - author.display_name
+  - value.content
+  - created_at
+  - like_count
+  - replies
+
+states:
+  default:
+    show_reply_form: false
+  replying:
+    show_reply_form: true
+  editing:
+    show_edit_form: true
+
+interactions:
+  - trigger: click
+    target_element: author-avatar
+    action: navigate
+    target: "/users/{comment.created_by}"
+
+  - trigger: click
+    target_element: reply-btn
+    action: toggle_state
+    target: replying
+    condition: user.is_authenticated
+
+  - trigger: click
+    target_element: like-btn
+    action: toggle_like
+    component_ref: like-button
+    props:
+      target_type: comment
+      target_id: "{comment.id}"
+      initial_count: "{comment.like_count}"
+
+  - trigger: click
+    target_element: edit-btn
+    condition: "comment.created_by == current_user.id"
+    action: toggle_state
+    target: editing
+
+  - trigger: click
+    target_element: delete-btn
+    condition: "comment.created_by == current_user.id || current_user.role == 'admin'"
+    action: show_confirm
+    message: "确定要删除这条评论吗？"
+    confirm_action:
+      api_call:
+        method: DELETE
+        endpoint: "/api/interactions/{comment.id}"
+      on_success:
+        action: remove_element
+        target: self
+
+  - trigger: submit
+    target_element: reply-form
+    action: submit_reply
+    api_call:
+      method: POST
+      endpoint: "/api/posts/{post_id}/comments"
+      body:
+        type: comment
+        value:
+          content: "{reply_content}"
+        parent_id: "{comment.id}"
+      headers:
+        X-User-Id: "{current_user.id}"
+    on_success:
+      - action: prepend_element
+        target: replies
+        content: "{new_comment}"
+      - action: toggle_state
+        target: default
+      - action: clear_input
+        target: reply-form
+
+accessibility:
+  role: article
+  aria-label: "{comment.author.display_name} 的评论"

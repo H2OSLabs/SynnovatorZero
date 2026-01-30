@@ -1,0 +1,60 @@
+# Component: Tabs
+name: tabs
+category: navigation
+description: 内容筛选标签页
+
+props:
+  options:
+    type: array
+    items:
+      - label: string
+      - filter: string
+      - default: boolean
+    required: true
+  active_index:
+    type: number
+    default: 0
+
+states:
+  idle:
+    loading: false
+  loading:
+    loading: true
+    disabled: true
+
+interactions:
+  - trigger: click
+    target_element: tab-item
+    condition: "index != active_index && !loading"
+    action: switch_tab
+    steps:
+      - action: set_state
+        target: loading
+      - action: update_url_param
+        param: tab
+        value: "{tab.filter}"
+      - action: emit_event
+        event: tab_change
+        data:
+          index: "{index}"
+          filter: "{tab.filter}"
+      - action: set_state
+        target: idle
+
+  - trigger: keyboard
+    key: ArrowLeft
+    action: switch_tab
+    direction: prev
+
+  - trigger: keyboard
+    key: ArrowRight
+    action: switch_tab
+    direction: next
+
+accessibility:
+  role: tablist
+  aria-label: 内容筛选
+  tab_item:
+    role: tab
+    aria-selected: "{is_active}"
+    tabindex: "{is_active ? 0 : -1}"

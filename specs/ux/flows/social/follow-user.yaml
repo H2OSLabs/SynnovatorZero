@@ -1,0 +1,68 @@
+# Flow: Follow User
+name: 关注用户
+category: social
+description: 用户关注/取消关注其他用户
+
+trigger: click follow-btn
+preconditions:
+  - user.is_authenticated
+  - target_user.id != current_user.id
+
+steps:
+  - step: 1
+    component: follow-btn
+    trigger: click
+    condition: "!is_following"
+    result:
+      action: optimistic_update
+      updates:
+        - field: is_following
+          value: true
+        - field: button_label
+          value: 已关注
+
+  - step: 1b
+    component: follow-btn
+    trigger: click
+    condition: is_following
+    result:
+      action: optimistic_update
+      updates:
+        - field: is_following
+          value: false
+        - field: button_label
+          value: 关注
+
+  - step: 2
+    api_call:
+      is_following_false:
+        method: POST
+        endpoint: "/api/users/{target_user.id}/follow"
+        headers:
+          X-User-Id: "{current_user.id}"
+      is_following_true:
+        method: DELETE
+        endpoint: "/api/users/{target_user.id}/follow"
+        headers:
+          X-User-Id: "{current_user.id}"
+
+  - step: 3a
+    condition: success
+    result:
+      action: none
+      note: 乐观更新已生效
+
+  - step: 3b
+    condition: error
+    result:
+      - action: rollback_optimistic_update
+      - action: show_toast
+        message: "操作失败，请重试"
+        type: error
+
+notification:
+  on_follow:
+    recipients:
+      - target_user
+    type: new_follower
+    message: "{current_user.display_name} 关注了你"

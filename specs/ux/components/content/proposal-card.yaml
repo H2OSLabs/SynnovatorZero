@@ -1,0 +1,59 @@
+# Component: Proposal Card
+name: proposal-card
+category: content
+description: 提案卡片，展示参赛提案摘要信息
+
+props:
+  post:
+    type: Post
+    required: true
+    filter: type=for_category
+  show_category:
+    type: boolean
+    default: true
+
+data_fields:
+  - cover_image
+  - title
+  - description
+  - author.avatar
+  - author.display_name
+  - category.name
+  - like_count
+  - average_rating
+
+interactions:
+  - trigger: click
+    target_element: card-body
+    action: navigate
+    target: "/proposals/{post.id}"
+
+  - trigger: click
+    target_element: author-avatar
+    action: navigate
+    target: "/users/{post.created_by}"
+    stop_propagation: true
+
+  - trigger: click
+    target_element: category-badge
+    action: navigate
+    target: "/categories/{post.category_id}"
+    stop_propagation: true
+
+  - trigger: click
+    target_element: like-btn
+    action: toggle_like
+    stop_propagation: true
+    component_ref: like-button
+    props:
+      target_type: post
+      target_id: "{post.id}"
+      initial_count: "{post.like_count}"
+
+  - trigger: hover
+    action: elevate
+    target: self
+
+accessibility:
+  role: article
+  aria-label: "提案: {post.title}"

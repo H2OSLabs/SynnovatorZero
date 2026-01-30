@@ -1,0 +1,176 @@
+# Global shared component interactions
+version: "1.0"
+
+shared_components:
+  global-header:
+    description: 顶部导航栏，固定在页面顶部，高度60px
+    position: top
+    height: 60
+
+    components:
+      site-logo:
+        description: 网站 Logo，点击返回首页
+        interactions:
+          - trigger: click
+            action: navigate
+            target: "/"
+
+      search-bar:
+        description: 全局搜索框
+        interactions:
+          - trigger: focus
+            action: expand
+            target: self
+          - trigger: input
+            action: search_suggestions
+            api_call:
+              method: GET
+              endpoint: "/api/search/suggest"
+              query:
+                q: "{query}"
+            debounce: 300
+          - trigger: submit
+            action: navigate
+            target: "/search?q={query}"
+
+      publish-btn:
+        description: 发布新内容按钮
+        interactions:
+          - trigger: click
+            action: toggle_panel
+            target: multi-function-panel.publish-center
+
+      notification-btn:
+        description: 通知中心按钮
+        badge_source: notification
+        interactions:
+          - trigger: click
+            action: toggle_panel
+            target: multi-function-panel.notification-center
+
+      user-menu:
+        description: 用户信息下拉菜单
+        interactions:
+          - trigger: click
+            action: show_dropdown
+            options:
+              - label: 个人主页
+                action: navigate
+                target: "/users/{current_user.id}"
+              - label: 我的资产
+                action: navigate
+                target: "/assets"
+              - label: 设置
+                action: navigate
+                target: "/settings"
+              - divider: true
+              - label: 退出登录
+                action: logout
+
+  sidebar-nav:
+    description: 左侧导航栏，可折叠
+    position: left
+    collapsible: true
+
+    components:
+      nav-explore:
+        label: 探索
+        icon: compass
+        interactions:
+          - trigger: click
+            action: navigate
+            target: "/"
+            active_indicator: true
+
+      nav-planet:
+        label: 星球
+        icon: globe
+        interactions:
+          - trigger: click
+            action: navigate
+            target: "/categories"
+            active_indicator: true
+
+      nav-camp:
+        label: 营地
+        icon: mountain
+        interactions:
+          - trigger: click
+            action: navigate
+            target: "/groups"
+            active_indicator: true
+
+  multi-function-panel:
+    description: 右侧多功能区，宽328px
+    position: right
+    width: 328
+    default_panel: hot-ranking
+
+    panels:
+      publish-center:
+        trigger: header.publish-btn
+        components:
+          find-teammate-card:
+            interactions:
+              - trigger: click
+                action: navigate
+                target: "/posts?tag=find-teammate"
+
+          find-idea-card:
+            interactions:
+              - trigger: click
+                action: navigate
+                target: "/posts?tag=find-idea"
+
+          publish-proposal-card:
+            interactions:
+              - trigger: click
+                action: navigate
+                target: "/posts/create?type=for_category"
+
+          create-team-card:
+            interactions:
+              - trigger: click
+                action: open_modal
+                target: create-team-modal
+
+      notification-center:
+        trigger: header.notification-btn
+        components:
+          notification-list:
+            data_source: interaction
+            filter: target_user={current_user.id}&type=notification
+            item_interactions:
+              - trigger: click
+                action: navigate
+                target: "{notification.target_url}"
+              - trigger: click
+                target_element: delete-btn
+                action: delete
+                api_call:
+                  method: DELETE
+                  endpoint: "/api/interactions/{id}"
+
+      hot-ranking:
+        default: true
+        components:
+          ranking-tabs:
+            interactions:
+              - trigger: click
+                action: filter_content
+                params:
+                  tab: "{selected_tab}"
+                api_call:
+                  method: GET
+                  endpoint: "/api/posts"
+                  query:
+                    type: "{tab.filter}"
+                    sort: "like_count:desc"
+                    limit: 20
+
+          ranking-list:
+            data_source: post
+            item_interactions:
+              - trigger: click
+                action: navigate
+                target: "/posts/{id}"

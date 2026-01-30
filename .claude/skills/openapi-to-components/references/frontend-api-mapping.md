@@ -4,7 +4,7 @@
 
 所有页面组件位于 `frontend/components/pages/`，当前均为硬编码 mock 数据，无 API 客户端层。本文档梳理各页面组件中需要替换为 API 调用的具体位置。
 
-API 规范参考：`.synnovator/openapi.yaml`
+API 规范参考：`.synnovator/generated/openapi.yaml`
 
 ---
 

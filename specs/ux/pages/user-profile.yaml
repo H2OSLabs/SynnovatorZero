@@ -1,0 +1,145 @@
+# Page: User Profile
+route: /users/{id}
+description: 用户详情页，展示用户资料、资产和作品
+uses_shared: [global-header, sidebar-nav, multi-function-panel]
+
+params:
+  id:
+    type: number
+    required: true
+
+data_fetching:
+  - id: user
+    api: getUser
+    params:
+      id: "{params.id}"
+
+  - id: posts
+    api: listPosts
+    params:
+      created_by: "{params.id}"
+      status: published
+      limit: 20
+
+  - id: following
+    api: getFollowing
+    params:
+      userId: "{params.id}"
+
+  - id: followers
+    api: getFollowers
+    params:
+      userId: "{params.id}"
+
+sections:
+  user-header:
+    description: 用户头部信息
+    components:
+      user-avatar:
+        data_source: user
+        field: avatar
+        type: avatar
+        size: large
+
+      user-info:
+        data_source: user
+        fields:
+          - display_name
+          - username
+          - bio
+        stats:
+          - label: 关注
+            value: "{following.length}"
+            action: navigate
+            target: "/users/{params.id}/following"
+          - label: 粉丝
+            value: "{followers.length}"
+            action: navigate
+            target: "/users/{params.id}/followers"
+          - label: 作品
+            value: "{posts.total}"
+
+      follow-btn:
+        condition: "params.id != current_user?.id"
+        component_ref: follow-button
+        props:
+          target_user_id: "{params.id}"
+
+  user-assets:
+    description: 用户资产区
+    layout: horizontal
+    gap: 16
+    components:
+      asset-card-agent:
+        type: asset-card
+        label: AI Agent
+        count: 0
+        color: pink
+        icon: ufo
+
+      asset-card-cert:
+        type: asset-card
+        label: 证书
+        count: 0
+        color: yellow
+        icon: certificate
+
+      asset-card-file:
+        type: asset-card
+        label: 文件
+        count: 0
+        color: lime
+        icon: file
+
+  user-works:
+    description: 用户作品区
+    components:
+      works-filter:
+        component_ref: tabs
+        props:
+          options:
+            - label: 全部
+              filter: null
+              default: true
+            - label: 提案
+              filter: type=for_category
+            - label: 帖子
+              filter: type=general
+        interactions:
+          - trigger: tab_change
+            action: filter_list
+            target: works-grid
+            filter: "{selected_tab.filter}"
+
+      works-grid:
+        data_source: posts
+        field: items
+        layout: grid
+        columns: 3
+        item_component: post-card
+        item_interactions:
+          - trigger: click
+            action: navigate
+            target: "/posts/{id}"
+        pagination:
+          type: infinite_scroll
+          page_size: 20
+
+loading_states:
+  user:
+    type: skeleton
+    components:
+      avatar: { type: circle, size: 96 }
+      name: { type: text, width: 150 }
+      bio: { type: text, lines: 2 }
+  posts:
+    type: skeleton
+    preset: card
+    count: 6
+
+error_states:
+  user:
+    404:
+      message: 用户不存在
+      action: navigate
+      target: "/"

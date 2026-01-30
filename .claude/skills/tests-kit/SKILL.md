@@ -27,9 +27,9 @@ Run this workflow **before committing any change** to synnovator skill scripts, 
      - `cascade.py` → `TC-DEL-*`
      - `cache.py` → `TC-IACT-003`, `TC-IACT-013`, `TC-IACT-021` (counter tests)
      - `rules.py` → `TC-RULE-100+`, `TC-ENGINE-*`, `TC-ENTRY-*`, `TC-CLOSE-*`
-     - `docs/data-types.md` → All content type TCs
-     - `docs/relationships.md` → `TC-REL-*`, `TC-FRIEND-*`, `TC-STAGE-*`, `TC-TRACK-*`, `TC-PREREQ-*`
-     - `docs/crud-operations.md` → `TC-PERM-*`, all CRUD TCs
+     - `specs/data/types.md` → All content type TCs
+     - `specs/data/relationships.md` → `TC-REL-*`, `TC-FRIEND-*`, `TC-STAGE-*`, `TC-TRACK-*`, `TC-PREREQ-*`
+     - `specs/data/crud-operations.md` → `TC-PERM-*`, all CRUD TCs
      - `docs/rule-engine.md` → `TC-ENGINE-*`, `TC-ENTRY-*`, `TC-CLOSE-*`
 
 3. **Read the affected test case files** in `specs/testcases/` and verify each scenario still holds given the proposed change.

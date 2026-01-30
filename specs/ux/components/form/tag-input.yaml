@@ -1,0 +1,70 @@
+# Component: Tag Input
+name: tag-input
+category: form
+description: 标签输入框，支持搜索建议和自定义标签
+
+props:
+  name:
+    type: string
+    required: true
+  max_tags:
+    type: number
+    default: 10
+  suggestions_endpoint:
+    type: string
+    default: "/api/tags"
+
+states:
+  default:
+    show_suggestions: false
+  focused:
+    show_suggestions: true
+  max_reached:
+    input_disabled: true
+
+interactions:
+  - trigger: input
+    action: search_suggestions
+    api_call:
+      method: GET
+      endpoint: "{suggestions_endpoint}"
+      query:
+        q: "{query}"
+    debounce: 200
+    on_success:
+      action: show_suggestions
+      data: "{response}"
+
+  - trigger: select
+    target_element: suggestion-item
+    action: add_tag
+    tag: "{selected.label}"
+    on_success:
+      - action: clear_input
+      - action: hide_suggestions
+      - action: check_max_tags
+
+  - trigger: keyboard
+    key: Enter
+    action: add_tag
+    tag: "{input_value}"
+    condition: "input_value.length > 0"
+
+  - trigger: keyboard
+    key: Backspace
+    condition: "input_value.length == 0 && tags.length > 0"
+    action: remove_tag
+    index: -1
+
+  - trigger: click
+    target_element: tag-remove-btn
+    action: remove_tag
+    index: "{tag_index}"
+
+accessibility:
+  role: combobox
+  aria-label: 添加标签
+  aria-expanded: "{show_suggestions}"
+  tag_item:
+    role: option
+    aria-selected: true

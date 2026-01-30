@@ -35,42 +35,33 @@ uv run pytest
 ## Project Structure
 
 ```
-<<<<<<< Updated upstream
-docs/               # Functional documentation
-  data-types.md     #   Content type schemas (7 types)
-  relationships.md  #   Relationship schemas (9 relations)
-  crud-operations.md #  CRUD operations and permissions
+app/                # FastAPI backend (package name matches api-builder templates)
+frontend/           # Next.js 14 frontend
+docs/               # Human-readable project documentation
   user-journeys.md  #   13 user flow documents
   examples.md       #   Data operation examples
-specs/              # Development standards and guidelines
-  data-integrity.md #   Data constraints, soft delete, cascading
-  data-indexing.md  #   Database index recommendations
-  data-normalization.md # Denormalization decisions
-  cache-strategy.md #   Cache field maintenance strategy
-  spec-guideline.md #   AI agent spec writing guide
-  ui/               #   Design system (.pen files)
+  development-workflow.md  # Development process and conventions
+specs/              # Technical specifications
+  data/             #   Data model specs (types, relationships, CRUD, integrity)
+  design/           #   UI/UX design (Figma, .pen files, pages.yaml)
+  testcases/        #   Test case specifications
+  guidelines/       #   Development guidelines (spec-guideline.md)
 .claude/            # Claude Code configuration, skills, plugins
-main.py             # Entry point (placeholder)
+.synnovator/        # Platform data (YAML+Markdown test fixtures)
+  generated/        #   Generated artifacts (openapi.yaml)
+.project/           # Project management files
+  task_plan.md      #   High-level task tracking
+  progress.md       #   Detailed session progress
+  findings.md       #   Key discoveries and decisions
+deploy/             # Docker & deployment configs
 pyproject.toml      # Python project config
 uv.toml             # UV package manager config (Tsinghua mirror)
-=======
-app/            # FastAPI backend (package name matches api-builder templates)
-frontend/       # Next.js 14 frontend
-docs/           # Functional documentation (data model, user journeys)
-specs/          # Development standards and guidelines
-specs/ui/       # Design system (.pen files: style guide + components)
-.claude/        # Claude Code configuration, skills, plugins
-.synnovator/    # Platform data (YAML+Markdown) and generated OpenAPI spec
-deploy/         # Docker & deployment configs
-pyproject.toml  # Python project config
-uv.toml         # UV package manager config (Tsinghua mirror)
-Makefile        # Build automation (make start/stop/clean)
->>>>>>> Stashed changes
+Makefile            # Build automation (make start/stop/clean)
 ```
 
 ## Architecture
 
-### Data Model (docs/data-types.md, docs/relationships.md)
+### Data Model (specs/data/types.md, specs/data/relationships.md)
 
 Seven content types stored as **YAML frontmatter + Markdown body**:
 
@@ -98,7 +89,7 @@ All content types use **soft delete** (`deleted_at` field). Cached counters (`li
 
 13 documented user flows covering registration, event creation, team formation, post lifecycle (create/edit/delete with version management), and community interactions (like/comment/rate).
 
-### Design System (specs/ui/)
+### Design System (specs/design/)
 
 Theme: **"Neon Forge"** — dark theme with neon accents.
 
@@ -110,7 +101,7 @@ Theme: **"Neon Forge"** — dark theme with neon accents.
 
 ## Development Approach
 
-This project follows **spec-driven development** (see `specs/spec-guideline.md`):
+This project follows **spec-driven development** (see `specs/guidelines/spec-guideline.md`):
 
 1. Start with high-level vision, let AI draft details
 2. Use structured PRD framework covering 6 domains: Commands, Testing, Project Structure, Code Style, Git Workflow, Boundaries
@@ -131,7 +122,7 @@ Use **Plan Mode** (Shift+Tab) before implementing features. Read the relevant `d
 
 - Never read or commit `.env` or `secrets/**`
 - Never use `curl` in bash commands (denied in settings)
-- Reference `docs/data-types.md` and `docs/relationships.md` for the canonical data schema before implementing any CRUD operations
-- Reference `docs/crud-operations.md` for CRUD operation definitions and permissions
+- Reference `specs/data/types.md` and `specs/data/relationships.md` for the canonical data schema before implementing any CRUD operations
+- Reference `specs/data/crud-operations.md` for CRUD operation definitions and permissions
 - Reference `docs/user-journeys.md` before implementing user-facing flows
-- Reference `specs/data-integrity.md` for data constraints and soft delete behavior
+- Reference `specs/data/integrity.md` for data constraints and soft delete behavior

@@ -1,0 +1,201 @@
+# Page: Post Detail
+route: /posts/{id}
+description: 帖子详情页，展示帖子内容、关联卡片和评论区
+uses_shared: [global-header, sidebar-nav, multi-function-panel]
+
+params:
+  id:
+    type: number
+    required: true
+
+data_fetching:
+  - id: post
+    api: getPost
+    params:
+      id: "{params.id}"
+      userId: "{current_user?.id}"
+
+  - id: author
+    api: getUser
+    params:
+      id: "{post.created_by}"
+    depends_on: post
+
+  - id: comments
+    api: listComments
+    params:
+      postId: "{params.id}"
+      skip: 0
+      limit: 20
+
+  - id: related_posts
+    api: listRelatedPosts
+    params:
+      postId: "{params.id}"
+
+  - id: resources
+    api: listPostResources
+    params:
+      postId: "{params.id}"
+
+sections:
+  post-header:
+    description: 帖子头部信息
+    components:
+      author-info:
+        data_source: author
+        component_ref: user-card
+        props:
+          compact: true
+        interactions:
+          - trigger: click
+            action: navigate
+            target: "/users/{author.id}"
+
+      post-title:
+        data_source: post
+        field: title
+        type: heading
+        level: 1
+
+      post-tags:
+        data_source: post
+        field: tags
+        type: tag-list
+
+      post-actions:
+        components:
+          like-btn:
+            component_ref: like-button
+            props:
+              target_type: post
+              target_id: "{post.id}"
+              initial_count: "{post.like_count}"
+          share-btn:
+            component_ref: share-button
+            props:
+              share_url: "{window.location.href}"
+              share_title: "{post.title}"
+          more-btn:
+            type: dropdown
+            options:
+              - label: 编辑
+                action: navigate
+                target: "/posts/{post.id}/edit"
+                condition: "post.created_by == current_user.id"
+              - label: 删除
+                action: show_confirm
+                message: "确定要删除这篇帖子吗？"
+                condition: "post.created_by == current_user.id || current_user.role == 'admin'"
+              - label: 举报
+                action: open_modal
+                target: report-modal
+
+  related-cards:
+    description: 关联卡片区
+    data_source: related_posts
+    layout: horizontal-scroll
+    item_component: post-card
+    props:
+      compact: true
+    item_interactions:
+      - trigger: click
+        action: navigate
+        target: "/posts/{id}"
+
+  post-body:
+    description: 帖子正文区
+    components:
+      content-header:
+        type: section-header
+        label: 内容详情
+
+      markdown-content:
+        data_source: post
+        field: body
+        type: markdown-viewer
+
+      attached-resources:
+        data_source: resources
+        condition: "resources.length > 0"
+        type: resource-list
+        item_interactions:
+          - trigger: click
+            action: download
+            url: "{resource.url}"
+
+  post-sidebar:
+    description: 帖子右侧边栏
+    components:
+      author-card:
+        data_source: author
+        component_ref: user-card
+        props:
+          show_follow_btn: true
+
+      related-proposals:
+        data_source: posts
+        filter: type=for_category
+        limit: 5
+        type: mini-list
+        item_interactions:
+          - trigger: click
+            action: navigate
+            target: "/posts/{id}"
+
+  comment-section:
+    description: 评论区
+    components:
+      comment-input:
+        component_ref: text-input
+        props:
+          name: comment
+          placeholder: "写下你的评论..."
+          multiline: true
+        interactions:
+          - trigger: submit
+            action: submit_comment
+            api_call:
+              method: POST
+              endpoint: "/api/posts/{params.id}/comments"
+              body:
+                type: comment
+                value:
+                  content: "{input_value}"
+              headers:
+                X-User-Id: "{current_user.id}"
+            on_success:
+              - action: prepend_to_list
+                target: comment-list
+                data: "{response}"
+              - action: clear_input
+              - action: show_toast
+                message: "评论成功"
+                type: success
+
+      comment-list:
+        data_source: comments
+        field: items
+        type: nested-list
+        item_component: comment-item
+        pagination:
+          type: load_more
+          page_size: 20
+
+loading_states:
+  post:
+    type: skeleton
+    preset: article
+  comments:
+    type: skeleton
+    preset: list
+    count: 5
+
+error_states:
+  post:
+    404:
+      action: navigate
+      target: "/404"
+    default:
+      message: 加载失败
+      retry_button: true

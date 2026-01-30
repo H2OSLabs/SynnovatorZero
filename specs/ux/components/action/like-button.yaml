@@ -1,0 +1,64 @@
+# Component: Like Button
+name: like-button
+category: action
+description: 点赞按钮，支持乐观更新
+
+props:
+  target_type:
+    type: string
+    enum: [post, comment, resource, category]
+    required: true
+  target_id:
+    type: number
+    required: true
+  initial_count:
+    type: number
+    default: 0
+  initial_liked:
+    type: boolean
+    default: false
+
+states:
+  default:
+    icon: heart-outline
+    color: text-secondary
+  liked:
+    icon: heart-filled
+    color: accent-primary
+  loading:
+    icon: spinner
+    disabled: true
+
+interactions:
+  - trigger: click
+    condition: "!is_loading"
+    action: toggle_like
+    api_call:
+      liked_true:
+        method: DELETE
+        endpoint: "/api/posts/{target_id}/like"
+        headers:
+          X-User-Id: "{current_user.id}"
+      liked_false:
+        method: POST
+        endpoint: "/api/posts/{target_id}/like"
+        headers:
+          X-User-Id: "{current_user.id}"
+    optimistic_update:
+      - field: liked
+        operation: toggle
+      - field: count
+        operation: "{liked ? decrement : increment}"
+    error_rollback: true
+    on_unauthenticated:
+      action: show_modal
+      target: login-prompt
+
+  - trigger: hover
+    action: show_tooltip
+    content: "{liked ? '取消点赞' : '点赞'}"
+
+accessibility:
+  role: button
+  aria-label: "{liked ? '取消点赞' : '点赞'}, 当前 {count} 人点赞"
+  aria-pressed: "{liked}"

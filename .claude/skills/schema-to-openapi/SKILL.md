@@ -20,13 +20,13 @@ Generate OpenAPI 3.0 specification from Synnovator's data schema.
 uv run python .claude/skills/schema-to-openapi/scripts/generate_openapi.py
 ```
 
-Output: `.synnovator/openapi.yaml`
+Output: `.synnovator/generated/openapi.yaml`
 
 ## Options
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--output`, `-o` | `.synnovator/openapi.yaml` | Output file path |
+| `--output`, `-o` | `.synnovator/generated/openapi.yaml` | Output file path |
 | `--title` | `Synnovator API` | API title |
 | `--version` | `1.0.0` | API version |
 | `--format` | `yaml` | Output format (`yaml` or `json`) |
@@ -78,7 +78,7 @@ After generating the spec:
 uv run python .claude/skills/schema-to-openapi/scripts/generate_openapi.py
 
 # Use api-builder to scaffold backend
-/api-builder .synnovator/openapi.yaml
+/api-builder .synnovator/generated/openapi.yaml
 ```
 
 ## Authentication

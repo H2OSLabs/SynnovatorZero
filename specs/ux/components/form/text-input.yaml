@@ -1,0 +1,63 @@
+# Component: Text Input
+name: text-input
+category: form
+description: 文本输入框，支持验证和错误提示
+
+props:
+  name:
+    type: string
+    required: true
+  label:
+    type: string
+    required: false
+  placeholder:
+    type: string
+    required: false
+  required:
+    type: boolean
+    default: false
+  validation:
+    type: object
+    properties:
+      min_length: number
+      max_length: number
+      pattern: string
+      custom: function
+
+states:
+  default:
+    border_color: "#333333"
+  focused:
+    border_color: "#BBFD3B"
+  error:
+    border_color: "#FF4D4F"
+    show_error_message: true
+  disabled:
+    opacity: 0.5
+    pointer_events: none
+
+interactions:
+  - trigger: focus
+    action: set_state
+    target: focused
+
+  - trigger: blur
+    action: validate_field
+    on_invalid:
+      action: set_state
+      target: error
+
+  - trigger: input
+    action: validate_field
+    debounce: 300
+    condition: has_error
+    on_valid:
+      action: set_state
+      target: focused
+
+accessibility:
+  role: textbox
+  aria-label: "{label || placeholder}"
+  aria-required: "{required}"
+  aria-invalid: "{has_error}"
+  aria-describedby: "{error_message_id}"

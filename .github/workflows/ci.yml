@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main, feat/*]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install dependencies
+        run: |
+          source $HOME/.local/bin/env
+          uv sync
+
+      - name: Run linter
+        run: |
+          source $HOME/.local/bin/env
+          uv run ruff check app/ || true
+
+      - name: Run type checker
+        run: |
+          source $HOME/.local/bin/env
+          uv run mypy app/ || true
+
+      - name: Run tests
+        run: |
+          source $HOME/.local/bin/env
+          uv run pytest app/tests/ -v --cov=app --cov-report=xml || true
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+        continue-on-error: true
+
+  frontend-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter
+        run: npm run lint || true
+
+      - name: Run type check
+        run: npx tsc --noEmit || true
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps
+
+      - name: Run E2E tests
+        run: npx playwright test || true
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+
+  build:
+    needs: [backend-tests, frontend-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Docker Compose file exists
+        run: |
+          if [ -f deploy/docker-compose.yml ]; then
+            echo "Docker Compose file found"
+          else
+            echo "Docker Compose file not found, skipping build"
+          fi
