@@ -61,6 +61,23 @@ Format: `TC-{PREFIX}-{NUMBER}`
 | ENTRY | Entry Rules | 001-031, 900-902 |
 | CLOSE | Closure Rules | 001-040, 900-902 |
 | ENGINE | Rule Engine | 001-061 |
+| BROWSE | Content Browsing | 001-051, 900-903 |
+| AUTH | Authentication | 001-013, 900-905 |
+| PROFILE | User Profile | 001-022 |
+| NOTIF | Notification | 001-033, 900-901 |
+| CATMGMT | Category Management | 001-042, 900-903 |
+| TEAM | Team Management | 001-033, 900-903 |
+| PART | Activity Participation | 001-033, 900-903 |
+| CREATE | Content Creation | 001-072, 900-903 |
+| SOCIAL | Social Interaction | 001-052, 900-905 |
+| SETTLE | Settlement & Reward | 001-043, 900-903 |
+| BOUNTY | Bounty Activities | 001-015, 900-901 |
+| ENTERPRISE | Enterprise Activities | 001-014, 900-901 |
+| VISIBLE | Visibility Control | 001-004 |
+| PERSONAL | Personalization | 001-043, 900-903 |
+| PLANET | Planet Page | 001-007, 900-902 |
+| CAMP | Camp Page | 001-022 |
+| NAV | Navigation | 001-004 |
 
 ### Number Range Convention
 

@@ -354,3 +354,295 @@
 | TC-ENGINE-052 | on_fail=flag 时操作允许并标记 |
 | TC-ENGINE-060 | Rule 无固定字段且 checks 为空数组 |
 | TC-ENGINE-061 | 活动未关联任何 Rule |
+
+## 18-content-browsing.md (Content Browsing)
+
+| TC ID | Description |
+|-------|-------------|
+| TC-BROWSE-001 | 浏览首页热门内容 |
+| TC-BROWSE-002 | 浏览探索页发现内容 |
+| TC-BROWSE-003 | 点击热点榜跳转帖子 |
+| TC-BROWSE-010 | 按标签筛选帖子 |
+| TC-BROWSE-011 | 按内容类型筛选帖子 |
+| TC-BROWSE-012 | 关键词搜索内容 |
+| TC-BROWSE-013 | 组合筛选条件 |
+| TC-BROWSE-020 | 查看活动详情 |
+| TC-BROWSE-021 | 查看帖子详情 |
+| TC-BROWSE-022 | 查看参赛提案详情 |
+| TC-BROWSE-030 | 点击作者进入个人主页 |
+| TC-BROWSE-031 | 点击团队进入团队主页 |
+| TC-BROWSE-032 | 在团队页面查看队友信息 |
+| TC-BROWSE-040 | 通过左侧导航栏跳转页面 |
+| TC-BROWSE-041 | 点击帮助支持入口 |
+| TC-BROWSE-050 | 登录完成后返回原页面 |
+| TC-BROWSE-051 | 登录后内容展示增强 |
+| TC-BROWSE-900 | 访问不存在的内容返回 404 |
+| TC-BROWSE-901 | 访问已删除内容返回 404 |
+
+## 19-auth-profile.md (Auth & Profile)
+
+| TC ID | Description |
+|-------|-------------|
+| TC-AUTH-001 | 手机号密码注册 |
+| TC-AUTH-002 | 邮箱密码注册 |
+| TC-AUTH-003 | 手机验证码注册 |
+| TC-AUTH-010 | 账号密码登录 |
+| TC-AUTH-011 | 手机验证码登录 |
+| TC-AUTH-012 | 忘记密码 — 手机号找回 |
+| TC-AUTH-013 | 忘记密码 — 邮箱找回 |
+| TC-PROFILE-001 | 创建个人简介 |
+| TC-PROFILE-002 | 更新个人简介 |
+| TC-PROFILE-003 | 更改头像 |
+| TC-PROFILE-004 | 更改显示名称 |
+| TC-PROFILE-010 | 填写职业信息 |
+| TC-PROFILE-011 | 填写学校信息 |
+| TC-PROFILE-012 | 填写兴趣爱好 |
+| TC-PROFILE-013 | 填写性格标签 |
+| TC-PROFILE-014 | 活动中收集的信息自动展示 |
+| TC-PROFILE-020 | 添加社交媒体链接 |
+| TC-PROFILE-021 | 更新社交媒体链接 |
+| TC-PROFILE-022 | 删除社交媒体链接 |
+| TC-AUTH-900 | 重复手机号注册被拒绝 |
+| TC-AUTH-902 | 密码格式不符被拒绝 |
+| TC-AUTH-903 | 验证码过期被拒绝 |
+| TC-AUTH-904 | 错误密码登录被拒绝 |
+| TC-AUTH-905 | 不存在的账号登录被拒绝 |
+
+## 20-notification.md (Notification)
+
+| TC ID | Description |
+|-------|-------------|
+| TC-NOTIF-001 | 点击通知图标查看通知列表 |
+| TC-NOTIF-002 | 未读通知标记展示 |
+| TC-NOTIF-003 | 标记单条通知为已读 |
+| TC-NOTIF-004 | 标记全部通知为已读 |
+| TC-NOTIF-010 | 点击通知跳转到对应页面 |
+| TC-NOTIF-011 | 团队申请通知跳转 |
+| TC-NOTIF-012 | 评论回复通知跳转 |
+| TC-NOTIF-013 | 活动状态变更通知跳转 |
+| TC-NOTIF-020 | 在通知中心批准团队申请 |
+| TC-NOTIF-021 | 在通知中心拒绝团队申请 |
+| TC-NOTIF-022 | 在通知中心接受团队邀请 |
+| TC-NOTIF-023 | 在通知中心拒绝团队邀请 |
+| TC-NOTIF-030 | 接收点赞通知 |
+| TC-NOTIF-031 | 接收评论通知 |
+| TC-NOTIF-032 | 接收关注通知 |
+| TC-NOTIF-033 | 接收系统公告通知 |
+| TC-NOTIF-900 | 访问不存在的通知返回错误 |
+| TC-NOTIF-901 | 非本人通知不可操作 |
+
+## 21-category-management.md (Category Management)
+
+| TC ID | Description |
+|-------|-------------|
+| TC-CATMGMT-001 | 发起常规赛道活动（X 类型） |
+| TC-CATMGMT-002 | 发起企业命题活动（Y 类型） |
+| TC-CATMGMT-003 | 发起悬赏组队活动（Y 类型） |
+| TC-CATMGMT-004 | 创建运营活动 |
+| TC-CATMGMT-010 | 编写活动说明 |
+| TC-CATMGMT-011 | 设定活动规则 — 时间限制 |
+| TC-CATMGMT-012 | 设定活动规则 — 团队要求 |
+| TC-CATMGMT-013 | 设定活动规则 — 提交要求 |
+| TC-CATMGMT-014 | 设定活动规则 — 内容审核 |
+| TC-CATMGMT-015 | 设定评分标准 |
+| TC-CATMGMT-020 | 发布活动 — draft 到 published |
+| TC-CATMGMT-021 | 关闭活动 — published 到 closed |
+| TC-CATMGMT-022 | 修改已发布活动需创建新版本 |
+| TC-CATMGMT-030 | 设置活动审核人员 |
+| TC-CATMGMT-031 | 审核人员审核提交内容 |
+| TC-CATMGMT-032 | 评委对参赛内容打分 |
+| TC-CATMGMT-050 | 组织者配置报名表单字段 |
+| TC-CATMGMT-051 | 配置必填与选填字段 |
+| TC-CATMGMT-052 | 配置字段类型 |
+| TC-CATMGMT-053 | 报名时用户填写自定义字段 |
+| TC-CATMGMT-054 | 预览报名表单 |
+| TC-CATMGMT-042 | 一个提案参加多个关联活动 |
+| TC-CATMGMT-901 | closed 状态活动不可修改 |
+| TC-CATMGMT-903 | 活动结束时间早于开始时间被拒绝 |
+| TC-CATMGMT-904 | 报名时必填字段缺失被拒绝 |
+
+## 22-team-management.md (Team Management)
+
+| TC ID | Description |
+|-------|-------------|
+| TC-TEAM-001 | 创建团队并成为 Owner |
+| TC-TEAM-002 | 创建团队并添加团队简介 |
+| TC-TEAM-010 | 关联个人提案为团队提案 |
+| TC-TEAM-011 | 向团队提案添加个人资产 |
+| TC-TEAM-012 | 非作者无法编辑他人资产 |
+| TC-TEAM-013 | 申请复制他人资产 |
+| TC-TEAM-020 | 搜索并邀请成员 |
+| TC-TEAM-021 | 被邀请成员接受邀请 |
+| TC-TEAM-022 | 被邀请成员拒绝邀请 |
+| TC-TEAM-030 | 成员主动退出团队 |
+| TC-TEAM-031 | 队长移除成员 |
+| TC-TEAM-032 | 离开团队后资产解除关联 |
+| TC-TEAM-033 | 离开团队后无法使用团队资产 |
+| TC-TEAM-902 | 非 Owner 移除成员被拒绝 |
+| TC-TEAM-903 | Owner 无法退出团队 |
+
+## 23-activity-participation.md (Activity Participation)
+
+| TC ID | Description |
+|-------|-------------|
+| TC-PART-001 | 选择团队和提案报名活动 |
+| TC-PART-002 | 报名时执行规则约束校验 |
+| TC-PART-003 | 规则校验不满足时拒绝报名 |
+| TC-PART-010 | 新建参赛作品帖 |
+| TC-PART-011 | 选择已有作品关联活动 |
+| TC-PART-012 | 报名成功自动打标 |
+| TC-PART-020 | 上传演示视频 |
+| TC-PART-021 | 上传文档资源 |
+| TC-PART-022 | 上传代码包 |
+| TC-PART-023 | 资源关联指定显示方式 |
+| TC-PART-900 | 未加入团队时个人报名被拒绝 |
+| TC-PART-903 | 未登录用户报名被拒绝 |
+
+## 24-content-creation.md (Content Creation)
+
+| TC ID | Description |
+|-------|-------------|
+| TC-CREATE-001 | 通过 MD 编辑器创建文档资产 |
+| TC-CREATE-002 | 同步 ELF 内容创建资产 |
+| TC-CREATE-003 | 本地上传文件创建资产 |
+| TC-CREATE-010 | 使用资产发布帖子 |
+| TC-CREATE-011 | 发布日常帖子 |
+| TC-CREATE-020 | 发布提案并创建新资产 |
+| TC-CREATE-021 | 发布提案并放入已有资产 |
+| TC-CREATE-022 | 提案关联活动 |
+| TC-CREATE-040 | 编辑自己的帖子 |
+| TC-CREATE-041 | 编辑提案标题和简介 |
+| TC-CREATE-042 | 编辑提案中的资产 |
+| TC-CREATE-043 | 在提案内创建并关联新资产 |
+| TC-CREATE-051 | 编辑提案产生新版本 |
+| TC-CREATE-052 | 查看历史版本 |
+| TC-CREATE-060 | 请求协作编辑他人帖子 |
+| TC-CREATE-061 | 接受协作编辑请求 |
+| TC-CREATE-062 | 协作者创建编辑副本 |
+| TC-CREATE-070 | 删除帖子（软删除） |
+| TC-CREATE-071 | 删除评论 |
+| TC-CREATE-072 | 删除资源 |
+| TC-CREATE-900 | 非本人编辑帖子被拒绝 |
+| TC-CREATE-901 | 已删除内容无法编辑 |
+| TC-CREATE-903 | 缺少必填字段被拒绝 |
+
+## 25-social-interaction.md (Social Interaction)
+
+| TC ID | Description |
+|-------|-------------|
+| TC-SOCIAL-012 | 删除评论 |
+| TC-SOCIAL-021 | 查看评分详情 |
+| TC-SOCIAL-040 | 关注提案 |
+| TC-SOCIAL-041 | 关注团队 |
+| TC-SOCIAL-042 | 取消内容关注 |
+| TC-SOCIAL-050 | 分享活动 |
+| TC-SOCIAL-051 | 分享帖子 |
+| TC-SOCIAL-052 | 分享通知 |
+| TC-SOCIAL-903 | 非本人删除评论被拒绝 |
+| TC-SOCIAL-905 | 评分权重不符规则被拒绝 |
+
+## 26-settlement-reward.md (Settlement & Reward)
+
+| TC ID | Description |
+|-------|-------------|
+| TC-SETTLE-001 | 查看评审结果 |
+| TC-SETTLE-002 | 查看排名详情 |
+| TC-SETTLE-010 | 领取电子证书 |
+| TC-SETTLE-011 | 下载电子证书 |
+| TC-SETTLE-012 | 证书自动关联到参赛作品 |
+| TC-SETTLE-013 | 分享证书成就 |
+| TC-SETTLE-020 | 下载官方资料 |
+| TC-SETTLE-021 | 下载他人公开分享资源 |
+| TC-SETTLE-030 | 完成运营活动获得资产奖励 |
+| TC-SETTLE-031 | 运营活动与比赛活动绑定 |
+| TC-SETTLE-040 | 获得勋章资产 |
+| TC-SETTLE-041 | 使用勋章投票 |
+| TC-SETTLE-042 | 投票活动开启 |
+| TC-SETTLE-043 | 勋章限制投票生效 |
+| TC-SETTLE-900 | 活动未关闭时无法查看最终排名 |
+| TC-SETTLE-901 | 非获奖者无法领取证书 |
+| TC-SETTLE-902 | 无效勋章投票被拒绝 |
+| TC-SETTLE-903 | 重复投票被拒绝 |
+
+## 27-bounty-enterprise.md (Bounty & Enterprise)
+
+| TC ID | Description |
+|-------|-------------|
+| TC-BOUNTY-001 | 发布悬赏活动 |
+| TC-BOUNTY-002 | 承接悬赏 |
+| TC-BOUNTY-003 | 悬赏活动提案互不可见 |
+| TC-BOUNTY-010 | 创建第一阶段悬赏活动 |
+| TC-BOUNTY-011 | 第一阶段结束选择优秀提案 |
+| TC-BOUNTY-012 | 创建第二阶段关联活动 |
+| TC-BOUNTY-013 | 晋级用户自动加入新团队 |
+| TC-BOUNTY-014 | 悬赏方共享详细需求 |
+| TC-BOUNTY-015 | 最终确认成果发放奖励 |
+| TC-ENTERPRISE-001 | 发布企业出题活动 |
+| TC-ENTERPRISE-002 | 企业出题提案互不可见 |
+| TC-ENTERPRISE-010 | 创建第一阶段企业出题活动 |
+| TC-ENTERPRISE-011 | 第一阶段评审选出优秀提案 |
+| TC-ENTERPRISE-012 | 创建第二阶段关联活动 |
+| TC-ENTERPRISE-013 | 企业方发送进阶信息到用户资产 |
+| TC-ENTERPRISE-014 | 后续阶段确认需求与成果 |
+| TC-VISIBLE-001 | 悬赏活动中参赛者提案对其他参赛者不可见 |
+| TC-VISIBLE-002 | 企业出题活动中参赛者提案对其他参赛者不可见 |
+| TC-VISIBLE-003 | 悬赏方可查看所有提案 |
+| TC-VISIBLE-004 | 企业方可查看所有提案 |
+| TC-BOUNTY-901 | 非悬赏方无法选择晋级提案 |
+| TC-ENTERPRISE-900 | 非企业方无法发送资产到用户 |
+| TC-ENTERPRISE-901 | 参赛者尝试查看其他参赛者提案被拒绝 |
+
+## 28-personalization.md (Personalization)
+
+| TC ID | Description |
+|-------|-------------|
+| TC-PERSONAL-001 | 基本个人信息在主页展示 |
+| TC-PERSONAL-002 | 显示名称展示 |
+| TC-PERSONAL-010 | 更改头像 — 上传图片 |
+| TC-PERSONAL-011 | 更改头像 — 选择预设 |
+| TC-PERSONAL-030 | 填写职业信息 |
+| TC-PERSONAL-031 | 填写学校信息 |
+| TC-PERSONAL-032 | 填写性格标签 |
+| TC-PERSONAL-033 | 填写兴趣爱好 |
+| TC-PERSONAL-034 | 活动收集信息自动展示 |
+| TC-PERSONAL-040 | 添加社交媒体链接 |
+| TC-PERSONAL-041 | 更新社交媒体链接 |
+| TC-PERSONAL-042 | 删除社交媒体链接 |
+| TC-PERSONAL-043 | 点击社交媒体链接跳转 |
+| TC-PERSONAL-050 | 活动收集信息聚合到个人主页 |
+| TC-PERSONAL-051 | 设置单项信息为公开可见 |
+| TC-PERSONAL-052 | 设置单项信息为仅自己可见 |
+| TC-PERSONAL-053 | 批量设置信息可见性 |
+| TC-PERSONAL-054 | 新收集信息的默认可见性 |
+| TC-PERSONAL-055 | 团队主页聚合成员公开信息 |
+| TC-PERSONAL-056 | 访客只能查看公开信息 |
+| TC-PERSONAL-900 | 头像格式不支持被拒绝 |
+| TC-PERSONAL-901 | 头像尺寸过大被拒绝 |
+| TC-PERSONAL-902 | 社交媒体链接格式无效被拒绝 |
+| TC-PERSONAL-903 | 未授权信息不展示在主页 |
+
+## 29-planet-camp.md (Planet & Camp)
+
+| TC ID | Description |
+|-------|-------------|
+| TC-PLANET-001 | 访问星球页面 |
+| TC-PLANET-002 | 按进行中状态筛选活动 |
+| TC-PLANET-003 | 按已结束状态筛选活动 |
+| TC-PLANET-004 | 按关联活动筛选 |
+| TC-PLANET-005 | 按活动类型筛选 |
+| TC-PLANET-006 | 按时间范围筛选活动 |
+| TC-PLANET-007 | 组合多条件筛选活动 |
+| TC-CAMP-001 | 访问营地页面 |
+| TC-CAMP-010 | 查看个人提案列表 |
+| TC-CAMP-011 | 查看团队提案列表 |
+| TC-CAMP-012 | 查看参加的团队列表 |
+| TC-CAMP-020 | 筛选个人提案 |
+| TC-CAMP-021 | 筛选团队提案 |
+| TC-CAMP-022 | 筛选团队 |
+| TC-NAV-001 | 从星球页面进入活动详情 |
+| TC-NAV-002 | 从营地页面进入提案详情 |
+| TC-NAV-003 | 从营地页面进入团队详情 |
+| TC-NAV-004 | 星球和营地页面切换 |
+| TC-PLANET-900 | 未登录用户访问营地页面 |
+| TC-PLANET-901 | 无任何提案时营地页面展示空状态 |
+| TC-PLANET-902 | 无任何团队时营地页面展示空状态 |
