@@ -1,8 +1,16 @@
-# Synnovator 完整开发流程
+# 完整开发流程
 
 ## 概述
 
-从需求设计到前后端实现和测试的完整开发流程。本流程涵盖数据建模、代码生成、数据注入、后端实现、前端集成（不含 UI 组件）和全栈测试。
+从需求设计到前后端实现和测试的完整开发流程。本流程涵盖数据建模、代码生成、数据注入、后端实现、**前端 UI 页面生成**和全栈 E2E 测试。
+
+> **通用性说明：**
+> 本工作流适用于任何需要从设计稿生成可测试原型的项目。只需替换：
+> - Figma 设计链接
+> - 测试用例 (`specs/testcases/`)
+> - 数据模型定义 (`docs/`)
+>
+> 工作流本身保持不变，输出始终是 **70-80% 可部署的原型**，可供 PM/设计师实际点击测试。
 
 > **重要约定：**
 > - 后端包名为 `app/`（与 api-builder 模板一致，标准 FastAPI 项目结构）。所有 Python 命令使用 `uv run python` 执行。
@@ -80,7 +88,7 @@
 └────────────────────────────────────────────────────────────────┘
                             ↓
 ┌────────────────────────────────────────────────────────────────┐
-│ 阶段 4: 前端客户端生成                                          │
+│ 阶段 4a: 前端客户端生成                                         │
 │  [前置] 安装 Tailwind CSS + shadcn/ui                          │
 │                                                                │
 │  [api-builder --generate-client]                              │
@@ -92,23 +100,73 @@
 │                                                                │
 │  集成到 Next.js                                                │
 │      ↓                                                        │
-│  frontend/lib/api/api-client.ts                               │
+│  frontend/lib/api-client.ts + frontend/lib/types.ts           │
 │                                                                │
 │  ✅ [tests-kit] 验证前端集成测试用例                             │
 └────────────────────────────────────────────────────────────────┘
                             ↓
 ┌────────────────────────────────────────────────────────────────┐
-│ 阶段 5: 最终集成验证                                            │
-│  全栈集成测试（前面各阶段已完成模块级测试）                       │
-│      ├─→ 启动 FastAPI + Next.js 服务                         │
-│      ├─→ 端到端用户旅程测试                                   │
-│      └─→ 数据一致性验证                                       │
+│ 阶段 4b: Figma 设计提取与 UI 规格生成                           │
+│  Figma 设计稿                                                  │
+│      ↓ [figma-resource-extractor skill]                      │
+│  specs/ui/figma/ (设计资源文档)                               │
+│      ├─→ icons.md, components.md, layouts.md                │
+│      └─→ pages/*.md (按类别分组的页面设计)                   │
+│                                                                │
+│  [ui-spec-generator skill]                                    │
+│      ↓                                                        │
+│  specs/ui/pages.yaml (页面组件结构 + 数据源 + 操作)            │
+│                                                                │
+│  [ux-spec-generator skill]                                    │
+│      ↓                                                        │
+│  specs/ux/ (交互规格：组件、页面、流程、表单、状态)             │
+└────────────────────────────────────────────────────────────────┘
+                            ↓
+┌────────────────────────────────────────────────────────────────┐
+│ 阶段 4c: 前端页面组件生成                                       │
+│  [frontend-prototype-builder skill]                           │
+│                                                                │
+│  输入:                                                         │
+│      ├─→ specs/ui/pages.yaml (页面结构)                      │
+│      ├─→ specs/ux/ (交互规格)                                │
+│      ├─→ frontend/lib/api-client.ts (API 客户端)             │
+│      └─→ specs/testcases/*.md (测试用例)                     │
+│                                                                │
+│  输出:                                                         │
+│      ├─→ frontend/app/**/page.tsx (路由文件)                 │
+│      └─→ frontend/components/pages/*.tsx (页面组件)          │
+│                                                                │
+│  ✅ 组件与 API 正确连接，事件处理器已绑定                        │
+└────────────────────────────────────────────────────────────────┘
+                            ↓
+┌────────────────────────────────────────────────────────────────┐
+│ 阶段 5: 原型验证与 E2E 测试                                     │
+│                                                                │
+│  5a. 服务健康检查                                              │
+│      ├─→ curl localhost:8000/health (后端)                   │
+│      └─→ curl -I localhost:3000 (前端)                       │
+│                                                                │
+│  5b. 视觉验证                                                  │
+│      ├─→ [agent-browser] 截图各页面                          │
+│      └─→ 对比 Figma 设计稿                                   │
+│                                                                │
+│  5c. E2E 浏览器测试                                            │
+│      ├─→ [agent-browser] 执行用户旅程                        │
+│      ├─→ 验证导航、点击、表单提交                             │
+│      └─→ 检查 API 调用成功                                   │
+│                                                                │
+│  5d. 迭代修复                                                  │
+│      ├─→ 识别失败点                                          │
+│      ├─→ 应用常见问题修复模式                                 │
+│      └─→ 重新测试直到通过                                    │
 │                                                                │
 │  ✅ [tests-kit] 最终 Guard 检查，确保所有测试用例通过            │
 └────────────────────────────────────────────────────────────────┘
 ```
 
 ## 使用的 Skills
+
+### 后端开发 Skills
 
 | Skill | 用途 | 状态 |
 |-------|------|------|
@@ -118,6 +176,17 @@
 | **api-builder** | 从 OpenAPI 生成 FastAPI 后端 + 迁移 + 测试 + TypeScript 客户端 | ✅ 可用 |
 | **data-importer** | 从 .synnovator 导入数据到 SQLite | ✅ 可用 |
 | **tests-kit** | 增量测试管理：Guard 模式验证已有测试用例，Insert 模式添加新测试用例 | ✅ 可用 |
+
+### 前端开发 Skills
+
+| Skill | 用途 | 状态 |
+|-------|------|------|
+| **figma-resource-extractor** | 从 Figma 设计稿提取资源，生成结构化 Markdown 文档到 `specs/ui/figma/` | ✅ 可用 |
+| **ui-spec-generator** | 从设计资源和测试用例生成页面规格文件 `specs/ui/pages.yaml` | ✅ 可用 |
+| **ux-spec-generator** | 从 UI 设计和测试用例生成交互规格到 `specs/ux/` | ✅ 可用 |
+| **openapi-to-components** | 从 OpenAPI 生成 TypeScript 类型和 API 客户端，转换页面组件为 Server Components | ✅ 可用 |
+| **frontend-prototype-builder** | 完整前端原型构建 SOP：服务启动 → 数据验证 → 页面生成 → E2E 测试 | ✅ 可用 |
+| **agent-browser** | 浏览器自动化：截图、表单填写、E2E 测试、数据提取 | ✅ 可用 |
 
 ---
 
@@ -705,9 +774,9 @@ uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 
 ---
 
-### 阶段 4: 前端客户端生成
+### 阶段 4a: 前端客户端生成
 
-#### 4.0 前置：安装前端样式框架
+#### 4a.0 前置：安装前端样式框架
 
 > **必须在开始前端 UI 开发前完成！**
 
@@ -728,7 +797,7 @@ Neon Forge 设计系统配色（参考 `specs/ui/style.pen`）：
 - Surface: `#181818`, Dark: `#222222`, Secondary: `#333333`
 - Fonts: Space Grotesk (headings), Inter (body), Poppins (numbers), Noto Sans SC (Chinese)
 
-#### 4.1 生成 TypeScript API 客户端
+#### 4a.1 生成 TypeScript API 客户端
 
 ```bash
 # 使用 schema-to-openapi 生成的规范
@@ -799,7 +868,7 @@ class ApiClient {
 export const apiClient = new ApiClient();
 ```
 
-#### 4.2 集成到 Next.js
+#### 4a.2 集成到 Next.js
 
 **配置环境变量：**
 
@@ -865,7 +934,7 @@ export default function CreateUserPage() {
 }
 ```
 
-#### 4.3 错误处理和类型安全
+#### 4a.3 错误处理和类型安全
 
 生成的客户端提供：
 - TypeScript 类型安全
@@ -873,7 +942,7 @@ export default function CreateUserPage() {
 - 统一的错误处理
 - 环境变量配置
 
-#### 4.4 增量测试：验证前端集成（tests-kit）
+#### 4a.4 增量测试：验证前端集成（tests-kit）
 
 ```bash
 # 启动后端服务
@@ -895,28 +964,411 @@ npx playwright test
 
 ---
 
-### 阶段 5: 最终集成验证
+### 阶段 4b: Figma 设计提取与 UI 规格生成
 
-> **前面各阶段已完成模块级增量测试**，本阶段聚焦于全栈端到端集成验证。
+> **本阶段从 Figma 设计稿提取资源，生成 AI 可读的规格文件，为后续页面组件生成做准备。**
 
-#### 5.1 tests-kit 最终 Guard 检查
+#### 4b.1 提取 Figma 设计资源
+
+使用 **figma-resource-extractor skill** 从 Figma 设计稿提取资源：
 
 ```bash
-# 运行 tests-kit Guard 模式，确保所有 246 个测试用例未被破坏
+# 触发方式（在 Claude Code 中）
+/figma-resource-extractor https://www.figma.com/design/{fileKey}?node-id={nodeId}
+```
+
+**输入：** Figma 设计稿 URL
+
+**输出：** `specs/ui/figma/` 目录结构
+
+```
+specs/ui/figma/
+├── README.md              # 资源总览与索引
+├── icons.md               # 图标组件列表
+├── components.md          # UI 组件列表
+├── layouts.md             # 响应式布局规格
+├── assets.md              # 共享资源（切图区）
+└── pages/                 # 页面设计（按类别分组）
+    ├── explore.md         # 探索类页面
+    ├── auth.md            # 认证类页面
+    ├── profile.md         # 个人资料页面
+    └── ...
+```
+
+每个页面文件包含：
+- Figma Node ID
+- Figma 链接
+- 页面类型
+- 子组件列表（如果有）
+
+#### 4b.2 生成页面规格文件
+
+使用 **ui-spec-generator skill** 生成页面组件结构：
+
+```bash
+# 触发方式
+/ui-spec-generator
+```
+
+**输入：**
+- `specs/ui/figma/pages/*.md` — Figma 设计文档
+- `specs/testcases/*.md` — 测试用例（提取期望的组件和操作）
+
+**输出：** `specs/ui/pages.yaml`
+
+```yaml
+# specs/ui/pages.yaml 示例结构
+shared_components:
+  - id: global-header
+    components:
+      - id: search-bar
+        type: search-input
+        actions:
+          - navigate_to: /search?q={query}
+      - id: publish-btn
+        type: button
+        actions:
+          - open_modal: publish-menu
+
+pages:
+  - id: home
+    route: /
+    figma_url: https://...
+    sections:
+      - id: main-tabs
+        components:
+          - id: tab-bar
+            type: tabs
+            options:
+              - label: 热门
+                filter: sort=hot
+      - id: hot-proposals
+        components:
+          - id: proposal-card
+            data_source: post
+            fields: [cover_image, title, like_count]
+            actions:
+              - navigate_to: /posts/{id}
+              - like
+```
+
+#### 4b.3 生成交互规格（可选）
+
+使用 **ux-spec-generator skill** 生成详细交互规格：
+
+```bash
+# 触发方式
+/ux-spec-generator
+```
+
+**输出：** `specs/ux/` 目录结构
+
+```
+specs/ux/
+├── README.md                    # 总览文档
+├── components/                  # 可复用组件交互
+│   ├── navigation/header.yaml
+│   ├── action/like-button.yaml
+│   └── ...
+├── pages/                       # 页面交互
+│   ├── home.yaml
+│   └── post-detail.yaml
+├── flows/                       # 用户流程
+│   ├── content/create-post.yaml
+│   └── social/follow-user.yaml
+└── state/                       # 状态管理
+    └── state-management.yaml
+```
+
+---
+
+### 阶段 4c: 前端页面组件生成
+
+> **本阶段使用规格文件生成实际的 React 页面组件，连接 API 客户端，绑定事件处理器。**
+
+#### 4c.1 前置检查
+
+确保以下文件存在：
+
+```bash
+# 必须存在
+ls specs/ui/pages.yaml           # 页面规格
+ls frontend/lib/api-client.ts    # API 客户端
+ls frontend/lib/types.ts         # TypeScript 类型
+
+# 可选但推荐
+ls specs/ux/README.md            # 交互规格
+```
+
+#### 4c.2 页面组件生成模式
+
+每个页面需要两个文件：
+
+**路由文件：** `frontend/app/{route}/page.tsx`
+
+```tsx
+// frontend/app/posts/[id]/page.tsx
+import { PostDetail } from "@/components/pages/post-detail"
+
+export default function PostDetailPage({ params }: { params: { id: string } }) {
+  return <PostDetail postId={Number(params.id)} />
+}
+```
+
+**组件文件：** `frontend/components/pages/{page-id}.tsx`
+
+```tsx
+// frontend/components/pages/post-detail.tsx
+"use client"
+
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { getPost, likePost, addComment } from "@/lib/api-client"
+import type { Post } from "@/lib/types"
+
+export function PostDetail({ postId }: { postId: number }) {
+  const router = useRouter()
+  const [post, setPost] = useState<Post | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const data = await getPost(postId)
+        setPost(data)
+      } catch (err) {
+        console.error("Failed to fetch:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [postId])
+
+  // 事件处理器 - 必须调用真实 API
+  async function handleLike() {
+    try {
+      await likePost(postId, 1) // userId=1 for prototype
+      // 刷新数据或乐观更新
+    } catch (err) {
+      console.error("Like failed:", err)
+    }
+  }
+
+  if (loading) return <div>Loading...</div>
+
+  return (
+    <div>
+      <h1>{post?.title}</h1>
+      <button onClick={handleLike}>Like ({post?.like_count})</button>
+      {/* 其他组件... */}
+    </div>
+  )
+}
+```
+
+#### 4c.3 页面生成检查清单
+
+对于 `specs/ui/pages.yaml` 中的每个页面：
+
+| 步骤 | 检查项 | 缺失时操作 |
+|------|--------|-----------|
+| 1 | `frontend/app/{route}/page.tsx` 存在 | 创建路由文件 |
+| 2 | `frontend/components/pages/{id}.tsx` 存在 | 创建组件文件 |
+| 3 | 组件从 `@/lib/api-client` 导入 API 函数 | 添加导入 |
+| 4 | 使用 `useEffect` 或 Server Component 获取数据 | 添加数据获取 |
+| 5 | 导航使用 `router.push()` 或 `<Link>` | 添加导航逻辑 |
+| 6 | 操作按钮绑定事件处理器 | 添加 onClick 处理 |
+| 7 | 事件处理器调用真实 API 函数 | 连接 API 调用 |
+
+#### 4c.4 常见问题与修复
+
+| 问题 | 症状 | 修复方法 |
+|------|------|----------|
+| API 404 | Console: "API 404" | 检查后端是否运行，路由前缀是否为 `/api` |
+| 按钮无响应 | 点击无反应 | 添加 onClick 处理器，检查 console 错误 |
+| 导航失败 | 页面未找到 | 检查动态路由 `[id]` 文件夹是否存在 |
+| 数据不加载 | 页面空白 | 检查 useEffect 执行，API 是否返回数据 |
+| CORS 错误 | Console: blocked | 后端 CORS 配置需包含 localhost:3000 |
+| Hydration 错误 | Console: hydration mismatch | 添加 "use client" 指令 |
+
+---
+
+### 阶段 5: 原型验证与 E2E 测试
+
+> **前面各阶段已完成模块级增量测试**，本阶段聚焦于全栈端到端集成验证。
+> 本阶段是确保原型可供 PM/设计师实际点击测试的关键。
+
+#### 5.1 服务健康检查
+
+**在进行任何测试前，必须确认服务正常运行：**
+
+```bash
+# 启动服务
+make start  # 或分别: make backend & make frontend
+
+# 验证后端健康
+curl http://localhost:8000/health
+# 期望: {"status":"ok"}
+
+# 验证前端可访问
+curl -I http://localhost:3000
+# 期望: HTTP/1.1 200 OK
+
+# 验证数据库有数据
+curl http://localhost:8000/api/users | jq '.total'
+curl http://localhost:8000/api/posts | jq '.total'
+# 期望: 非零数值
+```
+
+**如果数据库为空，导入测试数据：**
+
+```bash
+uv run python .claude/skills/data-importer/scripts/cli.py import \
+  --source .synnovator --db data/synnovator.db --models app/models
+```
+
+#### 5.2 视觉验证
+
+使用 **agent-browser skill** 截图各页面，对比 Figma 设计稿：
+
+```bash
+# 触发方式（在 Claude Code 中）
+/agent-browser screenshot http://localhost:3000 --output screenshots/home.png
+/agent-browser screenshot http://localhost:3000/posts/1 --output screenshots/post-detail.png
+```
+
+**检查项：**
+- [ ] 页面布局与 Figma 设计基本一致
+- [ ] 数据正确渲染（非占位符）
+- [ ] 响应式布局在不同宽度下正常
+
+#### 5.3 E2E 浏览器测试
+
+使用 **agent-browser skill** 执行用户旅程测试：
+
+```bash
+# 触发方式
+/agent-browser test http://localhost:3000 --scenario "Navigate to post detail"
+```
+
+**核心测试场景：**
+
+| 场景 | 验证项 |
+|------|--------|
+| 首页加载 | 帖子列表渲染，数据来自真实 API |
+| 卡片点击导航 | 点击帖子卡片 → 跳转到 `/posts/{id}` |
+| 点赞交互 | 点击点赞按钮 → 计数更新 |
+| 评论提交 | 输入评论 → 点击发送 → 评论出现在列表 |
+| 侧边栏导航 | 点击导航项 → 页面切换 |
+
+**Playwright 自动化测试示例：**
+
+```typescript
+// tests/e2e/prototype.spec.ts
+import { test, expect } from '@playwright/test'
+
+test('home page loads posts from API', async ({ page }) => {
+  await page.goto('http://localhost:3000')
+  // 等待数据加载完成
+  await page.waitForSelector('[data-testid="post-card"]')
+  const cards = await page.locator('[data-testid="post-card"]').count()
+  expect(cards).toBeGreaterThan(0)
+})
+
+test('navigate to post detail', async ({ page }) => {
+  await page.goto('http://localhost:3000')
+  await page.click('[data-testid="post-card"]:first-child')
+  await expect(page).toHaveURL(/\/posts\/\d+/)
+  await expect(page.locator('h1')).toBeVisible()
+})
+
+test('like button calls API', async ({ page }) => {
+  await page.goto('http://localhost:3000/posts/1')
+  const likeBtn = page.locator('[data-testid="like-btn"]')
+  await likeBtn.click()
+  // 验证 UI 更新或网络请求
+})
+```
+
+运行测试：
+
+```bash
+cd frontend && npx playwright test
+```
+
+#### 5.4 迭代修复
+
+**问题诊断检查清单：**
+
+当测试失败时，按顺序检查：
+
+- [ ] 后端服务运行中？ (`curl localhost:8000/health`)
+- [ ] 前端服务运行中？ (`curl -I localhost:3000`)
+- [ ] 数据库有测试数据？ (`curl localhost:8000/api/posts | jq .total`)
+- [ ] 浏览器 Console 无错误？
+- [ ] Network 面板显示 API 请求成功？
+- [ ] 动态路由文件夹存在？ (`app/posts/[id]/page.tsx`)
+- [ ] 组件正确导入 API 客户端？
+- [ ] 事件处理器已绑定？ (检查 onClick props)
+
+**常见修复模式：**
+
+```typescript
+// 问题: "API 404: Post not found"
+// 原因: 数据库没有该 ID 的数据
+// 修复: 验证数据存在
+curl http://localhost:8000/api/posts
+
+// 问题: "TypeError: Cannot read property 'items' of undefined"
+// 原因: API 响应结构不匹配
+// 修复: 添加空值检查
+const result = await listPosts()
+setData(result?.items ?? [])
+
+// 问题: "点击无响应"
+// 原因: onClick 未绑定或函数未定义
+// 修复: 检查并添加处理器
+<Button onClick={() => console.log('clicked')}>Test</Button>
+
+// 问题: "Hydration mismatch"
+// 原因: 服务端/客户端渲染不一致
+// 修复: 添加 "use client" 指令
+"use client"  // 文件顶部
+```
+
+**修复循环：**
+
+```
+1. 运行 E2E 测试
+    ↓
+2. 识别失败测试
+    ↓
+3. 检查 Console/Network 错误
+    ↓
+4. 应用修复模式
+    ↓
+5. 重新运行测试
+    ↓
+6. 重复直到全部通过
+```
+
+#### 5.5 tests-kit 最终 Guard 检查
+
+```bash
+# 运行 tests-kit Guard 模式，确保所有测试用例未被破坏
 uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 ```
 
-确保所有 17 个测试模块的用例都已覆盖：
+确保所有测试模块的用例都已覆盖：
 - 01-07: 内容类型 CRUD
 - 08: 关系操作
 - 09: 级联删除
 - 10: 权限控制
 - 11: 用户旅程
-- 12-13: 资源转移、关注
-- 14: 活动关联
-- 15-17: 规则引擎
+- 12-17: 高级功能
 
-#### 5.2 后端完整测试
+#### 5.6 后端完整测试
 
 ```bash
 # 运行所有后端测试
@@ -926,9 +1378,21 @@ uv run pytest app/tests/ -v
 uv run pytest app/tests/ --cov=app --cov-report=html
 ```
 
-#### 5.3 端到端集成测试
+#### 5.7 原型交付检查清单
 
-**完整的用户旅程测试（参考 `docs/user-journeys.md` 的 13 个用户旅程）：**
+在交付原型给 PM/设计师测试前，确认：
+
+- [ ] `make start` 可一键启动所有服务
+- [ ] 首页正确加载并显示真实数据
+- [ ] 所有导航链接可点击并跳转
+- [ ] 关键交互（点赞、评论、表单提交）调用真实 API
+- [ ] 无 Console 错误
+- [ ] 无网络请求失败
+- [ ] 页面布局与 Figma 设计基本一致
+
+#### 5.8 端到端集成测试（补充）
+
+**完整的用户旅程测试（参考 `docs/user-journeys.md`）：**
 
 ```bash
 # 启动后端和前端
@@ -1166,31 +1630,59 @@ async def upload_file(file: UploadFile = File(...)):
 - **包管理**: npm
 
 ### 工具链（Skills）
+
+**后端开发：**
 - **planning-with-files**: 文件化规划与会话管理（task_plan.md / findings.md / progress.md）
 - **synnovator**: 平台原型参考实现 + 文件数据管理（CRUD 操作）
 - **schema-to-openapi**: 从 synnovator skill + docs/ + specs/ 综合生成 OpenAPI 3.0 规范
 - **api-builder**: 后端代码生成（FastAPI + SQLAlchemy + Alembic + 测试 + TypeScript 客户端）
 - **data-importer**: 数据导入（.synnovator → SQLite）
-- **tests-kit**: 增量测试管理（Guard 验证 + Insert 添加，246 个测试用例）
+- **tests-kit**: 增量测试管理（Guard 验证 + Insert 添加）
+
+**前端开发：**
+- **figma-resource-extractor**: Figma 设计提取 → `specs/ui/figma/`
+- **ui-spec-generator**: 页面规格生成 → `specs/ui/pages.yaml`
+- **ux-spec-generator**: 交互规格生成 → `specs/ux/`
+- **openapi-to-components**: API 客户端 + 类型 → `frontend/lib/`
+- **frontend-prototype-builder**: 完整前端原型构建 SOP
+- **agent-browser**: E2E 浏览器测试与截图
 
 ---
 
 ## 总结
 
-完整开发流程 6 个阶段（贯穿 planning-with-files 规划管理）：
+完整开发流程 8 个阶段（贯穿 planning-with-files 规划管理）：
 
-0. **项目初始化** - 创建结构、配置环境、初始化规划文件（planning-with-files）
-1. **需求设计** - synnovator skill 为原型参考，综合 docs/ + specs/ 生成 OpenAPI spec → **tests-kit 验证数据模型**
-2. **后端生成** - 使用 api-builder 生成 FastAPI 到 `app/` + 迁移 → **tests-kit 按模块增量测试**
-3. **数据注入** - 使用 data-importer 导入测试数据 → **tests-kit 验证导入数据**
-4. **前端集成** - 安装 Tailwind+shadcn → 生成 TypeScript 客户端 → 集成到 Next.js → **tests-kit 验证前端集成**
-5. **最终集成验证** - tests-kit 全量 Guard 检查 + 端到端用户旅程测试
+0. **项目初始化** - 创建结构、配置环境、初始化规划文件
+1. **需求设计** - synnovator skill 为原型参考，综合 docs/ + specs/ 生成 OpenAPI spec
+2. **后端生成** - 使用 api-builder 生成 FastAPI 到 `app/` + 迁移
+3. **数据注入** - 使用 data-importer 导入测试数据
+4a. **前端客户端** - 生成 TypeScript API 客户端和类型定义
+4b. **设计提取** - 从 Figma 提取设计资源，生成 UI/UX 规格
+4c. **页面生成** - 基于规格生成 React 页面组件，连接 API
+5. **E2E 测试** - 服务健康检查 → 视觉验证 → 浏览器测试 → 迭代修复
+
+**Skill 调用链（从设计到原型）：**
+
+```
+figma-resource-extractor  → specs/ui/figma/
+         ↓
+ui-spec-generator         → specs/ui/pages.yaml
+         ↓
+ux-spec-generator         → specs/ux/
+         ↓
+openapi-to-components     → frontend/lib/api-client.ts + types.ts
+         ↓
+frontend-prototype-builder → frontend/app/ + frontend/components/pages/
+         ↓
+agent-browser             → E2E 验证
+```
 
 这个流程确保：
-- 从设计到实现的一致性
-- 自动化代码生成，减少重复工作
-- **增量测试，每个模块完成后立即验证**，不积压问题
-- **文件化规划，防止上下文丢失和中断失忆**
-- 测试数据与生产 schema 同步
-- 类型安全的全栈开发
-- 快速迭代和验证
+- **设计到代码的自动转换**，减少手工编写
+- **从设计到实现的一致性**，规格文件作为桥梁
+- **自动化代码生成**，减少重复工作
+- **增量测试**，每个模块完成后立即验证
+- **文件化规划**，防止上下文丢失和中断失忆
+- **70-80% 可部署原型**，PM/设计师可实际点击测试
+- **通用工作流**，更换 Figma 链接和测试用例即可复用
