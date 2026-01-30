@@ -1,0 +1,1187 @@
+# Synnovator UI 页面规格
+# 生成时间: 2025-01-29
+# 数据来源: specs/ui/pages.md, specs/ui/assets/images/*.png, specs/testcases/*.md
+
+pages:
+  # ============================================================
+  # 主页
+  # ============================================================
+  - id: home
+    name: 主页
+    route: /
+    pen_file: components/home.pen
+    figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=15249-66821
+    image: assets/images/首页.png
+    description: 平台首页，展示热门活动、提案和社区入口
+
+    sections:
+      - id: sidebar-nav
+        name: 左侧导航栏
+        position: left
+        layout: vertical
+
+        components:
+          - id: nav-explore
+            name: 探索入口
+            type: nav-item
+            icon: explore
+            actions:
+              - navigate_to: /explore
+
+          - id: nav-planet
+            name: 星球入口
+            type: nav-item
+            icon: planet
+            actions:
+              - navigate_to: /categories
+
+          - id: nav-camp
+            name: 营地入口
+            type: nav-item
+            icon: camp
+            actions:
+              - navigate_to: /groups
+
+      - id: main-tabs
+        name: 主内容 Tab 栏
+        position: top
+        layout: horizontal
+
+        components:
+          - id: tab-bar
+            name: 内容筛选标签
+            type: tabs
+            options:
+              - label: 热门
+                filter: sort=hot
+              - label: 原创广场
+                filter: type=original
+              - label: 最新
+                filter: sort=latest
+              - label: 跑道
+                filter: tag=runway
+              - label: 找队友
+                filter: tag=find-teammate
+              - label: 找点子
+                filter: tag=find-idea
+              - label: 官方
+                filter: created_by.role=admin
+
+      - id: hot-activities-banner
+        name: 热点活动横幅
+        position: below:main-tabs
+        layout: horizontal-scroll
+
+        components:
+          - id: activity-card
+            name: 活动卡片
+            type: card
+            data_source: category
+            filter: status=published
+            fields:
+              - cover_image
+              - title
+              - prize_amount
+            actions:
+              - navigate_to: /categories/{id}
+            notes: 可横向滑动，每次显示约 4 个卡片，带自动轮播
+
+      - id: hot-proposals
+        name: 热门提案区
+        position: below:hot-activities-banner
+        layout: grid
+
+        components:
+          - id: proposal-card
+            name: 提案卡片
+            type: card
+            data_source: post
+            filter: type=for_category
+            fields:
+              - cover_image
+              - title
+              - description
+              - author.avatar
+              - author.display_name
+              - like_count
+            actions:
+              - navigate_to: /posts/{id}
+              - like
+
+      - id: right-sidebar
+        name: 右侧边栏
+        position: right
+        layout: vertical
+
+        components:
+          - id: cta-banner
+            name: 来协创创个业横幅
+            type: banner
+            content: 来协创,创个业
+            subtitle: 来看看 Synnovator 有什么好活动
+
+          - id: quick-actions
+            name: 快捷操作区
+            type: button-group
+            buttons:
+              - label: 找队友
+                icon: teammate
+                action: navigate_to:/posts?tag=find-teammate
+              - label: 找点子
+                icon: idea
+                action: navigate_to:/posts?tag=find-idea
+
+          - id: publish-proposal-btn
+            name: 发布提案按钮
+            type: button
+            variant: primary
+            label: 发布提案
+            actions:
+              - navigate_to: /posts/create?type=for_category
+
+          - id: social-links
+            name: 社交媒体入口
+            type: icon-group
+            links:
+              - platform: wechat
+              - platform: weibo
+              - platform: bilibili
+
+          - id: join-us
+            name: 加入我们入口
+            type: link-button
+            label: 加入我们
+
+  # ============================================================
+  # 活动详情页
+  # ============================================================
+  - id: category-detail
+    name: 活动详情页
+    route: /categories/{id}
+    pen_file: components/category-detail.pen
+    figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=14649-69348
+    image: assets/images/星球-1.png
+    description: 展示活动详情、奖金、时间线、参赛团队和排行榜
+
+    sections:
+      - id: category-header
+        name: 活动头部信息
+        position: top
+        layout: horizontal
+
+        components:
+          - id: cover-image
+            name: 活动封面
+            type: image
+            data_source: category
+            fields:
+              - cover_image
+            size: large
+
+          - id: category-info
+            name: 活动基本信息
+            type: info-panel
+            data_source: category
+            fields:
+              - title
+              - prize_amount
+              - start_date
+              - end_date
+              - status
+
+          - id: category-tags
+            name: 活动标签
+            type: tag-list
+            data_source: category
+            fields:
+              - tags
+
+      - id: category-tabs
+        name: 活动内容 Tab
+        position: below:category-header
+        layout: horizontal
+
+        components:
+          - id: content-tabs
+            name: 内容标签页
+            type: tabs
+            options:
+              - label: 简介
+                content: description
+              - label: 排行榜
+                content: leaderboard
+              - label: 参赛团队
+                content: teams
+              - label: 发现更多
+                content: related
+
+      - id: category-body
+        name: 活动正文区
+        position: center
+        layout: vertical
+
+        components:
+          - id: markdown-content
+            name: Markdown 内容渲染
+            type: markdown-viewer
+            data_source: category
+            fields:
+              - body
+
+          - id: leaderboard
+            name: 排行榜
+            type: list
+            data_source: post
+            filter: category_id={id}&type=for_category
+            sort: average_rating:desc
+            fields:
+              - rank
+              - title
+              - author.display_name
+              - average_rating
+
+          - id: participating-teams
+            name: 参赛团队列表
+            type: grid
+            data_source: group
+            relation: category:group
+            fields:
+              - avatar
+              - name
+              - member_count
+
+      - id: category-actions
+        name: 活动操作区
+        position: bottom
+        layout: horizontal
+
+        components:
+          - id: register-btn
+            name: 报名按钮
+            type: button
+            variant: primary
+            label: 报名参赛
+            actions:
+              - create_relation: category:group
+            condition: user.has_team && category.status=published
+
+          - id: like-btn
+            name: 点赞按钮
+            type: icon-button
+            icon: heart
+            data_source: interaction
+            filter: type=like&target_type=category&target_id={id}
+            actions:
+              - toggle_like
+
+  # ============================================================
+  # 用户详情页
+  # ============================================================
+  - id: user-profile
+    name: 用户详情页
+    route: /users/{id}
+    pen_file: components/user-profile.pen
+    figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=14335-195078
+    image: assets/images/他人主页.png
+    description: 展示用户资料、资产和作品
+
+    sections:
+      - id: user-header
+        name: 用户头部信息
+        position: top
+        layout: horizontal
+
+        components:
+          - id: user-avatar
+            name: 用户头像
+            type: avatar
+            data_source: user
+            fields:
+              - avatar
+            size: large
+
+          - id: user-info
+            name: 用户基本信息
+            type: info-panel
+            data_source: user
+            fields:
+              - display_name
+              - username
+              - bio
+              - follower_count
+              - following_count
+              - post_count
+
+          - id: follow-btn
+            name: 关注按钮
+            type: button
+            variant: outline
+            label: 关注
+            actions:
+              - create_relation: user:user follow
+            condition: user.id != current_user.id
+
+      - id: user-assets
+        name: 用户资产区
+        position: below:user-header
+        layout: horizontal
+
+        components:
+          - id: asset-card-agent
+            name: AI Agent 资产卡片
+            type: asset-card
+            data_source: resource
+            filter: owner_id={id}&type=agent
+            fields:
+              - count
+              - label: AI Agent
+            color: pink
+
+          - id: asset-card-cert
+            name: 证书资产卡片
+            type: asset-card
+            data_source: resource
+            filter: owner_id={id}&type=certificate
+            fields:
+              - count
+              - label: 证书
+            color: yellow
+
+          - id: asset-card-file
+            name: 文件资产卡片
+            type: asset-card
+            data_source: resource
+            filter: owner_id={id}&type=file
+            fields:
+              - count
+              - label: 文件
+            color: lime
+
+      - id: user-works
+        name: 用户作品区
+        position: below:user-assets
+        layout: vertical
+
+        components:
+          - id: works-filter
+            name: 作品筛选标签
+            type: tag-filter
+            options:
+              - label: 全部
+              - label: 提案
+                filter: type=for_category
+              - label: 帖子
+                filter: type=general
+              - label: 证书
+                filter: type=certificate
+
+          - id: works-grid
+            name: 作品网格
+            type: grid
+            data_source: post
+            filter: created_by={id}
+            fields:
+              - cover_image
+              - title
+              - type
+              - like_count
+            actions:
+              - navigate_to: /posts/{id}
+
+  # ============================================================
+  # 关注列表页
+  # ============================================================
+  - id: following-list
+    name: 关注列表页
+    route: /users/{id}/following
+    pen_file: components/following-list.pen
+    figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=14999-52503
+    image: assets/images/个人关注列表.png
+    description: 展示用户关注的人和团队
+
+    sections:
+      - id: following-tabs
+        name: 关注类型切换
+        position: top
+        layout: horizontal
+
+        components:
+          - id: type-tabs
+            name: 类型标签
+            type: tabs
+            options:
+              - label: 我关注的用户
+                filter: type=user
+              - label: 关注的团队
+                filter: type=group
+
+      - id: following-users
+        name: 关注用户列表
+        position: center
+        layout: grid
+
+        components:
+          - id: user-follow-card
+            name: 用户关注卡片
+            type: card
+            data_source: user
+            relation: user:user follow
+            fields:
+              - avatar
+              - display_name
+              - bio
+              - follower_count
+            actions:
+              - navigate_to: /users/{id}
+              - unfollow
+
+      - id: following-teams
+        name: 关注团队列表
+        position: center
+        layout: grid
+
+        components:
+          - id: team-follow-card
+            name: 团队关注卡片
+            type: card
+            data_source: group
+            fields:
+              - avatar
+              - name
+              - member_avatars
+              - description
+            actions:
+              - navigate_to: /groups/{id}
+
+  # ============================================================
+  # 团队详情页
+  # ============================================================
+  - id: team-detail
+    name: 团队详情页
+    route: /groups/{id}
+    pen_file: components/team.pen
+    figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=14580-64676
+    image: assets/images/团队.png
+    description: 展示团队信息、成员和资产
+
+    sections:
+      - id: team-header
+        name: 团队头部信息
+        position: top
+        layout: horizontal
+
+        components:
+          - id: team-avatar
+            name: 团队头像
+            type: avatar
+            data_source: group
+            fields:
+              - avatar
+            size: large
+
+          - id: team-info
+            name: 团队基本信息
+            type: info-panel
+            data_source: group
+            fields:
+              - name
+              - description
+              - member_count
+              - max_members
+              - visibility
+
+          - id: join-btn
+            name: 加入团队按钮
+            type: button
+            variant: primary
+            label: 申请加入
+            actions:
+              - create_relation: group:user pending
+            condition: "!is_member && visibility=public"
+
+      - id: team-members
+        name: 团队成员区
+        position: below:team-header
+        layout: horizontal
+
+        components:
+          - id: member-grid
+            name: 成员头像网格
+            type: avatar-grid
+            data_source: user
+            relation: group:user
+            filter: status=accepted
+            fields:
+              - avatar
+              - display_name
+              - role
+            max_display: 8
+
+          - id: add-member-btn
+            name: 添加成员按钮
+            type: icon-button
+            icon: plus
+            actions:
+              - open_modal: invite-member
+            condition: is_owner
+
+          - id: pending-requests
+            name: 待审批申请
+            type: badge
+            data_source: group_user
+            filter: group_id={id}&status=pending
+            fields:
+              - count
+            condition: is_owner
+
+      - id: team-assets
+        name: 团队资产区
+        position: below:team-members
+        layout: horizontal
+
+        components:
+          - id: team-asset-cards
+            name: 团队资产卡片组
+            type: asset-card-group
+            data_source: resource
+            filter: owner_type=group&owner_id={id}
+            categories:
+              - type: agent
+                label: AI Agent
+                color: pink
+              - type: certificate
+                label: 证书
+                color: yellow
+              - type: file
+                label: 文件
+                color: lime
+
+      - id: team-works
+        name: 团队作品区
+        position: below:team-assets
+        layout: vertical
+
+        components:
+          - id: team-posts
+            name: 团队作品列表
+            type: grid
+            data_source: post
+            filter: team_id={id}
+            fields:
+              - cover_image
+              - title
+              - type
+              - like_count
+            actions:
+              - navigate_to: /posts/{id}
+
+  # ============================================================
+  # 帖子列表页
+  # ============================================================
+  - id: post-list
+    name: 帖子列表页
+    route: /posts
+    pen_file: components/post-list.pen
+    figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=14343-229423
+    image: assets/images/帖子列表.png
+    description: 展示帖子列表，支持筛选和分类
+
+    sections:
+      - id: post-filter-tabs
+        name: 帖子筛选栏
+        position: top
+        layout: horizontal
+
+        components:
+          - id: post-tabs
+            name: 帖子类型标签
+            type: tabs
+            options:
+              - label: 找队友
+                filter: tag=find-teammate
+              - label: 找点子
+                filter: tag=find-idea
+
+          - id: view-more-btn
+            name: 查看更多
+            type: link
+            label: 查看更多
+            actions:
+              - expand_list
+
+      - id: post-grid
+        name: 帖子网格
+        position: center
+        layout: grid
+
+        components:
+          - id: post-card
+            name: 帖子卡片
+            type: card
+            data_source: post
+            filter: status=published&type=general
+            fields:
+              - cover_image
+              - title
+              - author.avatar
+              - author.display_name
+              - like_count
+            actions:
+              - navigate_to: /posts/{id}
+
+  # ============================================================
+  # 帖子详情页
+  # ============================================================
+  - id: post-detail
+    name: 帖子详情页
+    route: /posts/{id}
+    pen_file: components/post-detail.pen
+    figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=15159-78311
+    image: assets/images/用户贴子.png
+    description: 展示帖子详情、关联卡片和评论区
+
+    sections:
+      - id: post-header
+        name: 帖子头部信息
+        position: top
+        layout: horizontal
+
+        components:
+          - id: author-info
+            name: 作者信息
+            type: user-chip
+            data_source: user
+            relation: post.created_by
+            fields:
+              - avatar
+              - display_name
+              - follower_count
+            actions:
+              - navigate_to: /users/{id}
+
+          - id: post-title
+            name: 帖子标题
+            type: heading
+            data_source: post
+            fields:
+              - title
+
+          - id: post-tags
+            name: 帖子标签
+            type: tag-list
+            data_source: post
+            fields:
+              - tags
+
+          - id: post-actions
+            name: 帖子操作
+            type: action-bar
+            actions:
+              - like:
+                  icon: heart
+                  count_field: like_count
+              - share:
+                  icon: share
+              - more:
+                  icon: ellipsis
+                  menu:
+                    - edit (condition: is_author)
+                    - delete (condition: is_author || is_admin)
+                    - report
+
+      - id: related-cards
+        name: 关联卡片区
+        position: below:post-header
+        layout: horizontal-scroll
+
+        components:
+          - id: related-post-card
+            name: 关联帖子卡片
+            type: mini-card
+            data_source: post
+            relation: post:post
+            fields:
+              - cover_image
+              - title
+              - author.display_name
+            actions:
+              - navigate_to: /posts/{id}
+
+      - id: post-body
+        name: 帖子正文区
+        position: center
+        layout: vertical
+
+        components:
+          - id: content-header
+            name: 内容详情标题
+            type: section-header
+            label: 内容详情
+
+          - id: markdown-content
+            name: Markdown 内容
+            type: markdown-viewer
+            data_source: post
+            fields:
+              - body
+
+          - id: attached-resources
+            name: 附件资源
+            type: resource-list
+            data_source: resource
+            relation: post:resource
+            fields:
+              - filename
+              - file_type
+              - file_size
+            actions:
+              - download
+              - preview
+
+      - id: post-sidebar
+        name: 帖子右侧边栏
+        position: right
+        layout: vertical
+
+        components:
+          - id: author-card
+            name: 作者详情卡片
+            type: user-card
+            data_source: user
+            relation: post.created_by
+            fields:
+              - avatar
+              - display_name
+              - bio
+              - follower_count
+            actions:
+              - follow
+
+          - id: related-proposals
+            name: 相关提案列表
+            type: mini-list
+            data_source: post
+            filter: type=for_category
+            limit: 5
+            fields:
+              - title
+              - like_count
+            actions:
+              - navigate_to: /posts/{id}
+
+      - id: comment-section
+        name: 评论区
+        position: below:post-body
+        layout: vertical
+
+        components:
+          - id: comment-input
+            name: 评论输入框
+            type: textarea
+            placeholder: 写下你的评论...
+            actions:
+              - submit_comment
+
+          - id: comment-list
+            name: 评论列表
+            type: nested-list
+            data_source: interaction
+            filter: type=comment&target_type=post&target_id={id}
+            fields:
+              - author.avatar
+              - author.display_name
+              - value
+              - created_at
+              - like_count
+            nested_field: replies
+            actions:
+              - reply
+              - like
+              - delete (condition: is_author || is_admin)
+
+  # ============================================================
+  # 提案列表页
+  # ============================================================
+  - id: proposal-list
+    name: 提案列表页
+    route: /proposals
+    pen_file: components/proposal-list.pen
+    figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=14343-229423
+    image: assets/images/提案列表.png
+    description: 展示参赛提案列表
+
+    sections:
+      - id: proposal-filter
+        name: 提案筛选栏
+        position: top
+        layout: horizontal
+
+        components:
+          - id: status-filter
+            name: 状态筛选
+            type: dropdown
+            options:
+              - label: 全部
+              - label: 草稿筛选
+                filter: status=draft
+              - label: 待审核
+                filter: status=pending_review
+              - label: 已发布
+                filter: status=published
+
+          - id: category-filter
+            name: 活动筛选
+            type: dropdown
+            data_source: category
+            filter: status=published
+            fields:
+              - name
+            placeholder: 选择活动
+
+      - id: proposal-grid
+        name: 提案网格
+        position: center
+        layout: grid
+
+        components:
+          - id: proposal-card
+            name: 提案卡片
+            type: card
+            data_source: post
+            filter: type=for_category
+            fields:
+              - cover_image
+              - title
+              - description
+              - author.avatar
+              - author.display_name
+              - category.name
+              - like_count
+            actions:
+              - navigate_to: /posts/{id}
+
+  # ============================================================
+  # 提案详情页
+  # ============================================================
+  - id: proposal-detail
+    name: 提案详情页
+    route: /proposals/{id}
+    pen_file: components/proposal-detail.pen
+    figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=15159-78311
+    image: assets/images/提案.png
+    description: 展示参赛提案详情，包含日历、热点榜和评分
+
+    sections:
+      - id: proposal-header
+        name: 提案头部
+        position: top
+        layout: horizontal
+
+        components:
+          - id: cover-image
+            name: 提案封面
+            type: image
+            data_source: post
+            fields:
+              - cover_image
+
+          - id: author-team-info
+            name: 作者和团队信息
+            type: info-row
+            fields:
+              - author.avatar
+              - author.display_name
+              - team.name
+            labels:
+              - 来自
+              - 团队
+
+          - id: proposal-meta
+            name: 提案元信息
+            type: info-panel
+            data_source: post
+            fields:
+              - title
+              - id
+              - like_count
+            actions:
+              - like
+              - share
+
+          - id: track-tags
+            name: 赛道标签
+            type: tag-list
+            data_source: post
+            fields:
+              - tags
+            filter: tag_type=track
+
+          - id: sponsor-badges
+            name: 赞助商徽章
+            type: badge-row
+            badges:
+              - BIP
+              - 团队
+
+      - id: proposal-sidebar
+        name: 提案右侧边栏
+        position: right
+        layout: vertical
+
+        components:
+          - id: activity-calendar
+            name: 活动日历
+            type: calendar
+            data_source: category
+            relation: category:post
+            fields:
+              - start_date
+              - end_date
+              - milestones
+            highlights:
+              - type: 报名
+                color: blue
+              - type: 初赛
+                color: green
+              - type: 复赛
+                color: orange
+              - type: 决赛
+                color: red
+
+          - id: hot-ranking
+            name: 协创热点榜
+            type: ranking-list
+            tabs:
+              - label: 提案
+                data_source: post
+                filter: type=for_category
+                sort: like_count:desc
+              - label: 帖子
+                data_source: post
+                filter: type=general
+                sort: like_count:desc
+            fields:
+              - rank
+              - title
+              - like_count
+            limit: 10
+
+      - id: proposal-body
+        name: 提案正文区
+        position: center
+        layout: vertical
+
+        components:
+          - id: section-header
+            name: 内容详情标题
+            type: section-header
+            label: 内容详情
+            meta: Divesee 潜读工具（网页和插件双端）v0.5.md
+
+          - id: markdown-content
+            name: Markdown 内容
+            type: markdown-viewer
+            data_source: post
+            fields:
+              - body
+
+          - id: comment-link
+            name: 前往评论区链接
+            type: link-button
+            icon: comment
+            label: 前往「评论区」
+            actions:
+              - scroll_to: comment-section
+
+      - id: proposal-gallery
+        name: 提案图库
+        position: bottom
+        layout: horizontal-scroll
+
+        components:
+          - id: image-gallery
+            name: 图片画廊
+            type: gallery
+            data_source: resource
+            relation: post:resource
+            filter: file_type=image
+            fields:
+              - url
+              - filename
+            actions:
+              - preview_fullscreen
+
+      - id: rating-section
+        name: 评分区
+        position: below:proposal-body
+        layout: vertical
+        condition: user.role=organizer && category.status=closed
+
+        components:
+          - id: rating-form
+            name: 多维度评分表单
+            type: rating-form
+            dimensions:
+              - label: 创新性
+                weight: 0.30
+                max: 100
+              - label: 技术实现
+                weight: 0.30
+                max: 100
+              - label: 实用价值
+                weight: 0.25
+                max: 100
+              - label: 演示效果
+                weight: 0.15
+                max: 100
+            fields:
+              - scores
+              - comment
+            actions:
+              - submit_rating
+
+  # ============================================================
+  # 资产页
+  # ============================================================
+  - id: assets
+    name: 资产页
+    route: /assets
+    pen_file: components/assets.pen
+    figma_url: https://www.figma.com/design/QUQsM2qOSwdYVoHVB1JpAw/SYN%E7%B3%BB%E5%88%97%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F?node-id=14405-45956
+    image: assets/images/资产.png
+    description: 展示用户拥有的资产（AI Agent、证书、文件）
+
+    sections:
+      - id: assets-header
+        name: 资产页头部
+        position: top
+        layout: horizontal
+
+        components:
+          - id: page-title
+            name: 页面标题
+            type: heading
+            label: 我的资产
+
+      - id: asset-type-cards
+        name: 资产类型卡片区
+        position: below:assets-header
+        layout: horizontal
+
+        components:
+          - id: agent-card
+            name: AI Agent 卡片
+            type: asset-type-card
+            data_source: resource
+            filter: type=agent&owner_id={current_user.id}
+            fields:
+              - count
+              - label: AI Agent
+              - subtitle: 0 TOPS
+            color: gradient-pink
+            icon: ufo
+
+          - id: cert-card
+            name: 证书卡片
+            type: asset-type-card
+            data_source: resource
+            filter: type=certificate&owner_id={current_user.id}
+            fields:
+              - count
+              - label: 证书
+            color: yellow
+            icon: certificate
+
+          - id: file-card
+            name: 文件卡片
+            type: asset-type-card
+            data_source: resource
+            filter: type=file&owner_id={current_user.id}
+            fields:
+              - count
+              - label: 文件
+            color: lime
+
+      - id: asset-list
+        name: 资产列表
+        position: below:asset-type-cards
+        layout: grid
+
+        components:
+          - id: asset-item
+            name: 资产条目
+            type: list-item
+            data_source: resource
+            filter: owner_id={current_user.id}
+            fields:
+              - title
+              - category.name
+              - tags
+              - status
+              - expires_at
+            status_labels:
+              - value: available
+                label: 可用
+                color: green
+            actions:
+              - view_detail
+              - transfer
+              - download
+
+# ============================================================
+# 缺失页面（从测试用例分析，建议新增）
+# ============================================================
+missing_pages:
+  - id: login
+    name: 登录页
+    route: /login
+    status: not_designed
+    required_by:
+      - TC-USER-001 (用户创建)
+      - TC-USER-004 (用户读取)
+    notes: 需要设计登录/注册表单，支持邮箱登录
+
+  - id: post-create
+    name: 帖子创建页
+    route: /posts/create
+    status: not_designed
+    required_by:
+      - TC-POST-001 (最小字段创建帖子)
+      - TC-POST-002 (显式发布帖子)
+      - TC-JOUR-009 (发送帖子)
+    notes: 需要表单组件：标题、正文(Markdown)、标签、类型选择、封面上传
+
+  - id: category-create
+    name: 活动创建页
+    route: /categories/create
+    status: not_designed
+    required_by:
+      - TC-CAT-001 (创建活动)
+    notes: 仅 Organizer/Admin 可访问，需要活动信息表单
+
+  - id: team-manage
+    name: 团队管理页
+    route: /groups/{id}/manage
+    status: not_designed
+    required_by:
+      - TC-GRP-004 (成员申请)
+      - TC-GRP-005 (Owner批准)
+      - TC-GRP-006 (Owner拒绝)
+    notes: 成员审批列表、邀请成员、角色管理
+
+  - id: notifications
+    name: 通知页
+    route: /notifications
+    status: not_designed
+    required_by:
+      - TC-GRP-004 (申请通知)
+      - TC-GRP-005 (审批通知)
+    notes: 系统通知、审批通知、互动通知
+
+  - id: search-results
+    name: 搜索结果页
+    route: /search
+    status: not_designed
+    required_by:
+      - TC-JOUR-002 (匿名浏览筛选)
+    notes: 全局搜索结果，支持按类型筛选
