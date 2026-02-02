@@ -31,7 +31,7 @@ export function SearchModal({ defaultOpen = false, onOpenChange }: SearchModalPr
   }>({ users: [], categories: [], posts: [] })
   const [isSearching, setIsSearching] = React.useState(false)
   const router = useRouter()
-  const debounceRef = React.useRef<NodeJS.Timeout>()
+  const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
 
   // Handle keyboard shortcut
   React.useEffect(() => {
