@@ -18,7 +18,7 @@
 
 ## 当前阶段
 
-**Phase 8: 测试与文档** - ✅ 完成 (E2E 测试延期至 P2)
+**Phase 9: OAuth Mock Switch** - ⏳ 待开始
 
 ## 进度总览
 
@@ -33,6 +33,11 @@
 | Phase 6: 业务逻辑实现 | ✅ 完成 | 100% |
 | Phase 7: 前端组件实现 | ✅ 完成 | 100% |
 | Phase 8: 测试与文档 | ✅ 完成 | 100% |
+| Phase 9: OAuth Mock Switch | ⏳ 待开始 | 0% |
+| Phase 10: Notification Event System | ⏳ 待开始 | 0% |
+| Phase 11: E2E Testing (Playwright) | ⏳ 待开始 | 0% |
+| Phase 12: P2 Frontend Components | ⏳ 待开始 | 0% |
+| Phase 13: Admin Batch Operations | ⏳ 待开始 (可选) | 0% |
 
 ---
 
@@ -267,6 +272,117 @@
 | 2025-02-03 | 使用 Header 认证而非 JWT | Phase 4.4 升级 | ⏳ 待处理 |
 | 2025-02-03 | alembic/versions/ 为空 | Phase 5 生成迁移 | ⏳ 待处理 |
 
+---
+
+## Phase 9: OAuth Mock Switch
+
+> 目标: 添加 Mock 认证开关，便于开发测试，未来上线 OAuth 服务后可关闭
+
+### 9.1 环境配置
+- [ ] 在 `app/core/config.py` 添加 `MOCK_AUTH` 环境变量
+- [ ] 在 `.env.example` 添加配置说明
+
+### 9.2 Mock 认证实现
+- [ ] 更新 `app/deps.py` 支持 mock 模式
+- [ ] Mock 模式下自动创建测试用户
+- [ ] Mock 模式下跳过密码验证
+
+### 9.3 单元测试
+- [ ] 测试 mock 模式开启/关闭切换
+- [ ] 测试 mock 用户创建
+
+---
+
+## Phase 10: Notification Event System
+
+> 目标: 实现通知触发器，在用户操作时自动创建通知
+
+### 10.1 事件服务基础
+- [ ] 创建 `app/services/notification_events.py`
+- [ ] 定义事件类型枚举 (follow, comment, mention, team_request, award)
+- [ ] 实现 `create_notification_for_event()` 核心函数
+
+### 10.2 关注事件集成
+- [ ] 在 `POST /users/{id}/follow` 触发 follow 通知
+- [ ] 通知内容: "{username} 关注了你"
+
+### 10.3 评论事件集成
+- [ ] 在 `POST /posts/{id}/comments` 触发 comment 通知
+- [ ] 通知内容: "{username} 评论了你的作品"
+
+### 10.4 提及事件集成
+- [ ] 解析评论内容中的 @username
+- [ ] 触发 mention 通知
+
+### 10.5 单元测试
+- [ ] 测试 follow 事件通知创建
+- [ ] 测试 comment 事件通知创建
+- [ ] 测试 mention 解析和通知
+
+---
+
+## Phase 11: E2E Testing (Playwright)
+
+> 目标: 使用 Playwright 进行端到端测试，验证完整用户流程
+> 工具: document-skills:webapp-testing skill
+
+### 11.1 Playwright 配置
+- [ ] 在 frontend 安装 Playwright: `npm init playwright@latest`
+- [ ] 配置 playwright.config.ts
+- [ ] 添加 npm scripts: `test:e2e`
+
+### 11.2 登录流程 E2E
+- [ ] 测试用户注册流程
+- [ ] 测试用户登录流程
+- [ ] 测试登录后页面跳转
+
+### 11.3 用户关注 E2E
+- [ ] 测试关注按钮交互
+- [ ] 测试关注列表显示
+- [ ] 测试取消关注
+
+### 11.4 活动浏览 E2E
+- [ ] 测试活动列表筛选
+- [ ] 测试活动详情页
+- [ ] 测试阶段状态显示
+
+---
+
+## Phase 12: P2 Frontend Components
+
+> 目标: 完成剩余的 P2 前端组件
+
+### 12.1 SearchModal
+- [ ] 创建 `frontend/components/search/SearchModal.tsx`
+- [ ] 实现全局搜索 UI (用户/活动/作品)
+- [ ] 集成 Command 组件实现快捷键 (⌘K)
+
+### 12.2 PlatformStats
+- [ ] 创建 `frontend/components/home/PlatformStats.tsx`
+- [ ] 显示平台统计数据 (用户数/活动数/作品数)
+- [ ] 实现数据获取 API
+
+---
+
+## Phase 13: Admin Batch Operations (P2 - 可选)
+
+> 目标: 实现管理员批量操作功能
+
+### 13.1 批量删除作品
+- [ ] `POST /admin/posts/batch-delete`
+- [ ] 权限检查: admin only
+- [ ] 支持软删除
+
+### 13.2 批量更新状态
+- [ ] `POST /admin/posts/batch-update-status`
+- [ ] 支持 draft/published/archived 状态切换
+
+### 13.3 批量更新用户角色
+- [ ] `POST /admin/users/batch-update-roles`
+- [ ] 权限检查: admin only
+
+---
+
 ## 决策记录
 
 | 日期 | 决策 | 原因 |
@@ -279,3 +395,6 @@
 | 2025-02-03 | 文件上传 → 原生 input[type=file] | 用户确认，快速原型优先 |
 | 2025-02-03 | 标签输入 → Input + Badge 显示 | 用户确认，快速原型优先 |
 | 2025-02-03 | 评论输入 → 简单 textarea | 用户确认，快速原型优先 |
+| 2026-02-03 | 添加 OAuth Mock Switch | 便于开发测试，未来上线 OAuth 后可关闭 |
+| 2026-02-03 | E2E 测试使用 Playwright | 通过 document-skills:webapp-testing skill 执行 |
+| 2026-02-03 | 通知触发器分阶段实现 | 先实现 follow，再扩展到 comment/mention |
