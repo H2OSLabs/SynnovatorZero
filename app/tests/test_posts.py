@@ -204,6 +204,59 @@ def test_delete_post(client):
     assert "Delete Me" not in titles
 
 
+# ---------- list posts filters ----------
+def test_list_posts_filter_by_type_and_status(client):
+    uid = _create_user(client)
+    _create_post(client, uid, title="A", type="general", status="published")
+    _create_post(client, uid, title="B", type="for_category", status="published")
+    _create_post(client, uid, title="C", type="for_category", status="draft")
+
+    resp = client.get("/api/posts?type=for_category&status=published")
+    assert resp.status_code == 200
+    items = resp.json()["items"]
+    titles = {p["title"] for p in items}
+    assert "B" in titles
+    assert "A" not in titles
+    assert "C" not in titles
+
+
+def test_list_posts_filter_by_tags(client):
+    uid = _create_user(client)
+    _create_post(client, uid, title="Tagged", status="published", tags=["find-idea", "demo"])
+    _create_post(client, uid, title="Other", status="published", tags=["other"])
+
+    resp = client.get("/api/posts?status=published&tags=find-idea")
+    assert resp.status_code == 200
+    titles = {p["title"] for p in resp.json()["items"]}
+    assert "Tagged" in titles
+    assert "Other" not in titles
+
+
+def test_list_posts_filter_by_category_id(client):
+    organizer_id = _create_user(client, username="org", role="organizer")
+    author_id = _create_user(client, username="author2", role="participant")
+    post = _create_post(client, author_id, title="Submission", type="for_category", status="published")
+    cat_resp = client.post(
+        "/api/categories",
+        json={
+            "name": "Hackathon",
+            "description": "Test category",
+            "type": "competition",
+            "status": "published",
+        },
+        headers={"X-User-Id": str(organizer_id)},
+    )
+    assert cat_resp.status_code == 201
+    category_id = cat_resp.json()["id"]
+    link_resp = client.post(f"/api/categories/{category_id}/posts", json={"post_id": post["id"]})
+    assert link_resp.status_code == 201
+
+    resp = client.get(f"/api/posts?category_id={category_id}&type=for_category&status=published")
+    assert resp.status_code == 200
+    titles = {p["title"] for p in resp.json()["items"]}
+    assert "Submission" in titles
+
+
 # ---------- TC-POST-900: 缺少 title 被拒绝 ----------
 def test_missing_title_rejected(client):
     uid = _create_user(client)

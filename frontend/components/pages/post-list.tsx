@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import {
   Menu, Search, Plus, Bell, Compass, Globe, Tent,
   Flame, Lightbulb,
@@ -12,6 +12,17 @@ import { listGroups, listPosts } from "@/lib/api-client"
 import type { Post, Group } from "@/lib/types"
 
 const mainTabs = ["帖子", "提案广场", "资源", "团队", "活动", "找队友", "找点子", "官方"]
+
+const tabRoutes: Record<string, string> = {
+  帖子: "/posts",
+  提案广场: "/proposals",
+  资源: "/assets",
+  团队: "/team",
+  活动: "/",
+  找队友: "/posts?tag=find-teammate",
+  找点子: "/posts?tag=find-idea",
+  官方: "/profile",
+}
 
 const fallbackTeamCards = [
   { name: "金发发前端", image: "https://images.unsplash.com/photo-1640183295767-d237218daafd?w=400&h=300&fit=crop" },
@@ -29,16 +40,20 @@ const fallbackIdeaCards = [
 
 export function PostList() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [teams, setTeams] = useState<Group[]>([])
   const [ideas, setIdeas] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
 
+  const activeTag = searchParams.get("tag")
+
   useEffect(() => {
     async function fetchData() {
       try {
+        const tags = activeTag ? activeTag : undefined
         const [groupsRes, postsRes] = await Promise.all([
           listGroups({ limit: 4, visibility: "public" }),
-          listPosts({ limit: 4, status: "published" }),
+          listPosts({ limit: 4, status: "published", tags, order_by: "created_at", order: "desc" }),
         ])
         setTeams(groupsRes.items)
         setIdeas(postsRes.items)
@@ -49,7 +64,14 @@ export function PostList() {
       }
     }
     fetchData()
-  }, [])
+  }, [activeTag])
+
+  function updateTag(nextTag: string | null) {
+    const next = new URLSearchParams(searchParams.toString())
+    if (!nextTag) next.delete("tag")
+    else next.set("tag", nextTag)
+    router.push(`/posts?${next.toString()}`)
+  }
 
   return (
     <div className="flex flex-col h-screen bg-[var(--nf-near-black)]">
@@ -94,24 +116,37 @@ export function PostList() {
         <main className="flex-1 overflow-y-auto p-6 px-8 flex flex-col gap-6">
           {/* Tabs Row */}
           <div className="flex items-center gap-6">
-            {mainTabs.map((tab, i) => (
-              <div key={tab} className="flex flex-col items-center gap-1.5">
-                <span className={`text-[15px] ${i === 0 ? "font-semibold text-[var(--nf-lime)]" : "text-[var(--nf-muted)]"}`}>
+            {mainTabs.map((tab) => (
+              (() => {
+                const active =
+                  (tab === "帖子" && !activeTag) ||
+                  (tab === "找队友" && activeTag === "find-teammate") ||
+                  (tab === "找点子" && activeTag === "find-idea")
+                return (
+              <div
+                key={tab}
+                onClick={() => tabRoutes[tab] && router.push(tabRoutes[tab])}
+                className="cursor-pointer flex flex-col items-center gap-1.5"
+              >
+                <span className={`text-[15px] ${active ? "font-semibold text-[var(--nf-lime)]" : "text-[var(--nf-muted)]"}`}>
                   {tab}
                 </span>
-                {i === 0 && <div className="w-8 h-[3px] rounded-sm bg-[var(--nf-lime)]" />}
+                {active && <div className="w-8 h-[3px] rounded-sm bg-[var(--nf-lime)]" />}
               </div>
+                )
+              })()
             ))}
           </div>
 
           {/* Section: 找队友 */}
+          {activeTag !== "find-idea" && (
           <section className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Flame className="w-5 h-5 text-[var(--nf-lime)]" />
                 <span className="font-heading text-[18px] font-bold text-[var(--nf-white)]">找队友</span>
               </div>
-              <span className="text-[13px] text-[var(--nf-muted)] cursor-pointer">查看更多</span>
+              <span onClick={() => updateTag("find-teammate")} className="text-[13px] text-[var(--nf-muted)] cursor-pointer">查看更多</span>
             </div>
             {loading ? (
               <div className="flex items-center justify-center h-[160px] text-[var(--nf-muted)] text-sm">
@@ -140,15 +175,17 @@ export function PostList() {
               </div>
             )}
           </section>
+          )}
 
           {/* Section: 找点子 */}
+          {activeTag !== "find-teammate" && (
           <section className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Lightbulb className="w-5 h-5 text-[var(--nf-lime)]" />
                 <span className="font-heading text-[18px] font-bold text-[var(--nf-white)]">找点子</span>
               </div>
-              <span className="text-[13px] text-[var(--nf-muted)] cursor-pointer">查看更多</span>
+              <span onClick={() => updateTag("find-idea")} className="text-[13px] text-[var(--nf-muted)] cursor-pointer">查看更多</span>
             </div>
             {loading ? (
               <div className="flex items-center justify-center h-[160px] text-[var(--nf-muted)] text-sm">
@@ -178,6 +215,7 @@ export function PostList() {
               </div>
             )}
           </section>
+          )}
         </main>
       </div>
     </div>

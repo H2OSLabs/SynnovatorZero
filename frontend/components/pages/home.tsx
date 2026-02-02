@@ -18,6 +18,16 @@ import type { Post, Category } from "@/lib/types"
 
 const tabs = ["热门", "提案广场", "资源", "提案专区", "找队友", "找点子", "官方"]
 
+const tabRoutes: Record<string, string> = {
+  热门: "/",
+  提案广场: "/proposals",
+  资源: "/assets",
+  提案专区: "/proposals",
+  找队友: "/posts?tag=find-teammate",
+  找点子: "/posts?tag=find-idea",
+  官方: "/profile",
+}
+
 const fallbackCards = [
   {
     title: "西建·滇水源 | 热帖神评选好礼!",
@@ -138,12 +148,17 @@ export function Home() {
               i === 0 ? (
                 <Badge
                   key={tab}
-                  className="bg-[var(--nf-lime)] text-[var(--nf-surface)] hover:bg-[var(--nf-lime)]/90 rounded-full px-4 py-1.5 text-[13px] font-semibold"
+                  onClick={() => router.push(tabRoutes[tab] ?? "/")}
+                  className="cursor-pointer bg-[var(--nf-lime)] text-[var(--nf-surface)] hover:bg-[var(--nf-lime)]/90 rounded-full px-4 py-1.5 text-[13px] font-semibold"
                 >
                   {tab}
                 </Badge>
               ) : (
-                <span key={tab} className="text-[13px] text-[var(--nf-muted)] cursor-pointer hover:text-[var(--nf-white)]">
+                <span
+                  key={tab}
+                  onClick={() => tabRoutes[tab] && router.push(tabRoutes[tab])}
+                  className="text-[13px] text-[var(--nf-muted)] cursor-pointer hover:text-[var(--nf-white)]"
+                >
                   {tab}
                 </span>
               )

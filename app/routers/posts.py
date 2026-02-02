@@ -17,11 +17,27 @@ def list_posts(
     limit: int = Query(100, ge=1, le=1000),
     type: Optional[str] = Query(None),
     post_status: Optional[str] = Query(None, alias="status"),
+    category_id: Optional[int] = Query(None),
     tags: Optional[str] = Query(None),
+    order_by: Optional[str] = Query(None),
+    order: str = Query("desc", pattern="^(asc|desc)$"),
     db: Session = Depends(get_db),
 ):
-    items = crud.posts.get_multi(db, skip=skip, limit=limit)
-    total = len(items)
+    tag_list = None
+    if tags:
+        tag_list = [t.strip() for t in tags.split(",") if t.strip()]
+
+    items, total = crud.posts.get_multi(
+        db,
+        skip=skip,
+        limit=limit,
+        post_type=type,
+        post_status=post_status,
+        category_id=category_id,
+        tags=tag_list,
+        order_by=order_by or "created_at",
+        order=order,
+    )
     return {"items": items, "total": total, "skip": skip, "limit": limit}
 
 

@@ -65,12 +65,25 @@ export async function checkFriend(userId: number, otherId: number): Promise<{ is
 
 // --- Posts ---
 
-export async function listPosts(params?: { skip?: number; limit?: number; type?: string; status?: string }): Promise<Paginated<Post>> {
+export async function listPosts(params?: {
+  skip?: number
+  limit?: number
+  type?: string
+  status?: string
+  category_id?: number
+  tags?: string
+  order_by?: string
+  order?: "asc" | "desc"
+}): Promise<Paginated<Post>> {
   const q = new URLSearchParams();
-  if (params?.skip) q.set("skip", String(params.skip));
-  if (params?.limit) q.set("limit", String(params.limit));
+  if (params?.skip !== undefined) q.set("skip", String(params.skip));
+  if (params?.limit !== undefined) q.set("limit", String(params.limit));
   if (params?.type) q.set("type", params.type);
   if (params?.status) q.set("status", params.status);
+  if (params?.category_id !== undefined && params?.category_id !== null) q.set("category_id", String(params.category_id));
+  if (params?.tags) q.set("tags", params.tags);
+  if (params?.order_by) q.set("order_by", params.order_by);
+  if (params?.order) q.set("order", params.order);
   return request(`/posts?${q.toString()}`);
 }
 
