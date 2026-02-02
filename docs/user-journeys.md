@@ -15,11 +15,15 @@
 - [7. 加入活动（报名参赛）](#7-加入活动报名参赛)
 - [8. 创建团队](#8-创建团队)
 - [9. 发送帖子](#9-发送帖子)
-- [10. 获得证书](#10-获得证书)
+- [10. 活动结束与颁奖](#10-活动结束与颁奖)
 - [11. 编辑 Post（版本管理与发布审核）](#11-编辑-post版本管理与发布审核)
 - [12. 删除 Post](#12-删除-post)
 - [13. 社区互动（点赞、评论、评分）](#13-社区互动点赞评论评分)
-- [附录：报名规则定义（Rule Definition）](#附录报名规则定义rule-definition)
+- [14. 关注与好友](#14-关注与好友)
+- [15. 多阶段/多赛道活动](#15-多阶段多赛道活动)
+- [16. 资产转移](#16-资产转移)
+- [附录 A：报名规则定义（Rule Definition）](#附录-a报名规则定义rule-definition)
+- [附录 B：声明式规则引擎](#附录-b声明式规则引擎)
 
 ---
 
@@ -37,10 +41,16 @@ flowchart TD
     D --> I[加入活动/报名]
     D --> J[创建/加入团队]
     D --> K[社区互动]
+    D --> L[关注用户]
+    D --> M[参与多阶段活动]
 
     K --> K1[点赞]
     K --> K2[评论/回复]
     K --> K3[评委评分]
+
+    L --> L1[关注]
+    L --> L2[互关成为好友]
+    L --> L3[拉黑]
 
     E --> E1[筛选浏览]
     E1 --> E2[个人说明 Post type=profile]
@@ -60,6 +70,11 @@ flowchart TD
     G5 --> G6{检查 Rule 是否允许 public}
     G6 -->|允许| G7[直接发布]
     G6 -->|不允许| G8[进入审核 workflow]
+
+    I --> I1{活动类型}
+    I1 -->|单阶段| I2[常规报名]
+    I1 -->|多阶段| I3[按赛段顺序参与]
+    I1 -->|多赛道| I4[选择赛道参与]
 ```
 
 ---
@@ -75,6 +90,17 @@ flowchart TD
 | 2 | 浏览活动卡片 | `READ category` + `READ rule`（摘要） | 展示活动名称、简介、关联规则摘要 |
 | 3 | 浏览公开帖子 | `READ post`（公开列表，带 tag 筛选） | 按标签筛选帖子（提案帖、日常帖等） |
 | 4 | 点击查看详情 | `READ post` / `READ category` | 查看单条内容详情 |
+
+### 2.1 可见性规则
+
+> 基于 TC-PERM-020 至 TC-PERM-025 测试用例
+
+| 内容类型 | 可见性条件 | 说明 |
+|---------|-----------|------|
+| Category（活动） | `status=published` | draft 状态的活动对访客不可见 |
+| Post（帖子） | `status=published` + `visibility=public` | draft 帖子、private 帖子对非作者不可见 |
+| Group（团队） | `visibility=public` | private 团队仅成员可见 |
+| Resource（资源） | 继承关联 Post 的可见性 | 若关联帖子不可见，则资源也不可见 |
 
 - **结果：** 用户了解平台活动内容，可决定是否注册参与
 
@@ -132,6 +158,7 @@ flowchart TD
 
 - **角色：** 组织者（Organizer）
 - **前置条件：** 已登录，拥有组织者权限
+- **权限约束：** participant 不能创建 category 或 rule（TC-PERM-001/002）
 
 ```mermaid
 flowchart TD
@@ -139,7 +166,14 @@ flowchart TD
     B --> C[创建 Rule]
     C --> D[关联 Rule 到 Category]
     D --> E[配置 Rule 参数]
-    E --> F[发布活动]
+    E --> E1[配置固定字段约束]
+    E --> E2[配置声明式 checks]
+    E --> E3[配置评分标准]
+    E --> E4[配置结束规则]
+    E1 --> F[发布活动]
+    E2 --> F
+    E3 --> F
+    E4 --> F
 ```
 
 | 步骤 | 用户操作 | 数据操作 | 说明 |
@@ -150,6 +184,77 @@ flowchart TD
 | 4 | 关联规则到活动 | `CREATE category : rule`（关联） | 将 Rule 绑定到 Category |
 | 5 | 配置规则参数 | `UPDATE rule` | 设置是否允许 public、审核人配置、提交截止时间等 |
 | 6 | 发布活动 | `UPDATE category`（状态变更） | 活动对外可见，参赛者可报名 |
+
+### 6.1 Rule 配置详解
+
+> 基于 TC-ENTRY、TC-CLOSE、TC-ENGINE 测试用例
+
+#### 6.1.1 固定字段约束
+
+| 字段 | 类型 | 说明 | 示例 |
+|------|------|------|------|
+| `max_submissions` | int | 每用户最大提交数 | `1`（每人只能提交一次） |
+| `min_team_size` | int | 团队最小人数 | `2`（至少 2 人） |
+| `max_team_size` | int | 团队最大人数 | `5`（最多 5 人） |
+| `submission_format` | string[] | 允许的附件格式 | `["pdf", "zip"]` |
+| `allow_public` | bool | 是否允许直接发布 | `false`（需审核） |
+
+#### 6.1.2 声明式 checks 配置
+
+```yaml
+checks:
+  # 报名前置条件：必须已有 profile 帖子
+  - trigger: create_relation(category_group)
+    phase: pre
+    condition:
+      type: exists
+      params:
+        entity: post
+        scope: user
+        filter: { type: profile, status: published }
+        require: true
+    on_fail: deny
+    message: "请先完善个人资料"
+
+  # 提交前置条件：帖子必须包含 PDF 附件
+  - trigger: create_relation(category_post)
+    phase: pre
+    condition:
+      type: resource_required
+      params:
+        min_count: 1
+        formats: ["pdf"]
+    on_fail: deny
+    message: "提案必须包含 PDF 附件"
+
+  # 活动关闭后：自动计算排名
+  - trigger: update_content(category.status)
+    phase: post
+    condition:
+      type: field_match
+      params: { field: status, op: "==", value: closed }
+    action: compute_ranking
+    action_params:
+      source_field: average_rating
+      order: desc
+      output_tag_prefix: "rank_"
+
+  # 活动关闭后：自动颁发证书
+  - trigger: update_content(category.status)
+    phase: post
+    condition:
+      type: field_match
+      params: { field: status, op: "==", value: closed }
+    action: award_certificate
+    action_params:
+      awards:
+        - rank_range: [1, 1]
+          name: "一等奖"
+        - rank_range: [2, 3]
+          name: "二等奖"
+        - rank_range: [4, 10]
+          name: "优秀奖"
+```
 
 - **结果：** 一个完整的活动已创建并发布，包含关联的规则配置
 
@@ -163,16 +268,19 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[浏览活动详情] --> B[点击报名]
-    B --> B1{是否以团队身份报名}
+    B --> B0{Rule pre-checks 校验}
+    B0 -->|通过| B1{是否以团队身份报名}
+    B0 -->|失败| B00[显示错误提示]
     B1 -->|是| B2[团队报名绑定]
     B1 -->|否| C
     B2 --> C{活动 Rule 要求}
     C -->|需要新建提交| D[创建 Post]
     C -->|可选择已有内容| E[选择已有 Post]
-    D --> F[Post 关联到 Category]
-    E --> G[为 Post 添加活动 Tag]
-    F --> H[报名完成]
-    G --> H
+    D --> F{提交 pre-checks 校验}
+    E --> F
+    F -->|通过| G[Post 关联到 Category]
+    F -->|失败| F0[显示错误提示]
+    G --> H[报名完成]
 ```
 
 | 步骤 | 用户操作 | 数据操作 | 说明 |
@@ -185,6 +293,36 @@ flowchart TD
 | 5a | 关联 Post 到活动 | `CREATE category:post`（关联，relation_type: submission） | 将新建的 Post 关联到 Category |
 | 5b | 为 Post 打活动标签 | `UPDATE post`（添加 tag `#for_<category>`） | 为已有 Post 添加活动标签 |
 | 6 | 报名完成 | — | 用户成为活动参与者 |
+
+### 7.1 报名规则校验（Entry Rule Enforcement）
+
+> 基于 TC-ENTRY 测试用例
+
+报名和提交操作会触发 Rule 的 `checks` 校验，校验在 `pre` 阶段执行：
+
+| 触发点 | 校验内容 | 失败处理 |
+|-------|---------|---------|
+| `create_relation(category_group)` | 团队报名前置条件 | `on_fail: deny` 拒绝操作 |
+| `create_relation(category_post)` | 帖子提交前置条件 | `on_fail: deny` 拒绝操作 |
+
+#### 常见校验场景
+
+| 场景 | condition type | 说明 |
+|------|---------------|------|
+| 必须已有 profile 帖子 | `exists` | 用户需先完善个人资料 |
+| 必须已有团队报名 | `exists` | 提交前需先报名活动 |
+| 必须包含附件 | `resource_required` | 提案需包含指定数量/格式的附件 |
+| 限制提交次数 | `count` | 每用户在同一活动中只能提交一次 |
+| 时间窗口限制 | `time_window` | 在指定时间范围内才能提交 |
+| 团队人数限制 | `count` | 团队成员数满足 min/max 要求 |
+
+#### 校验失败示例
+
+```
+❌ 报名失败：请先完善个人资料（TC-ENTRY-003）
+❌ 提交失败：提案必须包含至少一个 PDF 附件（TC-ENTRY-011）
+❌ 提交失败：每个用户只能提交一个参赛提案（TC-ENTRY-020）
+```
 
 - **结果：** 用户（或团队）成功报名活动，其 Post 作为参赛内容与活动关联
 
@@ -240,20 +378,100 @@ flowchart TD
 
 ---
 
-## 10. 获得证书
+## 10. 活动结束与颁奖
 
-- **角色：** 参赛者
-- **前置条件：** 已登录，活动已结束，用户有参赛记录
+- **角色：** 组织者（关闭活动）/ 参赛者（获得证书）
+- **前置条件：** 活动已发布，有参赛团队和提交内容
+
+> 基于 TC-CLOSE 测试用例
+
+```mermaid
+flowchart TD
+    A[组织者关闭活动] --> B{pre-phase checks}
+    B -->|on_fail: deny| B1[关闭被拒绝]
+    B -->|on_fail: warn| B2[关闭成功+警告]
+    B -->|通过| C[活动状态 → closed]
+    B2 --> C
+    C --> D[post-phase actions 执行]
+    D --> D1[flag_disqualified: 标记不合格]
+    D --> D2[compute_ranking: 计算排名]
+    D --> D3[award_certificate: 颁发证书]
+    D1 --> D2
+    D2 --> D3
+    D3 --> E[参赛者收到证书]
+    E --> F[用户查看/分享证书]
+```
+
+### 10.1 活动关闭流程
+
+| 步骤 | 操作者 | 数据操作 | 说明 |
+|------|-------|---------|------|
+| 1 | 组织者 | `UPDATE category`（status → closed） | 触发关闭流程 |
+| 2 | 系统 | 执行 pre-phase checks | 关闭前校验（如所有团队是否有提交） |
+| 3 | 系统 | 执行 post-phase actions | 关闭后自动处理（终审、排名、颁奖） |
+
+### 10.2 关闭前校验（pre phase）
+
+| 校验类型 | on_fail | 说明 |
+|---------|---------|------|
+| 所有团队人数满足要求 | `warn` | 警告但允许关闭 |
+| 所有团队有提交内容 | `deny` | 严格校验，不满足则拒绝关闭 |
+
+### 10.3 关闭后自动处理（post phase）
+
+#### 10.3.1 标记不合格（flag_disqualified）
+
+| 步骤 | 系统行为 | 数据操作 | 说明 |
+|------|---------|---------|------|
+| 1 | 扫描所有报名团队 | `READ category:group` | 获取参赛团队列表 |
+| 2 | 检查团队人数 | `READ group:user` | 验证 min_team_size 要求 |
+| 3 | 标记不合格团队 | `UPDATE group`（添加 tag） | 如 "team_too_small" |
+| 4 | 检查提交内容 | `READ category:post` | 验证提交要求 |
+| 5 | 标记不合格提交 | `UPDATE post`（添加 tag） | 如 "missing_attachment" |
+
+#### 10.3.2 计算排名（compute_ranking）
+
+| 步骤 | 系统行为 | 数据操作 | 说明 |
+|------|---------|---------|------|
+| 1 | 获取合格提交 | `READ category:post`（排除已标记不合格） | 过滤有效参赛帖 |
+| 2 | 按 average_rating 排序 | — | 降序排列 |
+| 3 | 添加排名标签 | `UPDATE post`（添加 tag） | 如 "rank_1"、"rank_2"、"rank_3" |
+
+**排名规则：**
+- 相同分数并列排名（如两个 rank_1，下一个为 rank_3）
+- `average_rating` 为 null 的帖子不参与排名
+
+#### 10.3.3 自动颁发证书（award_certificate）
+
+| 步骤 | 系统行为 | 数据操作 | 说明 |
+|------|---------|---------|------|
+| 1 | 根据排名确定奖项 | — | 按 rank_range 匹配奖项名称 |
+| 2 | 生成证书文件 | `CREATE resource`（type: certificate） | 证书 PDF |
+| 3 | 创建证书帖子 | `CREATE post`（type: certificate, status: published） | 公开可见 |
+| 4 | 关联证书到帖子 | `CREATE post:resource`（display_type: attachment） | 挂载证书文件 |
+
+**奖项配置示例：**
+
+```yaml
+awards:
+  - rank_range: [1, 1]
+    name: "一等奖"
+  - rank_range: [2, 3]
+    name: "二等奖"
+  - rank_range: [4, 10]
+    name: "优秀奖"
+```
+
+### 10.4 用户获取证书
 
 | 步骤 | 用户操作 | 数据操作 | 说明 |
 |------|---------|---------|------|
-| 1 | 活动结束 | `UPDATE category`（状态变更） | 组织者关闭活动 |
-| 2 | 组织者发布证书/结果 | `CREATE resource`（证书文件） | 生成证书资源 |
-| 3 | 关联证书到用户 Post | `CREATE post : resource`（关联） | 将证书关联到用户的参赛 Post |
-| 4 | 用户查看证书 | `READ resource` | 用户在个人页面查看/下载证书 |
-| 5 | （可选）分享证书 | `CREATE post`（type: certificate） | 用户发帖分享获得的证书 |
+| 1 | 收到颁奖通知 | — | 系统推送通知 |
+| 2 | 查看证书帖子 | `READ post`（type: certificate） | 证书帖子已自动创建 |
+| 3 | 下载证书文件 | `READ resource` | 获取证书 PDF |
+| 4 | （可选）分享证书 | `CREATE post`（引用证书帖） | 发帖展示荣誉 |
 
-- **结果：** 用户获得活动证书，可查看和分享
+- **结果：** 活动正式关闭，排名和证书自动生成，获奖者可查看和分享证书
 
 ---
 
@@ -415,7 +633,197 @@ value:
 
 ---
 
-## 附录：报名规则定义（Rule Definition）
+## 14. 关注与好友
+
+- **角色：** 已登录用户
+- **前置条件：** 已登录
+
+> 基于 TC-FRIEND 测试用例。好友功能通过 `user:user` 关系实现，关注为单向关系，互关即好友。
+
+```mermaid
+flowchart TD
+    A[浏览用户主页] --> B{操作选择}
+    B -->|关注| C[创建 follow 关系]
+    B -->|拉黑| D[创建 block 关系]
+    C --> E{对方是否已关注我}
+    E -->|是| F[互关成为好友]
+    E -->|否| G[单向关注]
+    D --> H[对方无法关注我]
+```
+
+### 14.1 关注用户
+
+| 步骤 | 用户操作 | 数据操作 | 说明 |
+|------|---------|---------|------|
+| 1 | 浏览目标用户主页 | `READ user` | 查看用户资料 |
+| 2 | 点击关注 | `CREATE user:user`（relation_type: follow） | 建立单向关注关系 |
+| 3 | 关注成功 | `READ user:user`（我的关注列表） | 目标用户出现在关注列表 |
+
+**约束：**
+- 不能关注自己（TC-FRIEND-900）
+- 不能重复关注同一用户（TC-FRIEND-901）
+- 被拉黑的用户无法关注你（TC-FRIEND-006）
+
+### 14.2 互关成为好友
+
+| 步骤 | 系统行为 | 数据操作 | 说明 |
+|------|---------|---------|------|
+| 1 | A 关注 B | `CREATE user:user`（A→B, follow） | A 的关注列表包含 B |
+| 2 | B 回关 A | `CREATE user:user`（B→A, follow） | B 的关注列表包含 A |
+| 3 | 系统判定好友 | 查询双向 follow 关系 | 互关状态 = true |
+
+### 14.3 取消关注
+
+| 步骤 | 用户操作 | 数据操作 | 说明 |
+|------|---------|---------|------|
+| 1 | 进入关注列表 | `READ user:user`（我的关注列表） | 查看已关注用户 |
+| 2 | 点击取消关注 | `DELETE user:user`（relation_type: follow） | 解除单向关注 |
+| 3 | 好友关系解除 | — | 若原为互关，降级为对方单向关注我 |
+
+### 14.4 拉黑用户
+
+| 步骤 | 用户操作 | 数据操作 | 说明 |
+|------|---------|---------|------|
+| 1 | 浏览目标用户主页 | `READ user` | 查看用户资料 |
+| 2 | 点击拉黑 | `CREATE user:user`（relation_type: block） | 建立拉黑关系 |
+| 3 | 拉黑生效 | — | 对方从好友列表移除，无法关注你 |
+
+- **结果：** 用户可关注其他用户，互关成为好友；可拉黑用户阻止其关注
+
+---
+
+## 15. 多阶段/多赛道活动
+
+- **角色：** 组织者（创建关联） / 参赛者（按阶段参与）
+- **前置条件：** 已有多个活动
+
+> 基于 TC-STAGE、TC-TRACK、TC-PREREQ、TC-CATREL 测试用例。活动关联功能通过 `category:category` 关系实现。
+
+```mermaid
+flowchart TD
+    A[创建活动关联] --> B{关联类型}
+    B -->|stage 赛段| C[顺序依赖关系]
+    B -->|track 赛道| D[并行独立关系]
+    B -->|prerequisite 前置| E[完成前置才能参加]
+
+    C --> C1[Stage 1] --> C2[Stage 2] --> C3[Stage 3]
+    D --> D1[Track A]
+    D --> D2[Track B]
+    E --> E1[悬赏活动] --> E2[常规赛]
+```
+
+### 15.1 赛段（Stage）— 顺序依赖
+
+| 步骤 | 操作者 | 数据操作 | 说明 |
+|------|-------|---------|------|
+| 1 | 组织者 | `CREATE category`（A、B、C） | 创建 3 个赛段活动 |
+| 2 | 组织者 | `CREATE category:category`（A→B, stage, stage_order=1） | A 是 B 的前置赛段 |
+| 3 | 组织者 | `CREATE category:category`（B→C, stage, stage_order=2） | B 是 C 的前置赛段 |
+| 4 | 参赛者 | `CREATE category:group`（报名 B） | 若 A 未完成（未 closed），报名被拒绝 |
+| 5 | 组织者 | `UPDATE category`（A status → closed） | 关闭赛段 A |
+| 6 | 参赛者 | `CREATE category:group`（报名 B） | 现在可以报名赛段 B |
+
+**约束：**
+- 赛段链不能形成循环（TC-CATREL-902）
+- 按 stage_order 升序排列赛段
+
+### 15.2 赛道（Track）— 并行独立
+
+| 步骤 | 操作者 | 数据操作 | 说明 |
+|------|-------|---------|------|
+| 1 | 组织者 | `CREATE category`（Main、Track1、Track2） | 创建主活动和 2 个赛道 |
+| 2 | 组织者 | `CREATE category:category`（Main→Track1, track） | Track1 属于 Main |
+| 3 | 组织者 | `CREATE category:category`（Main→Track2, track） | Track2 属于 Main |
+| 4 | 参赛者 | `CREATE category:group`（报名 Track1） | 成功 |
+| 5 | 参赛者 | `CREATE category:group`（报名 Track2） | 同一团队可同时参加不同赛道 |
+
+**约束：**
+- 同一赛道内仍受 Rule 约束（如 max_submissions）
+- 不同赛道的约束相互独立
+
+### 15.3 前置条件（Prerequisite）
+
+| 步骤 | 操作者 | 数据操作 | 说明 |
+|------|-------|---------|------|
+| 1 | 组织者 | `CREATE category`（Bounty, Competition） | 创建悬赏活动和常规赛 |
+| 2 | 组织者 | `CREATE category:category`（Bounty→Competition, prerequisite） | Bounty 是 Competition 的前置 |
+| 3 | 参赛者 | `CREATE category:group`（报名 Competition） | 若未完成 Bounty，报名被拒绝 |
+| 4 | 参赛者 | 完成 Bounty 活动 | Bounty 关闭且团队有 accepted 记录 |
+| 5 | 参赛者 | `CREATE category:group`（报名 Competition） | 现在可以报名 |
+
+**特性：**
+- 前置活动中组建的团队保持完整进入目标活动
+- 团队成员不因活动切换而变化
+
+### 15.4 负向约束
+
+| 约束 | 说明 |
+|------|------|
+| 不能自引用 | `source_category_id` ≠ `target_category_id`（TC-CATREL-901） |
+| 唯一性约束 | 同一对活动只能有一条关联（TC-CATREL-900） |
+| 枚举值限制 | relation_type 只能是 stage / track / prerequisite（TC-CATREL-903） |
+
+- **结果：** 组织者可创建复杂的多阶段、多赛道活动结构，参赛者按规则顺序参与
+
+---
+
+## 16. 资产转移
+
+- **角色：** 组织者 / 参赛者
+- **前置条件：** 已有 resource 和 post
+
+> 基于 TC-TRANSFER 测试用例。资产转移通过 `post:resource` 关系的解除和重建实现。
+
+```mermaid
+flowchart TD
+    A[Resource R 关联到 Post A] --> B{转移方式}
+    B -->|独占转移| C[解除 A-R 关系]
+    B -->|共享模式| D[保留 A-R 关系]
+    C --> E[创建 B-R 关系]
+    D --> E
+    E --> F[Resource R 可从 Post B 访问]
+
+    G[可选：通过 post:post reference 记录溯源]
+```
+
+### 16.1 独占转移
+
+| 步骤 | 用户操作 | 数据操作 | 说明 |
+|------|---------|---------|------|
+| 1 | 确认转移目标 | `READ post`（Post A、Post B） | 查看源和目标帖子 |
+| 2 | 解除旧关联 | `DELETE post:resource`（A→R） | Post A 不再关联 R |
+| 3 | 创建新关联 | `CREATE post:resource`（B→R） | Post B 关联 R |
+| 4 | 验证转移结果 | `READ post:resource` | R 只出现在 Post B 的资源列表 |
+
+**典型场景：**
+- 证书从组织者管理帖转移到参赛帖（TC-TRANSFER-001）
+- 提案附件在不同版本间转移（TC-TRANSFER-002）
+
+### 16.2 共享模式
+
+| 步骤 | 用户操作 | 数据操作 | 说明 |
+|------|---------|---------|------|
+| 1 | Post A 已关联 R | — | 现有关系 |
+| 2 | 创建新关联 | `CREATE post:resource`（B→R） | Post B 也关联 R |
+| 3 | 两个帖子共享 | `READ post:resource`（A 和 B） | R 同时出现在两个列表 |
+| 4 | 删除其中一条 | `DELETE post:resource`（A→R） | 不影响 B→R 关系 |
+
+**典型场景：**
+- 同一附件在多个帖子中引用
+
+### 16.3 转移溯源
+
+| 步骤 | 用户操作 | 数据操作 | 说明 |
+|------|---------|---------|------|
+| 1 | 创建溯源关系 | `CREATE post:post`（B→A, reference） | Post B 引用 Post A |
+| 2 | 执行转移 | DELETE + CREATE post:resource | R 从 A 转移到 B |
+| 3 | 追溯来源 | `READ post:post`（B 的 reference） | 通过 B 可追溯到 A（R 的原始来源） |
+
+- **结果：** 资源可在帖子间灵活转移，支持独占、共享和溯源模式
+
+---
+
+## 附录 A：报名规则定义（Rule Definition）
 
 本节详细说明活动报名环节中 Rule 的定义方式与执行逻辑。Rule 由组织者在创建活动时定义，系统在用户报名时自动执行。
 
@@ -469,3 +877,65 @@ flowchart TD
 | 4 | 保存并关联到活动 | `UPDATE category : rule` | Rule 生效，影响后续所有报名用户 |
 
 - **结果：** 活动规则配置完成，系统将根据 Rule 自动约束用户的报名行为
+
+---
+
+## 附录 B：声明式规则引擎
+
+> 基于 TC-ENGINE 测试用例
+
+规则引擎通过 Rule 的 `checks` 字段实现声明式约束，支持 pre（前置校验）和 post（后置动作）两个阶段。
+
+### B.1 条件类型（Condition Types）
+
+| 类型 | 说明 | 参数示例 |
+|------|------|---------|
+| `time_window` | 时间窗口限制 | `{ start: "2024-01-01", end: "2024-12-31" }` |
+| `count` | 计数校验 | `{ entity: group_user, scope: group, filter: { status: accepted }, op: ">=", value: 2 }` |
+| `exists` | 存在性检查 | `{ entity: post_resource, scope: post, require: true }` |
+| `field_match` | 字段匹配 | `{ entity: category, field: status, op: "==", value: "published" }` |
+| `resource_format` | 附件格式校验 | `{ formats: ["pdf", "zip"] }` |
+| `resource_required` | 附件数量和格式 | `{ min_count: 2, formats: ["pdf"] }` |
+| `aggregate` | 聚合计算 | `{ entity: group_user, agg_func: count, op: ">=", value: 2 }` |
+
+### B.2 固定字段自动展开
+
+Rule 的固定字段会自动展开为 checks：
+
+| 固定字段 | 展开为 |
+|---------|-------|
+| `max_submissions=2` | `{ trigger: create_relation(category_post), phase: pre, condition: { type: count, ... } }` |
+| `min_team_size=2` | `{ trigger: create_relation(category_group), phase: pre, condition: { type: count, ... } }` |
+
+**执行顺序：** 固定字段展开的 check → 自定义 checks（TC-ENGINE-021）
+
+### B.3 多 Rule 合并
+
+当活动关联多条 Rule 时，所有 checks 合并后按 **AND 逻辑** 执行：
+
+```
+活动关联 Rule A + Rule B
+→ Rule A 的 checks + Rule B 的 checks 全部执行
+→ 任一 check 失败则操作被拒绝
+```
+
+### B.4 on_fail 行为
+
+| 值 | 行为 | 说明 |
+|----|------|------|
+| `deny` | 拒绝操作 | 返回错误信息（默认） |
+| `warn` | 允许并警告 | 操作成功但返回警告 |
+| `flag` | 允许并标记 | 操作成功，对目标添加标记 |
+
+### B.5 post phase 执行规则
+
+- post phase 的 action 在主操作成功后执行
+- 若 condition 不满足，action 不执行
+- action 执行失败不回滚主操作（TC-ENGINE-042）
+
+### B.6 空 checks 和无 Rule 场景
+
+| 场景 | 行为 |
+|------|------|
+| Rule 的 checks 为空数组 | 无约束，所有操作通过 |
+| 活动未关联任何 Rule | 无约束，所有操作通过 |
