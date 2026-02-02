@@ -1,9 +1,12 @@
 """Synnovator API Server"""
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+from sqlalchemy import func
 
-from app.database import engine, Base
+from app.database import engine, Base, get_db
 from app.routers import users, resources, categories, posts, rules, groups, interactions, admin, auth, notifications
+from app import models
 
 # Import all models so Base.metadata knows about them
 import app.models  # noqa: F401
@@ -30,6 +33,28 @@ app.add_middleware(
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/api/stats")
+def get_stats(db: Session = Depends(get_db)):
+    """Get platform statistics (counts excluding soft-deleted records)"""
+    user_count = db.query(func.count(models.User.id)).filter(
+        models.User.deleted_at.is_(None)
+    ).scalar() or 0
+
+    category_count = db.query(func.count(models.Category.id)).filter(
+        models.Category.deleted_at.is_(None)
+    ).scalar() or 0
+
+    post_count = db.query(func.count(models.Post.id)).filter(
+        models.Post.deleted_at.is_(None)
+    ).scalar() or 0
+
+    return {
+        "user_count": user_count,
+        "category_count": category_count,
+        "post_count": post_count,
+    }
 
 
 # Include routers

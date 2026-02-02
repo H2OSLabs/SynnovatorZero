@@ -81,7 +81,7 @@ interface CategoryStageViewProps {
 }
 
 function StageBadge({ stage }: { stage: CategoryStage }) {
-  const config = STAGE_CONFIGS[stage]
+  const config = STAGE_CONFIGS[stage] || STAGE_CONFIGS.draft
   return (
     <Badge
       variant="outline"

@@ -104,3 +104,95 @@
 | plans/screenshots/e2e-08-proposal-comment.png | 提案评论区 |
 | plans/screenshots/e2e-09-follow.png | 关注按钮 (取消关注) |
 | plans/screenshots/e2e-10-card-nav.png | 卡片点击导航到详情 |
+
+---
+
+## 第三轮: Phase 12 & 13 组件测试
+
+**日期:** 2026-02-03
+**环境:** 同上
+
+### Phase 12: P2 Frontend Components
+
+#### 12.1 Demo Page Loading ✅
+
+| 测试项 | 期望结果 | 实际结果 | 状态 |
+|--------|----------|----------|------|
+| 页面加载 | "协创者 组件演示" 显示 | 正确显示 | PASS |
+| Phase 文本 | "Phase 12 前端组件预览" | 正确显示 | PASS |
+| 快捷键提示 | "⌘K 搜索" 显示 | 正确显示 | PASS |
+
+**截图**: `plans/e2e_demo_page_2.png`
+
+#### 12.2 PlatformStats Component ✅
+
+| 测试项 | 期望结果 | 实际结果 | 状态 |
+|--------|----------|----------|------|
+| 组件渲染 | "平台统计" 标题显示 | 正确显示 | PASS |
+| 用户统计 | "注册用户" 显示数量 | 显示 "3" | PASS |
+| 活动统计 | "活动数量" 显示数量 | 显示 "1" | PASS |
+| 作品统计 | "作品数量" 显示数量 | 显示 "3" | PASS |
+| API 调用 | GET /api/stats 返回数据 | 正常返回 | PASS |
+
+**截图**: `plans/e2e_demo_stats.png`
+
+#### 12.3 SearchModal Component ✅
+
+| 测试项 | 期望结果 | 实际结果 | 状态 |
+|--------|----------|----------|------|
+| ⌘K 打开 | 按下 ⌘K 打开搜索弹窗 | 弹窗正常打开 | PASS |
+| 搜索框显示 | "搜索用户、活动、作品..." | 正确显示 | PASS |
+| 空状态提示 | "输入关键词搜索..." | 正确显示 | PASS |
+| 搜索功能 | 输入查询后显示结果 | 正常搜索 | PASS |
+| 无结果提示 | "未找到相关结果" | 正确显示 | PASS |
+
+**截图**:
+- `plans/e2e_search_modal.png` (弹窗打开)
+- `plans/e2e_search_results.png` (搜索结果)
+
+### Phase 13: Admin Batch Operations ✅
+
+#### 13.1 Backend Unit Tests
+
+| 端点 | 测试用例 | 状态 |
+|------|----------|------|
+| POST /admin/posts/batch-delete | 批量删除成功 | PASS |
+| POST /admin/posts/batch-delete | 部分失败(无效ID) | PASS |
+| POST /admin/posts/batch-delete | 非管理员禁止(403) | PASS |
+| POST /admin/posts/batch-update-status | 批量更新状态成功 | PASS |
+| POST /admin/posts/batch-update-status | 无效状态拒绝(422) | PASS |
+| POST /admin/posts/batch-update-status | 部分失败(无效ID) | PASS |
+| POST /admin/posts/batch-update-status | 非管理员禁止(403) | PASS |
+| POST /admin/users/batch-update-roles | 批量更新角色成功 | PASS |
+| POST /admin/users/batch-update-roles | 无效角色拒绝(422) | PASS |
+| POST /admin/users/batch-update-roles | 部分失败(无效ID) | PASS |
+| POST /admin/users/batch-update-roles | 非管理员禁止(403) | PASS |
+| POST /admin/users/batch-update-roles | 提升为管理员 | PASS |
+
+**测试结果**: 12 tests passed
+
+### Phase 12 & 13 测试总结
+
+| Phase | 组件/功能 | 测试数 | 通过 | 失败 |
+|-------|-----------|--------|------|------|
+| 12 | SearchModal | 5 | 5 | 0 |
+| 12 | PlatformStats | 5 | 5 | 0 |
+| 12 | Demo Page | 3 | 3 | 0 |
+| 13 | Admin Batch Operations | 12 | 12 | 0 |
+| **总计** | | **25** | **25** | **0** |
+
+### 发现并修复的问题
+
+| 问题 | 修复 |
+|------|------|
+| CategoryStageView config undefined | 添加 `\|\| STAGE_CONFIGS.draft` 默认值 |
+| test_mock_auth.py endpoint path | 更新为新的 POST /admin/posts/batch-update-status |
+
+### Phase 12 & 13 新增截图
+
+| 文件名 | 描述 |
+|--------|------|
+| plans/e2e_demo_page_2.png | Demo 页面 Phase 12 |
+| plans/e2e_demo_stats.png | 平台统计组件 |
+| plans/e2e_search_modal.png | 搜索弹窗打开 |
+| plans/e2e_search_results.png | 搜索结果显示 |

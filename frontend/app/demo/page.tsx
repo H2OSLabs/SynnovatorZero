@@ -5,6 +5,8 @@ import { LoginForm, RegisterForm } from '@/components/auth'
 import { UserFollowButton, FollowersList, FollowingList } from '@/components/user'
 import { CategoryStageView, CategoryTrackView } from '@/components/category'
 import { NotificationDropdown } from '@/components/notification'
+import { SearchModal } from '@/components/search'
+import { PlatformStats } from '@/components/home'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
@@ -28,6 +30,9 @@ export default function DemoPage() {
 
   return (
     <div className="min-h-screen bg-nf-near-black py-8 px-4">
+      {/* Global Search Modal - triggered by ⌘K */}
+      <SearchModal />
+
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -35,7 +40,7 @@ export default function DemoPage() {
             <h1 className="text-3xl font-heading text-nf-white">
               <span className="text-nf-lime">协创者</span> 组件演示
             </h1>
-            <p className="text-nf-muted mt-1">Phase 7 前端组件预览</p>
+            <p className="text-nf-muted mt-1">Phase 12 前端组件预览 <kbd className="ml-2 rounded bg-nf-dark-bg px-2 py-0.5 text-xs">⌘K</kbd> 搜索</p>
           </div>
           {currentUser && (
             <div className="flex items-center gap-4">
@@ -221,9 +226,17 @@ export default function DemoPage() {
           />
         </section>
 
+        <Separator className="bg-nf-dark-bg" />
+
+        {/* Platform Stats */}
+        <section>
+          <h2 className="text-xl font-heading text-nf-white mb-4">平台统计</h2>
+          <PlatformStats />
+        </section>
+
         {/* Footer */}
         <div className="text-center text-nf-muted text-sm pt-8">
-          <p>Phase 7: 前端组件实现 - P0/P1 组件完成</p>
+          <p>Phase 12: 前端组件实现 - P0/P1/P2 组件完成</p>
           <p className="mt-1">使用 shadcn/ui + Neon Forge 主题</p>
         </div>
       </div>

@@ -14,11 +14,11 @@
 | **缓存字段** | ✅ 完成 | User/Category 缓存字段已添加 |
 | **权限校验** | ✅ 完成 | DELETE/PATCH 端点权限检查已实现 |
 | **数据库迁移** | ✅ 完成 | 初始迁移已生成并执行 |
-| **前端组件** | ✅ 完成 | P0/P1 组件完成 (SearchModal/PlatformStats P2 延期) |
+| **前端组件** | ✅ 完成 | P0/P1/P2 组件全部完成 |
 
 ## 当前阶段
 
-**Phase 12: P2 Frontend Components** - ⏳ 待开始
+**All Phases Complete** - ✅ 完成
 
 ## 进度总览
 
@@ -36,8 +36,8 @@
 | Phase 9: OAuth Mock Switch | ✅ 完成 | 100% |
 | Phase 10: Notification Event System | ✅ 完成 | 100% |
 | Phase 11: E2E Testing (Playwright) | ✅ 完成 | 100% |
-| Phase 12: P2 Frontend Components | ⏳ 待开始 | 0% |
-| Phase 13: Admin Batch Operations | ⏳ 待开始 (可选) | 0% |
+| Phase 12: P2 Frontend Components | ✅ 完成 | 100% |
+| Phase 13: Admin Batch Operations | ✅ 完成 | 100% |
 
 ---
 
@@ -153,10 +153,10 @@
 - [x] `PATCH /users/{id}` - 本人 or Admin
 - [x] `PATCH /rules/{id}` - 创建者 or Admin
 
-### 4.3 Admin 批操作 (P2 - 延期)
-- [ ] 实现 `batch_delete_posts` + 权限检查
-- [ ] 实现 `batch_update_post_status` + 权限检查
-- [ ] 实现 `batch_update_user_roles` + 权限检查
+### 4.3 Admin 批操作 ✅ (Phase 13)
+- [x] 实现 `batch_delete_posts` + 权限检查
+- [x] 实现 `batch_update_post_status` + 权限检查
+- [x] 实现 `batch_update_user_roles` + 权限检查
 
 ### 4.4 JWT 认证 (P1 - 延期)
 - [ ] 创建 `app/core/security.py`
@@ -235,8 +235,8 @@
 - [x] `frontend/app/demo/page.tsx` - 组件演示页面
 
 ### 7.4 P2 组件
-- [ ] `frontend/components/search/SearchModal.tsx`
-- [ ] `frontend/components/home/PlatformStats.tsx`
+- [x] `frontend/components/search/SearchModal.tsx` (Phase 12)
+- [x] `frontend/components/home/PlatformStats.tsx` (Phase 12)
 
 ---
 
@@ -374,38 +374,74 @@
 
 ---
 
-## Phase 12: P2 Frontend Components
+## Phase 12: P2 Frontend Components ✅
 
 > 目标: 完成剩余的 P2 前端组件
+> 完成日期: 2026-02-03
 
 ### 12.1 SearchModal
-- [ ] 创建 `frontend/components/search/SearchModal.tsx`
-- [ ] 实现全局搜索 UI (用户/活动/作品)
-- [ ] 集成 Command 组件实现快捷键 (⌘K)
+- [x] 创建 `frontend/components/search/SearchModal.tsx`
+- [x] 创建 `frontend/lib/search-api.ts` (客户端搜索)
+- [x] 实现全局搜索 UI (用户/活动/作品)
+- [x] 集成 Command 组件实现快捷键 (⌘K / Ctrl+K)
+- [x] 添加 Jest 测试 `frontend/__tests__/SearchModal.test.tsx` (5 tests)
 
 ### 12.2 PlatformStats
-- [ ] 创建 `frontend/components/home/PlatformStats.tsx`
-- [ ] 显示平台统计数据 (用户数/活动数/作品数)
-- [ ] 实现数据获取 API
+- [x] 创建 `frontend/components/home/PlatformStats.tsx`
+- [x] 显示平台统计数据 (用户数/活动数/作品数)
+- [x] 添加 `GET /api/stats` 端点到 `app/main.py`
+- [x] 添加 Jest 测试 `frontend/__tests__/PlatformStats.test.tsx` (5 tests)
+
+### 12.3 Demo 页面更新
+- [x] 更新 `frontend/app/demo/page.tsx` 集成新组件
+- [x] 添加 "Phase 12 前端组件预览" 标识
+
+### 12.4 Bug 修复
+- [x] 修复 `CategoryStageView.tsx` config undefined 错误 (添加 fallback)
+- [x] 添加 `ResizeObserver` mock 到 `jest.setup.ts` (cmdk 组件需要)
+
+### 12.5 测试结果
+- Frontend Jest: 11 tests passed (包括 5 SearchModal + 5 PlatformStats + 1 existing)
+- E2E 验证: Demo 页面加载正常，PlatformStats 显示正确数据，⌘K 打开搜索弹窗
 
 ---
 
-## Phase 13: Admin Batch Operations (P2 - 可选)
+## Phase 13: Admin Batch Operations ✅
 
 > 目标: 实现管理员批量操作功能
+> 完成日期: 2026-02-03
 
 ### 13.1 批量删除作品
-- [ ] `POST /admin/posts/batch-delete`
-- [ ] 权限检查: admin only
-- [ ] 支持软删除
+- [x] `POST /admin/posts/batch-delete`
+- [x] 权限检查: admin only (403 for non-admin)
+- [x] 支持软删除 (设置 deleted_at)
+- [x] 返回 BatchResult (success_count, failed_count, failed_ids)
 
 ### 13.2 批量更新状态
-- [ ] `POST /admin/posts/batch-update-status`
-- [ ] 支持 draft/published/archived 状态切换
+- [x] `POST /admin/posts/batch-update-status`
+- [x] 支持 draft/published/archived 状态切换
+- [x] 无效状态返回 422 Validation Error
 
 ### 13.3 批量更新用户角色
-- [ ] `POST /admin/users/batch-update-roles`
-- [ ] 权限检查: admin only
+- [x] `POST /admin/users/batch-update-roles`
+- [x] 权限检查: admin only
+- [x] 支持提升为 admin 角色
+- [x] 无效角色返回 422 Validation Error
+
+### 13.4 Schemas
+- [x] `BatchDeleteRequest` (ids: list[int])
+- [x] `BatchStatusUpdateRequest` (ids: list[int], status: str)
+- [x] `BatchRoleUpdateRequest` (ids: list[int], role: str)
+- [x] `BatchResult` (success_count, failed_count, failed_ids)
+
+### 13.5 单元测试
+- [x] 创建 `app/tests/test_admin_batch.py` (12 tests)
+- [x] 测试批量删除成功/部分失败/非管理员禁止
+- [x] 测试批量更新状态成功/无效状态/部分失败/非管理员禁止
+- [x] 测试批量更新角色成功/无效角色/部分失败/非管理员禁止/提升管理员
+
+### 13.6 测试结果
+- Backend pytest: 373 tests passed (361 existing + 12 new admin batch tests)
 
 ---
 

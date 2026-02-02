@@ -68,10 +68,10 @@ def test_role_check_with_valid_role(client):
     """TC-MOCK-010: Role check passes for user with allowed role."""
     admin = _create_user(client, "mock_admin", role="admin")
 
-    # Access admin endpoint (PATCH /admin/posts/status requires admin role)
-    resp = client.patch(
-        "/api/admin/posts/status",
-        json={"ids": [], "status": "archived"},
+    # Access admin endpoint (POST /admin/posts/batch-update-status requires admin role)
+    resp = client.post(
+        "/api/admin/posts/batch-update-status",
+        json={"ids": [], "status": "published"},
         headers={"X-User-Id": str(admin["id"])}
     )
     # Should not fail with 403 (might be 200 for empty batch)
@@ -83,9 +83,9 @@ def test_role_check_with_invalid_role(client):
     participant = _create_user(client, "mock_participant", role="participant")
 
     # Try to access admin endpoint
-    resp = client.patch(
-        "/api/admin/posts/status",
-        json={"ids": [], "status": "archived"},
+    resp = client.post(
+        "/api/admin/posts/batch-update-status",
+        json={"ids": [], "status": "published"},
         headers={"X-User-Id": str(participant["id"])}
     )
     assert resp.status_code == 403
