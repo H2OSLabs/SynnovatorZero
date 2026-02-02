@@ -1,6 +1,6 @@
 # 测试用例优先级矩阵
 
-> 本文档为 Synnovator 平台所有测试用例的优先级分配，共 499 条测试用例。
+> 本文档为 Synnovator 平台所有测试用例的优先级分配，共 552 条测试用例。
 >
 > **优先级定义：**
 > - **P0 关键路径**：MVP 必须，不通过则平台无法使用
@@ -15,11 +15,11 @@
 
 | 优先级 | 用例数 | 占比 | 建议时间点 |
 |--------|--------|------|------------|
-| P0 关键路径 | 89 | 18% | Sprint 1-2 |
-| P1 核心体验 | 119 | 24% | Sprint 2-3 |
-| P2 完整功能 | 127 | 25% | Sprint 3-4 |
-| P3 高级场景 | 62 | 12% | Sprint 4+ |
-| P4 负向测试 | 102 | 20% | 随对应正向用例 |
+| P0 关键路径 | 89 | 16% | Sprint 1-2 |
+| P1 核心体验 | 135 | 24% | Sprint 2-3 |
+| P2 完整功能 | 145 | 26% | Sprint 3-4 |
+| P3 高级场景 | 69 | 13% | Sprint 4+ |
+| P4 负向测试 | 114 | 21% | 随对应正向用例 |
 
 ---
 
@@ -331,9 +331,40 @@
 | TC-NAV-003 | 从营地页面进入团队详情 | 29-planet-camp.md |
 | TC-NAV-004 | 星球和营地页面切换 | 29-planet-camp.md |
 
+### 提案迭代（3 条）
+
+| TC ID | 描述 | 来源文件 |
+|-------|------|----------|
+| TC-PROPOSAL-001 | 编辑提案内资产并保存 | 30-proposal-iteration.md |
+| TC-PROPOSAL-002 | 多次更新后统一发布 | 30-proposal-iteration.md |
+| TC-PROPOSAL-010 | 提案发布产生新版本号 | 30-proposal-iteration.md |
+
+### 页面交互（7 条）
+
+| TC ID | 描述 | 来源文件 |
+|-------|------|----------|
+| TC-PAGEUI-001 | 点击搜索栏展开搜索界面 | 31-page-interaction.md |
+| TC-PAGEUI-002 | 输入关键词实时搜索 | 31-page-interaction.md |
+| TC-PAGEUI-010 | 导航栏当前位置高亮 | 31-page-interaction.md |
+| TC-PAGEUI-011 | 资产页导航入口 | 31-page-interaction.md |
+| TC-PAGEUI-022 | 点击消息展示通知页面 | 31-page-interaction.md |
+| TC-PAGEUI-023 | 点击发布展示发布页面 | 31-page-interaction.md |
+| TC-PAGEUI-025 | 消息图标显示未读数量 | 31-page-interaction.md |
+
+### 资产复制申请（6 条）
+
+| TC ID | 描述 | 来源文件 |
+|-------|------|----------|
+| TC-ASSETCOPY-001 | 在团队提案中查看他人资产 | 32-asset-copy-request.md |
+| TC-ASSETCOPY-002 | 发起资产复制申请 | 32-asset-copy-request.md |
+| TC-ASSETCOPY-003 | 资产作者收到复制申请通知 | 32-asset-copy-request.md |
+| TC-ASSETCOPY-004 | 资产作者批准复制申请 | 32-asset-copy-request.md |
+| TC-ASSETCOPY-005 | 资产作者拒绝复制申请 | 32-asset-copy-request.md |
+| TC-ASSETCOPY-006 | 申请人获得资产副本 | 32-asset-copy-request.md |
+
 ---
 
-## P2 完整功能（127 条）
+## P2 完整功能（145 条）
 
 > 提升用户体验，但不阻塞核心流程
 
@@ -519,13 +550,56 @@
 | TC-IACT-063 | 对 resource 发表评论 | 07-interaction.md |
 | TC-CAMP-020 | 筛选个人提案 | 29-planet-camp.md |
 
+### 提案迭代进阶（6 条）
+
+| TC ID | 描述 | 来源文件 |
+|-------|------|----------|
+| TC-PROPOSAL-003 | 保存资产同步更新关联资产 | 30-proposal-iteration.md |
+| TC-PROPOSAL-011 | 系统自动生成迭代日志 | 30-proposal-iteration.md |
+| TC-PROPOSAL-012 | 迭代日志不可被用户更改 | 30-proposal-iteration.md |
+| TC-PROPOSAL-013 | 迭代日志展示在提案页面 | 30-proposal-iteration.md |
+| TC-PROPOSAL-020 | 查看任意两个版本的差异 | 30-proposal-iteration.md |
+| TC-PROPOSAL-021 | 查看单个版本的完整快照 | 30-proposal-iteration.md |
+
+### 页面交互进阶（5 条）
+
+| TC ID | 描述 | 来源文件 |
+|-------|------|----------|
+| TC-PAGEUI-003 | 搜索历史记录 | 31-page-interaction.md |
+| TC-PAGEUI-004 | 清除搜索历史 | 31-page-interaction.md |
+| TC-PAGEUI-020 | 右侧栏常态显示日历 | 31-page-interaction.md |
+| TC-PAGEUI-021 | 右侧栏常态显示热度榜 | 31-page-interaction.md |
+| TC-PAGEUI-024 | 多功能栏状态可切换 | 31-page-interaction.md |
+
+### 资产副本属性（3 条）
+
+| TC ID | 描述 | 来源文件 |
+|-------|------|----------|
+| TC-ASSETCOPY-010 | 副本与原资产独立 | 32-asset-copy-request.md |
+| TC-ASSETCOPY-011 | 副本可关联到其他提案 | 32-asset-copy-request.md |
+| TC-ASSETCOPY-012 | 副本保留来源溯源 | 32-asset-copy-request.md |
+
+### 赛道类型标识（2 条）
+
+| TC ID | 描述 | 来源文件 |
+|-------|------|----------|
+| TC-CATTRACK-010 | 常规赛道（X类型）标识展示 | 14-category-association.md |
+| TC-CATTRACK-011 | 命题赛道（Y类型）标识展示 | 14-category-association.md |
+
+### 提案可见性扩展（2 条）
+
+| TC ID | 描述 | 来源文件 |
+|-------|------|----------|
+| TC-VISIBLE-005 | 评委可查看分配给自己的提案 | 27-bounty-enterprise.md |
+| TC-VISIBLE-006 | 活动结束后提案可见性变更 | 27-bounty-enterprise.md |
+
 ---
 
-## P3 高级场景（62 条）
+## P3 高级场景（69 条）
 
 > 特定场景或边缘用例，可后期迭代
 
-### 悬赏企业活动（23 条）
+### 悬赏企业活动（25 条）
 
 | TC ID | 描述 | 来源文件 |
 |-------|------|----------|
@@ -538,6 +612,8 @@
 | TC-BOUNTY-013 | 晋级用户自动加入新团队 | 27-bounty-enterprise.md |
 | TC-BOUNTY-014 | 悬赏方共享详细需求 | 27-bounty-enterprise.md |
 | TC-BOUNTY-015 | 最终确认成果发放奖励 | 27-bounty-enterprise.md |
+| TC-BOUNTY-016 | 发放阶段性奖励资源 | 27-bounty-enterprise.md |
+| TC-BOUNTY-017 | 团队成员基于详细需求工作 | 27-bounty-enterprise.md |
 | TC-ENTERPRISE-001 | 发布企业出题活动 | 27-bounty-enterprise.md |
 | TC-ENTERPRISE-002 | 企业出题提案互不可见 | 27-bounty-enterprise.md |
 | TC-ENTERPRISE-010 | 创建第一阶段企业出题活动 | 27-bounty-enterprise.md |
@@ -553,7 +629,7 @@
 | TC-PLANET-004 | 按关联活动筛选 | 29-planet-camp.md |
 | TC-CAMP-021 | 筛选团队提案 | 29-planet-camp.md |
 
-### 活动关联（15 条）
+### 活动关联（20 条）
 
 | TC ID | 描述 | 来源文件 |
 |-------|------|----------|
@@ -568,6 +644,11 @@
 | TC-PREREQ-002 | 前置活动完成后团队可报名目标活动 | 14-category-association.md |
 | TC-PREREQ-003 | 前置活动未完成时团队报名目标活动被拒绝 | 14-category-association.md |
 | TC-PREREQ-004 | 前置活动中组建的团队保持完整进入目标活动 | 14-category-association.md |
+| TC-CATREL-010 | 查看活动关联列表 | 14-category-association.md |
+| TC-CATREL-011 | 从关联活动跳转 | 14-category-association.md |
+| TC-CATREL-012 | 活动关联双向可见 | 14-category-association.md |
+| TC-CATREL-020 | 提案在多个关联活动中独立评审 | 14-category-association.md |
+| TC-CATREL-021 | 提案在多个活动中独立获奖 | 14-category-association.md |
 | TC-ENTRY-003 | 报名前必须已有 profile 帖子 | 15-entry-rules.md |
 | TC-ENTRY-012 | 帖子包含符合要求的 resource 时提交成功 | 15-entry-rules.md |
 | TC-ENTRY-022 | 不同活动中同一用户可分别提交提案 | 15-entry-rules.md |
@@ -614,7 +695,7 @@
 
 ---
 
-## P4 负向测试（102 条）
+## P4 负向测试（114 条）
 
 > 异常和边界情况，建议与对应正向用例同步测试
 
@@ -688,7 +769,7 @@
 | TC-IACT-905 | 非本人修改 interaction 被拒绝 | 07-interaction.md |
 | TC-CREATE-072 | 删除资源 | 24-content-creation.md |
 
-### 关系（12 条）
+### 关系（14 条）
 
 | TC ID | 描述 | 来源文件 |
 |-------|------|----------|
@@ -703,6 +784,8 @@
 | TC-CATREL-901 | 自引用被拒绝 | 14-category-association.md |
 | TC-CATREL-902 | 赛段循环依赖被拒绝 | 14-category-association.md |
 | TC-CATREL-903 | 非法 relation_type 被拒绝 | 14-category-association.md |
+| TC-CATREL-904 | 已关闭活动无法添加关联 | 14-category-association.md |
+| TC-CATREL-905 | 非关联活动无法共享提案 | 14-category-association.md |
 | TC-ENTRY-031 | 固定字段和自定义 checks 均满足时操作成功 | 15-entry-rules.md |
 
 ### 权限（12 条）
@@ -766,11 +849,12 @@
 | TC-SETTLE-903 | 重复投票被拒绝 | 26-settlement-reward.md |
 | TC-PLANET-902 | 无任何团队时营地页面展示空状态 | 29-planet-camp.md |
 
-### 悬赏企业（6 条）
+### 悬赏企业（7 条）
 
 | TC ID | 描述 | 来源文件 |
 |-------|------|----------|
 | TC-BOUNTY-901 | 非悬赏方无法选择晋级提案 | 27-bounty-enterprise.md |
+| TC-BOUNTY-902 | 第一阶段未关闭无法选择晋级 | 27-bounty-enterprise.md |
 | TC-ENTERPRISE-900 | 非企业方无法发送资产到用户 | 27-bounty-enterprise.md |
 | TC-ENTERPRISE-901 | 参赛者尝试查看其他参赛者提案被拒绝 | 27-bounty-enterprise.md |
 | TC-PERSONAL-900 | 头像格式不支持被拒绝 | 28-personalization.md |
@@ -784,6 +868,30 @@
 | TC-PART-900 | 未加入团队时个人报名被拒绝 | 23-activity-participation.md |
 | TC-PART-903 | 未登录用户报名被拒绝 | 23-activity-participation.md |
 | TC-PERSONAL-903 | 未授权信息不展示在主页 | 28-personalization.md |
+
+### 提案迭代（3 条）
+
+| TC ID | 描述 | 来源文件 |
+|-------|------|----------|
+| TC-PROPOSAL-900 | 未保存直接关闭编辑器 | 30-proposal-iteration.md |
+| TC-PROPOSAL-901 | 空更新发布被提示 | 30-proposal-iteration.md |
+| TC-PROPOSAL-902 | 已删除提案无法查看版本历史 | 30-proposal-iteration.md |
+
+### 页面交互（2 条）
+
+| TC ID | 描述 | 来源文件 |
+|-------|------|----------|
+| TC-PAGEUI-900 | 未登录用户无法访问资产页面 | 31-page-interaction.md |
+| TC-PAGEUI-901 | 搜索无结果展示空状态 | 31-page-interaction.md |
+
+### 资产复制申请（4 条）
+
+| TC ID | 描述 | 来源文件 |
+|-------|------|----------|
+| TC-ASSETCOPY-900 | 重复申请被拒绝 | 32-asset-copy-request.md |
+| TC-ASSETCOPY-901 | 自己资产无法申请复制 | 32-asset-copy-request.md |
+| TC-ASSETCOPY-902 | 已删除资产无法申请复制 | 32-asset-copy-request.md |
+| TC-ASSETCOPY-903 | 非团队成员无法申请团队提案内资产 | 32-asset-copy-request.md |
 
 ---
 
@@ -804,7 +912,7 @@
 | 11-user-journeys.md | 1 | 6 | 1 | 0 | 0 | 8 |
 | 12-resource-transfer.md | 0 | 0 | 2 | 2 | 0 | 4 |
 | 13-user-follow.md | 0 | 3 | 0 | 4 | 3 | 10 |
-| 14-category-association.md | 0 | 0 | 0 | 11 | 4 | 15 |
+| 14-category-association.md | 0 | 0 | 2 | 16 | 6 | 24 |
 | 15-entry-rules.md | 5 | 0 | 3 | 3 | 4 | 15 |
 | 16-closure-rules.md | 0 | 4 | 6 | 0 | 3 | 13 |
 | 17-rule-engine.md | 0 | 6 | 14 | 0 | 3 | 23 |
@@ -817,12 +925,15 @@
 | 24-content-creation.md | 7 | 4 | 7 | 0 | 5 | 23 |
 | 25-social-interaction.md | 0 | 3 | 5 | 0 | 2 | 10 |
 | 26-settlement-reward.md | 0 | 6 | 8 | 0 | 4 | 18 |
-| 27-bounty-enterprise.md | 0 | 0 | 0 | 20 | 3 | 23 |
+| 27-bounty-enterprise.md | 0 | 0 | 2 | 22 | 4 | 28 |
 | 28-personalization.md | 0 | 2 | 17 | 0 | 4 | 23 |
 | 29-planet-camp.md | 0 | 6 | 8 | 4 | 3 | 21 |
-| **总计** | **89** | **119** | **127** | **62** | **102** | **499** |
+| 30-proposal-iteration.md | 0 | 3 | 6 | 0 | 3 | 12 |
+| 31-page-interaction.md | 0 | 7 | 5 | 0 | 2 | 14 |
+| 32-asset-copy-request.md | 0 | 6 | 3 | 0 | 4 | 13 |
+| **总计** | **89** | **135** | **145** | **69** | **114** | **552** |
 
 ---
 
-*生成时间：2026-01-30*
-*测试用例总数：499 条*
+*生成时间：2026-02-02*
+*测试用例总数：552 条*

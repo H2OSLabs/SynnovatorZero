@@ -281,10 +281,19 @@
 | TC-PREREQ-002 | 前置活动完成后团队可报名目标活动 |
 | TC-PREREQ-003 | 前置活动未完成时团队报名目标活动被拒绝 |
 | TC-PREREQ-004 | 前置活动中组建的团队保持完整进入目标活动 |
+| TC-CATREL-010 | 查看活动关联列表 |
+| TC-CATREL-011 | 从关联活动跳转 |
+| TC-CATREL-012 | 活动关联双向可见 |
+| TC-CATREL-020 | 提案在多个关联活动中独立评审 |
+| TC-CATREL-021 | 提案在多个活动中独立获奖 |
+| TC-CATTRACK-010 | 常规赛道（X类型）标识展示 |
+| TC-CATTRACK-011 | 命题赛道（Y类型）标识展示 |
 | TC-CATREL-900 | 重复创建同一活动关联被拒绝 |
 | TC-CATREL-901 | 自引用被拒绝 |
 | TC-CATREL-902 | 赛段循环依赖被拒绝 |
 | TC-CATREL-903 | 非法 relation_type 被拒绝 |
+| TC-CATREL-904 | 已关闭活动无法添加关联 |
+| TC-CATREL-905 | 非关联活动无法共享提案 |
 
 ## 15-entry-rules.md (Entry Rules)
 
@@ -577,6 +586,8 @@
 | TC-BOUNTY-013 | 晋级用户自动加入新团队 |
 | TC-BOUNTY-014 | 悬赏方共享详细需求 |
 | TC-BOUNTY-015 | 最终确认成果发放奖励 |
+| TC-BOUNTY-016 | 发放阶段性奖励资源 |
+| TC-BOUNTY-017 | 团队成员基于详细需求工作 |
 | TC-ENTERPRISE-001 | 发布企业出题活动 |
 | TC-ENTERPRISE-002 | 企业出题提案互不可见 |
 | TC-ENTERPRISE-010 | 创建第一阶段企业出题活动 |
@@ -588,7 +599,10 @@
 | TC-VISIBLE-002 | 企业出题活动中参赛者提案对其他参赛者不可见 |
 | TC-VISIBLE-003 | 悬赏方可查看所有提案 |
 | TC-VISIBLE-004 | 企业方可查看所有提案 |
+| TC-VISIBLE-005 | 评委可查看分配给自己的提案 |
+| TC-VISIBLE-006 | 活动结束后提案可见性变更 |
 | TC-BOUNTY-901 | 非悬赏方无法选择晋级提案 |
+| TC-BOUNTY-902 | 第一阶段未关闭无法选择晋级 |
 | TC-ENTERPRISE-900 | 非企业方无法发送资产到用户 |
 | TC-ENTERPRISE-901 | 参赛者尝试查看其他参赛者提案被拒绝 |
 
@@ -646,3 +660,57 @@
 | TC-PLANET-900 | 未登录用户访问营地页面 |
 | TC-PLANET-901 | 无任何提案时营地页面展示空状态 |
 | TC-PLANET-902 | 无任何团队时营地页面展示空状态 |
+
+## 30-proposal-iteration.md (Proposal Iteration)
+
+| TC ID | Description |
+|-------|-------------|
+| TC-PROPOSAL-001 | 编辑提案内资产并保存 |
+| TC-PROPOSAL-002 | 多次更新后统一发布 |
+| TC-PROPOSAL-003 | 保存资产同步更新关联资产 |
+| TC-PROPOSAL-010 | 提案发布产生新版本号 |
+| TC-PROPOSAL-011 | 系统自动生成迭代日志 |
+| TC-PROPOSAL-012 | 迭代日志不可被用户更改 |
+| TC-PROPOSAL-013 | 迭代日志展示在提案页面 |
+| TC-PROPOSAL-020 | 查看任意两个版本的差异 |
+| TC-PROPOSAL-021 | 查看单个版本的完整快照 |
+| TC-PROPOSAL-900 | 未保存直接关闭编辑器 |
+| TC-PROPOSAL-901 | 空更新发布被提示 |
+| TC-PROPOSAL-902 | 已删除提案无法查看版本历史 |
+
+## 31-page-interaction.md (Page Interaction)
+
+| TC ID | Description |
+|-------|-------------|
+| TC-PAGEUI-001 | 点击搜索栏展开搜索界面 |
+| TC-PAGEUI-002 | 输入关键词实时搜索 |
+| TC-PAGEUI-003 | 搜索历史记录 |
+| TC-PAGEUI-004 | 清除搜索历史 |
+| TC-PAGEUI-010 | 导航栏当前位置高亮 |
+| TC-PAGEUI-011 | 资产页导航入口 |
+| TC-PAGEUI-020 | 右侧栏常态显示日历 |
+| TC-PAGEUI-021 | 右侧栏常态显示热度榜 |
+| TC-PAGEUI-022 | 点击消息展示通知页面 |
+| TC-PAGEUI-023 | 点击发布展示发布页面 |
+| TC-PAGEUI-024 | 多功能栏状态可切换 |
+| TC-PAGEUI-025 | 消息图标显示未读数量 |
+| TC-PAGEUI-900 | 未登录用户无法访问资产页面 |
+| TC-PAGEUI-901 | 搜索无结果展示空状态 |
+
+## 32-asset-copy-request.md (Asset Copy Request)
+
+| TC ID | Description |
+|-------|-------------|
+| TC-ASSETCOPY-001 | 在团队提案中查看他人资产 |
+| TC-ASSETCOPY-002 | 发起资产复制申请 |
+| TC-ASSETCOPY-003 | 资产作者收到复制申请通知 |
+| TC-ASSETCOPY-004 | 资产作者批准复制申请 |
+| TC-ASSETCOPY-005 | 资产作者拒绝复制申请 |
+| TC-ASSETCOPY-006 | 申请人获得资产副本 |
+| TC-ASSETCOPY-010 | 副本与原资产独立 |
+| TC-ASSETCOPY-011 | 副本可关联到其他提案 |
+| TC-ASSETCOPY-012 | 副本保留来源溯源 |
+| TC-ASSETCOPY-900 | 重复申请被拒绝 |
+| TC-ASSETCOPY-901 | 自己资产无法申请复制 |
+| TC-ASSETCOPY-902 | 已删除资产无法申请复制 |
+| TC-ASSETCOPY-903 | 非团队成员无法申请团队提案内资产 |

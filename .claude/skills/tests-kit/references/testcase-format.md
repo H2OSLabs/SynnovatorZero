@@ -57,7 +57,7 @@ Format: `TC-{PREFIX}-{NUMBER}`
 | STAGE | Category Stages | 001-004 |
 | TRACK | Category Tracks | 001-003 |
 | PREREQ | Prerequisites | 001-004 |
-| CATREL | Category Relations (negative) | 900-903 |
+| CATREL | Category Relations | 010-021, 900-905 |
 | ENTRY | Entry Rules | 001-031, 900-902 |
 | CLOSE | Closure Rules | 001-040, 900-902 |
 | ENGINE | Rule Engine | 001-061 |
@@ -71,13 +71,17 @@ Format: `TC-{PREFIX}-{NUMBER}`
 | CREATE | Content Creation | 001-072, 900-903 |
 | SOCIAL | Social Interaction | 001-052, 900-905 |
 | SETTLE | Settlement & Reward | 001-043, 900-903 |
-| BOUNTY | Bounty Activities | 001-015, 900-901 |
+| BOUNTY | Bounty Activities | 001-017, 900-902 |
 | ENTERPRISE | Enterprise Activities | 001-014, 900-901 |
-| VISIBLE | Visibility Control | 001-004 |
+| VISIBLE | Visibility Control | 001-006 |
 | PERSONAL | Personalization | 001-043, 900-903 |
 | PLANET | Planet Page | 001-007, 900-902 |
 | CAMP | Camp Page | 001-022 |
 | NAV | Navigation | 001-004 |
+| PROPOSAL | Proposal Iteration | 001-021, 900-902 |
+| PAGEUI | Page Interaction | 001-025, 900-901 |
+| ASSETCOPY | Asset Copy Request | 001-012, 900-903 |
+| CATTRACK | Category Track | 010-011 |
 
 ### Number Range Convention
 
