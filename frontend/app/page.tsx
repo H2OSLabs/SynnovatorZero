@@ -1,5 +1,7 @@
-import { Home } from "@/components/pages/home"
-
-export default function HomePage() {
-  return <Home />
+export default function Home() {
+  return (
+    <main className="flex min-h-screen items-center justify-center">
+      <h1 className="text-2xl font-heading text-nf-lime">Synnovator</h1>
+    </main>
+  )
 }
