@@ -18,27 +18,19 @@ jobs:
           python-version: '3.12'
 
       - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+        uses: astral-sh/setup-uv@v4
 
       - name: Install dependencies
-        run: |
-          source $HOME/.local/bin/env
-          uv sync
+        run: uv sync
 
       - name: Run linter
-        run: |
-          source $HOME/.local/bin/env
-          uv run ruff check app/ || true
+        run: uv run ruff check app/ || true
 
       - name: Run type checker
-        run: |
-          source $HOME/.local/bin/env
-          uv run mypy app/ || true
+        run: uv run mypy app/ || true
 
       - name: Run tests
-        run: |
-          source $HOME/.local/bin/env
-          uv run pytest app/tests/ -v --cov=app --cov-report=xml || true
+        run: uv run pytest app/tests/ -v --cov=app --cov-report=xml || true
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
