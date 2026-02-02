@@ -285,38 +285,40 @@ def test_notification_types(client, db_session):
 
 
 # ---------- Auth Required Tests ----------
+# Note: In mock mode, requests without X-User-Id header auto-create a mock user.
+# These tests verify auth failure by providing an invalid (non-existent) user ID.
 
 def test_list_notifications_no_auth(client):
-    """TC-NOTIF-060: List notifications without auth returns 401."""
-    resp = client.get("/api/notifications")
+    """TC-NOTIF-060: List notifications with invalid user returns 401."""
+    resp = client.get("/api/notifications", headers={"X-User-Id": "99999"})
     assert resp.status_code == 401
 
 
 def test_get_notification_no_auth(client, db_session):
-    """TC-NOTIF-061: Get notification without auth returns 401."""
+    """TC-NOTIF-061: Get notification with invalid user returns 401."""
     user_id = _create_user(client, "notif_noauth")
     notif = _create_notification(db_session, user_id, content="Test")
 
-    resp = client.get(f"/api/notifications/{notif.id}")
+    resp = client.get(f"/api/notifications/{notif.id}", headers={"X-User-Id": "99999"})
     assert resp.status_code == 401
 
 
 def test_mark_notification_no_auth(client, db_session):
-    """TC-NOTIF-062: Mark notification without auth returns 401."""
+    """TC-NOTIF-062: Mark notification with invalid user returns 401."""
     user_id = _create_user(client, "notif_noauth2")
     notif = _create_notification(db_session, user_id, content="Test")
 
-    resp = client.patch(f"/api/notifications/{notif.id}", json={"is_read": True})
+    resp = client.patch(f"/api/notifications/{notif.id}", json={"is_read": True}, headers={"X-User-Id": "99999"})
     assert resp.status_code == 401
 
 
 def test_unread_count_no_auth(client):
-    """TC-NOTIF-063: Unread count without auth returns 401."""
-    resp = client.get("/api/notifications/unread-count")
+    """TC-NOTIF-063: Unread count with invalid user returns 401."""
+    resp = client.get("/api/notifications/unread-count", headers={"X-User-Id": "99999"})
     assert resp.status_code == 401
 
 
 def test_mark_all_no_auth(client):
-    """TC-NOTIF-064: Mark all as read without auth returns 401."""
-    resp = client.post("/api/notifications/read-all")
+    """TC-NOTIF-064: Mark all as read with invalid user returns 401."""
+    resp = client.post("/api/notifications/read-all", headers={"X-User-Id": "99999"})
     assert resp.status_code == 401

@@ -104,7 +104,12 @@ def test_missing_filename_rejected(client):
 
 # ---------- TC-RES-901: 未登录用户创建资源被拒绝 ----------
 def test_unauthenticated_create_rejected(client):
-    resp = client.post("/api/resources", json={"filename": "test.txt"})
+    """Creating resource with invalid user returns 401.
+
+    Note: In mock mode, requests without X-User-Id header auto-create a mock user.
+    This test verifies auth failure by providing an invalid (non-existent) user ID.
+    """
+    resp = client.post("/api/resources", json={"filename": "test.txt"}, headers={"X-User-Id": "99999"})
     assert resp.status_code == 401
 
 

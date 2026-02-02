@@ -1,5 +1,5 @@
 """Rating Pydantic schemas"""
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Any, Dict, Optional
 
@@ -21,15 +21,14 @@ class RatingUpdate(BaseModel):
 
 
 class RatingInDBBase(RatingBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     target_id: int
     target_type: str
     created_by: str
     created_at: datetime
     updated_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
 
 
 class Rating(RatingInDBBase):

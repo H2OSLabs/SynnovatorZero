@@ -160,10 +160,15 @@ def test_delete_rule(client):
 
 # ---------- TC-RULE-900: 未认证用户无法创建规则 ----------
 def test_unauthenticated_cannot_create_rule(client):
+    """Creating rule with invalid user returns 401.
+
+    Note: In mock mode, requests without X-User-Id header auto-create a mock user.
+    This test verifies auth failure by providing an invalid (non-existent) user ID.
+    """
     resp = client.post("/api/rules", json={
         "name": "Should Fail",
         "description": "No auth",
-    })
+    }, headers={"X-User-Id": "99999"})
     assert resp.status_code == 401
 
 

@@ -126,6 +126,9 @@ def follow_user(
     from app.services.cache_update import update_user_follow_cache
     update_user_follow_cache(db, current_user_id)  # following_count +1
     update_user_follow_cache(db, user_id)  # follower_count +1
+    # Create notification for the followed user
+    from app.services.notification_events import notify_follow
+    notify_follow(db, follower_id=current_user_id, followed_id=user_id)
     return result
 
 

@@ -1,4 +1,4 @@
-.PHONY: start stop install dev backend frontend clean resetdb
+.PHONY: start stop install dev backend frontend clean resetdb test test-unit test-e2e
 
 # Default target
 start: install
@@ -35,3 +35,15 @@ clean:
 	@rm -rf .venv
 
 dev: start
+
+# Testing targets
+test: test-unit
+	@echo "All tests passed!"
+
+test-unit:
+	@echo "Running unit tests..."
+	@uv run pytest app/tests/ -v
+
+test-e2e:
+	@echo "Running E2E tests (requires servers)..."
+	@python3 e2e/run_e2e.py

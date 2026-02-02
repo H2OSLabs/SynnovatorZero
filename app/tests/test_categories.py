@@ -191,11 +191,16 @@ def test_invalid_status_rejected(client):
 
 # ---------- TC-CAT-902: 未认证用户无法创建活动 ----------
 def test_unauthenticated_cannot_create_category(client):
+    """Creating category with invalid user returns 401.
+
+    Note: In mock mode, requests without X-User-Id header auto-create a mock user.
+    This test verifies auth failure by providing an invalid (non-existent) user ID.
+    """
     resp = client.post("/api/categories", json={
         "name": "No Auth",
         "description": "Should fail",
         "type": "competition",
-    })
+    }, headers={"X-User-Id": "99999"})
     assert resp.status_code == 401
 
 

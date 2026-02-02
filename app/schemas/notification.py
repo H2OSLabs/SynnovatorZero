@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional, List
 from enum import Enum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class NotificationType(str, Enum):
@@ -32,14 +32,13 @@ class NotificationUpdate(BaseModel):
 
 
 class NotificationInDBBase(NotificationBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     user_id: int
     actor_id: Optional[int] = None
     is_read: bool
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class Notification(NotificationInDBBase):

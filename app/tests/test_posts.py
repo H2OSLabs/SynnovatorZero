@@ -232,7 +232,12 @@ def test_invalid_status_rejected(client):
 
 # ---------- TC-POST-902: 未认证用户无法创建帖子 ----------
 def test_unauthenticated_cannot_create_post(client):
-    resp = client.post("/api/posts", json={"title": "No Auth"})
+    """Creating post with invalid user returns 401.
+
+    Note: In mock mode, requests without X-User-Id header auto-create a mock user.
+    This test verifies auth failure by providing an invalid (non-existent) user ID.
+    """
+    resp = client.post("/api/posts", json={"title": "No Auth"}, headers={"X-User-Id": "99999"})
     assert resp.status_code == 401
 
 

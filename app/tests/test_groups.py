@@ -135,10 +135,15 @@ def test_invalid_visibility_rejected(client):
 
 # ---------- TC-GRP-901: 未认证用户无法创建团队 ----------
 def test_unauthenticated_cannot_create_group(client):
+    """Creating group with invalid user returns 401.
+
+    Note: In mock mode, requests without X-User-Id header auto-create a mock user.
+    This test verifies auth failure by providing an invalid (non-existent) user ID.
+    """
     resp = client.post("/api/groups", json={
         "name": "No Auth Group",
         "visibility": "public",
-    })
+    }, headers={"X-User-Id": "99999"})
     assert resp.status_code == 401
 
 

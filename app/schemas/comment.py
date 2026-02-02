@@ -1,5 +1,5 @@
 """Comment Pydantic schemas"""
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional
 
@@ -20,15 +20,14 @@ class CommentUpdate(BaseModel):
 
 
 class CommentInDBBase(CommentBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     target_id: int
     target_type: str
     created_by: str
     created_at: datetime
     updated_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
 
 
 class Comment(CommentInDBBase):
