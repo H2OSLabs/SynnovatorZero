@@ -247,7 +247,72 @@ export function PageComponent({ id }: { id?: number }) {
 }
 ```
 
-### 3.4 Common Issues & Fixes
+### 3.4 Implement UX Interaction Specs (CRITICAL)
+
+> **This step is mandatory.** Skipping it produces visual-only prototypes with no interactivity.
+
+For each page, read the corresponding `specs/ux/pages/{page-id}.yaml` and implement all defined interactions.
+
+**Interaction Translation Table:**
+
+| UX Spec Definition | React Implementation |
+|-------------------|----------------------|
+| `trigger: click, action: navigate, target: "/path"` | `onClick={() => router.push("/path")}` |
+| `trigger: tab_change` with `filter` | `onClick={() => updateSearchParams(key, value)}` or `router.push(newUrl)` |
+| `trigger: select, action: update_url_param` | `onChange` handler + `useSearchParams` + `router.push` |
+| `trigger: click, action: toggle_like` | `onClick={handleLike}` with API call |
+| `trigger: submit` | `onSubmit` or `onClick={handleSubmit}` with API call |
+| `trigger: click, action: open_modal` | `onClick={() => setModalOpen(true)}` |
+| `trigger: click, action: show_dropdown` | Use shadcn `DropdownMenu` component |
+
+**Implementation Pattern for Tabs with URL Filtering:**
+
+```tsx
+// 1. Define route mapping
+const tabRoutes: Record<string, string> = {
+  "热门": "/",
+  "提案广场": "/proposals",
+  "找队友": "/posts?tag=find-teammate",
+  "找点子": "/posts?tag=find-idea",
+}
+
+// 2. Add onClick to each tab
+<Badge onClick={() => router.push(tabRoutes[tab] ?? "/")}>
+  {tab}
+</Badge>
+```
+
+**Implementation Pattern for Filter Dropdowns:**
+
+```tsx
+// 1. Use useSearchParams
+const searchParams = useSearchParams()
+
+// 2. Create update helper
+function updateSearchParam(key: string, value: string | null) {
+  const next = new URLSearchParams(searchParams.toString())
+  if (value === null) next.delete(key)
+  else next.set(key, value)
+  router.push(`${pathname}?${next.toString()}`)
+}
+
+// 3. Wire to component
+<DropdownMenuItem onClick={() => updateSearchParam("status", "published")}>
+  已发布
+</DropdownMenuItem>
+```
+
+**Checklist for Each Page:**
+
+| Step | Check | Source |
+|------|-------|--------|
+| 1 | List all `interactions` from `specs/ux/pages/{page}.yaml` | UX spec |
+| 2 | For each `trigger: click` → verify `onClick` exists | Code audit |
+| 3 | For each `trigger: tab_change` → verify URL update logic | Code audit |
+| 4 | For each `trigger: submit` → verify API call wired | Code audit |
+| 5 | Shared components from `uses_shared` have interactions | `specs/ux/global/shared-components.yaml` |
+
+### 3.5 Common Issues & Fixes
 
 | Issue | Symptom | Fix |
 |-------|---------|-----|
@@ -256,6 +321,9 @@ export function PageComponent({ id }: { id?: number }) {
 | Navigation fails | Page not found | Check dynamic route `[id]` folder exists |
 | Data not loading | Empty page | Check useEffect runs, API returns data |
 | CORS error | Console: blocked | Backend CORS includes localhost:3000 |
+| **Tabs don't filter** | Click has no effect | Missing `onClick` → add `router.push(tabRoutes[tab])` |
+| **Dropdowns don't filter** | Selection ignored | Missing `onChange` → use `updateSearchParam()` helper |
+| **Like button static** | No count update | Missing API call → implement `handleLike()` with `likePost()` |
 
 ---
 
@@ -412,5 +480,33 @@ A successful prototype build produces:
 - [ ] All pages fetch and display real data
 - [ ] Navigation between pages works
 - [ ] Interactive elements (like, comment, follow) call APIs
+- [ ] **All interactions from `specs/ux/pages/*.yaml` are implemented** (tabs, filters, buttons)
+- [ ] **Tabs/filters update URL params and trigger data refetch**
 - [ ] E2E tests pass for core user journeys
 - [ ] PM/designer can click through the prototype
+
+## Interaction Verification Checklist
+
+Before marking a page complete, verify these interactions work:
+
+### Global (all pages)
+- [ ] Logo click → navigates to `/`
+- [ ] Search bar → expands on focus (or navigates on submit)
+- [ ] "发布新内容" button → opens publish menu or navigates
+- [ ] Sidebar nav items → navigate to correct routes
+- [ ] User avatar dropdown → shows menu options
+
+### Tabs & Filters
+- [ ] Each tab click → updates URL or navigates
+- [ ] Filter dropdowns → update URL params
+- [ ] Active state → visually indicates current selection
+
+### Content Cards
+- [ ] Card click → navigates to detail page
+- [ ] Like button → calls API, updates count
+- [ ] Share button → opens share modal or copies link
+
+### Forms
+- [ ] Submit button → calls API
+- [ ] Input validation → shows errors
+- [ ] Success → shows toast or redirects

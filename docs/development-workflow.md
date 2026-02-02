@@ -1515,8 +1515,78 @@ export function PostDetail({ postId }: { postId: number }) {
 | 5 | 导航使用 `router.push()` 或 `<Link>` | 添加导航逻辑 |
 | 6 | 操作按钮绑定事件处理器 | 添加 onClick 处理 |
 | 7 | 事件处理器调用真实 API 函数 | 连接 API 调用 |
+| **8** | **`specs/ux/pages/{id}.yaml` 中所有 `interactions` 已实现** | **实现交互逻辑** |
 
-#### 4c.4 常见问题与修复
+#### 4c.4 实现 UX 交互规格（必须）
+
+> ⚠️ **跳过此步骤将导致 UI 只有视觉效果，无交互功能。** 这是导致 "tabs 不响应点击" 等问题的根本原因。
+
+对于每个页面，读取 `specs/ux/pages/{page-id}.yaml` 中的 `interactions` 部分并逐一实现：
+
+**交互翻译对照表：**
+
+| UX Spec 定义 | React 实现代码 |
+|-------------|---------------|
+| `trigger: click, action: navigate, target: "/path"` | `onClick={() => router.push("/path")}` |
+| `trigger: tab_change` with `filter` | `onClick={() => router.push(url)}` 或 `updateSearchParams()` |
+| `trigger: select, action: update_url_param` | `onChange` + `useSearchParams` + `router.push` |
+| `trigger: click, action: toggle_like` | `onClick={handleLike}` 调用 `likePost()` API |
+| `trigger: submit` | `onSubmit` 或 `onClick={handleSubmit}` 调用 API |
+| `trigger: click, action: open_modal` | `onClick={() => setModalOpen(true)}` |
+
+**Tab 筛选实现模板：**
+
+```tsx
+// 1. 定义路由映射
+const tabRoutes: Record<string, string> = {
+  "热门": "/",
+  "提案广场": "/proposals",
+  "找队友": "/posts?tag=find-teammate",
+}
+
+// 2. 为每个 tab 添加 onClick
+{tabs.map(tab => (
+  <Badge
+    key={tab}
+    onClick={() => router.push(tabRoutes[tab] ?? "/")}
+    className="cursor-pointer"
+  >
+    {tab}
+  </Badge>
+))}
+```
+
+**URL 筛选实现模板：**
+
+```tsx
+import { useSearchParams } from "next/navigation"
+
+const searchParams = useSearchParams()
+
+function updateSearchParam(key: string, value: string | null) {
+  const next = new URLSearchParams(searchParams.toString())
+  if (value === null) next.delete(key)
+  else next.set(key, value)
+  router.push(`${pathname}?${next.toString()}`)
+}
+
+// 使用
+<DropdownMenuItem onClick={() => updateSearchParam("status", "published")}>
+  已发布
+</DropdownMenuItem>
+```
+
+**交互实现检查清单：**
+
+| 检查项 | 来源 |
+|--------|------|
+| [ ] 列出页面所有 `interactions` | `specs/ux/pages/{page}.yaml` |
+| [ ] 每个 `trigger: click` 有对应 `onClick` | 代码审计 |
+| [ ] 每个 `trigger: tab_change` 有 URL 更新逻辑 | 代码审计 |
+| [ ] 每个 `trigger: submit` 有 API 调用 | 代码审计 |
+| [ ] 共享组件交互已实现 | `specs/ux/global/shared-components.yaml` |
+
+#### 4c.5 常见问题与修复
 
 | 问题 | 症状 | 修复方法 |
 |------|------|----------|
