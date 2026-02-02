@@ -1,7 +1,7 @@
 "use client"
 
-import { use } from "react"
 import Link from "next/link"
+import { useParams } from "next/navigation"
 import { ArrowLeft, MapPin, Link as LinkIcon, Calendar, FileText, Heart, Users, MessageCircle } from "lucide-react"
 import { PageLayout } from "@/components/layout/PageLayout"
 import { Panel, PanelSection, PanelCard } from "@/components/layout/Panel"
@@ -45,8 +45,9 @@ const mockStats = {
   total_likes: 500,
 }
 
-export default function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+export default function UserProfilePage() {
+  const params = useParams()
+  const id = params.id as string
 
   const panelContent = (
     <Panel title="👤 用户操作">

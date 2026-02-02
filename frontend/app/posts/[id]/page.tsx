@@ -1,7 +1,8 @@
 "use client"
 
-import { use, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
+import { useParams } from "next/navigation"
 import { ArrowLeft, Heart, MessageCircle, Star, Share2, Edit, Trash2 } from "lucide-react"
 import { PageLayout } from "@/components/layout/PageLayout"
 import { Panel, PanelSection, PanelCard } from "@/components/layout/Panel"
@@ -67,8 +68,9 @@ const mockResources = [
   { id: 2, filename: "demo.zip", display_name: "演示文件", file_size: 15000000 },
 ]
 
-export default function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+export default function PostDetailPage() {
+  const params = useParams()
+  const id = params.id as string
   const [liked, setLiked] = useState(false)
   const [commentText, setCommentText] = useState("")
 

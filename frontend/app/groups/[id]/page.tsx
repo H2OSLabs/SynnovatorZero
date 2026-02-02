@@ -1,7 +1,7 @@
 "use client"
 
-import { use } from "react"
 import Link from "next/link"
+import { useParams } from "next/navigation"
 import { ArrowLeft, Users, Calendar, FileText, Settings, UserPlus, Share2 } from "lucide-react"
 import { PageLayout } from "@/components/layout/PageLayout"
 import { Panel, PanelSection, PanelCard } from "@/components/layout/Panel"
@@ -39,8 +39,9 @@ const mockCategories = [
   { id: 1, name: "AI 创新挑战赛 2024", type: "competition" as const, status: "published" as const, tags: ["AI"], participant_count: 128 },
 ]
 
-export default function GroupDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+export default function GroupDetailPage() {
+  const params = useParams()
+  const id = params.id as string
 
   const panelContent = (
     <Panel title="👥 团队操作">

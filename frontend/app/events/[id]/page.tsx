@@ -1,7 +1,7 @@
 "use client"
 
-import { use } from "react"
 import Link from "next/link"
+import { useParams } from "next/navigation"
 import { ArrowLeft, Calendar, Users, Clock, Award, FileText, UserPlus } from "lucide-react"
 import { PageLayout } from "@/components/layout/PageLayout"
 import { Panel, PanelSection, PanelCard } from "@/components/layout/Panel"
@@ -66,8 +66,9 @@ const mockRules = {
   ],
 }
 
-export default function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+export default function EventDetailPage() {
+  const params = useParams()
+  const id = params.id as string
 
   const statusConfig = {
     published: { label: "进行中", className: "bg-nf-lime text-nf-near-black" },

@@ -1,8 +1,8 @@
 "use client"
 
-import { use, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { X, Upload, Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,8 +23,9 @@ const mockPost = {
   ],
 }
 
-export default function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+export default function EditPostPage() {
+  const params = useParams()
+  const id = params.id as string
   const router = useRouter()
   const [formData, setFormData] = useState({
     title: mockPost.title,

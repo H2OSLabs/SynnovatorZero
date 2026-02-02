@@ -196,3 +196,172 @@
 | plans/e2e_demo_stats.png | 平台统计组件 |
 | plans/e2e_search_modal.png | 搜索弹窗打开 |
 | plans/e2e_search_results.png | 搜索结果显示 |
+
+---
+
+## 第四轮: Phase 3-7 前端页面重构 E2E 测试
+
+**日期:** 2026-02-03
+**环境:** Next.js 14.2.35 @ http://localhost:3001 (next dev)
+
+### 测试概述
+
+根据 `task_plan.md` 中定义的前端重构计划，完成了以下阶段：
+- Phase 3: 创建 16 个页面路由结构
+- Phase 4: 实现布局组件 (Header/Sidebar/Panel/PageLayout)
+- Phase 5: 实现卡片组件 (CategoryCard/PostCard/GroupCard/UserCard)
+- Phase 6: 实现页面 Body 内容 (使用 mock 数据)
+- Phase 7: E2E 测试验证
+
+### 页面访问测试结果
+
+#### P0 - 核心页面
+
+| 页面 | 路由 | 布局 | 状态 | 截图 |
+|------|------|------|------|------|
+| 首页 | `/` | Landing | ✅ PASS | `screenshots/01-homepage.png` |
+| 登录页 | `/login` | Landing | ✅ PASS | `screenshots/09-login.png` |
+| 注册页 | `/register` | Landing | ✅ PASS | `screenshots/10-register.png` |
+| 探索页 | `/explore` | Compact | ✅ PASS | `screenshots/02-explore.png` |
+| 活动列表 | `/events` | Compact | ✅ PASS | `screenshots/03-events.png` |
+| 活动详情 | `/events/[id]` | Full | ✅ PASS | `screenshots/04-event-detail-fixed.png` |
+
+#### P1 - 重要页面
+
+| 页面 | 路由 | 布局 | 状态 | 截图 |
+|------|------|------|------|------|
+| 帖子列表 | `/posts` | Compact | ✅ PASS | `screenshots/05-posts.png` |
+| 帖子详情 | `/posts/[id]` | Full | ✅ PASS | `screenshots/06-post-detail-fixed.png` |
+| 创建帖子 | `/posts/create` | Focus | ✅ PASS | `screenshots/12-create-post.png` |
+| 编辑帖子 | `/posts/[id]/edit` | Focus | ✅ PASS | `screenshots/16-edit-post.png` |
+| 团队列表 | `/groups` | Compact | ✅ PASS | `screenshots/07-groups.png` |
+| 团队详情 | `/groups/[id]` | Full | ✅ PASS | `screenshots/08-group-detail-fixed.png` |
+| 用户主页 | `/users/[id]` | Full | ✅ PASS | `screenshots/11-user-profile-fixed.png` |
+
+#### P2 - 扩展页面
+
+| 页面 | 路由 | 布局 | 状态 | 截图 |
+|------|------|------|------|------|
+| 创建活动 | `/events/create` | Focus | ✅ PASS | `screenshots/13-create-event.png` |
+| 创建团队 | `/groups/create` | Focus | ✅ PASS | `screenshots/14-create-group.png` |
+| 设置页 | `/settings` | Full | ✅ PASS | `screenshots/15-settings.png` |
+
+### 修复的问题
+
+#### React `use()` Hook 兼容性问题
+
+**问题描述**: Next.js 14 中的客户端组件接收的 `params` 是普通对象，而非 Promise。使用 React 的 `use()` hook 会导致运行时错误。
+
+**错误信息**:
+```
+Error: An unsupported type was passed to use(): [object Object]
+```
+
+**受影响的文件** (5个):
+- `app/posts/[id]/page.tsx`
+- `app/posts/[id]/edit/page.tsx`
+- `app/groups/[id]/page.tsx`
+- `app/events/[id]/page.tsx`
+- `app/users/[id]/page.tsx`
+
+**解决方案**: 将 `use(params)` 替换为 `useParams()` hook：
+
+```tsx
+// Before (错误 - Next.js 15 语法)
+import { use } from "react"
+export default function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
+}
+
+// After (正确 - Next.js 14 语法)
+import { useParams } from "next/navigation"
+export default function Page() {
+  const params = useParams()
+  const id = params.id as string
+}
+```
+
+### 构建验证
+
+```
+✓ Compiled successfully
+✓ Generating static pages (15/15)
+
+Route (app)                              Size     First Load JS
+┌ ○ /                                    34.8 kB         204 kB
+├ ○ /events                              4.95 kB         169 kB
+├ ƒ /events/[id]                         6.66 kB         172 kB
+├ ○ /events/create                       2.58 kB         160 kB
+├ ○ /explore                             3.61 kB         172 kB
+├ ○ /groups                              1.83 kB         170 kB
+├ ƒ /groups/[id]                         9.04 kB         170 kB
+├ ○ /groups/create                       2.71 kB         160 kB
+├ ○ /login                               1.8 kB          159 kB
+├ ○ /posts                               5.53 kB         170 kB
+├ ƒ /posts/[id]                          6.34 kB         168 kB
+├ ƒ /posts/[id]/edit                     2.82 kB         160 kB
+├ ○ /posts/create                        2.55 kB         160 kB
+├ ○ /register                            3.94 kB         169 kB
+├ ○ /settings                            8.34 kB         170 kB
+└ ƒ /users/[id]                          6.14 kB         171 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+```
+
+### User Journey 覆盖情况
+
+| Journey | 描述 | 涉及页面 | 测试状态 |
+|---------|------|----------|----------|
+| J2 | 浏览探索页 | `/`, `/explore` | ✅ 页面加载正常 |
+| J3 | 注册 | `/register` | ✅ 页面加载正常 |
+| J4 | 登录 | `/login` | ✅ 页面加载正常 |
+| J5 | 加入组 | `/groups/[id]` | ✅ 页面加载正常 |
+| J6 | 创建活动 | `/events/create` | ✅ 页面加载正常 |
+| J7 | 加入活动 | `/events/[id]` | ✅ 页面加载正常 |
+| J8 | 创建团队 | `/groups/create` | ✅ 页面加载正常 |
+| J9 | 发送帖子 | `/posts/create` | ✅ 页面加载正常 |
+| J10 | 活动排名 | `/events/[id]` | ✅ 页面加载正常 (排名 Tab) |
+| J11 | 编辑帖子 | `/posts/[id]/edit` | ✅ 页面加载正常 |
+| J12 | 删除帖子 | `/posts/[id]` | ✅ 删除按钮存在 |
+| J13 | 社区互动 | `/posts/[id]` | ✅ 评论区存在 |
+| J14 | 关注用户 | `/users/[id]` | ✅ 关注按钮存在 |
+| J15 | 多阶段活动 | `/events/[id]` | ✅ 页面结构支持 |
+| J16 | 资产转移 | `/posts/[id]/edit` | ✅ 附件管理存在 |
+
+### 测试总结
+
+| 指标 | 结果 |
+|------|------|
+| 总页面数 | 16 |
+| 通过 | 16 |
+| 失败 | 0 |
+| 通过率 | **100%** |
+
+### Phase 3-7 新增截图
+
+| 文件名 | 描述 |
+|--------|------|
+| screenshots/01-homepage.png | 首页 (Landing 布局) |
+| screenshots/02-explore.png | 探索页 (Compact 布局) |
+| screenshots/03-events.png | 活动列表 |
+| screenshots/04-event-detail-fixed.png | 活动详情 (Full 布局) |
+| screenshots/05-posts.png | 帖子列表 |
+| screenshots/06-post-detail-fixed.png | 帖子详情 (Full 布局) |
+| screenshots/07-groups.png | 团队列表 |
+| screenshots/08-group-detail-fixed.png | 团队详情 (Full 布局) |
+| screenshots/09-login.png | 登录页 (Landing 布局) |
+| screenshots/10-register.png | 注册页 (Landing 布局) |
+| screenshots/11-user-profile-fixed.png | 用户主页 (Full 布局) |
+| screenshots/12-create-post.png | 创建帖子 (Focus 布局) |
+| screenshots/13-create-event.png | 创建活动 (Focus 布局) |
+| screenshots/14-create-group.png | 创建团队 (Focus 布局) |
+| screenshots/15-settings.png | 设置页 (Full 布局) |
+| screenshots/16-edit-post.png | 编辑帖子 (Focus 布局) |
+
+### 下一步
+
+1. **API 集成**: 将 mock 数据替换为真实 API 调用
+2. **表单验证**: 添加前端表单验证逻辑
+3. **用户认证**: 集成 OneAuth OAuth2 登录
+4. **完整 E2E**: 添加完整的用户流程自动化测试
