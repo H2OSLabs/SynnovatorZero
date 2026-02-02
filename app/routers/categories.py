@@ -113,10 +113,17 @@ def update_category(
 def delete_category(
     category_id: int,
     db: Session = Depends(get_db),
+    user_id: int = Depends(require_current_user_id),
 ):
     item = crud.categories.get(db, id=category_id)
     if item is None:
         raise HTTPException(status_code=404, detail="Category not found")
+
+    # Permission check: creator or admin
+    user = crud.users.get(db, id=user_id)
+    if user.role != "admin" and item.created_by != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this category")
+
     from app.services.cascade_delete import cascade_delete_category
     cascade_delete_category(db, category_id)
     return None

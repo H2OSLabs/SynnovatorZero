@@ -67,7 +67,7 @@ def test_read_user(client):
 
 
 # ---------- TC-USER-010: 用户修改自己的个人信息 ----------
-def test_update_user_profile(client):
+def test_update_user_profile(client, auth_headers):
     create_resp = client.post("/api/users", json={
         "username": "bob",
         "email": "bob@example.com",
@@ -78,7 +78,7 @@ def test_update_user_profile(client):
     resp = client.patch(f"/api/users/{user_id}", json={
         "display_name": "Bob Updated",
         "bio": "I build things",
-    })
+    }, headers=auth_headers(user_id))
     assert resp.status_code == 200
     data = resp.json()
     assert data["display_name"] == "Bob Updated"
@@ -86,7 +86,7 @@ def test_update_user_profile(client):
 
 
 # ---------- TC-USER-011: Admin 修改其他用户的角色 ----------
-def test_admin_change_user_role(client):
+def test_admin_change_user_role(client, admin_user, auth_headers):
     create_resp = client.post("/api/users", json={
         "username": "charlie",
         "email": "charlie@example.com",
@@ -96,13 +96,13 @@ def test_admin_change_user_role(client):
 
     resp = client.patch(f"/api/users/{user_id}", json={
         "role": "organizer",
-    })
+    }, headers=auth_headers(admin_user["id"]))
     assert resp.status_code == 200
     assert resp.json()["role"] == "organizer"
 
 
 # ---------- TC-USER-020: 删除用户 (soft delete) ----------
-def test_delete_user(client):
+def test_delete_user(client, admin_user, auth_headers):
     create_resp = client.post("/api/users", json={
         "username": "charlie",
         "email": "charlie@example.com",
@@ -110,8 +110,8 @@ def test_delete_user(client):
     })
     user_id = create_resp.json()["id"]
 
-    # Delete
-    del_resp = client.delete(f"/api/users/{user_id}")
+    # Delete (using admin)
+    del_resp = client.delete(f"/api/users/{user_id}", headers=auth_headers(admin_user["id"]))
     assert del_resp.status_code == 204
 
     # User should no longer be accessible
@@ -203,18 +203,18 @@ def test_get_nonexistent_user(client):
 
 
 # ---------- Additional: update uniqueness check on username ----------
-def test_update_duplicate_username_rejected(client):
+def test_update_duplicate_username_rejected(client, auth_headers):
     client.post("/api/users", json={"username": "u1", "email": "u1@example.com"})
     resp2 = client.post("/api/users", json={"username": "u2", "email": "u2@example.com"})
     user2_id = resp2.json()["id"]
-    resp = client.patch(f"/api/users/{user2_id}", json={"username": "u1"})
+    resp = client.patch(f"/api/users/{user2_id}", json={"username": "u1"}, headers=auth_headers(user2_id))
     assert resp.status_code == 409
 
 
 # ---------- Additional: update uniqueness check on email ----------
-def test_update_duplicate_email_rejected(client):
+def test_update_duplicate_email_rejected(client, auth_headers):
     client.post("/api/users", json={"username": "u1", "email": "u1@example.com"})
     resp2 = client.post("/api/users", json={"username": "u2", "email": "u2@example.com"})
     user2_id = resp2.json()["id"]
-    resp = client.patch(f"/api/users/{user2_id}", json={"email": "u1@example.com"})
+    resp = client.patch(f"/api/users/{user2_id}", json={"email": "u1@example.com"}, headers=auth_headers(user2_id))
     assert resp.status_code == 409

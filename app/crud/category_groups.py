@@ -26,6 +26,12 @@ class CRUDCategoryGroup:
             CategoryGroup.group_id == group_id,
         ).all()
 
+    def count_by_category(self, db: Session, *, category_id: int) -> int:
+        """Count groups registered to a category."""
+        return db.query(CategoryGroup).filter(
+            CategoryGroup.category_id == category_id,
+        ).count()
+
     def is_user_in_category(self, db: Session, *, category_id: int, user_id: int) -> bool:
         """Check if a user is already in any group registered to this category."""
         from app.models.member import Member

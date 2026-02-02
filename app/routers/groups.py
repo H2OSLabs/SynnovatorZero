@@ -63,10 +63,20 @@ def update_group(
     group_id: int,
     group_in: schemas.GroupUpdate,
     db: Session = Depends(get_db),
+    user_id: int = Depends(require_current_user_id),
 ):
     item = crud.groups.get(db, id=group_id)
     if item is None:
         raise HTTPException(status_code=404, detail="Group not found")
+
+    # Permission check: owner, admin member, or platform admin
+    user = crud.users.get(db, id=user_id)
+    if user.role != "admin":
+        if item.created_by != user_id:
+            member = crud.members.get_by_group_and_user(db, group_id=group_id, user_id=user_id)
+            if member is None or member.role != "admin":
+                raise HTTPException(status_code=403, detail="Not authorized to update this group")
+
     return crud.groups.update(db, db_obj=item, obj_in=group_in)
 
 
@@ -74,10 +84,17 @@ def update_group(
 def delete_group(
     group_id: int,
     db: Session = Depends(get_db),
+    user_id: int = Depends(require_current_user_id),
 ):
     item = crud.groups.get(db, id=group_id)
     if item is None:
         raise HTTPException(status_code=404, detail="Group not found")
+
+    # Permission check: owner or platform admin
+    user = crud.users.get(db, id=user_id)
+    if user.role != "admin" and item.created_by != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this group")
+
     from app.services.cascade_delete import cascade_delete_group
     cascade_delete_group(db, group_id)
     return None

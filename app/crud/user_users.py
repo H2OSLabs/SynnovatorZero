@@ -41,6 +41,20 @@ class CRUDUserUser:
             UserUser.relation_type == "follow",
         ).all()
 
+    def count_followers(self, db: Session, *, user_id: int) -> int:
+        """Count users who follow this user."""
+        return db.query(UserUser).filter(
+            UserUser.target_user_id == user_id,
+            UserUser.relation_type == "follow",
+        ).count()
+
+    def count_following(self, db: Session, *, user_id: int) -> int:
+        """Count users this user follows."""
+        return db.query(UserUser).filter(
+            UserUser.source_user_id == user_id,
+            UserUser.relation_type == "follow",
+        ).count()
+
     def is_mutual_follow(self, db: Session, *, user_a: int, user_b: int) -> bool:
         """Check if two users follow each other (friends)."""
         a_follows_b = self.get_relation(db, source_user_id=user_a, target_user_id=user_b, relation_type="follow")

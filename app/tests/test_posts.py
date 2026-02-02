@@ -90,7 +90,7 @@ def test_create_certificate_post(client):
 def test_status_transition_draft_to_pending_review(client):
     uid = _create_user(client)
     post = _create_post(client, uid)
-    resp = client.patch(f"/api/posts/{post['id']}", json={"status": "pending_review"})
+    resp = client.patch(f"/api/posts/{post['id']}", json={"status": "pending_review"}, headers={"X-User-Id": str(uid)})
     assert resp.status_code == 200
     assert resp.json()["status"] == "pending_review"
 
@@ -99,8 +99,8 @@ def test_status_transition_draft_to_pending_review(client):
 def test_status_transition_pending_review_to_published(client):
     uid = _create_user(client)
     post = _create_post(client, uid)
-    client.patch(f"/api/posts/{post['id']}", json={"status": "pending_review"})
-    resp = client.patch(f"/api/posts/{post['id']}", json={"status": "published"})
+    client.patch(f"/api/posts/{post['id']}", json={"status": "pending_review"}, headers={"X-User-Id": str(uid)})
+    resp = client.patch(f"/api/posts/{post['id']}", json={"status": "published"}, headers={"X-User-Id": str(uid)})
     assert resp.status_code == 200
     assert resp.json()["status"] == "published"
 
@@ -109,8 +109,8 @@ def test_status_transition_pending_review_to_published(client):
 def test_status_transition_pending_review_to_rejected(client):
     uid = _create_user(client)
     post = _create_post(client, uid)
-    client.patch(f"/api/posts/{post['id']}", json={"status": "pending_review"})
-    resp = client.patch(f"/api/posts/{post['id']}", json={"status": "rejected"})
+    client.patch(f"/api/posts/{post['id']}", json={"status": "pending_review"}, headers={"X-User-Id": str(uid)})
+    resp = client.patch(f"/api/posts/{post['id']}", json={"status": "rejected"}, headers={"X-User-Id": str(uid)})
     assert resp.status_code == 200
     assert resp.json()["status"] == "rejected"
 
@@ -119,9 +119,9 @@ def test_status_transition_pending_review_to_rejected(client):
 def test_status_transition_rejected_to_draft(client):
     uid = _create_user(client)
     post = _create_post(client, uid)
-    client.patch(f"/api/posts/{post['id']}", json={"status": "pending_review"})
-    client.patch(f"/api/posts/{post['id']}", json={"status": "rejected"})
-    resp = client.patch(f"/api/posts/{post['id']}", json={"status": "draft"})
+    client.patch(f"/api/posts/{post['id']}", json={"status": "pending_review"}, headers={"X-User-Id": str(uid)})
+    client.patch(f"/api/posts/{post['id']}", json={"status": "rejected"}, headers={"X-User-Id": str(uid)})
+    resp = client.patch(f"/api/posts/{post['id']}", json={"status": "draft"}, headers={"X-User-Id": str(uid)})
     assert resp.status_code == 200
     assert resp.json()["status"] == "draft"
 
@@ -130,7 +130,7 @@ def test_status_transition_rejected_to_draft(client):
 def test_published_is_terminal_state(client):
     uid = _create_user(client)
     post = _create_post(client, uid, status="published")
-    resp = client.patch(f"/api/posts/{post['id']}", json={"status": "draft"})
+    resp = client.patch(f"/api/posts/{post['id']}", json={"status": "draft"}, headers={"X-User-Id": str(uid)})
     assert resp.status_code == 422
 
 
@@ -141,7 +141,7 @@ def test_update_title_and_content(client):
     resp = client.patch(f"/api/posts/{post['id']}", json={
         "title": "Updated Title",
         "content": "# Updated Content",
-    })
+    }, headers={"X-User-Id": str(uid)})
     assert resp.status_code == 200
     data = resp.json()
     assert data["title"] == "Updated Title"
@@ -159,7 +159,7 @@ def test_create_private_post(client):
 def test_private_post_can_publish_directly(client):
     uid = _create_user(client)
     post = _create_post(client, uid, visibility="private")
-    resp = client.patch(f"/api/posts/{post['id']}", json={"status": "published"})
+    resp = client.patch(f"/api/posts/{post['id']}", json={"status": "published"}, headers={"X-User-Id": str(uid)})
     assert resp.status_code == 200
     assert resp.json()["status"] == "published"
 
@@ -168,7 +168,7 @@ def test_private_post_can_publish_directly(client):
 def test_change_visibility_public_to_private(client):
     uid = _create_user(client)
     post = _create_post(client, uid)
-    resp = client.patch(f"/api/posts/{post['id']}", json={"visibility": "private"})
+    resp = client.patch(f"/api/posts/{post['id']}", json={"visibility": "private"}, headers={"X-User-Id": str(uid)})
     assert resp.status_code == 200
     assert resp.json()["visibility"] == "private"
 
@@ -177,7 +177,7 @@ def test_change_visibility_public_to_private(client):
 def test_change_visibility_private_to_public(client):
     uid = _create_user(client)
     post = _create_post(client, uid, visibility="private")
-    resp = client.patch(f"/api/posts/{post['id']}", json={"visibility": "public"})
+    resp = client.patch(f"/api/posts/{post['id']}", json={"visibility": "public"}, headers={"X-User-Id": str(uid)})
     assert resp.status_code == 200
     assert resp.json()["visibility"] == "public"
 
@@ -193,7 +193,7 @@ def test_default_visibility_is_public(client):
 def test_delete_post(client):
     uid = _create_user(client)
     post = _create_post(client, uid, title="Delete Me")
-    del_resp = client.delete(f"/api/posts/{post['id']}")
+    del_resp = client.delete(f"/api/posts/{post['id']}", headers={"X-User-Id": str(uid)})
     assert del_resp.status_code == 204
 
     get_resp = client.get(f"/api/posts/{post['id']}")

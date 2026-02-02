@@ -60,7 +60,7 @@ def test_update_group_description_and_max_members(client):
     resp = client.patch(f"/api/groups/{group_id}", json={
         "description": "Updated description",
         "max_members": 10,
-    })
+    }, headers={"X-User-Id": str(uid)})
     assert resp.status_code == 200
     data = resp.json()
     assert data["description"] == "Updated description"
@@ -79,7 +79,7 @@ def test_update_require_approval(client):
 
     resp = client.patch(f"/api/groups/{group_id}", json={
         "require_approval": False,
-    })
+    }, headers={"X-User-Id": str(uid)})
     assert resp.status_code == 200
     assert resp.json()["require_approval"] is False
 
@@ -95,7 +95,7 @@ def test_update_visibility(client):
 
     resp = client.patch(f"/api/groups/{group_id}", json={
         "visibility": "private",
-    })
+    }, headers={"X-User-Id": str(uid)})
     assert resp.status_code == 200
     assert resp.json()["visibility"] == "private"
 
@@ -109,7 +109,7 @@ def test_delete_group(client):
     }, headers={"X-User-Id": str(uid)})
     group_id = create_resp.json()["id"]
 
-    del_resp = client.delete(f"/api/groups/{group_id}")
+    del_resp = client.delete(f"/api/groups/{group_id}", headers={"X-User-Id": str(uid)})
     assert del_resp.status_code == 204
 
     # Group should no longer be accessible

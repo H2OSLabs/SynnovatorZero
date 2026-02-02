@@ -54,10 +54,17 @@ def update_user(
     user_id: int,
     user_in: schemas.UserUpdate,
     db: Session = Depends(get_db),
+    current_user_id: int = Depends(require_current_user_id),
 ):
     item = crud.users.get(db, id=user_id)
     if item is None:
         raise HTTPException(status_code=404, detail="User not found")
+
+    # Permission check: self or admin
+    current_user = crud.users.get(db, id=current_user_id)
+    if current_user.role != "admin" and user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this user")
+
     # Check uniqueness if username is being changed
     if user_in.username and user_in.username != item.username:
         existing = crud.users.get_by_username(db, username=user_in.username)
@@ -75,10 +82,17 @@ def update_user(
 def delete_user(
     user_id: int,
     db: Session = Depends(get_db),
+    current_user_id: int = Depends(require_current_user_id),
 ):
     item = crud.users.get(db, id=user_id)
     if item is None:
         raise HTTPException(status_code=404, detail="User not found")
+
+    # Permission check: self or admin
+    current_user = crud.users.get(db, id=current_user_id)
+    if current_user.role != "admin" and user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this user")
+
     from app.services.cascade_delete import cascade_delete_user
     cascade_delete_user(db, user_id)
     return None
@@ -107,7 +121,12 @@ def follow_user(
     )
     if existing:
         raise HTTPException(status_code=409, detail="Already following this user")
-    return crud.user_users.create(db, source_user_id=current_user_id, target_user_id=user_id, relation_type="follow")
+    result = crud.user_users.create(db, source_user_id=current_user_id, target_user_id=user_id, relation_type="follow")
+    # Update cache for both users
+    from app.services.cache_update import update_user_follow_cache
+    update_user_follow_cache(db, current_user_id)  # following_count +1
+    update_user_follow_cache(db, user_id)  # follower_count +1
+    return result
 
 
 @router.delete("/users/{user_id}/follow", status_code=status.HTTP_204_NO_CONTENT, tags=["users"])
@@ -123,6 +142,10 @@ def unfollow_user(
     if rel is None:
         raise HTTPException(status_code=404, detail="Not following this user")
     crud.user_users.remove(db, source_user_id=current_user_id, target_user_id=user_id, relation_type="follow")
+    # Update cache for both users
+    from app.services.cache_update import update_user_follow_cache
+    update_user_follow_cache(db, current_user_id)  # following_count -1
+    update_user_follow_cache(db, user_id)  # follower_count -1
     return None
 
 

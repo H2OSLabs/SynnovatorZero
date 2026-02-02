@@ -47,10 +47,17 @@ def update_resource(
     resource_id: int,
     resource_in: schemas.ResourceUpdate,
     db: Session = Depends(get_db),
+    user_id: int = Depends(require_current_user_id),
 ):
     item = crud.resources.get(db, id=resource_id)
     if item is None:
         raise HTTPException(status_code=404, detail="Resource not found")
+
+    # Permission check: creator or admin
+    user = crud.users.get(db, id=user_id)
+    if user.role != "admin" and item.created_by != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this resource")
+
     return crud.resources.update(db, db_obj=item, obj_in=resource_in)
 
 
@@ -58,9 +65,16 @@ def update_resource(
 def delete_resource(
     resource_id: int,
     db: Session = Depends(get_db),
+    user_id: int = Depends(require_current_user_id),
 ):
     item = crud.resources.get(db, id=resource_id)
     if item is None:
         raise HTTPException(status_code=404, detail="Resource not found")
+
+    # Permission check: creator or admin
+    user = crud.users.get(db, id=user_id)
+    if user.role != "admin" and item.created_by != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this resource")
+
     crud.resources.remove(db, id=resource_id)
     return None

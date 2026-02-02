@@ -53,10 +53,17 @@ def update_rule(
     rule_id: int,
     rule_in: schemas.RuleUpdate,
     db: Session = Depends(get_db),
+    user_id: int = Depends(require_current_user_id),
 ):
     item = crud.rules.get(db, id=rule_id)
     if item is None:
         raise HTTPException(status_code=404, detail="Rule not found")
+
+    # Permission check: creator or admin
+    user = crud.users.get(db, id=user_id)
+    if user.role != "admin" and item.created_by != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this rule")
+
     return crud.rules.update(db, db_obj=item, obj_in=rule_in)
 
 
@@ -64,10 +71,17 @@ def update_rule(
 def delete_rule(
     rule_id: int,
     db: Session = Depends(get_db),
+    user_id: int = Depends(require_current_user_id),
 ):
     item = crud.rules.get(db, id=rule_id)
     if item is None:
         raise HTTPException(status_code=404, detail="Rule not found")
+
+    # Permission check: creator or admin
+    user = crud.users.get(db, id=user_id)
+    if user.role != "admin" and item.created_by != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this rule")
+
     from app.services.cascade_delete import cascade_delete_rule
     cascade_delete_rule(db, rule_id)
     return None

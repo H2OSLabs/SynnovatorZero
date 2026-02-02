@@ -275,6 +275,6 @@ def test_like_deleted_post_returns_404(client):
     post = _create_post(client, uid)
     post_id = post["id"]
     # Soft delete the post
-    client.delete(f"/api/posts/{post_id}")
+    client.delete(f"/api/posts/{post_id}", headers={"X-User-Id": str(uid)})
     resp = client.post(f"/api/posts/{post_id}/like", headers={"X-User-Id": str(uid)})
     assert resp.status_code == 404

@@ -64,10 +64,16 @@ def update_post(
     post_id: int,
     post_in: schemas.PostUpdate,
     db: Session = Depends(get_db),
+    user_id: int = Depends(require_current_user_id),
 ):
     item = crud.posts.get(db, id=post_id)
     if item is None:
         raise HTTPException(status_code=404, detail="Post not found")
+
+    # Permission check: author or admin
+    user = crud.users.get(db, id=user_id)
+    if user.role != "admin" and item.created_by != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this post")
 
     # Validate status transition
     if post_in.status is not None and post_in.status != item.status:
@@ -88,10 +94,17 @@ def update_post(
 def delete_post(
     post_id: int,
     db: Session = Depends(get_db),
+    user_id: int = Depends(require_current_user_id),
 ):
     item = crud.posts.get(db, id=post_id)
     if item is None:
         raise HTTPException(status_code=404, detail="Post not found")
+
+    # Permission check: author or admin
+    user = crud.users.get(db, id=user_id)
+    if user.role != "admin" and item.created_by != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this post")
+
     from app.services.cascade_delete import cascade_delete_post
     cascade_delete_post(db, post_id)
     return None

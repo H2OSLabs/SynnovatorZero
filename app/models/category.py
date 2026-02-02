@@ -18,6 +18,8 @@ class Category(Base):
     end_date = Column(DateTime, nullable=True)
     created_by = Column(Integer, nullable=True)
     content = Column(Text, nullable=True)
+    # Cache field for participant count
+    participant_count = Column(Integer, nullable=False, default=0)
     deleted_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)

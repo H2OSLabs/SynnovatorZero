@@ -630,7 +630,7 @@ def test_delete_post_full_cascade(client):
     assert post_data["comment_count"] == 1
 
     # DELETE the post
-    resp = client.delete(f"/api/posts/{post_id}")
+    resp = client.delete(f"/api/posts/{post_id}", headers=h)
     assert resp.status_code == 204
 
     # Verify: GET post -> 404

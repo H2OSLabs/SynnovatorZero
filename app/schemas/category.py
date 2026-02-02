@@ -44,6 +44,7 @@ class CategoryUpdate(BaseModel):
 class CategoryInDBBase(CategoryBase):
     id: int
     created_by: Optional[int] = None
+    participant_count: int = 0
     created_at: datetime
     updated_at: Optional[datetime] = None
     deleted_at: Optional[datetime] = None

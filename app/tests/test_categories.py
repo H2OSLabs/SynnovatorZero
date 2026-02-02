@@ -152,7 +152,7 @@ def test_delete_category(client):
     uid = _create_user(client)
     cat = _create_category(client, uid, name="Delete Me")
 
-    del_resp = client.delete(f"/api/categories/{cat['id']}")
+    del_resp = client.delete(f"/api/categories/{cat['id']}", headers={"X-User-Id": str(uid)})
     assert del_resp.status_code == 204
 
     # Category should no longer be accessible

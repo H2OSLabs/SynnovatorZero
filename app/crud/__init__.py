@@ -16,3 +16,4 @@ from app.crud.category_posts import category_posts
 from app.crud.category_groups import category_groups
 from app.crud.target_interactions import target_interactions
 from app.crud.category_categories import category_categories
+from app.crud.notifications import notifications

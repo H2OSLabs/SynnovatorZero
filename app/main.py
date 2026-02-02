@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import engine, Base
-from app.routers import users, resources, categories, posts, rules, groups, interactions, admin
+from app.routers import users, resources, categories, posts, rules, groups, interactions, admin, auth, notifications
 
 # Import all models so Base.metadata knows about them
 import app.models  # noqa: F401
@@ -41,3 +41,5 @@ app.include_router(rules.router, prefix="/api", tags=["rules"])
 app.include_router(groups.router, prefix="/api", tags=["groups"])
 app.include_router(interactions.router, prefix="/api", tags=["interactions"])
 app.include_router(admin.router, prefix="/api", tags=["admin"])
+app.include_router(auth.router, prefix="/api", tags=["auth"])
+app.include_router(notifications.router, prefix="/api", tags=["notifications"])
