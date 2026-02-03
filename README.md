@@ -160,8 +160,6 @@ The frontend uses the **Neon Forge** theme:
 - Card: Dark Gray `#222222`
 - Text: White `#FFFFFF` / Light Gray `#DCDCDC` / Muted `#8E8E8E`
 
-View component demos at http://localhost:3000/demo
-
 ## License
 
 Private - H2OSLabs

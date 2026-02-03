@@ -232,7 +232,6 @@
 ### 7.3 支持文件
 - [x] `frontend/lib/types.ts` - TypeScript 类型定义
 - [x] `frontend/lib/api-client.ts` - API 客户端
-- [x] `frontend/app/demo/page.tsx` - 组件演示页面
 
 ### 7.4 P2 组件
 - [x] `frontend/components/search/SearchModal.tsx` (Phase 12)
@@ -357,20 +356,10 @@
 ### 11.2 首页 E2E (`e2e/test_home.py`)
 - [x] 页面加载测试
 - [x] 标题和副标题显示
-- [x] Demo 链接存在和导航
 - [x] 深色主题验证
 
-### 11.3 组件演示页 E2E (`e2e/test_demo.py`)
-- [x] 页面布局和分区显示
-- [x] 认证组件 (登录表单显示、字段验证)
-- [x] 活动阶段组件 (徽章、时间线、卡片)
-- [x] 用户关系组件 (关注按钮、粉丝/关注 tabs)
-- [x] 活动列表组件
-- [x] 响应式布局 (mobile/tablet viewports)
-
 ### 11.4 测试结果
-- 22 tests total (20 passed, 2 skipped)
-- 跳过的测试: 表单切换在 headless 模式下有 React hydration 问题
+- 4 tests total (4 passed, 0 skipped)
 
 ---
 
@@ -392,17 +381,13 @@
 - [x] 添加 `GET /api/stats` 端点到 `app/main.py`
 - [x] 添加 Jest 测试 `frontend/__tests__/PlatformStats.test.tsx` (5 tests)
 
-### 12.3 Demo 页面更新
-- [x] 更新 `frontend/app/demo/page.tsx` 集成新组件
-- [x] 添加 "Phase 12 前端组件预览" 标识
-
 ### 12.4 Bug 修复
 - [x] 修复 `CategoryStageView.tsx` config undefined 错误 (添加 fallback)
 - [x] 添加 `ResizeObserver` mock 到 `jest.setup.ts` (cmdk 组件需要)
 
 ### 12.5 测试结果
 - Frontend Jest: 11 tests passed (包括 5 SearchModal + 5 PlatformStats + 1 existing)
-- E2E 验证: Demo 页面加载正常，PlatformStats 显示正确数据，⌘K 打开搜索弹窗
+- E2E 验证: 首页加载正常，⌘K 打开搜索弹窗，PlatformStats 显示正确数据
 
 ---
 

@@ -19,44 +19,22 @@ class TestHomePage:
         """E2E-HOME-002: Home page shows the platform title."""
         wait_for_app_load(page, FRONTEND_URL)
 
-        # Check for the Chinese title "协创者"
         title = page.locator("h1")
-        expect(title).to_contain_text("协创者")
+        expect(title).to_contain_text("创意在这里起飞")
 
     def test_home_page_shows_subtitle(self, page: Page):
-        """E2E-HOME-003: Home page shows the English subtitle."""
+        """E2E-HOME-003: Home page shows the subtitle."""
         wait_for_app_load(page, FRONTEND_URL)
 
-        # Check for subtitle
-        subtitle = page.locator("text=Creative Collaboration Platform")
+        subtitle = page.locator("text=发现最激动人心的 Hackathon")
         expect(subtitle).to_be_visible()
-
-    def test_demo_link_exists(self, page: Page):
-        """E2E-HOME-004: Home page has a link to the demo page."""
-        wait_for_app_load(page, FRONTEND_URL)
-
-        # Find demo link
-        demo_link = page.locator("text=查看组件演示")
-        expect(demo_link).to_be_visible()
-
-    def test_demo_link_navigates(self, page: Page):
-        """E2E-HOME-005: Clicking demo link navigates to /demo."""
-        wait_for_app_load(page, FRONTEND_URL)
-
-        # Click demo link
-        page.click("text=查看组件演示")
-        page.wait_for_load_state("networkidle")
-
-        # Verify URL changed
-        assert "/demo" in page.url
 
     def test_home_page_dark_theme(self, page: Page):
         """E2E-HOME-006: Home page uses dark theme (Neon Forge)."""
         wait_for_app_load(page, FRONTEND_URL)
 
-        # Check for dark background on main element
-        main = page.locator("main")
-        expect(main).to_be_visible()
+        root = page.locator(".bg-nf-dark")
+        expect(root.first).to_be_visible()
 
         # The lime green accent should be visible
         lime_element = page.locator(".text-nf-lime, [class*='text-nf-lime']")
