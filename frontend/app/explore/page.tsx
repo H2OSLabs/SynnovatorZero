@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Search, SlidersHorizontal } from "lucide-react"
 import { PageLayout } from "@/components/layout/PageLayout"
 import { CategoryCard } from "@/components/cards/CategoryCard"
@@ -10,12 +10,7 @@ import { UserCard } from "@/components/cards/UserCard"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-// Mock data
-const mockCategories = [
-  { id: 1, name: "AI 创新挑战赛 2024", type: "competition" as const, status: "published" as const, tags: ["AI"], participant_count: 128 },
-  { id: 2, name: "Web3 黑客马拉松", type: "competition" as const, status: "published" as const, tags: ["Web3"], participant_count: 86 },
-]
+import { getCategories, type Category } from "@/lib/api-client"
 
 const mockPosts = [
   { id: 1, title: "基于大模型的智能教育平台", type: "for_category", status: "published", tags: ["AI"], like_count: 128, comment_count: 32, created_by: { id: 1, username: "alice", display_name: "Alice" } },
@@ -34,6 +29,26 @@ const mockUsers = [
 
 export default function ExplorePage() {
   const [activeTab, setActiveTab] = useState("all")
+  const [categories, setCategories] = useState<Category[]>([])
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true)
+  const [categoriesError, setCategoriesError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setIsLoadingCategories(true)
+      setCategoriesError(null)
+      try {
+        const resp = await getCategories(0, 6, { status: "published" })
+        setCategories(resp.items)
+      } catch (e) {
+        setCategoriesError(e instanceof Error ? e.message : "加载失败")
+        setCategories([])
+      } finally {
+        setIsLoadingCategories(false)
+      }
+    }
+    fetchCategories()
+  }, [])
 
   return (
     <PageLayout variant="compact" user={null}>
@@ -73,11 +88,29 @@ export default function ExplorePage() {
             {/* Events Section */}
             <section>
               <h2 className="font-heading text-xl font-semibold text-nf-white mb-4">活动</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {mockCategories.map((cat) => (
-                  <CategoryCard key={cat.id} {...cat} />
-                ))}
-              </div>
+              {isLoadingCategories ? (
+                <div className="text-center py-10 text-nf-muted">加载中...</div>
+              ) : categoriesError ? (
+                <div className="text-center py-10 text-nf-muted">{categoriesError}</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {categories.map((cat) => (
+                    <CategoryCard
+                      key={cat.id}
+                      id={cat.id}
+                      name={cat.name}
+                      description={cat.description}
+                      type={cat.type}
+                      status={cat.status}
+                      tags={cat.tags ?? []}
+                      cover_image={cat.cover_image ?? undefined}
+                      start_date={cat.start_date ?? undefined}
+                      end_date={cat.end_date ?? undefined}
+                      participant_count={cat.participant_count ?? 0}
+                    />
+                  ))}
+                </div>
+              )}
             </section>
 
             {/* Posts Section */}
@@ -103,11 +136,29 @@ export default function ExplorePage() {
         </TabsContent>
 
         <TabsContent value="events">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockCategories.map((cat) => (
-              <CategoryCard key={cat.id} {...cat} />
-            ))}
-          </div>
+          {isLoadingCategories ? (
+            <div className="text-center py-10 text-nf-muted">加载中...</div>
+          ) : categoriesError ? (
+            <div className="text-center py-10 text-nf-muted">{categoriesError}</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {categories.map((cat) => (
+                <CategoryCard
+                  key={cat.id}
+                  id={cat.id}
+                  name={cat.name}
+                  description={cat.description}
+                  type={cat.type}
+                  status={cat.status}
+                  tags={cat.tags ?? []}
+                  cover_image={cat.cover_image ?? undefined}
+                  start_date={cat.start_date ?? undefined}
+                  end_date={cat.end_date ?? undefined}
+                  participant_count={cat.participant_count ?? 0}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="posts">

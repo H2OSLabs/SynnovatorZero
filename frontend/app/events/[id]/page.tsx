@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useParams } from "next/navigation"
+import { useEffect, useState } from "react"
 import { ArrowLeft, Calendar, Users, Clock, Award, FileText, UserPlus } from "lucide-react"
 import { PageLayout } from "@/components/layout/PageLayout"
 import { Panel, PanelSection, PanelCard } from "@/components/layout/Panel"
@@ -11,37 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-// Mock data
-const mockCategory = {
-  id: 1,
-  name: "AI 创新挑战赛 2024",
-  description: "探索人工智能的无限可能，用 AI 改变世界",
-  content: `## 活动介绍
-
-本次 AI 创新挑战赛旨在发掘和培养人工智能领域的创新人才，鼓励参赛者利用 AI 技术解决实际问题。
-
-## 奖项设置
-
-- 一等奖：¥50,000 + 孵化支持
-- 二等奖：¥30,000
-- 三等奖：¥10,000
-- 优秀奖：¥5,000 × 10
-
-## 参赛要求
-
-1. 团队人数：2-5 人
-2. 提交格式：PDF + 演示视频
-3. 作品需原创，不得抄袭`,
-  type: "competition",
-  status: "published",
-  tags: ["AI", "Machine Learning", "Deep Learning"],
-  cover_image: null,
-  start_date: "2024-03-01",
-  end_date: "2024-03-30",
-  created_by: { id: 1, username: "techcorp", display_name: "TechCorp" },
-  participant_count: 128,
-}
+import { getCategory, type Category } from "@/lib/api-client"
 
 const mockPosts = [
   { id: 1, title: "基于大模型的智能教育平台", type: "for_category", status: "published", tags: ["AI"], like_count: 128, comment_count: 32, created_by: { id: 1, username: "alice", display_name: "Alice" } },
@@ -69,6 +40,32 @@ const mockRules = {
 export default function EventDetailPage() {
   const params = useParams()
   const id = params.id as string
+  const categoryId = Number(id)
+  const [category, setCategory] = useState<Category | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!Number.isFinite(categoryId)) {
+      setError("无效的活动 ID")
+      setIsLoading(false)
+      return
+    }
+    const fetchData = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const data = await getCategory(categoryId)
+        setCategory(data)
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "加载失败")
+        setCategory(null)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchData()
+  }, [categoryId])
 
   const statusConfig = {
     published: { label: "进行中", className: "bg-nf-lime text-nf-near-black" },
@@ -76,7 +73,11 @@ export default function EventDetailPage() {
     closed: { label: "已结束", className: "bg-nf-muted text-nf-white" },
   }
 
-  const statusInfo = statusConfig[mockCategory.status as keyof typeof statusConfig]
+  const statusInfo = statusConfig[(category?.status || "draft") as keyof typeof statusConfig]
+
+  const startDate = category?.start_date ? new Date(category.start_date).toLocaleDateString("zh-CN") : null
+  const endDate = category?.end_date ? new Date(category.end_date).toLocaleDateString("zh-CN") : null
+  const dateRange = startDate && endDate ? `${startDate} - ${endDate}` : null
 
   const panelContent = (
     <Panel title="📊 活动概览">
@@ -89,7 +90,7 @@ export default function EventDetailPage() {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-nf-muted">报名人数</span>
-              <span className="text-nf-white font-medium">{mockCategory.participant_count}</span>
+              <span className="text-nf-white font-medium">{category?.participant_count ?? 0}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-nf-muted">提交作品</span>
@@ -104,11 +105,11 @@ export default function EventDetailPage() {
           <div className="space-y-3">
             <div>
               <p className="text-xs text-nf-muted">开始时间</p>
-              <p className="text-nf-white">{mockCategory.start_date}</p>
+              <p className="text-nf-white">{startDate || "-"}</p>
             </div>
             <div>
               <p className="text-xs text-nf-muted">结束时间</p>
-              <p className="text-nf-white">{mockCategory.end_date}</p>
+              <p className="text-nf-white">{endDate || "-"}</p>
             </div>
           </div>
         </PanelCard>
@@ -150,8 +151,8 @@ export default function EventDetailPage() {
 
       {/* Cover Image */}
       <div className="relative aspect-video bg-nf-surface rounded-xl mb-6 overflow-hidden">
-        {mockCategory.cover_image ? (
-          <img src={mockCategory.cover_image} alt={mockCategory.name} className="w-full h-full object-cover" />
+        {category?.cover_image ? (
+          <img src={category.cover_image} alt={category.name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-nf-secondary to-nf-dark">
             <Calendar className="h-20 w-20 text-nf-muted" />
@@ -165,15 +166,15 @@ export default function EventDetailPage() {
       {/* Title & Meta */}
       <div className="mb-6">
         <h1 className="font-heading text-3xl font-bold text-nf-white mb-2">
-          🏆 {mockCategory.name}
+          🏆 {category?.name || "活动"}
         </h1>
         <div className="flex items-center gap-4 text-nf-muted">
-          <span>由 {mockCategory.created_by.display_name} 主办</span>
+          <span>由 {category?.created_by ? `用户 #${category.created_by}` : "未知主办方"} 主办</span>
           <span>·</span>
-          <span>{mockCategory.start_date} - {mockCategory.end_date}</span>
+          <span>{dateRange || "-"}</span>
         </div>
         <div className="flex gap-2 mt-4">
-          {mockCategory.tags.map((tag) => (
+          {(category?.tags || []).map((tag) => (
             <Badge key={tag} variant="secondary" className="bg-nf-dark">
               {tag}
             </Badge>
@@ -193,7 +194,7 @@ export default function EventDetailPage() {
         <TabsContent value="details">
           <div className="prose prose-invert max-w-none">
             <div className="whitespace-pre-wrap text-nf-light-gray">
-              {mockCategory.content}
+              {isLoading ? "加载中..." : error ? error : category?.content || "暂无详情"}
             </div>
           </div>
 

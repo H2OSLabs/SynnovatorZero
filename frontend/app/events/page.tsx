@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Search, SlidersHorizontal, Plus } from "lucide-react"
 import Link from "next/link"
 import { PageLayout } from "@/components/layout/PageLayout"
@@ -8,27 +8,40 @@ import { CategoryCard } from "@/components/cards/CategoryCard"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-// Mock data
-const mockCategories = [
-  { id: 1, name: "AI 创新挑战赛 2024", type: "competition" as const, status: "published" as const, tags: ["AI", "Machine Learning"], participant_count: 128, start_date: "2024-03-01", end_date: "2024-03-30" },
-  { id: 2, name: "Web3 黑客马拉松", type: "competition" as const, status: "published" as const, tags: ["Web3", "Blockchain"], participant_count: 86, start_date: "2024-04-01", end_date: "2024-04-15" },
-  { id: 3, name: "绿色科技创新大赛", type: "competition" as const, status: "published" as const, tags: ["Climate", "Sustainability"], participant_count: 64, start_date: "2024-05-01", end_date: "2024-05-31" },
-  { id: 4, name: "开源社区贡献月", type: "operation" as const, status: "published" as const, tags: ["Open Source"], participant_count: 256, start_date: "2024-03-01", end_date: "2024-03-31" },
-  { id: 5, name: "移动应用创新赛", type: "competition" as const, status: "draft" as const, tags: ["Mobile", "iOS", "Android"], participant_count: 0, start_date: "2024-06-01", end_date: "2024-06-30" },
-  { id: 6, name: "2023 年度创新盛典", type: "competition" as const, status: "closed" as const, tags: ["Innovation"], participant_count: 512, start_date: "2023-11-01", end_date: "2023-12-15" },
-]
+import { getCategories, type Category } from "@/lib/api-client"
 
 export default function EventsPage() {
   const [activeTab, setActiveTab] = useState("all")
+  const [categories, setCategories] = useState<Category[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const filteredCategories = mockCategories.filter((cat) => {
-    if (activeTab === "all") return true
-    if (activeTab === "ongoing") return cat.status === "published"
-    if (activeTab === "upcoming") return cat.status === "draft"
-    if (activeTab === "ended") return cat.status === "closed"
-    return true
-  })
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const status =
+          activeTab === "ongoing"
+            ? "published"
+            : activeTab === "upcoming"
+              ? "draft"
+              : activeTab === "ended"
+                ? "closed"
+                : undefined
+        const resp = await getCategories(0, 100, status ? { status } : undefined)
+        setCategories(resp.items)
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "加载失败")
+        setCategories([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchData()
+  }, [activeTab])
+
+  const filteredCategories = categories
 
   return (
     <PageLayout variant="compact" user={null}>
@@ -71,10 +84,30 @@ export default function EventsPage() {
         </TabsList>
 
         <TabsContent value={activeTab}>
-          {filteredCategories.length > 0 ? (
+          {isLoading ? (
+            <div className="text-center py-16">
+              <p className="text-nf-muted">加载中...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-16">
+              <p className="text-nf-muted">{error}</p>
+            </div>
+          ) : filteredCategories.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredCategories.map((cat) => (
-                <CategoryCard key={cat.id} {...cat} />
+                <CategoryCard
+                  key={cat.id}
+                  id={cat.id}
+                  name={cat.name}
+                  description={cat.description}
+                  type={cat.type}
+                  status={cat.status}
+                  tags={cat.tags ?? []}
+                  cover_image={cat.cover_image ?? undefined}
+                  start_date={cat.start_date ?? undefined}
+                  end_date={cat.end_date ?? undefined}
+                  participant_count={cat.participant_count ?? 0}
+                />
               ))}
             </div>
           ) : (

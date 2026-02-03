@@ -214,6 +214,42 @@ def test_list_categories(client):
     assert resp.json()["total"] == 2
 
 
+def test_list_categories_filter_by_status(client):
+    uid = _create_user(client)
+    _create_category(client, uid, name="Draft1", status="draft")
+    _create_category(client, uid, name="Published1", status="published")
+    _create_category(client, uid, name="Closed1", status="closed")
+
+    resp = client.get("/api/categories?status=published")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] == 1
+    assert data["items"][0]["status"] == "published"
+
+
+def test_list_categories_filter_by_type(client):
+    uid = _create_user(client)
+    _create_category(client, uid, name="Comp1", type="competition")
+    _create_category(client, uid, name="Op1", type="operation")
+
+    resp = client.get("/api/categories?type=operation")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] == 1
+    assert data["items"][0]["type"] == "operation"
+
+
+def test_list_categories_filter_invalid_value_rejected(client):
+    uid = _create_user(client)
+    _create_category(client, uid, name="C1")
+
+    resp = client.get("/api/categories?status=archived")
+    assert resp.status_code == 422
+
+    resp2 = client.get("/api/categories?type=workshop")
+    assert resp2.status_code == 422
+
+
 # ---------- Additional: get nonexistent category ----------
 def test_get_nonexistent_category(client):
     resp = client.get("/api/categories/9999")

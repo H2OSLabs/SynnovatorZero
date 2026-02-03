@@ -6,7 +6,7 @@ from typing import Optional
 from app import crud, schemas
 from app.database import get_db
 from app.deps import get_current_user_id, require_current_user_id, require_role
-from app.schemas.post import VALID_POST_STATUS_TRANSITIONS
+from app.schemas.post import POST_STATUSES, POST_TYPES, VALID_POST_STATUS_TRANSITIONS
 
 router = APIRouter()
 
@@ -20,8 +20,19 @@ def list_posts(
     tags: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
-    items = crud.posts.get_multi(db, skip=skip, limit=limit)
-    total = len(items)
+    query = db.query(crud.posts.model).filter(
+        crud.posts.model.deleted_at.is_(None),
+    )
+    if type is not None:
+        if type not in POST_TYPES:
+            raise HTTPException(status_code=422, detail=f"Invalid type: {type}")
+        query = query.filter(crud.posts.model.type == type)
+    if post_status is not None:
+        if post_status not in POST_STATUSES:
+            raise HTTPException(status_code=422, detail=f"Invalid status: {post_status}")
+        query = query.filter(crud.posts.model.status == post_status)
+    total = query.count()
+    items = query.offset(skip).limit(limit).all()
     return {"items": items, "total": total, "skip": skip, "limit": limit}
 
 

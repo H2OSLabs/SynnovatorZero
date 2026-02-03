@@ -2,7 +2,7 @@
  * API client for Synnovator backend
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api'
 
 interface ApiOptions extends RequestInit {
   userId?: number
@@ -73,11 +73,33 @@ export async function getUser(userId: number) {
     username: string
     email: string
     role: string
+    display_name?: string
     avatar_url?: string
     bio?: string
     follower_count: number
     following_count: number
   }>(`/users/${userId}`)
+}
+
+export interface User {
+  id: number
+  username: string
+  email: string
+  role: 'participant' | 'organizer' | 'admin'
+  display_name?: string | null
+  avatar_url?: string | null
+  bio?: string | null
+  follower_count: number
+  following_count: number
+  created_at?: string
+  updated_at?: string | null
+  deleted_at?: string | null
+}
+
+export async function listUsers(skip = 0, limit = 20, role?: User['role']) {
+  const params = new URLSearchParams({ skip: String(skip), limit: String(limit) })
+  if (role) params.set('role', role)
+  return apiFetch<{ items: User[]; total: number; skip: number; limit: number }>(`/users?${params.toString()}`)
 }
 
 // User Relations
@@ -120,33 +142,123 @@ export async function getFollowing(userId: number, skip = 0, limit = 20) {
 }
 
 // Categories
-export async function getCategories(skip = 0, limit = 20) {
-  return apiFetch<{
-    items: Array<{
-      id: number
-      name: string
-      type: string
-      stage: string
-      description?: string
-      participant_count: number
-    }>
-    total: number
-  }>(`/categories?skip=${skip}&limit=${limit}`)
+export type CategoryStatus = 'draft' | 'published' | 'closed'
+export type CategoryType = 'competition' | 'operation'
+
+export interface Category {
+  id: number
+  name: string
+  description: string
+  type: CategoryType
+  status: CategoryStatus
+  tags?: string[] | null
+  cover_image?: string | null
+  start_date?: string | null
+  end_date?: string | null
+  created_by?: number | null
+  content?: string | null
+  participant_count: number
+  created_at?: string
+  updated_at?: string | null
+  deleted_at?: string | null
+}
+
+export async function getCategories(
+  skip = 0,
+  limit = 20,
+  filters?: { status?: CategoryStatus; type?: CategoryType }
+) {
+  const params = new URLSearchParams({ skip: String(skip), limit: String(limit) })
+  if (filters?.status) params.set('status', filters.status)
+  if (filters?.type) params.set('type', filters.type)
+  return apiFetch<{ items: Category[]; total: number; skip: number; limit: number }>(
+    `/categories?${params.toString()}`
+  )
 }
 
 export async function getCategory(categoryId: number) {
-  return apiFetch<{
-    id: number
-    name: string
-    type: string
-    stage: string
-    description?: string
-    cover_image_url?: string
-    start_time?: string
-    end_time?: string
-    registration_deadline?: string
-    participant_count: number
-  }>(`/categories/${categoryId}`)
+  return apiFetch<Category>(`/categories/${categoryId}`)
+}
+
+export type PostStatus = 'draft' | 'pending_review' | 'published' | 'rejected'
+export type PostVisibility = 'public' | 'private'
+
+export interface Post {
+  id: number
+  title: string
+  type: string
+  tags?: string[] | null
+  status: PostStatus
+  visibility: PostVisibility
+  content?: string | null
+  created_by?: number | null
+  like_count: number
+  comment_count: number
+  average_rating?: number | null
+  created_at?: string
+  updated_at?: string | null
+  deleted_at?: string | null
+}
+
+export async function getPosts(skip = 0, limit = 20, filters?: { type?: string; status?: PostStatus }) {
+  const params = new URLSearchParams({ skip: String(skip), limit: String(limit) })
+  if (filters?.type) params.set('type', filters.type)
+  if (filters?.status) params.set('status', filters.status)
+  return apiFetch<{ items: Post[]; total: number; skip: number; limit: number }>(`/posts?${params.toString()}`)
+}
+
+export async function getPost(postId: number) {
+  return apiFetch<Post>(`/posts/${postId}`)
+}
+
+export type GroupVisibility = 'public' | 'private'
+
+export interface Group {
+  id: number
+  name: string
+  description?: string | null
+  visibility: GroupVisibility
+  max_members?: number | null
+  require_approval?: boolean | null
+  created_by?: number | null
+  created_at?: string
+  updated_at?: string | null
+  deleted_at?: string | null
+}
+
+export interface Member {
+  id: number
+  group_id: number
+  user_id: number
+  role: 'owner' | 'admin' | 'member'
+  status: 'pending' | 'accepted' | 'rejected'
+  joined_at?: string | null
+  status_changed_at?: string | null
+  created_at?: string
+  updated_at?: string | null
+}
+
+export async function getGroups(skip = 0, limit = 20, filters?: { visibility?: GroupVisibility }) {
+  const params = new URLSearchParams({ skip: String(skip), limit: String(limit) })
+  if (filters?.visibility) params.set('visibility', filters.visibility)
+  return apiFetch<{ items: Group[]; total: number; skip: number; limit: number }>(`/groups?${params.toString()}`)
+}
+
+export async function getGroup(groupId: number) {
+  return apiFetch<Group>(`/groups/${groupId}`)
+}
+
+export async function getGroupMembers(
+  groupId: number,
+  skip = 0,
+  limit = 100,
+  filters?: { status?: Member['status'] }
+) {
+  const params = new URLSearchParams({ skip: String(skip), limit: String(limit) })
+  if (filters?.status) params.set('status', filters.status)
+  return apiFetch<{ items: Member[]; total: number; skip: number; limit: number }>(
+    `/groups/${groupId}/members?${params.toString()}`
+  )
 }
 
 // Notifications

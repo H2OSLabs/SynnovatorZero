@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
+import { getPostTypeIcon } from "@/lib/post-type"
 
 interface PostCardProps {
   id: number
@@ -53,19 +54,6 @@ export function PostCard({
     })
   }
 
-  const getTypeIcon = () => {
-    switch (type) {
-      case "for_category":
-        return "💡"
-      case "team":
-        return "👥"
-      case "profile":
-        return "👤"
-      default:
-        return "📝"
-    }
-  }
-
   // Strip markdown and truncate body
   const truncatedBody = body
     ? body.replace(/[#*`\[\]]/g, "").slice(0, 100) + (body.length > 100 ? "..." : "")
@@ -76,7 +64,7 @@ export function PostCard({
       <Card className={cn("bg-nf-secondary border-none hover:bg-nf-secondary/80 transition-colors cursor-pointer", className)}>
         <CardHeader className="p-4 pb-2">
           <h3 className="font-heading font-semibold text-nf-white line-clamp-2">
-            {getTypeIcon()} {title}
+            {getPostTypeIcon(type)} {title}
           </h3>
         </CardHeader>
 

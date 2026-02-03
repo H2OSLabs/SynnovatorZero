@@ -1,4 +1,4 @@
-.PHONY: start stop install dev backend frontend clean resetdb test test-unit test-e2e
+.PHONY: start stop install dev backend frontend clean resetdb seed test test-unit test-e2e
 
 # Default target
 start: install
@@ -28,6 +28,10 @@ resetdb:
 	@echo "Resetting database (schema changed)..."
 	@rm -f data/synnovator.db
 	@echo "Done. Run 'make start' to recreate tables."
+
+seed:
+	@echo "Seeding development data..."
+	@uv run python scripts/seed_dev_data.py
 
 clean:
 	@rm -rf app/__pycache__ data/*.db

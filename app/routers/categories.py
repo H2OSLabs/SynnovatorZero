@@ -6,7 +6,7 @@ from typing import Optional
 from app import crud, schemas
 from app.database import get_db
 from app.deps import get_current_user_id, require_current_user_id, require_role
-from app.schemas.category import VALID_STATUS_TRANSITIONS
+from app.schemas.category import CATEGORY_STATUSES, CATEGORY_TYPES, VALID_STATUS_TRANSITIONS
 
 router = APIRouter()
 
@@ -15,10 +15,23 @@ router = APIRouter()
 def list_categories(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
+    status: Optional[str] = Query(None),
+    type: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
-    items = crud.categories.get_multi(db, skip=skip, limit=limit)
-    total = len(items)
+    query = db.query(crud.categories.model).filter(
+        crud.categories.model.deleted_at.is_(None),
+    )
+    if status is not None:
+        if status not in CATEGORY_STATUSES:
+            raise HTTPException(status_code=422, detail=f"Invalid status: {status}")
+        query = query.filter(crud.categories.model.status == status)
+    if type is not None:
+        if type not in CATEGORY_TYPES:
+            raise HTTPException(status_code=422, detail=f"Invalid type: {type}")
+        query = query.filter(crud.categories.model.type == type)
+    total = query.count()
+    items = query.offset(skip).limit(limit).all()
     return {"items": items, "total": total, "skip": skip, "limit": limit}
 
 

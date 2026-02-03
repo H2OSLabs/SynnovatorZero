@@ -3,8 +3,10 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import List, Literal, Optional
 
+from app.schemas.enums import PostType
 
-POST_TYPES = ("profile", "team", "category", "for_category", "certificate", "general")
+
+POST_TYPES = tuple(t.value for t in PostType)
 POST_STATUSES = ("draft", "pending_review", "published", "rejected")
 POST_VISIBILITIES = ("public", "private")
 
@@ -22,7 +24,7 @@ VALID_POST_STATUS_TRANSITIONS = {
 
 class PostBase(BaseModel):
     title: str
-    type: Literal["profile", "team", "category", "for_category", "certificate", "general"] = "general"
+    type: PostType = PostType.general
     tags: Optional[List[str]] = None
     status: Literal["draft", "pending_review", "published", "rejected"] = "draft"
     visibility: Literal["public", "private"] = "public"
@@ -35,7 +37,7 @@ class PostCreate(PostBase):
 
 class PostUpdate(BaseModel):
     title: Optional[str] = None
-    type: Optional[Literal["profile", "team", "category", "for_category", "certificate", "general"]] = None
+    type: Optional[PostType] = None
     tags: Optional[List[str]] = None
     status: Optional[Literal["draft", "pending_review", "published", "rejected"]] = None
     visibility: Optional[Literal["public", "private"]] = None

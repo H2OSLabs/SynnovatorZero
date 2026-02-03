@@ -26,6 +26,13 @@ export const getUser = jest.fn().mockResolvedValue({
   following_count: 0,
 })
 
+export const listUsers = jest.fn().mockResolvedValue({
+  items: [],
+  total: 0,
+  skip: 0,
+  limit: 20,
+})
+
 export const followUser = jest.fn().mockResolvedValue({})
 export const unfollowUser = jest.fn().mockResolvedValue({})
 export const checkFollowing = jest.fn().mockResolvedValue(false)
@@ -43,13 +50,54 @@ export const getFollowing = jest.fn().mockResolvedValue({
 export const getCategories = jest.fn().mockResolvedValue({
   items: [],
   total: 0,
+  skip: 0,
+  limit: 20,
 })
 
 export const getCategory = jest.fn().mockResolvedValue({
   id: 1,
   name: 'Test Category',
+  description: 'Test description',
   type: 'competition',
-  stage: 'draft',
+  status: 'draft',
+  participant_count: 0,
+})
+
+export const getPosts = jest.fn().mockResolvedValue({
+  items: [],
+  total: 0,
+  skip: 0,
+  limit: 20,
+})
+
+export const getPost = jest.fn().mockResolvedValue({
+  id: 1,
+  title: 'Test Post',
+  type: 'general',
+  status: 'draft',
+  visibility: 'public',
+  like_count: 0,
+  comment_count: 0,
+})
+
+export const getGroups = jest.fn().mockResolvedValue({
+  items: [],
+  total: 0,
+  skip: 0,
+  limit: 20,
+})
+
+export const getGroup = jest.fn().mockResolvedValue({
+  id: 1,
+  name: 'Test Group',
+  visibility: 'public',
+})
+
+export const getGroupMembers = jest.fn().mockResolvedValue({
+  items: [],
+  total: 0,
+  skip: 0,
+  limit: 100,
 })
 
 export const getNotifications = jest.fn().mockResolvedValue({

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.database import engine, Base, get_db
-from app.routers import users, resources, categories, posts, rules, groups, interactions, admin, auth, notifications
+from app.routers import users, resources, categories, posts, rules, groups, interactions, admin, auth, notifications, meta
 from app import models
 
 # Import all models so Base.metadata knows about them
@@ -60,6 +60,7 @@ def get_stats(db: Session = Depends(get_db)):
 # Include routers
 app.include_router(users.router, prefix="/api", tags=["users"])
 app.include_router(resources.router, prefix="/api", tags=["resources"])
+app.include_router(meta.router, prefix="/api", tags=["meta"])
 app.include_router(categories.router, prefix="/api", tags=["categories"])
 app.include_router(posts.router, prefix="/api", tags=["posts"])
 app.include_router(rules.router, prefix="/api", tags=["rules"])

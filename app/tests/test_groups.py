@@ -157,6 +157,24 @@ def test_list_groups(client):
     assert resp.json()["total"] == 2
 
 
+def test_list_groups_filter_by_visibility(client):
+    uid = _create_user(client)
+    client.post("/api/groups", json={"name": "G1", "visibility": "public"}, headers={"X-User-Id": str(uid)})
+    client.post("/api/groups", json={"name": "G2", "visibility": "private"}, headers={"X-User-Id": str(uid)})
+    resp = client.get("/api/groups?visibility=private")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] == 1
+    assert data["items"][0]["visibility"] == "private"
+
+
+def test_list_groups_filter_invalid_visibility_rejected(client):
+    uid = _create_user(client)
+    client.post("/api/groups", json={"name": "G1", "visibility": "public"}, headers={"X-User-Id": str(uid)})
+    resp = client.get("/api/groups?visibility=secret")
+    assert resp.status_code == 422
+
+
 # ---------- Additional: get nonexistent group ----------
 def test_get_nonexistent_group(client):
     resp = client.get("/api/groups/9999")

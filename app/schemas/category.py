@@ -1,7 +1,7 @@
 """Category Pydantic schemas"""
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Literal, Optional
+from typing import List, Literal, Optional
 
 
 CATEGORY_TYPES = ("competition", "operation")
@@ -23,6 +23,7 @@ class CategoryBase(BaseModel):
     cover_image: Optional[str] = None
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
+    tags: Optional[List[str]] = None
     content: Optional[str] = None
 
 
@@ -38,6 +39,7 @@ class CategoryUpdate(BaseModel):
     cover_image: Optional[str] = None
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
+    tags: Optional[List[str]] = None
     content: Optional[str] = None
 
 

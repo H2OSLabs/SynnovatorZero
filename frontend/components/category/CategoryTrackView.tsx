@@ -51,7 +51,7 @@ export function CategoryTrackView({
       setIsLoading(true)
       try {
         const { items } = await getCategories(0, 100)
-        setCategories(items as CategoryTrack[])
+        setCategories(items as unknown as CategoryTrack[])
       } catch (err) {
         console.error('Failed to fetch categories:', err)
       } finally {

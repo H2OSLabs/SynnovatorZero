@@ -261,6 +261,37 @@ def test_list_posts(client):
     assert resp.json()["total"] == 2
 
 
+def test_list_posts_filter_by_status(client):
+    uid = _create_user(client)
+    _create_post(client, uid, title="Draft1", status="draft")
+    _create_post(client, uid, title="Published1", status="published")
+    resp = client.get("/api/posts?status=published")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] == 1
+    assert data["items"][0]["status"] == "published"
+
+
+def test_list_posts_filter_by_type(client):
+    uid = _create_user(client)
+    _create_post(client, uid, title="Team1", type="team")
+    _create_post(client, uid, title="General1", type="general")
+    resp = client.get("/api/posts?type=team")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] == 1
+    assert data["items"][0]["type"] == "team"
+
+
+def test_list_posts_filter_invalid_value_rejected(client):
+    uid = _create_user(client)
+    _create_post(client, uid, title="P1")
+    resp = client.get("/api/posts?status=archived")
+    assert resp.status_code == 422
+    resp2 = client.get("/api/posts?type=workshop")
+    assert resp2.status_code == 422
+
+
 # ---------- Additional: get nonexistent post ----------
 def test_get_nonexistent_post(client):
     resp = client.get("/api/posts/9999")

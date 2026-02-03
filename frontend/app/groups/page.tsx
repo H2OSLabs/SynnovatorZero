@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Search, SlidersHorizontal, Plus } from "lucide-react"
 import Link from "next/link"
 import { PageLayout } from "@/components/layout/PageLayout"
@@ -8,21 +8,62 @@ import { GroupCard } from "@/components/cards/GroupCard"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-// Mock data
-const mockGroups = [
-  { id: 1, name: "创新先锋队", visibility: "public" as const, member_count: 5, event_count: 2, description: "热爱技术，热爱开源，我们是一群热情的创客！" },
-  { id: 2, name: "AI 实验室", visibility: "public" as const, member_count: 8, event_count: 3, description: "探索 AI 的无限可能，用技术改变世界" },
-  { id: 3, name: "Web3 先锋", visibility: "public" as const, member_count: 4, event_count: 1, description: "去中心化的未来由我们创造" },
-  { id: 4, name: "设计创意组", visibility: "public" as const, member_count: 6, event_count: 2, description: "用设计传递价值，用创意点亮生活" },
-  { id: 5, name: "全栈开发团", visibility: "public" as const, member_count: 7, event_count: 4, description: "从前端到后端，我们无所不能" },
-  { id: 6, name: "数据科学家", visibility: "private" as const, member_count: 3, event_count: 1, description: "用数据洞察一切" },
-]
+import { getGroups, getGroupMembers, getUser, type Group } from "@/lib/api-client"
 
 export default function GroupsPage() {
   const [activeTab, setActiveTab] = useState("all")
+  const [groups, setGroups] = useState<Group[]>([])
+  const [groupMeta, setGroupMeta] = useState<Record<number, { member_count: number; members: Array<{ id: number; username: string; display_name?: string; avatar_url?: string }> }>>({})
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const filteredGroups = mockGroups.filter((group) => {
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const resp = await getGroups(0, 100)
+        setGroups(resp.items)
+
+        const entries = await Promise.all(
+          resp.items.map(async (g) => {
+            try {
+              const membersResp = await getGroupMembers(g.id, 0, 3, { status: "accepted" })
+              const memberUsers = await Promise.all(
+                membersResp.items.map(async (m) => {
+                  try {
+                    const u = await getUser(m.user_id)
+                    return { id: u.id, username: u.username, display_name: u.display_name, avatar_url: u.avatar_url }
+                  } catch {
+                    return { id: m.user_id, username: `user_${m.user_id}` }
+                  }
+                })
+              )
+              return { groupId: g.id, meta: { member_count: membersResp.total, members: memberUsers } }
+            } catch {
+              return {
+                groupId: g.id,
+                meta: { member_count: 0, members: [] as Array<{ id: number; username: string; display_name?: string; avatar_url?: string }> },
+              }
+            }
+          })
+        )
+
+        const meta: Record<number, { member_count: number; members: Array<{ id: number; username: string; display_name?: string; avatar_url?: string }> }> = {}
+        for (const entry of entries) meta[entry.groupId] = entry.meta
+        setGroupMeta(meta)
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "加载失败")
+        setGroups([])
+        setGroupMeta({})
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  const filteredGroups = groups.filter((group) => {
     if (activeTab === "all") return true
     if (activeTab === "public") return group.visibility === "public"
     if (activeTab === "private") return group.visibility === "private"
@@ -69,10 +110,26 @@ export default function GroupsPage() {
         </TabsList>
 
         <TabsContent value={activeTab}>
-          {filteredGroups.length > 0 ? (
+          {isLoading ? (
+            <div className="text-center py-16">
+              <p className="text-nf-muted">加载中...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-16">
+              <p className="text-nf-muted">{error}</p>
+            </div>
+          ) : filteredGroups.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredGroups.map((group) => (
-                <GroupCard key={group.id} {...group} />
+                <GroupCard
+                  key={group.id}
+                  id={group.id}
+                  name={group.name}
+                  description={group.description ?? undefined}
+                  visibility={group.visibility}
+                  member_count={groupMeta[group.id]?.member_count ?? 0}
+                  members={groupMeta[group.id]?.members ?? []}
+                />
               ))}
             </div>
           ) : (

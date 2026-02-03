@@ -6,6 +6,7 @@ from typing import Optional
 from app import crud, schemas
 from app.database import get_db
 from app.deps import get_current_user_id, require_current_user_id
+from app.schemas.group import VISIBILITY_VALUES
 
 router = APIRouter()
 
@@ -17,8 +18,15 @@ def list_groups(
     visibility: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
-    items = crud.groups.get_multi(db, skip=skip, limit=limit)
-    total = len(items)
+    query = db.query(crud.groups.model).filter(
+        crud.groups.model.deleted_at.is_(None),
+    )
+    if visibility is not None:
+        if visibility not in VISIBILITY_VALUES:
+            raise HTTPException(status_code=422, detail=f"Invalid visibility: {visibility}")
+        query = query.filter(crud.groups.model.visibility == visibility)
+    total = query.count()
+    items = query.offset(skip).limit(limit).all()
     return {"items": items, "total": total, "skip": skip, "limit": limit}
 
 

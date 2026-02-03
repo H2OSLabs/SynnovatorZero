@@ -2,6 +2,8 @@
  * Search API client for Synnovator
  */
 
+import { getPostTypeLabel } from '@/lib/post-type'
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
 export interface SearchResult {
@@ -132,17 +134,6 @@ export async function searchPosts(query: string, limit = 5): Promise<SearchResul
   } catch {
     return []
   }
-}
-
-function getPostTypeLabel(type: string): string {
-  const labels: Record<string, string> = {
-    general: '帖子',
-    team: '团队',
-    profile: '个人简介',
-    for_category: '提案',
-    certificate: '证书',
-  }
-  return labels[type] || '帖子'
 }
 
 /**

@@ -5,103 +5,86 @@ import { Header } from "@/components/layout/Header"
 import { CategoryCard } from "@/components/cards/CategoryCard"
 import { PostCard } from "@/components/cards/PostCard"
 import { PlatformStats } from "@/components/home/PlatformStats"
+import { getCategories, getPosts, getUser } from "@/lib/api-client"
 
-// Mock data for development
-const mockCategories = [
-  {
-    id: 1,
-    name: "AI 创新挑战赛 2024",
-    description: "探索人工智能的无限可能",
-    type: "competition" as const,
-    status: "published" as const,
-    tags: ["AI", "Machine Learning"],
-    participant_count: 128,
-    start_date: "2024-03-01",
-    end_date: "2024-03-30",
-  },
-  {
-    id: 2,
-    name: "Web3 黑客马拉松",
-    description: "构建去中心化的未来",
-    type: "competition" as const,
-    status: "published" as const,
-    tags: ["Web3", "Blockchain"],
-    participant_count: 86,
-    start_date: "2024-04-01",
-    end_date: "2024-04-15",
-  },
-  {
-    id: 3,
-    name: "绿色科技创新大赛",
-    description: "用科技守护地球家园",
-    type: "competition" as const,
-    status: "published" as const,
-    tags: ["Climate", "Sustainability"],
-    participant_count: 64,
-    start_date: "2024-05-01",
-    end_date: "2024-05-31",
-  },
-  {
-    id: 4,
-    name: "开源社区贡献月",
-    description: "参与开源，共建技术生态",
-    type: "operation" as const,
-    status: "published" as const,
-    tags: ["Open Source"],
-    participant_count: 256,
-    start_date: "2024-03-01",
-    end_date: "2024-03-31",
-  },
-]
+export default async function HomePage() {
+  let hotCategories: Array<{
+    id: number
+    name: string
+    description: string
+    type: "competition" | "operation"
+    status: "draft" | "published" | "closed"
+    tags?: string[]
+    cover_image?: string
+    start_date?: string
+    end_date?: string
+    participant_count?: number
+  }> = []
+  let featuredPosts: Array<{
+    id: number
+    title: string
+    body?: string
+    type: string
+    status: string
+    tags?: string[]
+    like_count?: number
+    comment_count?: number
+    created_at?: string
+    created_by?: { id: number; username: string; display_name?: string; avatar_url?: string }
+  }> = []
 
-const mockPosts = [
-  {
-    id: 1,
-    title: "基于大模型的智能教育平台",
-    body: "我们开发了一个基于大语言模型的个性化学习平台，能够根据学生的学习进度自动调整教学内容...",
-    type: "for_category",
-    status: "published",
-    tags: ["AI", "Education", "LLM"],
-    like_count: 128,
-    comment_count: 32,
-    created_by: { id: 1, username: "alice", display_name: "Alice" },
-  },
-  {
-    id: 2,
-    title: "去中心化身份认证系统",
-    body: "利用区块链技术构建的下一代身份认证系统，让用户真正掌控自己的数据...",
-    type: "for_category",
-    status: "published",
-    tags: ["Web3", "DID", "Privacy"],
-    like_count: 96,
-    comment_count: 24,
-    created_by: { id: 2, username: "bob", display_name: "Bob" },
-  },
-  {
-    id: 3,
-    title: "碳足迹追踪应用",
-    body: "帮助用户记录和减少日常生活中的碳排放，通过游戏化机制激励环保行动...",
-    type: "for_category",
-    status: "published",
-    tags: ["Climate", "Mobile", "Gamification"],
-    like_count: 72,
-    comment_count: 18,
-    created_by: { id: 3, username: "carol", display_name: "Carol" },
-  },
-  {
-    id: 4,
-    title: "开源代码审查工具",
-    body: "AI 驱动的代码审查助手，帮助开发者发现潜在 bug 和安全漏洞...",
-    type: "for_category",
-    status: "published",
-    tags: ["DevTools", "AI", "Security"],
-    like_count: 156,
-    comment_count: 42,
-    created_by: { id: 4, username: "dave", display_name: "Dave" },
-  },
-]
+  try {
+    const resp = await getCategories(0, 4, { status: "published" })
+    hotCategories = resp.items.map((c) => ({
+      id: c.id,
+      name: c.name,
+      description: c.description,
+      type: c.type,
+      status: c.status,
+      tags: c.tags ?? [],
+      cover_image: c.cover_image ?? undefined,
+      start_date: c.start_date ?? undefined,
+      end_date: c.end_date ?? undefined,
+      participant_count: c.participant_count ?? 0,
+    }))
+  } catch {
+    hotCategories = []
+  }
 
-export default function HomePage() {
+  try {
+    const resp = await getPosts(0, 4, { status: "published" })
+    const authorIds = Array.from(
+      new Set(resp.items.map((p) => p.created_by).filter((v): v is number => typeof v === "number"))
+    )
+    const users = await Promise.all(
+      authorIds.map(async (uid) => {
+        try {
+          return await getUser(uid)
+        } catch {
+          return null
+        }
+      })
+    )
+    const usersById: Record<number, { id: number; username: string; display_name?: string; avatar_url?: string }> = {}
+    for (const u of users) {
+      if (!u) continue
+      usersById[u.id] = { id: u.id, username: u.username, display_name: u.display_name, avatar_url: u.avatar_url }
+    }
+    featuredPosts = resp.items.map((p) => ({
+      id: p.id,
+      title: p.title,
+      body: p.content ?? undefined,
+      type: p.type,
+      status: p.status,
+      tags: p.tags ?? [],
+      like_count: p.like_count ?? 0,
+      comment_count: p.comment_count ?? 0,
+      created_at: p.created_at ?? undefined,
+      created_by: p.created_by ? usersById[p.created_by] : undefined,
+    }))
+  } catch {
+    featuredPosts = []
+  }
   return (
     <div className="min-h-screen bg-nf-dark">
       {/* Header */}
@@ -181,11 +164,17 @@ export default function HomePage() {
               查看更多 →
             </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {mockCategories.map((category) => (
-              <CategoryCard key={category.id} {...category} />
-            ))}
-          </div>
+          {hotCategories.length === 0 ? (
+            <div className="bg-nf-secondary rounded-xl p-6 text-nf-muted">
+              暂无活动数据，请确认后端已启动并已执行种子数据（make seed）
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {hotCategories.map((category) => (
+                <CategoryCard key={category.id} {...category} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -198,11 +187,17 @@ export default function HomePage() {
               查看更多 →
             </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {mockPosts.map((post) => (
-              <PostCard key={post.id} {...post} />
-            ))}
-          </div>
+          {featuredPosts.length === 0 ? (
+            <div className="bg-nf-card-bg border border-nf-dark-bg rounded-xl p-6 text-nf-muted">
+              暂无项目数据，请确认后端已启动并已执行种子数据（make seed）
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredPosts.map((post) => (
+                <PostCard key={post.id} {...post} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

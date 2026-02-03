@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Header } from "@/components/layout/Header"
+import { POST_TYPE_OPTIONS } from "@/lib/post-type"
 
 // Mock existing post data
 const mockPost = {
@@ -95,23 +96,20 @@ export default function EditPostPage() {
           {/* Post Type */}
           <div>
             <label className="block text-sm font-medium text-nf-white mb-2">帖子类型</label>
-            <div className="flex gap-4">
-              {[
-                { value: "general", label: "📝 日常", desc: "分享日常想法" },
-                { value: "for_category", label: "💡 提案", desc: "参赛作品" },
-                { value: "team", label: "👥 团队", desc: "找队友" },
-                { value: "profile", label: "👤 个人", desc: "个人简介" },
-              ].map((type) => (
+            <div className="flex gap-4 flex-wrap">
+              {POST_TYPE_OPTIONS.map((type) => (
                 <button
                   key={type.value}
-                  className={`flex-1 p-3 rounded-lg border-2 transition-colors text-left ${
+                  className={`flex-1 min-w-[140px] p-3 rounded-lg border-2 transition-colors text-left ${
                     formData.type === type.value
                       ? "border-nf-lime bg-nf-lime/10"
                       : "border-nf-secondary hover:border-nf-muted"
                   }`}
                   onClick={() => setFormData({ ...formData, type: type.value })}
                 >
-                  <span className="text-lg">{type.label}</span>
+                  <span className="text-lg">
+                    {type.icon} {type.label}
+                  </span>
                   <p className="text-xs text-nf-muted mt-1">{type.desc}</p>
                 </button>
               ))}
