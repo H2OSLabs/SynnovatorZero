@@ -145,6 +145,10 @@ def add_post_comment(
     db.refresh(interaction)
     crud.target_interactions.create(db, target_type="post", target_id=post_id, interaction_id=interaction.id)
     _update_post_cache(db, post_id)
+    # Create notification for post author (and @mentions)
+    from app.services.notification_events import notify_comment
+    comment_text = body.value if isinstance(body.value, str) else None
+    notify_comment(db, commenter_id=user_id, post_id=post_id, comment_content=comment_text)
     return interaction
 
 

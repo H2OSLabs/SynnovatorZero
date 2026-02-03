@@ -152,7 +152,7 @@ def test_delete_category(client):
     uid = _create_user(client)
     cat = _create_category(client, uid, name="Delete Me")
 
-    del_resp = client.delete(f"/api/categories/{cat['id']}")
+    del_resp = client.delete(f"/api/categories/{cat['id']}", headers={"X-User-Id": str(uid)})
     assert del_resp.status_code == 204
 
     # Category should no longer be accessible
@@ -191,11 +191,16 @@ def test_invalid_status_rejected(client):
 
 # ---------- TC-CAT-902: 未认证用户无法创建活动 ----------
 def test_unauthenticated_cannot_create_category(client):
+    """Creating category with invalid user returns 401.
+
+    Note: In mock mode, requests without X-User-Id header auto-create a mock user.
+    This test verifies auth failure by providing an invalid (non-existent) user ID.
+    """
     resp = client.post("/api/categories", json={
         "name": "No Auth",
         "description": "Should fail",
         "type": "competition",
-    })
+    }, headers={"X-User-Id": "99999"})
     assert resp.status_code == 401
 
 
@@ -207,6 +212,42 @@ def test_list_categories(client):
     resp = client.get("/api/categories")
     assert resp.status_code == 200
     assert resp.json()["total"] == 2
+
+
+def test_list_categories_filter_by_status(client):
+    uid = _create_user(client)
+    _create_category(client, uid, name="Draft1", status="draft")
+    _create_category(client, uid, name="Published1", status="published")
+    _create_category(client, uid, name="Closed1", status="closed")
+
+    resp = client.get("/api/categories?status=published")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] == 1
+    assert data["items"][0]["status"] == "published"
+
+
+def test_list_categories_filter_by_type(client):
+    uid = _create_user(client)
+    _create_category(client, uid, name="Comp1", type="competition")
+    _create_category(client, uid, name="Op1", type="operation")
+
+    resp = client.get("/api/categories?type=operation")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] == 1
+    assert data["items"][0]["type"] == "operation"
+
+
+def test_list_categories_filter_invalid_value_rejected(client):
+    uid = _create_user(client)
+    _create_category(client, uid, name="C1")
+
+    resp = client.get("/api/categories?status=archived")
+    assert resp.status_code == 422
+
+    resp2 = client.get("/api/categories?type=workshop")
+    assert resp2.status_code == 422
 
 
 # ---------- Additional: get nonexistent category ----------

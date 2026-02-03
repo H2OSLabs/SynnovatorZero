@@ -3,6 +3,12 @@
 Backend Base URL: `http://localhost:8000/api`
 Auth Header: `X-User-Id: <int>` (temporary)
 
+## Meta Endpoints
+
+| Purpose | HTTP Method | Endpoint | Notes |
+|--------|-------------|----------|-------|
+| Post type enum | GET | `/api/meta/post-types` | Returns allowed `post.type` values and default |
+
 ## Component → API Endpoint Mapping
 
 ### 1. Home (`components/pages/home.tsx`)
@@ -125,7 +131,8 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 ```typescript
 // Core entities
 interface User { id: number; username: string; email: string; display_name?: string; bio?: string; role: "participant"|"organizer"|"admin"; }
-interface Post { id: number; title: string; body?: string; type: string; status: string; visibility: string; tags?: string[]; created_by: number; like_count: number; comment_count: number; average_rating?: number; }
+type PostType = "profile" | "team" | "category" | "for_category" | "certificate" | "general";
+interface Post { id: number; title: string; body?: string; type: PostType; status: string; visibility: string; tags?: string[]; created_by: number; like_count: number; comment_count: number; average_rating?: number; }
 interface Category { id: number; name: string; description?: string; type: "competition"|"operation"; status: "draft"|"published"|"closed"; created_by: number; }
 interface Group { id: number; name: string; description?: string; visibility: "public"|"private"; require_approval: boolean; max_members?: number; created_by: number; }
 interface Resource { id: number; filename: string; url?: string; display_name?: string; description?: string; mime_type?: string; file_size?: number; created_by?: number; }

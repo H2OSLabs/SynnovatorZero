@@ -1,184 +1,301 @@
-import type {
-  User, Post, Category, Group, Resource, Interaction, Member,
-  UserUserRelation, CategoryPost, CategoryGroup, PostResource, PostPost,
-  CategoryRule, Paginated,
-} from "./types";
+/**
+ * API client for Synnovator backend
+ */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api'
 
-// --- Helpers ---
+interface ApiOptions extends RequestInit {
+  userId?: number
+}
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const url = `${API_BASE}${path}`;
-  const res = await fetch(url, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers || {}),
-    },
-  });
-  if (!res.ok) {
-    const detail = await res.text().catch(() => res.statusText);
-    throw new Error(`API ${res.status}: ${detail}`);
+async function apiFetch<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
+  const { userId, headers: customHeaders, ...rest } = options
+
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...customHeaders,
   }
-  if (res.status === 204) return undefined as unknown as T;
-  return res.json();
+
+  if (userId) {
+    (headers as Record<string, string>)['X-User-Id'] = String(userId)
+  }
+
+  const response = await fetch(`${API_BASE}${endpoint}`, {
+    ...rest,
+    headers,
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Unknown error' }))
+    throw new Error(error.detail || `HTTP ${response.status}`)
+  }
+
+  // Handle 204 No Content
+  if (response.status === 204) {
+    return {} as T
+  }
+
+  return response.json()
 }
 
-function authHeaders(userId: number | null): Record<string, string> {
-  return userId ? { "X-User-Id": String(userId) } : {};
+// Auth
+export async function login(username: string, password?: string) {
+  return apiFetch<{ user_id: number; username: string; role: string }>('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  })
 }
 
-// --- Users ---
-
-export async function listUsers(skip = 0, limit = 100): Promise<Paginated<User>> {
-  return request(`/users?skip=${skip}&limit=${limit}`);
+export async function logout(userId: number) {
+  return apiFetch('/auth/logout', {
+    method: 'POST',
+    userId,
+  })
 }
 
-export async function getUser(id: number): Promise<User> {
-  return request(`/users/${id}`);
+// Users
+export async function createUser(data: {
+  username: string
+  email: string
+  role?: string
+  avatar_url?: string
+  bio?: string
+}) {
+  return apiFetch<{ id: number; username: string; email: string; role: string }>('/users', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
 }
 
-export async function createUser(data: { username: string; email: string; display_name?: string; bio?: string; role?: string }): Promise<User> {
-  return request("/users", { method: "POST", body: JSON.stringify(data) });
+export async function getUser(userId: number) {
+  return apiFetch<{
+    id: number
+    username: string
+    email: string
+    role: string
+    display_name?: string
+    avatar_url?: string
+    bio?: string
+    follower_count: number
+    following_count: number
+  }>(`/users/${userId}`)
 }
 
-export async function getFollowing(userId: number): Promise<UserUserRelation[]> {
-  return request(`/users/${userId}/following`);
+export interface User {
+  id: number
+  username: string
+  email: string
+  role: 'participant' | 'organizer' | 'admin'
+  display_name?: string | null
+  avatar_url?: string | null
+  bio?: string | null
+  follower_count: number
+  following_count: number
+  created_at?: string
+  updated_at?: string | null
+  deleted_at?: string | null
 }
 
-export async function getFollowers(userId: number): Promise<UserUserRelation[]> {
-  return request(`/users/${userId}/followers`);
+export async function listUsers(skip = 0, limit = 20, role?: User['role']) {
+  const params = new URLSearchParams({ skip: String(skip), limit: String(limit) })
+  if (role) params.set('role', role)
+  return apiFetch<{ items: User[]; total: number; skip: number; limit: number }>(`/users?${params.toString()}`)
 }
 
-export async function followUser(targetId: number, currentUserId: number): Promise<UserUserRelation> {
-  return request(`/users/${targetId}/follow`, { method: "POST", headers: authHeaders(currentUserId) });
+// User Relations
+export async function followUser(currentUserId: number, targetUserId: number) {
+  return apiFetch(`/users/${targetUserId}/follow`, {
+    method: 'POST',
+    userId: currentUserId,
+  })
 }
 
-export async function unfollowUser(targetId: number, currentUserId: number): Promise<void> {
-  return request(`/users/${targetId}/follow`, { method: "DELETE", headers: authHeaders(currentUserId) });
+export async function unfollowUser(currentUserId: number, targetUserId: number) {
+  return apiFetch(`/users/${targetUserId}/follow`, {
+    method: 'DELETE',
+    userId: currentUserId,
+  })
 }
 
-export async function checkFriend(userId: number, otherId: number): Promise<{ is_friend: boolean }> {
-  return request(`/users/${userId}/is-friend/${otherId}`);
+export async function checkFollowing(currentUserId: number, targetUserId: number): Promise<boolean> {
+  try {
+    const response = await apiFetch<{ items: Array<{ target_user_id: number }> }>(
+      `/users/${currentUserId}/following?limit=1000`,
+      { userId: currentUserId }
+    )
+    return response.items.some(item => item.target_user_id === targetUserId)
+  } catch {
+    return false
+  }
 }
 
-// --- Posts ---
-
-export async function listPosts(params?: { skip?: number; limit?: number; type?: string; status?: string }): Promise<Paginated<Post>> {
-  const q = new URLSearchParams();
-  if (params?.skip) q.set("skip", String(params.skip));
-  if (params?.limit) q.set("limit", String(params.limit));
-  if (params?.type) q.set("type", params.type);
-  if (params?.status) q.set("status", params.status);
-  return request(`/posts?${q.toString()}`);
+export async function getFollowers(userId: number, skip = 0, limit = 20) {
+  return apiFetch<{ items: Array<{ source_user_id: number; created_at: string }>; total: number }>(
+    `/users/${userId}/followers?skip=${skip}&limit=${limit}`
+  )
 }
 
-export async function getPost(id: number, userId?: number | null): Promise<Post> {
-  return request(`/posts/${id}`, userId ? { headers: authHeaders(userId) } : undefined);
+export async function getFollowing(userId: number, skip = 0, limit = 20) {
+  return apiFetch<{ items: Array<{ target_user_id: number; created_at: string }>; total: number }>(
+    `/users/${userId}/following?skip=${skip}&limit=${limit}`
+  )
 }
 
-export async function createPost(data: { title: string; body?: string; type?: string; tags?: string[] }, userId: number): Promise<Post> {
-  return request("/posts", { method: "POST", body: JSON.stringify(data), headers: authHeaders(userId) });
+// Categories
+export type CategoryStatus = 'draft' | 'published' | 'closed'
+export type CategoryType = 'competition' | 'operation'
+
+export interface Category {
+  id: number
+  name: string
+  description: string
+  type: CategoryType
+  status: CategoryStatus
+  tags?: string[] | null
+  cover_image?: string | null
+  start_date?: string | null
+  end_date?: string | null
+  created_by?: number | null
+  content?: string | null
+  participant_count: number
+  created_at?: string
+  updated_at?: string | null
+  deleted_at?: string | null
 }
 
-export async function updatePost(id: number, data: Record<string, unknown>): Promise<Post> {
-  return request(`/posts/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+export async function getCategories(
+  skip = 0,
+  limit = 20,
+  filters?: { status?: CategoryStatus; type?: CategoryType }
+) {
+  const params = new URLSearchParams({ skip: String(skip), limit: String(limit) })
+  if (filters?.status) params.set('status', filters.status)
+  if (filters?.type) params.set('type', filters.type)
+  return apiFetch<{ items: Category[]; total: number; skip: number; limit: number }>(
+    `/categories?${params.toString()}`
+  )
 }
 
-// --- Post interactions ---
-
-export async function likePost(postId: number, userId: number): Promise<unknown> {
-  return request(`/posts/${postId}/like`, { method: "POST", headers: authHeaders(userId) });
+export async function getCategory(categoryId: number) {
+  return apiFetch<Category>(`/categories/${categoryId}`)
 }
 
-export async function unlikePost(postId: number, userId: number): Promise<void> {
-  return request(`/posts/${postId}/like`, { method: "DELETE", headers: authHeaders(userId) });
+export type PostStatus = 'draft' | 'pending_review' | 'published' | 'rejected'
+export type PostVisibility = 'public' | 'private'
+
+export interface Post {
+  id: number
+  title: string
+  type: string
+  tags?: string[] | null
+  status: PostStatus
+  visibility: PostVisibility
+  content?: string | null
+  created_by?: number | null
+  like_count: number
+  comment_count: number
+  average_rating?: number | null
+  created_at?: string
+  updated_at?: string | null
+  deleted_at?: string | null
 }
 
-export async function listComments(postId: number, skip = 0, limit = 20): Promise<Paginated<Interaction>> {
-  return request(`/posts/${postId}/comments?skip=${skip}&limit=${limit}`);
+export async function getPosts(skip = 0, limit = 20, filters?: { type?: string; status?: PostStatus }) {
+  const params = new URLSearchParams({ skip: String(skip), limit: String(limit) })
+  if (filters?.type) params.set('type', filters.type)
+  if (filters?.status) params.set('status', filters.status)
+  return apiFetch<{ items: Post[]; total: number; skip: number; limit: number }>(`/posts?${params.toString()}`)
 }
 
-export async function addComment(postId: number, value: Record<string, unknown>, userId: number, parentId?: number): Promise<Interaction> {
-  return request(`/posts/${postId}/comments`, {
-    method: "POST",
-    body: JSON.stringify({ type: "comment", value, parent_id: parentId }),
-    headers: authHeaders(userId),
-  });
+export async function getPost(postId: number) {
+  return apiFetch<Post>(`/posts/${postId}`)
 }
 
-export async function listRatings(postId: number, skip = 0, limit = 20): Promise<Paginated<Interaction>> {
-  return request(`/posts/${postId}/ratings?skip=${skip}&limit=${limit}`);
+export type GroupVisibility = 'public' | 'private'
+
+export interface Group {
+  id: number
+  name: string
+  description?: string | null
+  visibility: GroupVisibility
+  max_members?: number | null
+  require_approval?: boolean | null
+  created_by?: number | null
+  created_at?: string
+  updated_at?: string | null
+  deleted_at?: string | null
 }
 
-export async function addRating(postId: number, value: Record<string, unknown>, userId: number): Promise<Interaction> {
-  return request(`/posts/${postId}/ratings`, {
-    method: "POST",
-    body: JSON.stringify({ type: "rating", value }),
-    headers: authHeaders(userId),
-  });
+export interface Member {
+  id: number
+  group_id: number
+  user_id: number
+  role: 'owner' | 'admin' | 'member'
+  status: 'pending' | 'accepted' | 'rejected'
+  joined_at?: string | null
+  status_changed_at?: string | null
+  created_at?: string
+  updated_at?: string | null
 }
 
-// --- Post relations ---
-
-export async function listPostResources(postId: number): Promise<PostResource[]> {
-  return request(`/posts/${postId}/resources`);
+export async function getGroups(skip = 0, limit = 20, filters?: { visibility?: GroupVisibility }) {
+  const params = new URLSearchParams({ skip: String(skip), limit: String(limit) })
+  if (filters?.visibility) params.set('visibility', filters.visibility)
+  return apiFetch<{ items: Group[]; total: number; skip: number; limit: number }>(`/groups?${params.toString()}`)
 }
 
-export async function listRelatedPosts(postId: number, relationType?: string): Promise<PostPost[]> {
-  const q = relationType ? `?relation_type=${relationType}` : "";
-  return request(`/posts/${postId}/related${q}`);
+export async function getGroup(groupId: number) {
+  return apiFetch<Group>(`/groups/${groupId}`)
 }
 
-// --- Categories ---
-
-export async function listCategories(skip = 0, limit = 100): Promise<Paginated<Category>> {
-  return request(`/categories?skip=${skip}&limit=${limit}`);
+export async function getGroupMembers(
+  groupId: number,
+  skip = 0,
+  limit = 100,
+  filters?: { status?: Member['status'] }
+) {
+  const params = new URLSearchParams({ skip: String(skip), limit: String(limit) })
+  if (filters?.status) params.set('status', filters.status)
+  return apiFetch<{ items: Member[]; total: number; skip: number; limit: number }>(
+    `/groups/${groupId}/members?${params.toString()}`
+  )
 }
 
-export async function getCategory(id: number, userId?: number | null): Promise<Category> {
-  return request(`/categories/${id}`, userId ? { headers: authHeaders(userId) } : undefined);
+// Notifications
+export async function getNotifications(userId: number, skip = 0, limit = 20, isRead?: boolean) {
+  let url = `/notifications?skip=${skip}&limit=${limit}`
+  if (isRead !== undefined) {
+    url += `&is_read=${isRead}`
+  }
+  return apiFetch<{
+    items: Array<{
+      id: number
+      type: string
+      title?: string
+      content: string
+      related_url?: string
+      is_read: boolean
+      created_at: string
+    }>
+    total: number
+  }>(url, { userId })
 }
 
-export async function listCategoryPosts(categoryId: number, relationType?: string, userId?: number | null): Promise<CategoryPost[]> {
-  const q = relationType ? `?relation_type=${relationType}` : "";
-  return request(`/categories/${categoryId}/posts${q}`, userId ? { headers: authHeaders(userId) } : undefined);
+export async function getUnreadCount(userId: number) {
+  return apiFetch<{ unread_count: number }>('/notifications/unread-count', { userId })
 }
 
-export async function listCategoryGroups(categoryId: number): Promise<CategoryGroup[]> {
-  return request(`/categories/${categoryId}/groups`);
+export async function markNotificationAsRead(userId: number, notificationId: number) {
+  return apiFetch(`/notifications/${notificationId}`, {
+    method: 'PATCH',
+    userId,
+    body: JSON.stringify({ is_read: true }),
+  })
 }
 
-export async function listCategoryRules(categoryId: number): Promise<CategoryRule[]> {
-  return request(`/categories/${categoryId}/rules`);
-}
-
-// --- Groups ---
-
-export async function listGroups(params?: { skip?: number; limit?: number; visibility?: string }): Promise<Paginated<Group>> {
-  const q = new URLSearchParams();
-  if (params?.skip) q.set("skip", String(params.skip));
-  if (params?.limit) q.set("limit", String(params.limit));
-  if (params?.visibility) q.set("visibility", params.visibility);
-  return request(`/groups?${q.toString()}`);
-}
-
-export async function getGroup(id: number, userId?: number | null): Promise<Group> {
-  return request(`/groups/${id}`, userId ? { headers: authHeaders(userId) } : undefined);
-}
-
-export async function listGroupMembers(groupId: number, status?: string): Promise<Paginated<Member>> {
-  const q = status ? `?status=${status}` : "";
-  return request(`/groups/${groupId}/members${q}`);
-}
-
-// --- Resources ---
-
-export async function listResources(skip = 0, limit = 100): Promise<Paginated<Resource>> {
-  return request(`/resources?skip=${skip}&limit=${limit}`);
-}
-
-export async function getResource(id: number): Promise<Resource> {
-  return request(`/resources/${id}`);
+export async function markAllNotificationsAsRead(userId: number) {
+  return apiFetch<{ marked_count: number }>('/notifications/read-all', {
+    method: 'POST',
+    userId,
+  })
 }

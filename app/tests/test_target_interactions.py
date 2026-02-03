@@ -236,34 +236,36 @@ def test_list_post_ratings(client):
 
 
 # --- Auth requirement ---
+# Note: In mock mode, requests without X-User-Id header auto-create a mock user.
+# These tests verify auth failure by providing an invalid (non-existent) user ID.
 
 def test_like_requires_auth(client):
-    """Like without auth header returns 401."""
+    """Like with invalid user returns 401."""
     uid = _create_user(client)
     post = _create_post(client, uid)
-    resp = client.post(f"/api/posts/{post['id']}/like")
+    resp = client.post(f"/api/posts/{post['id']}/like", headers={"X-User-Id": "99999"})
     assert resp.status_code == 401
 
 
 def test_comment_requires_auth(client):
-    """Comment without auth header returns 401."""
+    """Comment with invalid user returns 401."""
     uid = _create_user(client)
     post = _create_post(client, uid)
     resp = client.post(f"/api/posts/{post['id']}/comments", json={
         "type": "comment",
         "value": "No auth",
-    })
+    }, headers={"X-User-Id": "99999"})
     assert resp.status_code == 401
 
 
 def test_rating_requires_auth(client):
-    """Rating without auth header returns 401."""
+    """Rating with invalid user returns 401."""
     uid = _create_user(client)
     post = _create_post(client, uid)
     resp = client.post(f"/api/posts/{post['id']}/ratings", json={
         "type": "rating",
         "value": {"Q": 80},
-    })
+    }, headers={"X-User-Id": "99999"})
     assert resp.status_code == 401
 
 
@@ -275,6 +277,6 @@ def test_like_deleted_post_returns_404(client):
     post = _create_post(client, uid)
     post_id = post["id"]
     # Soft delete the post
-    client.delete(f"/api/posts/{post_id}")
+    client.delete(f"/api/posts/{post_id}", headers={"X-User-Id": str(uid)})
     resp = client.post(f"/api/posts/{post_id}/like", headers={"X-User-Id": str(uid)})
     assert resp.status_code == 404

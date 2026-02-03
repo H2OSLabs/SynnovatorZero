@@ -60,7 +60,7 @@ def test_update_group_description_and_max_members(client):
     resp = client.patch(f"/api/groups/{group_id}", json={
         "description": "Updated description",
         "max_members": 10,
-    })
+    }, headers={"X-User-Id": str(uid)})
     assert resp.status_code == 200
     data = resp.json()
     assert data["description"] == "Updated description"
@@ -79,7 +79,7 @@ def test_update_require_approval(client):
 
     resp = client.patch(f"/api/groups/{group_id}", json={
         "require_approval": False,
-    })
+    }, headers={"X-User-Id": str(uid)})
     assert resp.status_code == 200
     assert resp.json()["require_approval"] is False
 
@@ -95,7 +95,7 @@ def test_update_visibility(client):
 
     resp = client.patch(f"/api/groups/{group_id}", json={
         "visibility": "private",
-    })
+    }, headers={"X-User-Id": str(uid)})
     assert resp.status_code == 200
     assert resp.json()["visibility"] == "private"
 
@@ -109,7 +109,7 @@ def test_delete_group(client):
     }, headers={"X-User-Id": str(uid)})
     group_id = create_resp.json()["id"]
 
-    del_resp = client.delete(f"/api/groups/{group_id}")
+    del_resp = client.delete(f"/api/groups/{group_id}", headers={"X-User-Id": str(uid)})
     assert del_resp.status_code == 204
 
     # Group should no longer be accessible
@@ -135,10 +135,15 @@ def test_invalid_visibility_rejected(client):
 
 # ---------- TC-GRP-901: 未认证用户无法创建团队 ----------
 def test_unauthenticated_cannot_create_group(client):
+    """Creating group with invalid user returns 401.
+
+    Note: In mock mode, requests without X-User-Id header auto-create a mock user.
+    This test verifies auth failure by providing an invalid (non-existent) user ID.
+    """
     resp = client.post("/api/groups", json={
         "name": "No Auth Group",
         "visibility": "public",
-    })
+    }, headers={"X-User-Id": "99999"})
     assert resp.status_code == 401
 
 
@@ -150,6 +155,24 @@ def test_list_groups(client):
     resp = client.get("/api/groups")
     assert resp.status_code == 200
     assert resp.json()["total"] == 2
+
+
+def test_list_groups_filter_by_visibility(client):
+    uid = _create_user(client)
+    client.post("/api/groups", json={"name": "G1", "visibility": "public"}, headers={"X-User-Id": str(uid)})
+    client.post("/api/groups", json={"name": "G2", "visibility": "private"}, headers={"X-User-Id": str(uid)})
+    resp = client.get("/api/groups?visibility=private")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] == 1
+    assert data["items"][0]["visibility"] == "private"
+
+
+def test_list_groups_filter_invalid_visibility_rejected(client):
+    uid = _create_user(client)
+    client.post("/api/groups", json={"name": "G1", "visibility": "public"}, headers={"X-User-Id": str(uid)})
+    resp = client.get("/api/groups?visibility=secret")
+    assert resp.status_code == 422
 
 
 # ---------- Additional: get nonexistent group ----------

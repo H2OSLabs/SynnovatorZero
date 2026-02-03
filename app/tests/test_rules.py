@@ -97,7 +97,7 @@ def test_update_rule_config(client):
         "allow_public": True,
         "max_submissions": 3,
         "max_team_size": 5,
-    })
+    }, headers={"X-User-Id": str(uid)})
     assert resp.status_code == 200
     data = resp.json()
     assert data["allow_public"] is True
@@ -128,7 +128,7 @@ def test_update_scoring_criteria_weights(client):
             {"name": "C", "weight": 25},
             {"name": "D", "weight": 25},
         ],
-    })
+    }, headers={"X-User-Id": str(uid)})
     assert resp.status_code == 200
     data = resp.json()
     weights = [c["weight"] for c in data["scoring_criteria"]]
@@ -144,7 +144,7 @@ def test_delete_rule(client):
     }, headers={"X-User-Id": str(uid)})
     rule_id = create_resp.json()["id"]
 
-    del_resp = client.delete(f"/api/rules/{rule_id}")
+    del_resp = client.delete(f"/api/rules/{rule_id}", headers={"X-User-Id": str(uid)})
     assert del_resp.status_code == 204
 
     # Rule should no longer be accessible
@@ -160,10 +160,15 @@ def test_delete_rule(client):
 
 # ---------- TC-RULE-900: 未认证用户无法创建规则 ----------
 def test_unauthenticated_cannot_create_rule(client):
+    """Creating rule with invalid user returns 401.
+
+    Note: In mock mode, requests without X-User-Id header auto-create a mock user.
+    This test verifies auth failure by providing an invalid (non-existent) user ID.
+    """
     resp = client.post("/api/rules", json={
         "name": "Should Fail",
         "description": "No auth",
-    })
+    }, headers={"X-User-Id": "99999"})
     assert resp.status_code == 401
 
 
@@ -201,7 +206,8 @@ def test_get_nonexistent_rule(client):
 
 # ---------- Additional: update nonexistent rule ----------
 def test_update_nonexistent_rule(client):
-    resp = client.patch("/api/rules/9999", json={"name": "Nothing"})
+    uid = _create_organizer(client)
+    resp = client.patch("/api/rules/9999", json={"name": "Nothing"}, headers={"X-User-Id": str(uid)})
     assert resp.status_code == 404
 
 
@@ -223,5 +229,5 @@ def test_update_scoring_criteria_bad_weights(client):
             {"name": "A", "weight": 50},
             {"name": "B", "weight": 40},
         ],
-    })
+    }, headers={"X-User-Id": str(uid)})
     assert resp.status_code == 422

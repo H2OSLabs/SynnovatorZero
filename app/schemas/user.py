@@ -32,6 +32,8 @@ class UserInDBBase(UserBase):
     model_config = {"from_attributes": True}
 
     id: int
+    follower_count: int = 0
+    following_count: int = 0
     created_at: datetime
     updated_at: Optional[datetime] = None
     deleted_at: Optional[datetime] = None

@@ -77,7 +77,7 @@ def test_delete_category_basic(client):
     """TC-DEL-001: Delete a category; read returns not found."""
     uid = _create_user(client)
     cat_id = _create_category(client, uid)
-    resp = client.delete(f"/api/categories/{cat_id}")
+    resp = client.delete(f"/api/categories/{cat_id}", headers={"X-User-Id": str(uid)})
     assert resp.status_code == 204
     resp = client.get(f"/api/categories/{cat_id}")
     assert resp.status_code == 404
@@ -89,7 +89,7 @@ def test_delete_rule_basic(client):
     """TC-DEL-002: Delete a rule; read returns not found."""
     uid = _create_user(client)
     rule_id = _create_rule(client, uid)
-    resp = client.delete(f"/api/rules/{rule_id}")
+    resp = client.delete(f"/api/rules/{rule_id}", headers={"X-User-Id": str(uid)})
     assert resp.status_code == 204
     resp = client.get(f"/api/rules/{rule_id}")
     assert resp.status_code == 404
@@ -115,8 +115,8 @@ def test_delete_user_cascades_interactions_and_members(client):
     members = client.get(f"/api/groups/{group_id}/members").json()
     assert members["total"] == 1
 
-    # Delete user
-    resp = client.delete(f"/api/users/{uid}")
+    # Delete user (self-delete)
+    resp = client.delete(f"/api/users/{uid}", headers={"X-User-Id": str(uid)})
     assert resp.status_code == 204
 
     # User not found
@@ -151,7 +151,7 @@ def test_delete_group_cascades_members_and_category_groups(client):
     assert client.get(f"/api/groups/{group_id}/members").json()["total"] == 1
 
     # Delete group
-    resp = client.delete(f"/api/groups/{group_id}")
+    resp = client.delete(f"/api/groups/{group_id}", headers={"X-User-Id": str(uid)})
     assert resp.status_code == 204
 
     # Group not found
@@ -191,7 +191,7 @@ def test_delete_category_cascades_interactions(client):
     assert len(client.get(f"/api/categories/{cat_id}/rules").json()) == 1
 
     # Delete category
-    resp = client.delete(f"/api/categories/{cat_id}")
+    resp = client.delete(f"/api/categories/{cat_id}", headers={"X-User-Id": str(uid)})
     assert resp.status_code == 204
 
     # Category not found, rule still exists
@@ -236,7 +236,7 @@ def test_delete_post_full_cascade(client):
     assert client.get(f"/api/posts/{post_id}", headers=h).json()["comment_count"] == 1
 
     # Delete post
-    resp = client.delete(f"/api/posts/{post_id}")
+    resp = client.delete(f"/api/posts/{post_id}", headers={"X-User-Id": str(uid)})
     assert resp.status_code == 204
 
     # Post not found
@@ -263,7 +263,7 @@ def test_delete_rule_cascades_category_rule(client):
     assert len(client.get(f"/api/categories/{cat_id}/rules").json()) == 1
 
     # Delete rule
-    resp = client.delete(f"/api/rules/{rule_id}")
+    resp = client.delete(f"/api/rules/{rule_id}", headers={"X-User-Id": str(uid)})
     assert resp.status_code == 204
 
     # Rule not found
@@ -317,7 +317,7 @@ def test_read_deleted_post_returns_not_found(client):
     """TC-DEL-020: Read a deleted post; returns 404."""
     uid = _create_user(client)
     post_id = _create_post(client, uid)
-    client.delete(f"/api/posts/{post_id}")
+    client.delete(f"/api/posts/{post_id}", headers={"X-User-Id": str(uid)})
     resp = client.get(f"/api/posts/{post_id}")
     assert resp.status_code == 404
 
@@ -328,8 +328,8 @@ def test_update_deleted_post_returns_not_found(client):
     """TC-DEL-022: Update a deleted post; returns 404."""
     uid = _create_user(client)
     post_id = _create_post(client, uid)
-    client.delete(f"/api/posts/{post_id}")
-    resp = client.patch(f"/api/posts/{post_id}", json={"title": "Updated"})
+    client.delete(f"/api/posts/{post_id}", headers={"X-User-Id": str(uid)})
+    resp = client.patch(f"/api/posts/{post_id}", json={"title": "Updated"}, headers={"X-User-Id": str(uid)})
     assert resp.status_code == 404
 
 
@@ -346,7 +346,7 @@ def test_delete_category_cascades_category_post(client):
     h = {"X-User-Id": str(uid)}
     assert len(client.get(f"/api/categories/{cat_id}/posts", headers=h).json()) == 1
 
-    client.delete(f"/api/categories/{cat_id}")
+    client.delete(f"/api/categories/{cat_id}", headers={"X-User-Id": str(uid)})
     # Post still exists
     assert client.get(f"/api/posts/{post_id}", headers=h).status_code == 200
 
@@ -359,7 +359,7 @@ def test_delete_category_cascades_category_group(client):
     client.post(f"/api/categories/{cat_id}/groups", json={"group_id": group_id})
     assert len(client.get(f"/api/categories/{cat_id}/groups").json()) == 1
 
-    client.delete(f"/api/categories/{cat_id}")
+    client.delete(f"/api/categories/{cat_id}", headers={"X-User-Id": str(uid)})
     # Group still exists
     assert client.get(f"/api/groups/{group_id}").status_code == 200
 
@@ -384,7 +384,7 @@ def test_delete_category_cascades_category_category(client):
     assert len(client.get(f"/api/categories/{cat_c}/associations").json()) == 1
 
     # Delete A → removes both A→B and C→A
-    client.delete(f"/api/categories/{cat_a}")
+    client.delete(f"/api/categories/{cat_a}", headers={"X-User-Id": str(uid)})
 
     # B and C still exist
     h = {"X-User-Id": str(uid)}
@@ -408,8 +408,8 @@ def test_delete_user_cascades_user_user(client):
     assert len(client.get(f"/api/users/{uid_a}/following").json()) == 1
     assert len(client.get(f"/api/users/{uid_a}/followers").json()) == 1
 
-    # Delete A
-    client.delete(f"/api/users/{uid_a}")
+    # Delete A (self-delete)
+    client.delete(f"/api/users/{uid_a}", headers={"X-User-Id": str(uid_a)})
 
     # B's following list (was following A) should be empty
     assert len(client.get(f"/api/users/{uid_b}/following").json()) == 0
@@ -427,6 +427,6 @@ def test_multiple_users_like_then_delete_one(client):
     h = {"X-User-Id": str(poster)}
     assert client.get(f"/api/posts/{post_id}", headers=h).json()["like_count"] == 2
 
-    # Delete uid1
-    client.delete(f"/api/users/{uid1}")
+    # Delete uid1 (self-delete)
+    client.delete(f"/api/users/{uid1}", headers={"X-User-Id": str(uid1)})
     assert client.get(f"/api/posts/{post_id}", headers=h).json()["like_count"] == 1

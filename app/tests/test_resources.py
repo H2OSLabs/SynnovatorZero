@@ -61,7 +61,7 @@ def test_update_resource_metadata(client):
     resp = client.patch(f"/api/resources/{resource_id}", json={
         "display_name": "Updated Name",
         "description": "Updated description",
-    })
+    }, headers={"X-User-Id": str(user_id)})
     assert resp.status_code == 200
     data = resp.json()
     assert data["display_name"] == "Updated Name"
@@ -78,7 +78,7 @@ def test_delete_resource(client):
     )
     resource_id = create_resp.json()["id"]
 
-    del_resp = client.delete(f"/api/resources/{resource_id}")
+    del_resp = client.delete(f"/api/resources/{resource_id}", headers={"X-User-Id": str(user_id)})
     assert del_resp.status_code == 204
 
     # Resource should no longer be accessible
@@ -104,7 +104,12 @@ def test_missing_filename_rejected(client):
 
 # ---------- TC-RES-901: 未登录用户创建资源被拒绝 ----------
 def test_unauthenticated_create_rejected(client):
-    resp = client.post("/api/resources", json={"filename": "test.txt"})
+    """Creating resource with invalid user returns 401.
+
+    Note: In mock mode, requests without X-User-Id header auto-create a mock user.
+    This test verifies auth failure by providing an invalid (non-existent) user ID.
+    """
+    resp = client.post("/api/resources", json={"filename": "test.txt"}, headers={"X-User-Id": "99999"})
     assert resp.status_code == 401
 
 

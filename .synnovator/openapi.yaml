@@ -30,7 +30,64 @@ tags:
   description: Likes, comments, and ratings
 - name: admin
   description: Admin batch operations
+- name: auth
+  description: Authentication and authorization
+- name: notifications
+  description: User notifications
 paths:
+  /auth/login:
+    post:
+      summary: User login
+      operationId: login
+      tags:
+      - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /auth/logout:
+    post:
+      summary: User logout
+      operationId: logout
+      tags:
+      - auth
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          description: Logged out successfully
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      operationId: refresh_token
+      tags:
+      - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /categories:
     get:
       summary: List categories
@@ -286,6 +343,82 @@ paths:
       responses:
         '201':
           description: Added
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /categories/{category_id}/categories:
+    get:
+      summary: List category associations
+      operationId: list_category_associations
+      tags:
+      - categories
+      parameters:
+      - name: category_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: relation_type
+        in: query
+        schema:
+          type: string
+          enum: [stage, track, prerequisite]
+      responses:
+        '200':
+          description: List of associated categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CategoryAssociation'
+    post:
+      summary: Create category association
+      operationId: create_category_association
+      tags:
+      - categories
+      parameters:
+      - name: category_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryAssociationCreate'
+      responses:
+        '201':
+          description: Association created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryAssociation'
+        '400':
+          description: Invalid association (circular dependency, self-reference)
+        '409':
+          description: Association already exists
+  /categories/{category_id}/categories/{target_category_id}:
+    delete:
+      summary: Delete category association
+      operationId: delete_category_association
+      tags:
+      - categories
+      parameters:
+      - name: category_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: target_category_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Association deleted
         '404':
           $ref: '#/components/responses/NotFound'
   /posts:
@@ -973,6 +1106,81 @@ paths:
           description: Deleted
         '404':
           $ref: '#/components/responses/NotFound'
+  /users/{user_id}/follow:
+    post:
+      summary: Follow user
+      operationId: follow_user
+      tags:
+      - users
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '201':
+          description: Followed
+        '409':
+          description: Already following
+    delete:
+      summary: Unfollow user
+      operationId: unfollow_user
+      tags:
+      - users
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Unfollowed
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users/{user_id}/followers:
+    get:
+      summary: List user followers
+      operationId: list_user_followers
+      tags:
+      - users
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/SkipParam'
+      - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of followers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserList'
+  /users/{user_id}/following:
+    get:
+      summary: List users that this user follows
+      operationId: list_user_following
+      tags:
+      - users
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/SkipParam'
+      - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of users being followed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserList'
   /groups:
     get:
       summary: List groups
@@ -1172,6 +1380,62 @@ paths:
       responses:
         '204':
           description: Member removed
+  /notifications:
+    get:
+      summary: List notifications for current user
+      operationId: list_notifications
+      tags:
+      - notifications
+      parameters:
+      - $ref: '#/components/parameters/SkipParam'
+      - $ref: '#/components/parameters/LimitParam'
+      - name: is_read
+        in: query
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNotificationList'
+  /notifications/{notification_id}:
+    patch:
+      summary: Update notification (mark as read)
+      operationId: update_notification
+      tags:
+      - notifications
+      parameters:
+      - name: notification_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationUpdate'
+      responses:
+        '200':
+          description: Notification updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /notifications/read-all:
+    post:
+      summary: Mark all notifications as read
+      operationId: mark_all_notifications_read
+      tags:
+      - notifications
+      responses:
+        '204':
+          description: All notifications marked as read
   /admin/posts:
     delete:
       summary: Batch delete posts
@@ -2198,6 +2462,152 @@ components:
           type: object
           additionalProperties:
             type: string
+    LoginRequest:
+      type: object
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+    LoginResponse:
+      type: object
+      required:
+      - access_token
+      - token_type
+      - user
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          default: bearer
+        expires_in:
+          type: integer
+          description: Token expiration time in seconds
+        user:
+          $ref: '#/components/schemas/User'
+    RefreshRequest:
+      type: object
+      required:
+      - refresh_token
+      properties:
+        refresh_token:
+          type: string
+    CategoryAssociationType:
+      type: string
+      enum: [stage, track, prerequisite]
+      description: |
+        - stage: Sequential stages (赛段), requires stage_order
+        - track: Parallel tracks (赛道)
+        - prerequisite: Prerequisite activity (前置条件)
+    CategoryAssociationCreate:
+      type: object
+      required:
+      - target_category_id
+      - relation_type
+      properties:
+        target_category_id:
+          type: string
+        relation_type:
+          $ref: '#/components/schemas/CategoryAssociationType'
+        stage_order:
+          type: integer
+          description: Required for stage type, defines sequence order
+    CategoryAssociation:
+      type: object
+      required:
+      - source_category_id
+      - target_category_id
+      - relation_type
+      - created_at
+      properties:
+        source_category_id:
+          type: string
+        target_category_id:
+          type: string
+        target_category:
+          $ref: '#/components/schemas/Category'
+        relation_type:
+          $ref: '#/components/schemas/CategoryAssociationType'
+        stage_order:
+          type: integer
+          description: Order for stage type associations
+        created_at:
+          type: string
+          format: date-time
+    NotificationType:
+      type: string
+      enum: [award, comment, team_request, follow, mention, system]
+      description: |
+        - award: Competition award notification
+        - comment: Comment on your post
+        - team_request: Team join request
+        - follow: Someone followed you
+        - mention: Mentioned in a post/comment
+        - system: System notification
+    Notification:
+      type: object
+      required:
+      - id
+      - type
+      - content
+      - is_read
+      - created_at
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/NotificationType'
+        title:
+          type: string
+        content:
+          type: string
+        is_read:
+          type: boolean
+          default: false
+        related_url:
+          type: string
+          description: URL to the related content
+        actor:
+          $ref: '#/components/schemas/User'
+          description: The user who triggered the notification
+        created_at:
+          type: string
+          format: date-time
+    NotificationUpdate:
+      type: object
+      properties:
+        is_read:
+          type: boolean
+    PaginatedNotificationList:
+      type: object
+      required:
+      - items
+      - total
+      - skip
+      - limit
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+        total:
+          type: integer
+        skip:
+          type: integer
+        limit:
+          type: integer
+        unread_count:
+          type: integer
+          description: Total count of unread notifications
   parameters:
     SkipParam:
       name: skip

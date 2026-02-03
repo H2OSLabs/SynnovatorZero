@@ -37,3 +37,7 @@ from app.schemas.category_group import CategoryGroupResponse
 from app.schemas.target_interaction import TargetInteractionCreate, TargetInteractionResponse
 from app.schemas.paginatedinteractionlist import PaginatedInteractionList
 from app.schemas.category_category import CategoryCategoryAdd, CategoryCategoryResponse
+from app.schemas.notification import (
+    Notification, NotificationCreate, NotificationUpdate,
+    NotificationType, PaginatedNotificationList
+)

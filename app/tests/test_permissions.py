@@ -250,10 +250,14 @@ def test_guest_reads_private_post_returns_not_found(client):
 
 
 def test_no_auth_header_create_category_returns_401(client):
-    """Creating category without auth → 401."""
+    """Creating category with invalid user returns 401.
+
+    Note: In mock mode, requests without X-User-Id header auto-create a mock user.
+    This test verifies auth failure by providing an invalid (non-existent) user ID.
+    """
     resp = client.post("/api/categories", json={
         "name": "Event",
         "description": "Desc",
         "type": "competition",
-    })
+    }, headers={"X-User-Id": "99999"})
     assert resp.status_code == 401

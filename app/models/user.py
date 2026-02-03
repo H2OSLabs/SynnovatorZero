@@ -1,6 +1,7 @@
 """User SQLAlchemy 模型"""
 from sqlalchemy import Column, Integer, String, DateTime, Text
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 
 from app.database import Base
 
@@ -15,6 +16,12 @@ class User(Base):
     avatar_url = Column(String, nullable=True)
     bio = Column(Text, nullable=True)
     role = Column(String, nullable=False, default="participant")
+    # Cache fields for follow counts
+    follower_count = Column(Integer, nullable=False, default=0)
+    following_count = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=True)
     deleted_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationships
+    notifications = relationship("Notification", back_populates="user", foreign_keys="Notification.user_id")
