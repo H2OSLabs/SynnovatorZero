@@ -8,7 +8,6 @@ WORKDIR /app
 COPY --from=registry.h2os.cloud/astral-sh/uv:latest /uv /bin/uv
 
 # Copy dependency definitions
-# Copy dependency definitions
 COPY pyproject.toml uv.lock* ./
 
 # Install dependencies
@@ -17,6 +16,7 @@ RUN uv sync --no-dev --no-install-project
 
 # Copy source code
 COPY app/ ./app/
+COPY scripts/ ./scripts/
 
 # Final stage
 FROM registry.h2os.cloud/python:3.12-slim-bookworm
@@ -26,8 +26,9 @@ WORKDIR /app
 # Copy virtual environment
 COPY --from=builder /app/.venv /app/.venv
 
-# Copy app code
+# Copy app code and scripts
 COPY --from=builder /app/app/ ./app/
+COPY --from=builder /app/scripts/ ./scripts/
 
 # Set path
 ENV PATH="/app/.venv/bin:$PATH"

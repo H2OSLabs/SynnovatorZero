@@ -2,7 +2,7 @@ name: Build & Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [feat/make-seed-db-support]
     paths-ignore:
       - '*.md'
       - 'docs/**'

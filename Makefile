@@ -33,6 +33,10 @@ seed:
 	@echo "Seeding development data..."
 	@uv run python scripts/seed_dev_data.py
 
+seed-prod:
+	@echo "Seeding production data (running inside backend container)..."
+	@cd deploy && docker compose exec backend python scripts/seed_dev_data.py
+
 clean:
 	@rm -rf app/__pycache__ data/*.db
 	@rm -rf frontend/node_modules frontend/.next
