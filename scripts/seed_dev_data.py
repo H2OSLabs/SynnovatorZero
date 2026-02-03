@@ -5,7 +5,7 @@ import sqlite3
 
 from sqlalchemy.orm import Session
 
-from app.database import Base, SessionLocal, engine
+from app.database import Base, SessionLocal, engine, DATA_DIR
 from app.models.category import Category
 from app.models.group import Group
 from app.models.member import Member
@@ -347,7 +347,7 @@ def _seed_members(db: Session, group_ids: dict[str, int], user_ids: dict[str, in
 def main() -> None:
     _ensure_schema()
 
-    db_path = "./data/synnovator.db"
+    db_path = str(DATA_DIR / "synnovator.db")
     if not _has_category_tags_column(db_path):
         raise SystemExit(
             "当前数据库缺少 categories.tags 字段。请先运行 `make resetdb` 删除旧库后再执行 seed。"
