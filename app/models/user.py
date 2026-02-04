@@ -16,6 +16,7 @@ class User(Base):
     avatar_url = Column(String, nullable=True)
     bio = Column(Text, nullable=True)
     role = Column(String, nullable=False, default="participant")
+    password = Column(String, nullable=True)  # 明文存储，仅开发用
     # Cache fields for follow counts
     follower_count = Column(Integer, nullable=False, default=0)
     following_count = Column(Integer, nullable=False, default=0)

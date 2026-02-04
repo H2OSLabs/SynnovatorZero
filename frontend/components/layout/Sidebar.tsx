@@ -20,14 +20,11 @@ import {
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface SidebarProps {
   collapsed?: boolean
   onToggle?: () => void
-  user?: {
-    id: number
-    username: string
-  } | null
 }
 
 interface NavItem {
@@ -53,8 +50,9 @@ const myNavItems: NavItem[] = [
   { label: "关注", icon: <UserPlus className="h-5 w-5" />, href: "/my/following", requireAuth: true },
 ]
 
-export function Sidebar({ collapsed = false, onToggle, user }: SidebarProps) {
+export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
   const pathname = usePathname()
+  const { user } = useAuth()
 
   const NavLink = ({ item }: { item: NavItem }) => {
     const isActive = pathname === item.href || pathname.startsWith(item.href + "/")

@@ -3,21 +3,40 @@
  */
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api'
+const STORAGE_KEY = 'synnovator_user'
 
 interface ApiOptions extends RequestInit {
   userId?: number
+  skipAuth?: boolean  // Skip auto-attaching user_id from localStorage
+}
+
+/**
+ * Get current user_id from localStorage
+ */
+function getStoredUserId(): number | null {
+  if (typeof window === 'undefined') return null
+  const stored = localStorage.getItem(STORAGE_KEY)
+  if (!stored) return null
+  try {
+    const user = JSON.parse(stored)
+    return user.user_id || null
+  } catch {
+    return null
+  }
 }
 
 async function apiFetch<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
-  const { userId, headers: customHeaders, ...rest } = options
+  const { userId, skipAuth, headers: customHeaders, ...rest } = options
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...customHeaders,
   }
 
-  if (userId) {
-    (headers as Record<string, string>)['X-User-Id'] = String(userId)
+  // Use provided userId, or auto-attach from localStorage
+  const effectiveUserId = userId ?? (skipAuth ? null : getStoredUserId())
+  if (effectiveUserId) {
+    (headers as Record<string, string>)['X-User-Id'] = String(effectiveUserId)
   }
 
   const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -50,6 +69,19 @@ export async function logout(userId: number) {
   return apiFetch('/auth/logout', {
     method: 'POST',
     userId,
+  })
+}
+
+export async function register(data: {
+  username: string
+  email: string
+  password: string
+  role: 'participant' | 'organizer'
+}) {
+  return apiFetch<{ user_id: number; username: string; role: string }>('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    skipAuth: true,
   })
 }
 

@@ -88,7 +88,7 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen bg-nf-dark">
       {/* Header */}
-      <Header user={null} />
+      <Header />
 
       {/* Hero Section */}
       <section className="pt-[60px]">

@@ -33,7 +33,7 @@ export default function CreateGroupPage() {
 
   return (
     <div className="min-h-screen bg-nf-dark">
-      <Header user={{ id: 1, username: "test", role: "participant" }} />
+      <Header />
 
       {/* Top Bar */}
       <div className="fixed top-[60px] left-0 right-0 h-14 bg-nf-surface border-b border-nf-secondary z-40">

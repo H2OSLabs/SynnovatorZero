@@ -63,7 +63,7 @@ export default function PostsPage() {
   })
 
   return (
-    <PageLayout variant="compact" user={null}>
+    <PageLayout variant="compact">
       {/* Page Header */}
       <div className="flex items-center justify-between mb-8">
         <div>

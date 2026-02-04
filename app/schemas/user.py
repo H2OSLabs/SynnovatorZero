@@ -16,7 +16,7 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    pass
+    password: Optional[str] = None  # 明文密码，仅开发用
 
 
 class UserUpdate(BaseModel):

@@ -142,7 +142,7 @@ export default function EventDetailPage() {
   )
 
   return (
-    <PageLayout variant="full" user={null} panel={panelContent}>
+    <PageLayout variant="full" panel={panelContent}>
       {/* Back Button */}
       <Link href="/events" className="inline-flex items-center gap-2 text-nf-muted hover:text-nf-white mb-6">
         <ArrowLeft className="h-4 w-4" />

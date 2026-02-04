@@ -34,42 +34,49 @@ def _seed_users(db: Session) -> dict[str, int]:
             "email": "techcorp@example.com",
             "display_name": "TechCorp",
             "role": "organizer",
+            "password": "techcorp",  # 密码 = 用户名
         },
         {
             "username": "alice",
             "email": "alice@example.com",
             "display_name": "Alice",
             "role": "participant",
+            "password": "alice",
         },
         {
             "username": "bob",
             "email": "bob@example.com",
             "display_name": "Bob",
             "role": "participant",
+            "password": "bob",
         },
         {
             "username": "carol",
             "email": "carol@example.com",
             "display_name": "Carol",
             "role": "participant",
+            "password": "carol",
         },
         {
             "username": "dave",
             "email": "dave@example.com",
             "display_name": "Dave",
             "role": "participant",
+            "password": "dave",
         },
         {
             "username": "eve",
             "email": "eve@example.com",
             "display_name": "Eve",
             "role": "participant",
+            "password": "eve",
         },
         {
             "username": "frank",
             "email": "frank@example.com",
             "display_name": "Frank",
             "role": "participant",
+            "password": "frank",
         },
     ]
 

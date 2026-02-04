@@ -100,7 +100,7 @@ export default function UserProfilePage() {
   )
 
   return (
-    <PageLayout variant="full" user={null} panel={panelContent}>
+    <PageLayout variant="full" panel={panelContent}>
       {/* Cover Image */}
       <div className="relative h-48 -mx-8 -mt-8 mb-20 bg-gradient-to-br from-nf-secondary to-nf-dark">
         {/* Profile Section */}

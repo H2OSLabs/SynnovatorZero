@@ -11,6 +11,107 @@ def _create_user(client, username, role="participant"):
     return resp.json()
 
 
+# ---------- Register Tests ----------
+
+def test_register_success(client):
+    """TC-AUTH-REG-001: Successful registration returns user info."""
+    resp = client.post("/api/auth/register", json={
+        "username": "new_user",
+        "email": "new_user@example.com",
+        "password": "secret123",
+        "role": "participant",
+    })
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["username"] == "new_user"
+    assert data["role"] == "participant"
+    assert "user_id" in data
+
+
+def test_register_organizer(client):
+    """TC-AUTH-REG-002: Register as organizer."""
+    resp = client.post("/api/auth/register", json={
+        "username": "new_organizer",
+        "email": "organizer@example.com",
+        "password": "secret123",
+        "role": "organizer",
+    })
+    assert resp.status_code == 200
+    assert resp.json()["role"] == "organizer"
+
+
+def test_register_duplicate_username(client):
+    """TC-AUTH-REG-003: Register with existing username fails."""
+    client.post("/api/auth/register", json={
+        "username": "dup_user",
+        "email": "dup1@example.com",
+        "password": "secret",
+        "role": "participant",
+    })
+    resp = client.post("/api/auth/register", json={
+        "username": "dup_user",
+        "email": "dup2@example.com",
+        "password": "secret",
+        "role": "participant",
+    })
+    assert resp.status_code == 400
+    assert "already exists" in resp.json()["detail"].lower()
+
+
+def test_register_duplicate_email(client):
+    """TC-AUTH-REG-004: Register with existing email fails."""
+    client.post("/api/auth/register", json={
+        "username": "email_user1",
+        "email": "same@example.com",
+        "password": "secret",
+        "role": "participant",
+    })
+    resp = client.post("/api/auth/register", json={
+        "username": "email_user2",
+        "email": "same@example.com",
+        "password": "secret",
+        "role": "participant",
+    })
+    assert resp.status_code == 400
+    assert "already exists" in resp.json()["detail"].lower()
+
+
+def test_register_invalid_role(client):
+    """TC-AUTH-REG-005: Register with invalid role fails."""
+    resp = client.post("/api/auth/register", json={
+        "username": "bad_role_user",
+        "email": "bad@example.com",
+        "password": "secret",
+        "role": "admin",  # admin not allowed for self-registration
+    })
+    assert resp.status_code == 400
+
+
+def test_register_then_login(client):
+    """TC-AUTH-REG-006: Register then login with password."""
+    # Register
+    client.post("/api/auth/register", json={
+        "username": "reg_login_user",
+        "email": "reglogin@example.com",
+        "password": "mypassword",
+        "role": "participant",
+    })
+
+    # Login with correct password
+    resp = client.post("/api/auth/login", json={
+        "username": "reg_login_user",
+        "password": "mypassword",
+    })
+    assert resp.status_code == 200
+
+    # Login with wrong password
+    resp = client.post("/api/auth/login", json={
+        "username": "reg_login_user",
+        "password": "wrongpassword",
+    })
+    assert resp.status_code == 401
+
+
 # ---------- Login Tests ----------
 
 def test_login_success(client):
@@ -75,13 +176,14 @@ def test_login_empty_username(client):
 
 
 def test_login_missing_password(client):
-    """TC-AUTH-006: Login without password field returns 422."""
+    """TC-AUTH-006: Login without password is allowed (backward compatible)."""
     _create_user(client, "no_pwd_user")
 
     resp = client.post("/api/auth/login", json={
         "username": "no_pwd_user",
     })
-    assert resp.status_code == 422
+    # Password is optional for backward compatibility
+    assert resp.status_code == 200
 
 
 # ---------- Logout Tests ----------

@@ -38,7 +38,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <PageLayout variant="full" user={{ ...mockUser, role: "participant" }}>
+    <PageLayout variant="full">
       <div className="max-w-3xl">
         <h1 className="font-heading text-3xl font-bold text-nf-white mb-2">⚙️ 设置</h1>
         <p className="text-nf-muted mb-8">管理你的账户设置和偏好</p>
