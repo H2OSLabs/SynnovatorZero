@@ -2,12 +2,13 @@
 
 ## 概述
 
-从需求设计到前后端实现和测试的完整开发流程。本流程涵盖数据建模、代码生成、数据注入、后端实现、前端集成（不含 UI 组件）和全栈测试。
+从需求设计到前后端实现和测试的完整开发流程。本流程涵盖数据建模、代码生成、**UI 设计文档生成**、后端实现、前端集成和 **E2E 测试**。
 
 > **重要约定：**
 > - 后端包名为 `app/`（与 api-builder 模板一致，标准 FastAPI 项目结构）。所有 Python 命令使用 `uv run python` 执行。
 > - 本流程较长，建议使用 **planning-with-files** skill 将流程拆分为更小的可管理阶段，防止上下文用尽或意外中断导致进度丢失。
 > - 每个阶段开发完成后，使用 **tests-kit** skill 进行增量测试，及时发现和修复问题，不要积压到最后统一测试。
+> - **前端认证默认使用 Mock 登录**（X-User-Id header），只有用户明确要求时才实现真实认证。
 
 ## 本地开发数据（Seed）
 
@@ -42,15 +43,11 @@ make seed
 ┌────────────────────────────────────────────────────────────────┐
 │ 阶段 1: 需求设计与数据建模                                      │
 │  数据源:                                                       │
-│      ├─→ synnovator skill (完整原型能力参考)                   │
-│      ├─→ docs/ (功能说明文档)                                  │
-│      └─→ specs/ (开发规范文档)                                 │
+│      ├─→ docs/user-journeys.md (用户旅程)                     │
+│      ├─→ specs/testcases/ (测试用例)                          │
+│      └─→ docs/ + specs/ (功能与规范文档)                       │
 │                                                                │
-│  [手工] 创建示例数据                                            │
-│      ↓ [synnovator skill]                                     │
-│  .synnovator/*.md (测试数据)                                   │
-│                                                                │
-│  [schema-to-openapi skill] ← 读取 synnovator + docs + specs   │
+│  [schema-to-openapi skill] ← 读取 docs + specs                │
 │      ↓                                                        │
 │  OpenAPI 3.x 规范 (.synnovator/openapi.yaml)                  │
 │                                                                │
@@ -73,46 +70,89 @@ make seed
 │  SQLite database (空表结构)                                    │
 │                                                                │
 │  ✅ [tests-kit] 按模块增量测试后端代码                           │
-│      ├─→ 用户模块完成 → 测试用户模块                           │
-│      ├─→ 活动模块完成 → 测试活动模块                           │
-│      └─→ 每完成一个模块，立即运行对应测试                       │
 └────────────────────────────────────────────────────────────────┘
                             ↓
 ┌────────────────────────────────────────────────────────────────┐
-│ 阶段 3: 数据注入                                                │
-│  .synnovator/*.md                                              │
-│      ↓ [data-importer skill]                                  │
+│ 阶段 3: 种子数据注入                                            │
+│  [通过 API 注入]                                               │
+│  make resetdb && make seed                                    │
+│      ↓                                                        │
 │  SQLite database (填充测试数据)                                │
-│      ├─→ 按依赖顺序导入 (user → post → relations)             │
-│      ├─→ 类型转换 (datetime, JSON, enum)                     │
-│      └─→ 跳过重复记录                                         │
+│      ├─→ 调用后端 API 创建数据                                │
+│      └─→ 确保数据符合业务校验规则                              │
 │                                                                │
-│  ✅ [tests-kit] 验证导入数据与测试用例一致                       │
+│  ✅ [tests-kit] 验证种子数据与测试用例一致                       │
 └────────────────────────────────────────────────────────────────┘
                             ↓
 ┌────────────────────────────────────────────────────────────────┐
-│ 阶段 4: 前端客户端生成                                          │
-│  [前置] 安装 Tailwind CSS + shadcn/ui                          │
+│ 阶段 4: UI 设计文档生成 ⭐ 新增                                  │
+│  数据源:                                                       │
+│      ├─→ docs/user-journeys.md (用户旅程)                     │
+│      ├─→ specs/testcases/ (测试用例)                          │
+│      └─→ .synnovator/openapi.yaml (API 规范)                  │
 │                                                                │
+│  [AI 生成] UI 设计文档                                         │
+│      ├─→ 参考业界 Hackathon 平台案例                          │
+│      ├─→ 遍历 user-journey 确保每个流程有 UI 入口              │
+│      ├─→ 检查 OpenAPI spec 标记缺失 endpoint                  │
+│      └─→ 使用 shadcn MCP 检查组件可用性                        │
+│      ↓                                                        │
+│  specs/ui/ui-design-spec.md (UI 设计规范)                      │
+│      ├─→ 布局架构 (Header/Sidebar/Body/Panel/Footer)          │
+│      ├─→ 页面列表与组件映射                                   │
+│      └─→ 缺失 endpoint 标记 "Not Implemented"                 │
+└────────────────────────────────────────────────────────────────┘
+                            ↓
+┌────────────────────────────────────────────────────────────────┐
+│ 阶段 5: 前端样式框架配置                                        │
+│  [前置] 安装 Tailwind CSS + shadcn/ui                          │
+│      ├─→ npx shadcn@latest init                              │
+│      ├─→ 配置 Neon Forge 主题 (#BBFD3B)                       │
+│      └─→ 验证 shadcn MCP 插件可用                             │
+└────────────────────────────────────────────────────────────────┘
+                            ↓
+┌────────────────────────────────────────────────────────────────┐
+│ 阶段 6: 前端 API 客户端生成                                     │
 │  [api-builder --generate-client]                              │
 │      ↓                                                        │
 │  TypeScript API Client                                        │
-│      ├─→ 类型定义 (从 OpenAPI schemas)                       │
-│      ├─→ API 方法 (从 OpenAPI paths)                         │
+│      ├─→ frontend/lib/api-client.ts (API 方法)               │
+│      ├─→ frontend/lib/types.ts (类型定义)                    │
 │      └─→ 错误处理                                             │
-│                                                                │
-│  集成到 Next.js                                                │
-│      ↓                                                        │
-│  frontend/lib/api/api-client.ts                               │
-│                                                                │
-│  ✅ [tests-kit] 验证前端集成测试用例                             │
 └────────────────────────────────────────────────────────────────┘
                             ↓
 ┌────────────────────────────────────────────────────────────────┐
-│ 阶段 5: 最终集成验证                                            │
+│ 阶段 7: 前端组件开发 ⭐ 组件优先                                 │
+│  [shadcn 组件优先策略]                                         │
+│      ├─→ 1️⃣ 使用 shadcn MCP 检查组件是否存在                  │
+│      ├─→ 2️⃣ 存在则 npx shadcn add <component>                │
+│      ├─→ 3️⃣ 不存在则按 shadcn 风格创建自定义组件               │
+│      └─→ 4️⃣ 组件完成后组合成页面                              │
+│                                                                │
+│  开发顺序:                                                     │
+│      ├─→ frontend/components/ui/ (基础 UI 组件)               │
+│      └─→ frontend/app/**/page.tsx (页面组件)                  │
+│                                                                │
+│  认证配置:                                                     │
+│      └─→ 默认 Mock 登录 (X-User-Id header)                    │
+└────────────────────────────────────────────────────────────────┘
+                            ↓
+┌────────────────────────────────────────────────────────────────┐
+│ 阶段 8: E2E 测试 ⭐ 必须步骤                                    │
+│  [Playwright E2E 测试]                                         │
+│      ├─→ 配置 playwright.config.ts                           │
+│      ├─→ 编写用户旅程测试 (对照 user-journeys.md)             │
+│      ├─→ 配置测试环境 (Mock 用户)                              │
+│      └─→ 运行 npx playwright test                            │
+│                                                                │
+│  ✅ 覆盖核心用户流程                                            │
+└────────────────────────────────────────────────────────────────┘
+                            ↓
+┌────────────────────────────────────────────────────────────────┐
+│ 阶段 9: 最终集成验证                                            │
 │  全栈集成测试（前面各阶段已完成模块级测试）                       │
-│      ├─→ 启动 FastAPI + Next.js 服务                         │
-│      ├─→ 端到端用户旅程测试                                   │
+│      ├─→ 启动 FastAPI + Next.js 服务 (make start)            │
+│      ├─→ E2E 用户旅程测试 (Playwright)                        │
 │      └─→ 数据一致性验证                                       │
 │                                                                │
 │  ✅ [tests-kit] 最终 Guard 检查，确保所有测试用例通过            │
@@ -121,14 +161,29 @@ make seed
 
 ## 使用的 Skills
 
+### 核心 Skills（实际使用）
+
 | Skill | 用途 | 状态 |
 |-------|------|------|
-| **planning-with-files** | 文件化规划：创建 task_plan.md / findings.md / progress.md，防止上下文丢失和中断失忆 | ✅ 可用 |
-| **synnovator** | 管理 .synnovator/*.md 文件数据（CRUD），是平台原型能力的完整参考实现 | ✅ 可用 |
-| **schema-to-openapi** | 从 synnovator skill + docs/ + specs/ 综合生成 OpenAPI 3.0 规范 | ✅ 可用 |
-| **api-builder** | 从 OpenAPI 生成 FastAPI 后端 + 迁移 + 测试 + TypeScript 客户端 | ✅ 可用 |
-| **data-importer** | 从 .synnovator 导入数据到 SQLite | ✅ 可用 |
-| **tests-kit** | 增量测试管理：Guard 模式验证已有测试用例，Insert 模式添加新测试用例 | ✅ 可用 |
+| **planning-with-files** | 文件化规划：创建 task_plan.md / findings.md / progress.md，防止上下文丢失和中断失忆 | ✅ 核心 |
+| **schema-to-openapi** | 从 docs/ + specs/ 综合生成 OpenAPI 3.0 规范 | ✅ 核心 |
+| **api-builder** | 从 OpenAPI 生成 FastAPI 后端 + 迁移 + 测试 + TypeScript 客户端 | ✅ 核心 |
+| **tests-kit** | 增量测试管理：Guard 模式验证已有测试用例，Insert 模式添加新测试用例 | ✅ 核心 |
+
+### 可选 Skills（特定场景使用）
+
+| Skill | 用途 | 使用场景 |
+|-------|------|---------|
+| **synnovator** | 管理 .synnovator/*.md 文件数据（CRUD） | 当需要通过文件管理测试数据时使用，实践中更推荐通过 API 注入种子数据 |
+| **data-importer** | 从 .synnovator 导入数据到 SQLite | 仅在需要从文件批量导入数据时使用，实践效果一般 |
+| **pen-to-react** | 从 .pen 设计文件转换 React 组件 | 仅在有 .pen 设计稿时使用；无 .pen 时应使用 AI 生成 UI 设计文档 |
+
+### 外部工具
+
+| 工具 | 用途 | 说明 |
+|------|------|------|
+| **shadcn MCP 插件** | 检查 shadcn 组件是否可用 | 前端开发时优先使用 shadcn 现有组件 |
+| **Playwright** | E2E 端到端测试 | 用户旅程测试的必备工具 |
 
 ---
 
@@ -332,16 +387,15 @@ python3 .claude/skills/planning-with-files/scripts/session-catchup.py "$(pwd)"
 
 #### 1.1 定义数据模型
 
-数据模型的完整定义分布在三个位置，schema-to-openapi 会综合读取：
+数据模型的完整定义分布在两个核心位置，schema-to-openapi 会综合读取：
 
 | 数据源 | 位置 | 内容 |
 |--------|------|------|
-| **synnovator skill** | `.claude/skills/synnovator/` | 原型参考实现（SKILL.md + references/ + scripts/endpoints/） |
-| **功能说明文档** | `docs/` | data-types.md、relationships.md、crud-operations.md、rule-engine.md 等 |
+| **功能说明文档** | `docs/` | data-types.md、relationships.md、crud-operations.md、user-journeys.md、rule-engine.md 等 |
 | **开发规范文档** | `specs/` | data-integrity.md、cache-strategy.md、testcases/ 等 |
 
-> synnovator skill 的能力就是我们想要的原型能力，它包含 7 种内容类型、9 种关系类型、
-> 规则引擎、级联删除、缓存维护、权限系统等完整实现。
+> **设计驱动开发**：先完成 docs/ 中的需求文档，再通过 schema-to-openapi 生成 API 规范。
+> docs/user-journeys.md 是验证 UI 设计覆盖度的核心依据。
 
 **7 种内容类型：**
 - **user**: 用户账户
@@ -367,60 +421,19 @@ python3 .claude/skills/planning-with-files/scripts/session-catchup.py "$(pwd)"
 CRUD 操作与权限见 `docs/crud-operations.md`。
 数据完整性约束见 `specs/data-integrity.md`。
 
-#### 1.2 创建示例数据
+#### 1.2 定义种子数据需求
 
-使用 **synnovator skill** 创建测试数据：
+在 `specs/testcases/` 中定义测试场景所需的数据。种子数据将在阶段 3 通过 API 注入。
 
-```bash
-# 创建用户
-uv run python .claude/skills/synnovator/scripts/engine.py \
-  --user admin create user \
-  --data '{"username": "alice", "email": "alice@example.com", "display_name": "Alice", "role": "participant"}'
+**数据需求示例（参考 docs/examples.md）：**
 
-uv run python .claude/skills/synnovator/scripts/engine.py \
-  --user admin create user \
-  --data '{"username": "bob", "email": "bob@example.com", "display_name": "Bob", "role": "organizer"}'
+- 用户数据：admin、organizer、participant 各角色
+- 活动数据：不同状态（draft、published、closed）的活动
+- 帖子数据：不同类型和状态的帖子
+- 团队数据：公开/私有团队及成员关系
+- 交互数据：点赞、评论、评分记录
 
-# 创建活动
-uv run python .claude/skills/synnovator/scripts/engine.py \
-  --user user_xxx create category \
-  --data '{"name": "2025 AI Hackathon", "description": "AI innovation competition", "type": "competition", "status": "published"}' \
-  --body "# Welcome\n\nJoin us for an AI innovation competition!"
-
-# 创建帖子
-uv run python .claude/skills/synnovator/scripts/engine.py \
-  --user user_xxx create post \
-  --data '{"title": "My AI Project", "type": "for_category", "tags": ["ai", "demo"], "status": "published"}' \
-  --body "## Project Description\n\nThis is my AI project."
-
-# 创建团队
-uv run python .claude/skills/synnovator/scripts/engine.py \
-  --user user_xxx create group \
-  --data '{"name": "Team Synnovator", "description": "Our team", "visibility": "public", "require_approval": false}'
-
-# 创建关系（团队成员）
-uv run python .claude/skills/synnovator/scripts/engine.py \
-  --user user_xxx create group_user \
-  --data '{"group_id": "grp_xxx", "user_id": "user_xxx", "role": "owner", "status": "accepted"}'
-```
-
-数据文件存储在 `.synnovator/` 目录：
-
-```
-.synnovator/
-├── user/
-│   ├── user_alice.md
-│   └── user_bob.md
-├── category/
-│   └── cat_hackathon.md
-├── post/
-│   └── post_myproject.md
-├── group/
-│   └── grp_team.md
-└── relations/
-    └── group_user/
-        └── grp_team_user_alice.md
-```
+> **注意**：不再使用 .synnovator/*.md 文件存储测试数据。种子数据通过 `make seed` 调用后端 API 注入。
 
 #### 1.3 生成 OpenAPI 规范
 
@@ -428,26 +441,21 @@ uv run python .claude/skills/synnovator/scripts/engine.py \
 
 **使用 schema-to-openapi skill**
 
-schema-to-openapi 现在综合读取整个 synnovator skill 以及 docs/ 和 specs/ 文档来生成 OpenAPI 规范：
+schema-to-openapi 综合读取 docs/ 和 specs/ 文档来生成 OpenAPI 规范：
 
-**输入数据源（按优先级）：**
-1. **synnovator skill** — 完整原型参考实现
-   - `SKILL.md`: 能力描述和触发条件
-   - `references/schema.md`: 字段定义表格（结构化数据源）
-   - `references/endpoints.md`: API 端点和用法示例
-   - `scripts/endpoints/*.py`: 7 个内容类型的具体实现（默认值、验证、级联）
-2. **docs/ 功能文档** — 业务需求
+**输入数据源：**
+1. **docs/ 功能文档** — 业务需求
    - `data-types.md`: 内容类型完整字段定义
    - `relationships.md`: 关系类型定义
    - `crud-operations.md`: CRUD 操作与权限矩阵
    - `rule-engine.md`: 声明式规则引擎规范
    - `user-journeys.md`: 13 个用户旅程
-3. **specs/ 规范文档** — 技术约束
+2. **specs/ 规范文档** — 技术约束
    - `data-integrity.md`: 唯一性约束、软删除、级联规则
    - `cache-strategy.md`: 缓存字段维护策略
 
 ```bash
-# 从 synnovator skill + docs/ + specs/ 综合生成 OpenAPI 规范
+# 从 docs/ + specs/ 综合生成 OpenAPI 规范
 uv run python .claude/skills/schema-to-openapi/scripts/generate_openapi.py
 
 # 指定输出路径和格式
@@ -618,89 +626,66 @@ uv run pytest app/tests/test_api/test_posts_api.py -v
 
 ---
 
-### 阶段 3: 数据注入
+### 阶段 3: 种子数据注入
 
-#### 3.1 使用 data-importer 导入测试数据
+#### 3.1 通过 API 注入种子数据
+
+> **推荐方式**：使用 `make seed` 通过后端 API 注入种子数据，而非 data-importer。
+> 这种方式确保数据通过业务校验规则，与生产环境一致。
 
 ```bash
-# 导入所有数据
-uv run python .claude/skills/data-importer/scripts/cli.py import \
-  --source .synnovator \
-  --db data/synnovator.db \
-  --models app/models
-
-# 只导入特定类型
-uv run python .claude/skills/data-importer/scripts/cli.py import \
-  --source .synnovator \
-  --db data/synnovator.db \
-  --models app/models \
-  --types user,post,category
+# 重置数据库并注入种子数据
+make resetdb
+make seed
 ```
 
-**导入过程：**
-1. 解析 `.synnovator/*.md` 文件（YAML frontmatter + Markdown body）
-2. 按依赖顺序导入：
-   - Phase 1: user, category, rule
-   - Phase 2: group, post, resource
-   - Phase 3: interaction
-   - Phase 4: 所有关系类型
-3. 自动类型转换（datetime, JSON, enum）
-4. 跳过已存在记录（基于 ID）
-5. 生成导入报告
+**种子数据脚本位置：** `scripts/seed.py` 或 `app/scripts/seed_data.py`
 
-#### 3.2 验证导入结果
+**种子数据脚本示例：**
+
+```python
+# scripts/seed.py
+import httpx
+
+API_BASE = "http://localhost:8000/api"
+
+def seed_users():
+    users = [
+        {"username": "alice", "email": "alice@example.com", "role": "participant"},
+        {"username": "bob", "email": "bob@example.com", "role": "organizer"},
+        {"username": "admin", "email": "admin@example.com", "role": "admin"},
+    ]
+    for user in users:
+        httpx.post(f"{API_BASE}/users", json=user)
+
+def seed_categories():
+    # 创建活动数据...
+    pass
+
+if __name__ == "__main__":
+    seed_users()
+    seed_categories()
+    # ... 其他数据
+```
+
+#### 3.2 验证种子数据
 
 ```bash
-# 查看导入的数据
+# 查看数据库中的数据
 sqlite3 data/synnovator.db << EOF
-SELECT COUNT(*) FROM user;
-SELECT COUNT(*) FROM post;
-SELECT COUNT(*) FROM category;
-SELECT * FROM user LIMIT 3;
+SELECT COUNT(*) FROM users;
+SELECT COUNT(*) FROM categories;
+SELECT COUNT(*) FROM posts;
 EOF
+
+# 通过 API 验证
+curl http://localhost:8000/api/users | jq
 ```
 
-#### 3.3 数据更新流程
-
-**场景 1: 添加新的测试数据**
+#### 3.3 增量测试：验证种子数据（tests-kit）
 
 ```bash
-# 1. 使用 synnovator engine 创建新数据
-uv run python .claude/skills/synnovator/scripts/engine.py \
-  --user user_xxx create post \
-  --data '{"title": "New Post", "type": "general"}' \
-  --body "New content..."
-
-# 2. 重新导入（增量模式，自动跳过已存在记录）
-uv run python .claude/skills/data-importer/scripts/cli.py import \
-  --source .synnovator \
-  --db data/synnovator.db \
-  --models app/models
-```
-
-**场景 2: 更新现有数据**
-
-```bash
-# 1. 使用 synnovator engine 更新
-uv run python .claude/skills/synnovator/scripts/engine.py \
-  update post --id post_xxx \
-  --data '{"status": "published"}'
-
-# 2. 清空数据库重新导入
-rm data/synnovator.db
-cd app && uv run alembic upgrade head && cd ..
-uv run python .claude/skills/data-importer/scripts/cli.py import \
-  --source .synnovator \
-  --db data/synnovator.db \
-  --models app/models
-```
-
-#### 3.4 增量测试：验证导入数据（tests-kit）
-
-> 数据注入完成后，验证导入的数据是否与测试用例中描述的场景一致。
-
-```bash
-# 运行后端 API 测试（验证导入数据可通过 API 正确访问）
+# 运行后端 API 测试
 uv run pytest app/tests/ -v
 
 # 运行 tests-kit Guard 检查
@@ -716,11 +701,79 @@ uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 
 ---
 
-### 阶段 4: 前端客户端生成
+### 阶段 4: UI 设计文档生成 ⭐
 
-#### 4.0 前置：安装前端样式框架
+> **设计驱动开发**：在编写前端代码之前，先生成完整的 UI 设计文档。
 
-> **必须在开始前端 UI 开发前完成！**
+#### 4.1 生成 UI 设计文档
+
+**输入数据源：**
+- `docs/user-journeys.md` — 13 个用户旅程
+- `specs/testcases/` — 测试用例
+- `.synnovator/openapi.yaml` — API 规范
+
+**AI 生成 Prompt 模板：**
+
+```
+依据我的原型是一个 hackathon 平台，用户可以发布活动、参与活动。
+按照常见的业界例子（如 Devpost、HackerEarth），给出一个完整的 UI 设计文档。
+
+要求：
+1. 布局架构
+   - Header: 全局导航
+   - Sidebar: 页面级导航（可折叠）
+   - Body: 主内容区域
+   - Panel: 详情/编辑面板（右侧滑出）
+   - Footer: 版权信息
+
+2. 用户旅程覆盖检查
+   - 遍历 docs/user-journeys.md 每个流程
+   - 确保每个流程都能在 UI 中找到入口
+   - 标注流程对应的页面和组件
+
+3. API Endpoint 检查
+   - 为每个 UI 组件标注对应的 API endpoint
+   - 检查 .synnovator/openapi.yaml 是否已实现
+   - 若 endpoint 缺失，标注 "🚧 Not Implemented"
+
+4. shadcn 组件映射
+   - 优先使用 shadcn 现有组件
+   - 标注需要的 shadcn 组件名称
+   - 自定义组件单独标注
+
+5. 主题适配
+   - 使用 Neon Forge 主题（参考 theme-factory）
+   - Primary accent: #BBFD3B (Lime Green)
+   - 深色背景 + 亮色强调色
+```
+
+**输出：** `specs/ui/ui-design-spec.md`
+
+#### 4.2 验证 UI 设计覆盖度
+
+**User Journey 覆盖检查：**
+
+| User Journey | UI 入口 | 相关页面 |
+|-------------|---------|---------|
+| J-001 用户注册 | Header → 注册按钮 | /register |
+| J-002 创建活动 | Sidebar → 创建活动 | /categories/new |
+| J-003 提交作品 | 活动详情 → 提交按钮 | /categories/[id]/submit |
+| ... | ... | ... |
+
+**Endpoint 覆盖检查：**
+
+```
+✅ GET /api/categories — 已实现
+✅ POST /api/categories — 已实现
+🚧 POST /api/categories/{id}/submissions — Not Implemented
+🚧 GET /api/notifications — Not Implemented
+```
+
+---
+
+### 阶段 5: 前端样式框架配置
+
+#### 5.1 安装 Tailwind CSS + shadcn/ui
 
 ```bash
 cd frontend
@@ -728,196 +781,279 @@ cd frontend
 # 安装 Tailwind CSS
 npm install -D tailwindcss @tailwindcss/postcss postcss
 
-# 初始化 shadcn/ui（按提示配置）
+# 初始化 shadcn/ui
 npx shadcn@latest init
 
 cd ..
 ```
 
-Neon Forge 设计系统配色（参考 `specs/ui/style.pen`）：
-- Primary accent: `#BBFD3B` (Lime Green)
-- Surface: `#181818`, Dark: `#222222`, Secondary: `#333333`
-- Fonts: Space Grotesk (headings), Inter (body), Poppins (numbers), Noto Sans SC (Chinese)
+#### 5.2 配置 Neon Forge 主题
 
-#### 4.1 生成 TypeScript API 客户端
+**Tailwind 配置（tailwind.config.ts）：**
+
+```typescript
+// Neon Forge 主题配色
+const colors = {
+  primary: '#BBFD3B',    // Lime Green
+  surface: '#181818',    // 最深背景
+  dark: '#222222',       // 深色背景
+  secondary: '#333333',  // 次级背景
+  muted: '#666666',      // 弱化文字
+  foreground: '#FFFFFF', // 主文字
+};
+```
+
+**字体配置：**
+- Space Grotesk — 标题
+- Inter — 正文
+- Poppins — 数字/代码
+- Noto Sans SC — 中文
+
+#### 5.3 验证 shadcn MCP 插件
+
+> 在开发组件前，确保 shadcn MCP 插件可用，用于检查组件是否已存在。
 
 ```bash
-# 使用 schema-to-openapi 生成的规范
+# 检查 MCP 配置
+cat ~/.claude/mcp.json | grep shadcn
+```
+
+---
+
+### 阶段 6: 前端 API 客户端生成
+
+#### 6.1 生成 TypeScript 客户端
+
+```bash
+# 使用 api-builder 生成客户端
 uv run python .claude/skills/api-builder/scripts/cli.py \
   --spec .synnovator/openapi.yaml \
   --output app \
   --generate-client \
-  --client-output frontend/lib/api/api-client.ts
+  --client-output frontend/lib/
 ```
 
-**生成内容：**
+**生成文件：**
+- `frontend/lib/api-client.ts` — API 方法
+- `frontend/lib/types.ts` — TypeScript 类型
 
-```typescript
-// frontend/lib/api/api-client.ts
-
-// 类型定义（从 OpenAPI schemas 生成）
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  display_name?: string;
-  role: 'participant' | 'organizer' | 'admin';
-  created_at: string;
-  updated_at: string;
-}
-
-export interface UserCreate {
-  username: string;
-  email: string;
-  display_name?: string;
-  role?: 'participant' | 'organizer' | 'admin';
-}
-
-// API 客户端类
-class ApiClient {
-  private baseURL: string;
-
-  constructor(baseURL?: string) {
-    this.baseURL = baseURL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-  }
-
-  // User endpoints
-  async listUsers(): Promise<User[]> {
-    const response = await fetch(`${this.baseURL}/users`);
-    if (!response.ok) throw new Error('Failed to fetch users');
-    return response.json();
-  }
-
-  async createUser(data: UserCreate): Promise<User> {
-    const response = await fetch(`${this.baseURL}/users`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error('Failed to create user');
-    return response.json();
-  }
-
-  async getUser(id: string): Promise<User> {
-    const response = await fetch(`${this.baseURL}/users/${id}`);
-    if (!response.ok) throw new Error('Failed to fetch user');
-    return response.json();
-  }
-
-  // ... 其他 endpoints
-}
-
-export const apiClient = new ApiClient();
-```
-
-#### 4.2 集成到 Next.js
-
-**配置环境变量：**
+#### 6.2 配置环境变量
 
 ```bash
-# frontend/.env.local
-NEXT_PUBLIC_API_URL=http://localhost:8000
+# frontend/.env.development (开发环境)
+API_URL=http://localhost:8000/api
+
+# frontend/.env.local (本地覆盖，不提交)
+API_URL=https://custom-api.example.com/api
 ```
 
-**在 Server Component 中使用：**
-
-```typescript
-// frontend/app/users/page.tsx
-import { apiClient } from '@/lib/api/api-client';
-
-export default async function UsersPage() {
-  const users = await apiClient.listUsers();
-
-  return (
-    <div>
-      <h1>Users</h1>
-      <ul>
-        {users.map(user => (
-          <li key={user.id}>
-            {user.username} ({user.email})
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-```
-
-**在 Client Component 中使用：**
-
-```typescript
-// frontend/app/users/create/page.tsx
-'use client';
-
-import { useState } from 'react';
-import { apiClient } from '@/lib/api/api-client';
-
-export default function CreateUserPage() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const user = await apiClient.createUser({ username, email });
-      alert(`User created: ${user.id}`);
-    } catch (error) {
-      alert('Failed to create user');
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <input value={username} onChange={e => setUsername(e.target.value)} placeholder="Username" />
-      <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" />
-      <button type="submit">Create User</button>
-    </form>
-  );
-}
-```
-
-#### 4.3 错误处理和类型安全
-
-生成的客户端提供：
-- TypeScript 类型安全
-- 自动 JSON 序列化/反序列化
-- 统一的错误处理
-- 环境变量配置
-
-#### 4.4 增量测试：验证前端集成（tests-kit）
-
-```bash
-# 启动后端服务
-make backend &
-
-# 验证 TypeScript 编译通过
-cd frontend && npx tsc --noEmit
-
-# 运行前端测试
-npx playwright test
-```
-
-**重点验证：**
-- API 客户端类型定义与后端 schema 一致
-- 基本 CRUD 操作能正常调用
-- 错误处理正常工作
-
-> 更新 `progress.md` 记录前端集成测试结果。
+> 环境变量通过 `lib/env.ts` 在服务端读取，并通过 `layout.tsx` 注入到 `window.__ENV__` 供客户端使用。
 
 ---
 
-### 阶段 5: 最终集成验证
+### 阶段 7: 前端组件开发 ⭐
+
+> **组件优先策略**：先实现 UI 组件，再组合成页面。
+
+#### 7.1 shadcn 组件优先
+
+开发任何 UI 组件前，按以下顺序检查：
+
+1. **检查 shadcn 是否有现成组件**
+   ```bash
+   # 使用 shadcn MCP 插件搜索
+   # 或查看 https://ui.shadcn.com/docs/components
+   ```
+
+2. **存在则直接安装**
+   ```bash
+   npx shadcn@latest add button
+   npx shadcn@latest add card
+   npx shadcn@latest add dialog
+   ```
+
+3. **不存在则创建自定义组件**
+   - 遵循 shadcn 组件风格
+   - 放置在 `frontend/components/ui/`
+   - 使用 Tailwind + CSS Variables
+
+#### 7.2 组件开发顺序
+
+```
+1. frontend/components/ui/        # 基础 UI 组件
+   ├── button.tsx                  # (shadcn)
+   ├── card.tsx                    # (shadcn)
+   ├── category-card.tsx           # (自定义)
+   └── ...
+
+2. frontend/components/           # 业务组件
+   ├── header.tsx
+   ├── sidebar.tsx
+   ├── category-list.tsx
+   └── ...
+
+3. frontend/app/**/page.tsx       # 页面组件
+   ├── page.tsx                    # 首页
+   ├── categories/page.tsx         # 活动列表
+   ├── categories/[id]/page.tsx    # 活动详情
+   └── ...
+```
+
+#### 7.3 Mock 认证配置
+
+> **默认使用 Mock 登录**，仅当用户明确要求时才实现真实认证。
+
+**Mock 认证实现：**
+
+```typescript
+// frontend/lib/auth.ts
+export function getMockUserId(): string {
+  // 从 localStorage 或 cookie 读取 mock user id
+  return localStorage.getItem('mockUserId') || 'user_1';
+}
+
+// 在 API 请求中添加 header
+const headers = {
+  'Content-Type': 'application/json',
+  'X-User-Id': getMockUserId(),  // Mock 认证
+};
+```
+
+**后端 Mock 认证中间件：**
+
+```python
+# app/auth.py
+from fastapi import Request
+
+def get_current_user(request: Request):
+    # Mock 模式：从 header 读取用户 ID
+    user_id = request.headers.get('X-User-Id')
+    if user_id:
+        return get_user_by_id(user_id)
+    raise HTTPException(401, "Unauthorized")
+```
+
+#### 7.4 增量测试：验证前端集成
+
+```bash
+# 验证 TypeScript 编译
+cd frontend && npx tsc --noEmit
+
+# 启动开发服务器验证
+npm run dev
+```
+
+---
+
+### 阶段 8: E2E 测试 ⭐
+
+> **必须步骤**：E2E 测试覆盖核心用户旅程。
+
+#### 8.1 配置 Playwright
+
+```bash
+cd frontend
+
+# 安装 Playwright
+npm install -D @playwright/test
+
+# 初始化配置
+npx playwright install
+```
+
+**playwright.config.ts：**
+
+```typescript
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './tests/e2e',
+  use: {
+    baseURL: 'http://localhost:3000',
+  },
+  webServer: {
+    command: 'npm run dev',
+    port: 3000,
+    reuseExistingServer: true,
+  },
+});
+```
+
+#### 8.2 编写用户旅程测试
+
+**对照 `docs/user-journeys.md` 编写测试：**
+
+```typescript
+// tests/e2e/user-journeys.spec.ts
+import { test, expect } from '@playwright/test';
+
+// J-002: 创建活动
+test('organizer can create a category', async ({ page }) => {
+  // 设置 Mock 用户（organizer）
+  await page.addInitScript(() => {
+    localStorage.setItem('mockUserId', 'user_organizer');
+  });
+
+  await page.goto('/categories/new');
+  await page.fill('[name="name"]', 'Test Hackathon');
+  await page.fill('[name="description"]', 'A test event');
+  await page.click('button[type="submit"]');
+
+  await expect(page).toHaveURL(/\/categories\/\w+/);
+});
+
+// J-003: 提交作品
+test('participant can submit to category', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('mockUserId', 'user_participant');
+  });
+
+  await page.goto('/categories/cat_1');
+  await page.click('text=提交作品');
+  // ...
+});
+```
+
+#### 8.3 运行 E2E 测试
+
+```bash
+# 确保后端运行
+make backend &
+
+# 运行所有 E2E 测试
+cd frontend && npx playwright test
+
+# 运行特定测试
+npx playwright test user-journeys
+
+# 查看测试报告
+npx playwright show-report
+```
+
+**测试覆盖目标：**
+- [ ] J-001 用户注册/登录
+- [ ] J-002 创建活动
+- [ ] J-003 提交作品
+- [ ] J-004 团队组建
+- [ ] J-005 评审流程
+- [ ] ... (其他核心旅程)
+
+> 更新 `progress.md` 记录 E2E 测试结果。
+
+---
+
+### 阶段 9: 最终集成验证
 
 > **前面各阶段已完成模块级增量测试**，本阶段聚焦于全栈端到端集成验证。
 
-#### 5.1 tests-kit 最终 Guard 检查
+#### 9.1 tests-kit 最终 Guard 检查
 
 ```bash
-# 运行 tests-kit Guard 模式，确保所有 246 个测试用例未被破坏
+# 运行 tests-kit Guard 模式，确保所有测试用例未被破坏
 uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 ```
 
-确保所有 17 个测试模块的用例都已覆盖：
+确保所有测试模块的用例都已覆盖：
 - 01-07: 内容类型 CRUD
 - 08: 关系操作
 - 09: 级联删除
@@ -927,7 +1063,7 @@ uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 - 14: 活动关联
 - 15-17: 规则引擎
 
-#### 5.2 后端完整测试
+#### 9.2 后端完整测试
 
 ```bash
 # 运行所有后端测试
@@ -937,19 +1073,16 @@ uv run pytest app/tests/ -v
 uv run pytest app/tests/ --cov=app --cov-report=html
 ```
 
-#### 5.3 端到端集成测试
-
-**完整的用户旅程测试（参考 `docs/user-journeys.md` 的 13 个用户旅程）：**
+#### 9.3 全栈集成测试
 
 ```bash
 # 启动后端和前端
 make start
 
-# 确保测试数据已导入
-uv run python .claude/skills/data-importer/scripts/cli.py import \
-  --source .synnovator --db data/synnovator.db --models app/models
+# 确保种子数据已注入
+make seed
 
-# 运行前端端到端测试
+# 运行 E2E 测试
 cd frontend && npx playwright test
 
 # 手动验证
@@ -957,7 +1090,7 @@ open http://localhost:3000
 open http://localhost:8000/docs
 ```
 
-#### 5.4 完成会话记录
+#### 9.4 完成会话记录
 
 ```bash
 # 更新 progress.md，标记所有阶段完成
@@ -976,31 +1109,28 @@ bash .claude/skills/planning-with-files/scripts/check-complete.sh
 uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 
 # 1. 更新 docs/data-types.md（内容类型字段定义）
-# 2. 同步更新 synnovator skill 相关文件（references/schema.md、endpoints/*.py）
 
-# 3. 重新生成 OpenAPI spec（自动读取 synnovator skill + docs/ + specs/）
+# 2. 重新生成 OpenAPI spec
 uv run python .claude/skills/schema-to-openapi/scripts/generate_openapi.py
 
-# 4. 重新生成后端代码
+# 3. 重新生成后端代码
 uv run python .claude/skills/api-builder/scripts/cli.py \
   --spec .synnovator/openapi.yaml --output app
 
-# 5. 生成数据库迁移
+# 4. 生成数据库迁移
 cd app && uv run alembic revision --autogenerate -m "Add new field"
 uv run alembic upgrade head && cd ..
 
-# 6. 更新 .synnovator 测试数据
-uv run python .claude/skills/synnovator/scripts/engine.py \
-  update user --id user_xxx --data '{"new_field": "value"}'
+# 5. 更新种子数据脚本
+# 编辑 scripts/seed.py 添加新字段的测试数据
 
-# 7. 重新导入数据
-uv run python .claude/skills/data-importer/scripts/cli.py import \
-  --source .synnovator --db data/synnovator.db --models app/models
+# 6. 重置并注入种子数据
+make resetdb && make seed
 
-# 8. [tests-kit Guard] 验证受影响的测试用例仍然通过
+# 7. [tests-kit Guard] 验证受影响的测试用例仍然通过
 uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 
-# 9. 运行后端测试
+# 8. 运行后端测试
 uv run pytest app/tests/ -v
 ```
 
@@ -1011,18 +1141,24 @@ uv run pytest app/tests/ -v
 uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 
 # 1. 更新 docs/data-types.md 和 docs/relationships.md
-# 2. 同步更新 synnovator skill（references/schema.md、新增 endpoints/*.py）
-# 3. 重新生成 OpenAPI spec
+# 2. 重新生成 OpenAPI spec
 uv run python .claude/skills/schema-to-openapi/scripts/generate_openapi.py
-# 4. 重新生成后端
+# 3. 重新生成后端
 uv run python .claude/skills/api-builder/scripts/cli.py \
   --spec .synnovator/openapi.yaml --output app
-# 5. 更新 data-importer（在 IMPORT_ORDER 中添加新类型）
-# 6. 创建测试数据
-# 7. 导入并测试
 
-# 8. [tests-kit Insert] 为新内容类型添加测试用例到 specs/testcases/
-# 9. [tests-kit Guard] 验证所有测试用例通过
+# 4. 生成迁移
+cd app && uv run alembic revision --autogenerate -m "Add new content type"
+uv run alembic upgrade head && cd ..
+
+# 5. 更新种子数据脚本
+# 编辑 scripts/seed.py 添加新类型的测试数据
+
+# 6. 重置并注入种子数据
+make resetdb && make seed
+
+# 7. [tests-kit Insert] 为新内容类型添加测试用例到 specs/testcases/
+# 8. [tests-kit Guard] 验证所有测试用例通过
 uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 ```
 
@@ -1033,21 +1169,19 @@ uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 
 # 1. 更新 docs/relationships.md
-# 2. 同步更新 synnovator skill（references/schema.md）
-# 3. 重新生成 OpenAPI spec
+# 2. 重新生成 OpenAPI spec
 uv run python .claude/skills/schema-to-openapi/scripts/generate_openapi.py
-# 4. 重新生成后端
+# 3. 重新生成后端
 uv run python .claude/skills/api-builder/scripts/cli.py \
   --spec .synnovator/openapi.yaml --output app
-# 5. 生成迁移（可能需要手动调整）
+# 4. 生成迁移（可能需要手动调整）
 cd app && uv run alembic revision --autogenerate -m "Update relations"
 uv run alembic upgrade head && cd ..
-# 6. 更新测试数据
-# 7. 重新导入
-uv run python .claude/skills/data-importer/scripts/cli.py import \
-  --source .synnovator --db data/synnovator.db --models app/models
+# 5. 更新种子数据脚本
+# 6. 重置并注入种子数据
+make resetdb && make seed
 
-# 8. [tests-kit Guard] 验证关系相关测试用例
+# 7. [tests-kit Guard] 验证关系相关测试用例
 uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 ```
 
@@ -1058,18 +1192,16 @@ uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 ### Q: 如何清空数据库重新开始？
 
 ```bash
-rm data/synnovator.db
-cd app && uv run alembic upgrade head && cd ..
-uv run python .claude/skills/data-importer/scripts/cli.py import \
-  --source .synnovator --db data/synnovator.db --models app/models
+make resetdb
+make seed
 ```
 
-### Q: 数据导入失败怎么办？
+### Q: 种子数据注入失败怎么办？
 
-1. 查看错误报告
-2. 验证 .md 文件格式
-3. 检查外键依赖
-4. 使用 `--types` 单独导入失败的类型
+1. 检查后端服务是否运行：`make backend`
+2. 查看种子脚本错误日志
+3. 检查外键依赖（确保依赖的数据先创建）
+4. 逐步调试种子脚本：先注入用户，再注入活动，依次类推
 
 ### Q: 如何添加认证？
 
@@ -1118,41 +1250,52 @@ async def upload_file(file: UploadFile = File(...)):
 
 ## 最佳实践
 
-### 1. 数据一致性
-- 优先在 `.synnovator/` 中维护测试数据
-- 使用 data-importer 同步到数据库
-- 避免直接修改数据库
+### 1. 设计驱动开发
+- **先设计，后实现**：先完成 UI 设计文档，再编写前端代码
+- 使用 user-journeys 验证 UI 设计的覆盖度
+- 使用 OpenAPI spec 验证 endpoint 实现情况
 
-### 2. 版本控制
-- `.synnovator/` 纳入 Git
+### 2. 组件优先策略
+- **shadcn 优先**：先检查 shadcn 是否有现成组件
+- 自定义组件遵循 shadcn 风格
+- 组件完成后再组合成页面
+
+### 3. 数据一致性
+- 使用 `make seed` 通过 API 注入种子数据
+- 种子数据脚本纳入版本控制
 - `data/*.db` 添加到 .gitignore
 - 迁移文件纳入版本控制
 
-### 3. 增量开发与增量测试
-- 设计 → 生成 → 导入 → **测试** → 下一模块
+### 4. 增量开发与增量测试
+- 设计 → 生成 → **测试** → 下一模块
 - 每次迭代只修改必要部分
-- 保持数据与 schema 同步
 - **每完成一个模块，立即使用 tests-kit 验证**，不要积压到最后
+- **E2E 测试是必须步骤**，覆盖核心用户旅程
 
-### 4. 测试策略
+### 5. 测试策略
 - 使用 **tests-kit Guard** 模式在修改前检查现有测试用例
 - 使用 **tests-kit Insert** 模式为新功能添加测试用例
 - 按模块增量测试：用户 → 活动 → 规则 → 团队 → 帖子 → 资源 → 交互 → 关系
-- 使用真实的 .synnovator 数据
+- 使用 **Playwright** 进行 E2E 测试
 - 测试外键约束和级联删除
 - 最终阶段运行全量集成测试
 
-### 5. 会话管理（planning-with-files）
+### 6. 会话管理（planning-with-files）
 - 每次开始新会话时初始化或恢复规划文件
 - 每 2 次搜索/浏览操作后保存发现到 `findings.md`
 - 重大决策前重新阅读 `task_plan.md` 保持目标在注意力中
 - 错误记录到规划文件，避免重复同样的失败
 - 3 次尝试失败后升级处理方式
 
-### 6. 环境隔离
-- 开发环境: SQLite
+### 7. 认证策略
+- **默认使用 Mock 登录**（X-User-Id header）
+- 仅当用户明确要求时才实现真实认证
+- Mock 模式便于开发和测试
+
+### 8. 环境隔离
+- 开发环境: SQLite + Mock 认证
 - 测试环境: SQLite（独立数据库）
-- 生产环境: PostgreSQL/MySQL
+- 生产环境: PostgreSQL/MySQL + 真实认证
 
 ---
 
@@ -1177,31 +1320,162 @@ async def upload_file(file: UploadFile = File(...)):
 - **包管理**: npm
 
 ### 工具链（Skills）
+
+**核心 Skills：**
 - **planning-with-files**: 文件化规划与会话管理（task_plan.md / findings.md / progress.md）
-- **synnovator**: 平台原型参考实现 + 文件数据管理（CRUD 操作）
-- **schema-to-openapi**: 从 synnovator skill + docs/ + specs/ 综合生成 OpenAPI 3.0 规范
+- **schema-to-openapi**: 从 docs/ + specs/ 综合生成 OpenAPI 3.0 规范
 - **api-builder**: 后端代码生成（FastAPI + SQLAlchemy + Alembic + 测试 + TypeScript 客户端）
-- **data-importer**: 数据导入（.synnovator → SQLite）
-- **tests-kit**: 增量测试管理（Guard 验证 + Insert 添加，246 个测试用例）
+- **tests-kit**: 增量测试管理（Guard 验证 + Insert 添加）
+
+**可选 Skills：**
+- **synnovator**: 平台原型参考实现 + 文件数据管理（特定场景使用）
+- **data-importer**: 数据导入（仅在需要从文件批量导入时使用）
+- **pen-to-react**: 从 .pen 设计稿转换 React 组件（仅有 .pen 时使用）
+
+**外部工具：**
+- **shadcn MCP 插件**: 检查 shadcn 组件可用性
+- **Playwright**: E2E 端到端测试
+
+---
+
+## 潜在新 Skill 建议
+
+根据实际开发流程，以下步骤可以抽取为新的 skill：
+
+### 1. ui-design-generator
+
+**用途：** 从 user-journeys + testcases 生成 UI 设计文档
+
+**触发条件：**
+- "生成 UI 设计文档"
+- "创建 UI 规范"
+- "从用户旅程生成 UI"
+
+**功能：**
+- 读取 `docs/user-journeys.md`
+- 读取 `specs/testcases/`
+- 参考业界案例生成 UI 设计
+- 验证 user-journey 覆盖度
+- 检查 OpenAPI endpoint 实现情况
+- 输出 `specs/ui/ui-design-spec.md`
+
+### 2. endpoint-validator
+
+**用途：** 验证 UI 组件与 OpenAPI endpoint 的对应关系
+
+**触发条件：**
+- "验证 endpoint 覆盖"
+- "检查 API 实现情况"
+
+**功能：**
+- 读取 UI 设计文档中的 endpoint 引用
+- 对照 OpenAPI spec 检查实现状态
+- 生成 "Not Implemented" 报告
+- 支持增量验证
+
+### 3. shadcn-component-checker
+
+**用途：** 开发组件前检查 shadcn 可用性
+
+**触发条件：**
+- "检查 shadcn 组件"
+- 开发新 UI 组件前自动触发
+
+**功能：**
+- 使用 shadcn MCP 插件搜索组件
+- 推荐使用的 shadcn 组件
+- 生成安装命令
+- 标记需要自定义的组件
+
+### 4. e2e-test-generator
+
+**用途：** 从 user-journeys 生成 Playwright 测试
+
+**触发条件：**
+- "生成 E2E 测试"
+- "创建用户旅程测试"
+
+**功能：**
+- 读取 `docs/user-journeys.md`
+- 为每个旅程生成 Playwright 测试骨架
+- 包含 Mock 用户配置
+- 生成测试覆盖报告
+
+---
+
+## 流程优化建议
+
+### 1. 减少手工步骤
+
+| 当前步骤 | 优化建议 |
+|---------|---------|
+| 手工检查 shadcn 组件 | 集成 shadcn MCP 到 AI workflow |
+| 手工验证 endpoint 覆盖 | 自动化 endpoint 验证工具 |
+| 手工编写 E2E 测试 | 从 user-journeys 自动生成测试骨架 |
+
+### 2. 流程自动化
+
+```bash
+# 建议新增的 Makefile 目标
+
+# 生成 UI 设计文档
+make ui-design
+
+# 验证 endpoint 覆盖
+make validate-endpoints
+
+# 生成 E2E 测试骨架
+make generate-e2e-tests
+
+# 完整的前端开发流程
+make frontend-workflow
+```
+
+### 3. 检查点增强
+
+在关键阶段自动运行检查：
+
+| 阶段 | 自动检查 |
+|-----|---------|
+| 阶段 4 (UI 设计) | user-journey 覆盖度 ≥ 90% |
+| 阶段 5 (样式) | shadcn MCP 可用性验证 |
+| 阶段 6 (API 客户端) | TypeScript 编译通过 |
+| 阶段 7 (组件开发) | 组件单元测试通过 |
+| 阶段 8 (E2E) | 核心旅程测试通过 |
+
+### 4. 文档同步
+
+- OpenAPI spec 变更时，自动更新 UI 设计文档的 endpoint 状态
+- UI 设计文档变更时，自动更新 E2E 测试覆盖报告
 
 ---
 
 ## 总结
 
-完整开发流程 6 个阶段（贯穿 planning-with-files 规划管理）：
+完整开发流程 10 个阶段（贯穿 planning-with-files 规划管理）：
 
-0. **项目初始化** - 创建结构、配置环境、初始化规划文件（planning-with-files）
-1. **需求设计** - synnovator skill 为原型参考，综合 docs/ + specs/ 生成 OpenAPI spec → **tests-kit 验证数据模型**
-2. **后端生成** - 使用 api-builder 生成 FastAPI 到 `app/` + 迁移 → **tests-kit 按模块增量测试**
-3. **数据注入** - 使用 data-importer 导入测试数据 → **tests-kit 验证导入数据**
-4. **前端集成** - 安装 Tailwind+shadcn → 生成 TypeScript 客户端 → 集成到 Next.js → **tests-kit 验证前端集成**
-5. **最终集成验证** - tests-kit 全量 Guard 检查 + 端到端用户旅程测试
+0. **项目初始化** - 创建结构、配置环境、初始化规划文件
+1. **需求设计** - 综合 docs/ + specs/ 生成 OpenAPI spec → **tests-kit 验证**
+2. **后端生成** - 使用 api-builder 生成 FastAPI → **tests-kit 按模块测试**
+3. **种子数据** - 通过 API 注入种子数据（make seed）→ **tests-kit 验证**
+4. **UI 设计** ⭐ - 从 user-journeys 生成 UI 设计文档，验证 endpoint 覆盖
+5. **样式配置** - 安装 Tailwind + shadcn，配置 Neon Forge 主题
+6. **API 客户端** - 生成 TypeScript 客户端（api-client.ts + types.ts）
+7. **组件开发** ⭐ - shadcn 优先策略，组件完成后组合成页面
+8. **E2E 测试** ⭐ - Playwright 测试覆盖核心用户旅程
+9. **最终验证** - tests-kit 全量 Guard + E2E 测试
 
-这个流程确保：
+**核心原则：**
+- **设计驱动开发**：先生成 UI 设计文档，再编写前端代码
+- **组件优先**：shadcn 优先，组件完成后组合成页面
+- **Mock 认证**：默认使用 X-User-Id header，仅需时实现真实认证
+- **E2E 必须**：Playwright 测试是前端开发的必须步骤
+
+**这个流程确保：**
 - 从设计到实现的一致性
 - 自动化代码生成，减少重复工作
-- **增量测试，每个模块完成后立即验证**，不积压问题
-- **文件化规划，防止上下文丢失和中断失忆**
-- 测试数据与生产 schema 同步
+- **增量测试，每个模块完成后立即验证**
+- **文件化规划，防止上下文丢失**
+- 种子数据通过 API 注入，确保业务校验
+- **E2E 测试覆盖核心用户旅程**
 - 类型安全的全栈开发
-- 快速迭代和验证
