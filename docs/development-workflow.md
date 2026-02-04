@@ -1079,6 +1079,17 @@ uv run python .claude/skills/data-importer/scripts/cli.py import \
 3. 检查外键依赖
 4. 使用 `--types` 单独导入失败的类型
 
+### Q: 生产环境请求 `/api/*` 返回 404，但后端日志显示收到的是 `/*`？
+
+现象示例：浏览器请求 `GET /api/categories`，但后端日志却是 `GET /categories`，从而触发 404。
+
+常见原因是 Nginx 反向代理的 `proxy_pass` 写法导致路径前缀被剥离：
+
+- 错误写法：`location /api/ { proxy_pass http://backend/; }`（会把 `/api/...` 转发成 `/...`）
+- 正确写法：`location /api/ { proxy_pass http://backend; }`（保留原始 URI，后端可匹配 `/api/...`）
+
+本仓库的对应配置文件在 `deploy/nginx.conf`，修改后需要 reload/restart Nginx 容器或主机 Nginx 才会生效。
+
 ### Q: 如何添加认证？
 
 ```python
