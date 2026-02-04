@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { getServerEnv } from "@/lib/env"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -11,9 +12,17 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  // Read environment variables on the server and inject into client
+  const env = getServerEnv()
+
   return (
     <html lang="zh-CN" className="dark">
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__ENV__=${JSON.stringify(env)}`,
+          }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

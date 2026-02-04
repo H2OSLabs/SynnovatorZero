@@ -3,8 +3,7 @@
 import * as React from 'react'
 import { UsersIcon, FolderIcon, FileTextIcon, TrendingUpIcon } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api'
+import { getEnv } from '@/lib/env'
 
 interface Stats {
   user_count: number
@@ -53,7 +52,7 @@ export function PlatformStats({ refreshInterval = 0 }: PlatformStatsProps) {
 
   const fetchStats = React.useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE}/stats`)
+      const response = await fetch(`${getEnv().API_URL}/stats`)
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`)
       }
@@ -88,7 +87,7 @@ export function PlatformStats({ refreshInterval = 0 }: PlatformStatsProps) {
             重试
           </button>
           <p className="mt-3 text-xs text-nf-muted">
-            请确认后端已启动（8000 端口）或设置 NEXT_PUBLIC_API_URL
+            请确认后端已启动（8000 端口）
           </p>
         </CardContent>
       </Card>

@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+import { getEnv } from './env'
 
 export type PostType = 'profile' | 'team' | 'category' | 'for_category' | 'certificate' | 'general'
 
@@ -42,7 +42,7 @@ export type PostTypesMeta = {
 }
 
 export async function fetchPostTypesMeta(): Promise<PostTypesMeta> {
-  const response = await fetch(`${API_BASE}/meta/post-types`, { cache: 'no-store' })
+  const response = await fetch(`${getEnv().API_URL}/meta/post-types`, { cache: 'no-store' })
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`)
   }

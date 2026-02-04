@@ -3,8 +3,9 @@
  */
 
 import { getPostTypeLabel } from '@/lib/post-type'
+import { getEnv } from './env'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+const getApiBase = () => getEnv().API_URL
 
 export interface SearchResult {
   type: 'user' | 'category' | 'post'
@@ -58,7 +59,7 @@ export async function searchUsers(query: string, limit = 5): Promise<SearchResul
   try {
     // Backend doesn't have a search endpoint, so we fetch and filter client-side
     const data = await fetchJson<PaginatedResponse<UserResult>>(
-      `${API_BASE}/users?limit=100`
+      `${getApiBase()}/users?limit=100`
     )
 
     const q = query.toLowerCase()
@@ -86,7 +87,7 @@ export async function searchUsers(query: string, limit = 5): Promise<SearchResul
 export async function searchCategories(query: string, limit = 5): Promise<SearchResult[]> {
   try {
     const data = await fetchJson<PaginatedResponse<CategoryResult>>(
-      `${API_BASE}/categories?limit=100`
+      `${getApiBase()}/categories?limit=100`
     )
 
     const q = query.toLowerCase()
@@ -114,7 +115,7 @@ export async function searchCategories(query: string, limit = 5): Promise<Search
 export async function searchPosts(query: string, limit = 5): Promise<SearchResult[]> {
   try {
     const data = await fetchJson<PaginatedResponse<PostResult>>(
-      `${API_BASE}/posts?limit=100&status=published`
+      `${getApiBase()}/posts?limit=100&status=published`
     )
 
     const q = query.toLowerCase()

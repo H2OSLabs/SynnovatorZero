@@ -4,8 +4,10 @@ services:
       context: ..
       dockerfile: deploy/Dockerfile.frontend
     restart: always
-    env_file:
-      - ../.env
+    environment:
+      # Runtime environment variable for API URL
+      # Injected to client via window.__ENV__ in layout.tsx
+      API_URL: /api
     networks:
       - synnovator_net
 
