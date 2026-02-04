@@ -325,9 +325,14 @@ export default async function UsersPage() {
 
 ### 环境配置
 ```bash
-# .env.local
-NEXT_PUBLIC_API_URL=http://localhost:8000
+# frontend/.env.development (开发环境)
+API_URL=http://localhost:8000/api
+
+# frontend/.env.local (本地覆盖，可选)
+API_URL=https://custom-api.example.com/api
 ```
+
+> 注意：API_URL 通过 `lib/env.ts` 在服务端读取，并通过 `layout.tsx` 注入到客户端的 `window.__ENV__`。
 
 ### 类型映射
 | OpenAPI | TypeScript |

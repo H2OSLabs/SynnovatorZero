@@ -24,8 +24,27 @@ export interface ApiConfig {
   headers?: Record<string, string>;
 }
 
+/**
+ * Get API URL from runtime environment
+ * - Server: reads from process.env.API_URL
+ * - Client: reads from window.__ENV__.API_URL (injected by layout.tsx)
+ */
+function getApiUrl(): string {
+  if (typeof window !== 'undefined' && window.__ENV__?.API_URL) {
+    return window.__ENV__.API_URL;
+  }
+  return process.env.API_URL || "/api";
+}
+
+// Declare window.__ENV__ type
+declare global {
+  interface Window {
+    __ENV__?: { API_URL: string };
+  }
+}
+
 const defaultConfig: ApiConfig = {
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+  baseUrl: getApiUrl(),
 };
 
 class ApiClient {

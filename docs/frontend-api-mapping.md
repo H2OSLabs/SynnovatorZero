@@ -118,7 +118,12 @@ Auth Header: `X-User-Id: <int>` (temporary)
 
 ```typescript
 // frontend/lib/api-client.ts
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+import { getEnv } from './env'
+
+// 运行时获取 API URL（支持不同环境）
+// - 开发环境: http://localhost:8000/api (来自 .env.development)
+// - 生产环境: /api (来自 Docker 环境变量，通过 nginx 代理)
+const getApiBase = () => getEnv().API_URL
 
 // All endpoints use JSON content type
 // Auth via X-User-Id header when logged in

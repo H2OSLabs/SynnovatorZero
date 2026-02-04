@@ -778,7 +778,10 @@ class ApiClient {
   private baseURL: string;
 
   constructor(baseURL?: string) {
-    this.baseURL = baseURL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    // 使用运行时环境变量，通过 lib/env.ts 的 getEnv() 获取
+    // 开发环境: http://localhost:8000 (来自 .env.development)
+    // 生产环境: /api (来自 Docker 环境变量)
+    this.baseURL = baseURL || 'http://localhost:8000';
   }
 
   // User endpoints
@@ -815,9 +818,14 @@ export const apiClient = new ApiClient();
 **配置环境变量：**
 
 ```bash
-# frontend/.env.local
-NEXT_PUBLIC_API_URL=http://localhost:8000
+# frontend/.env.development (开发环境，已提交到仓库)
+API_URL=http://localhost:8000/api
+
+# frontend/.env.local (本地覆盖，不提交)
+API_URL=https://custom-api.example.com/api
 ```
+
+> 注意：环境变量通过 `lib/env.ts` 在服务端读取，并通过 `layout.tsx` 注入到 `window.__ENV__` 供客户端使用。
 
 **在 Server Component 中使用：**
 

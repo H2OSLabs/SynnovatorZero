@@ -432,7 +432,7 @@ def main():
         print(f"  Generated: {client_output}")
         print(f"\n{Colors.CYAN}Next steps for frontend:{Colors.END}")
         print(f"  1. Copy {client_output} to your Next.js project (e.g., lib/api/)")
-        print(f"  2. Set NEXT_PUBLIC_API_URL in .env.local")
+        print(f"  2. Set API_URL in frontend/.env.development or .env.local")
         print(f"  3. Import: import {{ apiClient }} from '@/lib/api/api-client'")
 
     # 打印migration信息（如果运行了）

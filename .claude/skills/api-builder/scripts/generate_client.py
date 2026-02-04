@@ -295,7 +295,7 @@ def main():
     print(f"\n✅ Client generation complete!")
     print(f"\n📝 Next steps:")
     print(f"  1. Copy {args.output} to your Next.js project")
-    print(f"  2. Configure NEXT_PUBLIC_API_URL in .env.local")
+    print(f"  2. Configure API_URL in frontend/.env.development or .env.local")
     print(f"  3. Import and use: import {{ apiClient }} from './api-client'")
 
 
