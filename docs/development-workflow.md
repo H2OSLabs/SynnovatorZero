@@ -41,12 +41,24 @@ make seed
 └────────────────────────────────────────────────────────────────┘
                             ↓
 ┌────────────────────────────────────────────────────────────────┐
-│ 阶段 1: 需求设计与数据建模                                      │
-│  数据源:                                                       │
-│      ├─→ docs/user-journeys.md (用户旅程)                     │
-│      ├─→ specs/testcases/ (测试用例)                          │
-│      └─→ docs/ + specs/ (功能与规范文档)                       │
+│ 阶段 0.5: 领域建模与数据架构 ⭐                                   │
+│  [domain-modeler skill]                                       │
+│  输入:                                                         │
+│      └─→ docs/user-journeys.md (手写需求文档)                  │
 │                                                                │
+│  输出 (领域模型文档):                                           │
+│      ├─→ docs/data-types.md (实体定义)                        │
+│      ├─→ docs/relationships.md (关系定义)                     │
+│      ├─→ docs/crud-operations.md (操作与权限)                 │
+│      ├─→ specs/data-integrity.md (数据约束)                   │
+│      ├─→ specs/cache-strategy.md (缓存策略)                   │
+│      └─→ docs/rule-engine.md (规则引擎，如需要)               │
+│                                                                │
+│  ✅ 交叉验证: 每个用户旅程步骤都能被领域模型支撑                   │
+└────────────────────────────────────────────────────────────────┘
+                            ↓
+┌────────────────────────────────────────────────────────────────┐
+│ 阶段 1: API 设计 (OpenAPI 规范生成)                              │
 │  [schema-to-openapi skill] ← 读取 docs + specs                │
 │      ↓                                                        │
 │  OpenAPI 3.x 规范 (.synnovator/openapi.yaml)                  │
@@ -70,6 +82,20 @@ make seed
 │  SQLite database (空表结构)                                    │
 │                                                                │
 │  ✅ [tests-kit] 按模块增量测试后端代码                           │
+└────────────────────────────────────────────────────────────────┘
+                            ↓
+┌────────────────────────────────────────────────────────────────┐
+│ 阶段 2.5: 种子数据设计 ⭐                                        │
+│  [seed-designer skill]                                        │
+│  输入:                                                         │
+│      ├─→ specs/testcases/ (测试用例场景需求)                   │
+│      └─→ docs/data-types.md (实体定义，校验字段值)              │
+│                                                                │
+│  输出:                                                         │
+│      ├─→ specs/seed-data-requirements.md (种子数据需求清单)    │
+│      └─→ scripts/seed_dev_data.py (种子脚本注释更新)           │
+│                                                                │
+│  ✅ 验证种子数据覆盖测试用例前置条件                              │
 └────────────────────────────────────────────────────────────────┘
                             ↓
 ┌────────────────────────────────────────────────────────────────┐
@@ -166,9 +192,11 @@ make seed
 | Skill | 用途 | 状态 |
 |-------|------|------|
 | **planning-with-files** | 文件化规划：创建 task_plan.md / findings.md / progress.md，防止上下文丢失和中断失忆 | ✅ 核心 |
+| **domain-modeler** | 从 user-journeys 提取领域模型：实体、关系、属性、约束 → 产出 data-types.md 等文档 | ✅ 核心 |
 | **schema-to-openapi** | 从 docs/ + specs/ 综合生成 OpenAPI 3.0 规范 | ✅ 核心 |
 | **api-builder** | 从 OpenAPI 生成 FastAPI 后端 + 迁移 + 测试 + TypeScript 客户端 | ✅ 核心 |
 | **tests-kit** | 增量测试管理：Guard 模式验证已有测试用例，Insert 模式添加新测试用例 | ✅ 核心 |
+| **seed-designer** | 从 testcases 提取种子数据需求 → 产出 seed-data-requirements.md + 种子脚本注释 | ✅ 核心 |
 
 ### 可选 Skills（特定场景使用）
 
@@ -305,7 +333,6 @@ SynnovatorZero/
 │   ├── crud-operations.md #  CRUD 操作与权限矩阵
 │   ├── user-journeys.md  #   13 个用户旅程
 │   ├── rule-engine.md    #   声明式规则引擎规范
-│   ├── examples.md       #   数据操作示例
 │   └── development-workflow.md  # 本文档
 ├── specs/                # 开发规范文档
 │   ├── data-integrity.md #   数据完整性约束
@@ -383,21 +410,43 @@ python3 .claude/skills/planning-with-files/scripts/session-catchup.py "$(pwd)"
 
 ---
 
-### 阶段 1: 需求设计与数据建模
+### 阶段 0.5: 领域建模与数据架构 ⭐
 
-#### 1.1 定义数据模型
+> **核心阶段**：从用户旅程中提取业务实体，产出数据模型文档。这些文档是后续所有阶段（API 设计、代码生成、测试）的单一数据源。
+>
+> **设计哲学**：Domain-model-first。领域模型从业务需求推导，与技术无关。数据库 schema 和 API 契约都是领域模型的下游消费者。
 
-数据模型的完整定义分布在两个核心位置，schema-to-openapi 会综合读取：
+#### 0.5.1 使用 domain-modeler skill
 
-| 数据源 | 位置 | 内容 |
-|--------|------|------|
-| **功能说明文档** | `docs/` | data-types.md、relationships.md、crud-operations.md、user-journeys.md、rule-engine.md 等 |
-| **开发规范文档** | `specs/` | data-integrity.md、cache-strategy.md、testcases/ 等 |
+**输入：** `docs/user-journeys.md`（手写需求文档，本项目唯一的人工输入）
 
-> **设计驱动开发**：先完成 docs/ 中的需求文档，再通过 schema-to-openapi 生成 API 规范。
-> docs/user-journeys.md 是验证 UI 设计覆盖度的核心依据。
+**使用 domain-modeler skill**，按 6 步流程从用户旅程提取领域模型：
 
-**7 种内容类型：**
+| 步骤 | 操作 | 产出 |
+|------|------|------|
+| 1. 提取实体 | 从用户旅程中提取名词 | 实体列表 + 中英映射 |
+| 2. 识别关系 | 确定实体间的关联类型和基数 | 关系列表 |
+| 3. 定义属性 | 每个实体的字段、类型、约束 | `docs/data-types.md` |
+| 4. 定义约束 | 唯一性、软删除、级联、缓存 | `specs/data-integrity.md`, `specs/cache-strategy.md` |
+| 5. 定义操作 | CRUD 操作和权限矩阵 | `docs/crud-operations.md` |
+| 6. 交叉验证 | 每个用户旅程步骤都能被模型支撑 | 验证报告 |
+
+#### 0.5.2 产出物
+
+| 产出文件 | 内容 | 下游消费者 |
+|----------|------|-----------|
+| `docs/data-types.md` | 实体定义（字段、类型、枚举值、外键） | schema-to-openapi, api-builder |
+| `docs/relationships.md` | 关系定义（类型、基数、关联表字段） | schema-to-openapi, api-builder |
+| `docs/crud-operations.md` | CRUD 操作定义与角色权限矩阵 | schema-to-openapi, api-builder |
+| `specs/data-integrity.md` | 唯一性约束、软删除规则、级联删除 | api-builder (模型生成) |
+| `specs/cache-strategy.md` | 缓存字段维护策略 | api-builder (模型生成) |
+| `docs/rule-engine.md` | 声明式规则引擎规范（如需要） | schema-to-openapi |
+
+> **数据模型文档就是 Synnovator 的 "Domain Model"**。`data-types.md` + `relationships.md` 对应 DDD 中的实体和聚合定义，`crud-operations.md` 对应领域服务定义。
+
+#### 0.5.3 Synnovator 领域模型概要
+
+**7 种内容类型（实体）：**
 - **user**: 用户账户
 - **category**: 活动/竞赛
 - **post**: 用户帖子（支持多种 type）
@@ -421,36 +470,35 @@ python3 .claude/skills/planning-with-files/scripts/session-catchup.py "$(pwd)"
 CRUD 操作与权限见 `docs/crud-operations.md`。
 数据完整性约束见 `specs/data-integrity.md`。
 
-#### 1.2 定义种子数据需求
+#### 0.5.4 验证领域模型
 
-在 `specs/testcases/` 中定义测试场景所需的数据。种子数据将在阶段 3 通过 API 注入。
+**交叉验证清单：**
+- [ ] 每个用户旅程的每个步骤都有对应的实体和操作
+- [ ] 没有孤立实体（未被任何旅程引用的实体）
+- [ ] 没有缺失操作（旅程步骤需要但未定义的 CRUD 操作）
+- [ ] 约束不阻塞任何合法旅程路径
 
-**数据需求示例（参考 docs/examples.md）：**
+---
 
-- 用户数据：admin、organizer、participant 各角色
-- 活动数据：不同状态（draft、published、closed）的活动
-- 帖子数据：不同类型和状态的帖子
-- 团队数据：公开/私有团队及成员关系
-- 交互数据：点赞、评论、评分记录
+### 阶段 1: API 设计 (OpenAPI 规范生成)
 
-> **注意**：不再使用 .synnovator/*.md 文件存储测试数据。种子数据通过 `make seed` 调用后端 API 注入。
+> **阶段 0.5 的领域模型文档是本阶段的输入**。schema-to-openapi 读取 docs/ + specs/ 生成 API 规范。
+> 每次进入阶段 2 前必须重新生成，确保 OpenAPI spec 与数据模型保持同步。
 
-#### 1.3 生成 OpenAPI 规范
-
-> **每次进入阶段 2 前必须重新生成**，确保 OpenAPI spec 与数据模型保持同步。
+#### 1.1 生成 OpenAPI 规范
 
 **使用 schema-to-openapi skill**
 
-schema-to-openapi 综合读取 docs/ 和 specs/ 文档来生成 OpenAPI 规范：
+schema-to-openapi 综合读取领域模型文档来生成 OpenAPI 规范：
 
 **输入数据源：**
-1. **docs/ 功能文档** — 业务需求
+1. **docs/ 领域模型文档**（阶段 0.5 产出）
    - `data-types.md`: 内容类型完整字段定义
    - `relationships.md`: 关系类型定义
    - `crud-operations.md`: CRUD 操作与权限矩阵
    - `rule-engine.md`: 声明式规则引擎规范
-   - `user-journeys.md`: 13 个用户旅程
-2. **specs/ 规范文档** — 技术约束
+   - `user-journeys.md`: 用户旅程（交叉验证用）
+2. **specs/ 规范文档**（阶段 0.5 产出）
    - `data-integrity.md`: 唯一性约束、软删除、级联规则
    - `cache-strategy.md`: 缓存字段维护策略
 
@@ -477,7 +525,7 @@ uv run python .claude/skills/schema-to-openapi/scripts/generate_openapi.py \
 - 管理批量操作
 - OAuth2 认证配置
 
-#### 1.4 增量测试：验证数据模型（tests-kit）
+#### 1.2 增量测试：验证数据模型（tests-kit）
 
 > 阶段 1 完成后，立即运行 tests-kit Guard 模式验证测试用例。
 
@@ -623,6 +671,173 @@ uv run pytest app/tests/test_api/test_posts_api.py -v
 | 10 | 用户旅程 | TC-JOUR-* |
 
 > 更新 `progress.md` 记录每个模块的测试结果。
+
+---
+
+### 阶段 2.5: 种子数据设计 ⭐
+
+> **关键阶段**：在注入种子数据之前，必须明确种子数据的来源和需求。种子数据不是随意编造的，而是从测试用例的前置条件中系统性地推导出来。
+>
+> **使用 seed-designer skill** 从 `specs/testcases/` 提取数据前置条件，产出种子数据需求清单。
+
+#### 2.5.1 种子数据需求来源
+
+种子数据需求来自三个核心来源：
+
+| 来源 | 位置 | 提取内容 |
+|------|------|---------|
+| **测试用例前置条件** | `specs/testcases/*.md` | 每个测试用例的"场景"部分隐含的数据前置条件 |
+| **用户旅程步骤** | `docs/user-journeys.md` | 旅程中需要预先存在的数据（如"用户已注册"、"活动已发布"） |
+| **领域模型文档** | `docs/data-types.md` | 实体字段定义和枚举值（标准数据格式参考） |
+
+#### 2.5.2 从测试用例提取数据需求
+
+**遍历 `specs/testcases/` 目录，识别每个测试用例的前置数据条件：**
+
+```
+测试用例分析模板：
+
+TC-XXX-NNN: [标题]
+├── 前置条件（隐含）
+│   ├── 需要的用户: [用户类型, 角色, 数量]
+│   ├── 需要的活动: [活动类型, 状态, 关联规则]
+│   ├── 需要的帖子: [帖子类型, 状态, 所属活动]
+│   ├── 需要的团队: [团队类型, 成员关系]
+│   └── 需要的关系: [用户-团队, 帖子-活动, 等]
+└── 种子数据映射
+    └── → seed_xxx() 函数
+```
+
+**示例：从 TC-POST-001 提取数据需求**
+
+```
+TC-POST-001：创建日常帖子
+场景：用户在首页点击"发帖"按钮，填写标题和内容后提交
+预期：帖子创建成功，状态为 draft
+
+前置数据需求：
+├── 用户: 1 个已注册用户（participant 角色）
+└── 无其他前置
+```
+
+**示例：从 TC-ENTRY-001 提取数据需求**
+
+```
+TC-ENTRY-001：活动报名
+场景：用户查看已发布的活动，点击"立即报名"
+
+前置数据需求：
+├── 用户: 1 个已注册用户（participant）
+├── 活动: 1 个已发布活动（status=published）
+├── 规则: 活动关联的报名规则
+└── 组织者: 创建活动的 organizer 用户
+```
+
+#### 2.5.3 生成种子数据需求清单
+
+将提取的数据需求汇总到 `specs/seed-data-requirements.md`：
+
+```markdown
+# 种子数据需求清单
+
+## 用户数据
+
+| 标识 | 角色 | 用途 | 关联测试用例 |
+|------|------|------|-------------|
+| user_participant_1 | participant | 参赛者操作 | TC-POST-*, TC-ENTRY-* |
+| user_participant_2 | participant | 团队成员 | TC-GRP-020~025 |
+| user_organizer_1 | organizer | 活动创建者 | TC-CAT-*, TC-RULE-* |
+| user_admin_1 | admin | 管理操作 | TC-PERM-* |
+
+## 活动数据
+
+| 标识 | 状态 | 用途 | 关联测试用例 |
+|------|------|------|-------------|
+| cat_draft_1 | draft | 草稿活动测试 | TC-CAT-002 |
+| cat_published_1 | published | 报名/提交测试 | TC-ENTRY-*, TC-POST-050~076 |
+| cat_closed_1 | closed | 闭幕规则测试 | TC-CLOSE-* |
+
+## 帖子数据
+
+| 标识 | 类型 | 状态 | 关联测试用例 |
+|------|------|------|-------------|
+| post_daily_1 | daily | published | TC-POST-001~010 |
+| post_for_category_1 | for_category | draft | TC-POST-050~076 |
+
+## 团队数据
+
+| 标识 | 可见性 | 成员 | 关联测试用例 |
+|------|-------|------|-------------|
+| group_public_1 | public | user_participant_1 (owner) | TC-GRP-* |
+| group_private_1 | private | user_participant_2 (owner) | TC-GRP-010~015 |
+
+## 关系数据
+
+| 关系类型 | 数据 | 关联测试用例 |
+|----------|------|-------------|
+| group_user | group_public_1 → user_participant_1 (owner) | TC-REL-GU-* |
+| category_rule | cat_published_1 → rule_entry_1 | TC-REL-CR-* |
+```
+
+#### 2.5.4 更新种子脚本
+
+根据需求清单更新 `scripts/seed_dev_data.py`：
+
+```python
+# scripts/seed_dev_data.py
+"""
+种子数据脚本
+
+数据来源: specs/seed-data-requirements.md
+每个 seed_xxx() 函数对应需求清单中的一个数据类别
+"""
+
+def seed_users():
+    """
+    用户种子数据
+    覆盖测试用例: TC-USER-*, TC-PERM-*, TC-POST-* (前置)
+    """
+    users = [
+        # user_participant_1: 参赛者，用于帖子/报名测试
+        {"id": "user_participant_1", "username": "alice", "role": "participant"},
+        # user_participant_2: 参赛者，用于团队成员测试
+        {"id": "user_participant_2", "username": "bob", "role": "participant"},
+        # user_organizer_1: 组织者，用于活动/规则创建
+        {"id": "user_organizer_1", "username": "organizer", "role": "organizer"},
+        # user_admin_1: 管理员，用于权限测试
+        {"id": "user_admin_1", "username": "admin", "role": "admin"},
+    ]
+    # ... 注入逻辑
+
+def seed_categories():
+    """
+    活动种子数据
+    覆盖测试用例: TC-CAT-*, TC-ENTRY-*, TC-CLOSE-*
+    """
+    # ...
+```
+
+#### 2.5.5 验证种子数据覆盖度
+
+**检查清单：**
+
+- [ ] 每个 `specs/testcases/*.md` 文件的测试用例都有对应的前置数据
+- [ ] `specs/seed-data-requirements.md` 中每条数据都有明确的测试用例映射
+- [ ] `scripts/seed_dev_data.py` 中每个 seed 函数都有注释说明覆盖的测试用例
+- [ ] 运行 `make seed` 后，执行测试用例不会因缺少前置数据而失败
+
+```bash
+# 验证种子数据与测试用例的一致性（手动检查）
+# 1. 确认需求清单存在
+cat specs/seed-data-requirements.md
+
+# 2. 确认种子脚本有注释
+grep -n "覆盖测试用例" scripts/seed_dev_data.py
+
+# 3. 运行种子注入并测试
+make resetdb && make seed
+uv run pytest app/tests/ -v
+```
 
 ---
 
@@ -1375,9 +1590,11 @@ async def upload_file(file: UploadFile = File(...)):
 
 **核心 Skills：**
 - **planning-with-files**: 文件化规划与会话管理（task_plan.md / findings.md / progress.md）
+- **domain-modeler**: 从 user-journeys 提取领域模型（实体/关系/属性/约束 → 数据模型文档）
 - **schema-to-openapi**: 从 docs/ + specs/ 综合生成 OpenAPI 3.0 规范
 - **api-builder**: 后端代码生成（FastAPI + SQLAlchemy + Alembic + 测试 + TypeScript 客户端）
 - **tests-kit**: 增量测试管理（Guard 验证 + Insert 添加）
+- **seed-designer**: 从 testcases 提取种子数据需求（前置条件分析 → 需求清单 + 脚本注释）
 
 **可选 Skills：**
 - **synnovator**: 平台原型参考实现 + 文件数据管理（特定场景使用）
@@ -1504,12 +1721,14 @@ make frontend-workflow
 
 ## 总结
 
-完整开发流程 10 个阶段（贯穿 planning-with-files 规划管理）：
+完整开发流程 12 个阶段（贯穿 planning-with-files 规划管理）：
 
 0. **项目初始化** - 创建结构、配置环境、初始化规划文件
-1. **需求设计** - 综合 docs/ + specs/ 生成 OpenAPI spec → **tests-kit 验证**
-2. **后端生成** - 使用 api-builder 生成 FastAPI → **tests-kit 按模块测试**
-3. **种子数据** - 通过 API 注入种子数据（make seed）→ **tests-kit 验证**
+0.5. **领域建模** ⭐ - [domain-modeler] 从 user-journeys 提取实体/关系 → 产出数据模型文档
+1. **API 设计** - [schema-to-openapi] 从领域模型文档生成 OpenAPI spec → **tests-kit 验证**
+2. **后端生成** - [api-builder] 生成 FastAPI → **tests-kit 按模块测试**
+2.5. **种子数据设计** - [seed-designer] 从 testcases 提取数据需求 → 生成 seed-data-requirements.md
+3. **种子数据注入** - 通过 API 注入种子数据（make seed）→ **tests-kit 验证**
 4. **UI 设计** ⭐ - 从 user-journeys 生成 UI 设计文档，验证 endpoint 覆盖
 5. **样式配置** - 安装 Tailwind + shadcn，配置 Neon Forge 主题
 6. **API 客户端** - 生成 TypeScript 客户端（api-client.ts + types.ts）
@@ -1518,6 +1737,7 @@ make frontend-workflow
 9. **最终验证** - tests-kit 全量 Guard + E2E 测试
 
 **核心原则：**
+- **领域模型优先**：user-journeys → 领域建模 → API 设计 → 代码生成，领域模型是单一数据源
 - **设计驱动开发**：先生成 UI 设计文档，再编写前端代码
 - **组件优先**：shadcn 优先，组件完成后组合成页面
 - **Mock 认证**：默认使用 X-User-Id header，仅需时实现真实认证
@@ -1528,6 +1748,7 @@ make frontend-workflow
 - 自动化代码生成，减少重复工作
 - **增量测试，每个模块完成后立即验证**
 - **文件化规划，防止上下文丢失**
+- **种子数据可追溯**：每条种子数据都映射到具体测试用例
 - 种子数据通过 API 注入，确保业务校验
 - **E2E 测试覆盖核心用户旅程**
 - 类型安全的全栈开发

@@ -34,6 +34,8 @@ Run this workflow **before committing any change** to synnovator skill scripts, 
      - **frontend/lib/api-client.ts** → `TC-FEINT-090` (CRUD 完整性)
      - **frontend/app/**/create/page.tsx** → `TC-FEINT-001~091` (前端集成)
      - **frontend/app/**/edit/page.tsx** → `TC-FEINT-040~041` (编辑集成)
+     - **specs/seed-data-requirements.md** → 种子数据映射的测试用例 (需检查覆盖度)
+     - **scripts/seed_dev_data.py** → 种子数据脚本变更需验证前置条件覆盖
 
 3. **Read the affected test case files** in `specs/testcases/` and verify each scenario still holds given the proposed change.
 
