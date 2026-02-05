@@ -4,10 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Synnovator is a creative collaboration platform (协创者) being rebuilt from scratch. The project is currently in the **specification and design phase** — the data model, user journeys, and design system are fully documented, but production code has not yet been written.
+Synnovator is a creative collaboration platform (协创者) being rebuilt from scratch. The project is in the **prototype development phase** — the data model, user journeys, design system, and development workflow are fully documented. A working FastAPI backend (SQLite + SQLAlchemy), Next.js frontend, and username/password authentication system are implemented.
 
-- **Language:** Python 3.12
-- **Package manager:** UV (with Tsinghua PyPI mirror configured in `uv.toml`)
+- **Language:** Python 3.12 + TypeScript (Next.js 14)
+- **Package manager:** UV (Python, with Tsinghua PyPI mirror in `uv.toml`) + npm (frontend)
+- **Database:** SQLite + SQLAlchemy + Alembic migrations
 - **Repository:** H2OSLabs/SynnovatorZero
 
 ## Commands
@@ -28,6 +29,9 @@ uv add <package>
 # Sync dependencies from lock file
 uv sync
 
+# Reset database and inject seed data
+make resetdb && make seed
+
 # Run tests
 uv run pytest
 ```
@@ -35,24 +39,28 @@ uv run pytest
 ## Project Structure
 
 ```
-app/            # FastAPI backend (package name matches api-builder templates)
-frontend/       # Next.js 14 frontend
-docs/           # Functional documentation (data model, user journeys)
-specs/          # Development standards and guidelines
+app/            # FastAPI backend (models, schemas, routers, crud, services, tests)
+frontend/       # Next.js 14 frontend (App Router, shadcn/ui, Neon Forge theme)
+docs/           # Functional documentation (data model, user journeys, workflow)
+specs/          # Development standards, test cases, seed data requirements
 specs/ui/       # Design system (.pen files: style guide + components)
-.claude/        # Claude Code configuration, skills, plugins
-.synnovator/    # Platform data (YAML+Markdown) and generated OpenAPI spec
+scripts/        # Utility scripts (seed_dev_data.py)
+alembic/        # Database migrations
+e2e/            # Playwright E2E tests
+.claude/        # Claude Code configuration, skills (20+), plugins
+.synnovator/    # Platform data engine (YAML+Markdown) and generated OpenAPI spec
 deploy/         # Docker & deployment configs
+data/           # SQLite database files
 pyproject.toml  # Python project config
 uv.toml         # UV package manager config (Tsinghua mirror)
-Makefile        # Build automation (make start/stop/clean)
+Makefile        # Build automation (make start/stop/clean/resetdb/seed)
 ```
 
 ## Architecture
 
 ### Data Model (docs/data-types.md, docs/relationships.md)
 
-Seven content types stored as **YAML frontmatter + Markdown body**:
+Seven content types defined in domain model docs, implemented as SQLAlchemy ORM models (`app/models/`) backed by SQLite:
 
 | Type | Purpose |
 |------|---------|
@@ -60,13 +68,15 @@ Seven content types stored as **YAML frontmatter + Markdown body**:
 | `post` | User-submitted content with tags and custom rendering |
 | `resource` | Uploaded file attachments |
 | `rule` | Event rules created by organizers |
-| `user` | User profiles |
+| `user` | User profiles (with username/password auth) |
 | `group` | Teams / permission groups |
 | `interaction` | Likes, comments, ratings on any content type |
 
-Nine relationship types: `category:rule`, `category:post`, `category:group`, `category:category`, `post:post`, `post:resource`, `group:user`, `user:user`, `target:interaction`.
+Nine relationship types (with junction tables): `category:rule`, `category:post`, `category:group`, `category:category`, `post:post`, `post:resource`, `group:user`, `user:user`, `target:interaction`.
 
 All content types use **soft delete** (`deleted_at` field). Cached counters (`like_count`, `comment_count`, `average_rating`) are auto-maintained on `post`.
+
+> **Note:** The `.synnovator/` directory uses YAML+Markdown as a file-based data engine. The actual application stores data in SQLite via SQLAlchemy. The domain model docs (`docs/data-types.md` etc.) are the single source of truth for both.
 
 ### Roles
 
@@ -90,22 +100,52 @@ Theme: **"Neon Forge"** — dark theme with neon accents.
 
 ## Development Approach
 
-This project follows **spec-driven development** (see `specs/spec-guideline.md`):
+This project follows **spec-driven, skill-automated development** with a 12-phase workflow documented in `docs/development-workflow.md`.
 
-1. Start with high-level vision, let AI draft details
-2. Use structured PRD framework covering 6 domains: Commands, Testing, Project Structure, Code Style, Git Workflow, Boundaries
-3. Modularize tasks — break large specs into small, focused pieces
-4. Build self-checking constraints into specs
-5. Test, iterate, and evolve specs over time
+### Core Principles
 
-Use **Plan Mode** (Shift+Tab) before implementing features. Read the relevant `docs/` files before writing code that touches the data model or user flows.
+- **领域模型优先 (Domain-Model-First):** Domain model (docs/) is the single source of truth. Both database schema and API contract are downstream consumers.
+- **Skill-driven automation:** Each workflow phase has a corresponding Claude Code skill that defines inputs, process, and outputs.
+- **Incremental testing:** Use tests-kit after each phase, not just at the end.
+- **Plan before implement:** Use Plan Mode (Shift+Tab) before implementing features. Use planning-with-files for multi-phase work.
+
+### 12-Phase Workflow (summary)
+
+```
+Phase 0:   项目初始化
+Phase 0.5: 领域建模与数据架构  [domain-modeler]
+Phase 1:   API 设计 (OpenAPI)   [schema-to-openapi]
+Phase 2:   后端代码生成          [api-builder]
+Phase 2.5: 种子数据设计          [seed-designer]
+Phase 3:   种子数据注入          make resetdb && make seed
+Phase 4:   UI 设计文档生成
+Phase 5:   前端样式框架配置      shadcn/ui + Neon Forge
+Phase 6:   前端 API 客户端生成   [api-builder --generate-client]
+Phase 7:   前端组件开发          [pen-to-react / openapi-to-components]
+Phase 8:   E2E 测试             Playwright
+Phase 9:   最终集成验证          [tests-kit Guard]
+```
+
+### Key Skills
+
+| Skill | Purpose |
+|-------|---------|
+| **domain-modeler** | Extract entities, relationships, constraints from user-journeys → domain model docs |
+| **schema-to-openapi** | Generate OpenAPI 3.0 spec from domain model docs |
+| **api-builder** | Generate FastAPI backend + TypeScript client from OpenAPI spec |
+| **seed-designer** | Derive seed data requirements from test case preconditions |
+| **tests-kit** | Guard mode (verify test cases) + Insert mode (add test cases) |
+| **pen-to-react** | Convert .pen design files → React components |
+| **openapi-to-components** | Wire frontend components to backend API |
+| **planning-with-files** | File-based planning (task_plan.md, findings.md, progress.md) for context persistence |
 
 ## Conventions
 
 - All field names use `snake_case`; all content types use `created_by` for the author/creator field
-- Content is stored as YAML frontmatter + Markdown body
+- Domain model docs are the source of truth; `.synnovator/` uses YAML+Markdown file engine; `app/` uses SQLite+SQLAlchemy
 - Documentation is bilingual (Chinese primary, English where applicable)
 - Use `uv` for all Python commands (not pip/poetry)
+- Frontend auth defaults to Mock login (`X-User-Id` header); real auth only when explicitly requested
 
 ## Boundaries
 
@@ -123,7 +163,7 @@ Use **Plan Mode** (Shift+Tab) before implementing features. Read the relevant `d
 ### 追溯流程
 
 1. **定位问题阶段**
-   - 对照 `docs/development-workflow.md` 的 10 个阶段
+   - 对照 `docs/development-workflow.md` 的 12 个阶段
    - 判断问题属于哪个阶段的产出物
 
 2. **检查工作流覆盖**
@@ -142,12 +182,14 @@ Use **Plan Mode** (Shift+Tab) before implementing features. Read the relevant `d
 
 | 问题类型 | 追溯阶段 | 检查项 |
 |---------|---------|-------|
+| 领域模型缺陷 | 阶段 0.5 (领域建模) | domain-modeler 输出、user-journeys 覆盖 |
+| 缺少 API endpoint | 阶段 1 (API 设计) | OpenAPI spec、schema-to-openapi 输出 |
 | API 返回错误数据 | 阶段 2 (后端生成) | schema 定义、api-builder 输出 |
-| 前端显示异常 | 阶段 7 (组件开发) | UI 设计文档、shadcn 组件使用 |
-| 缺少 API endpoint | 阶段 1 (需求设计) | OpenAPI spec、user-journeys 覆盖 |
-| E2E 测试失败 | 阶段 8 (E2E 测试) | 测试用例完整性 |
-| 数据不一致 | 阶段 3 (种子数据) | 种子脚本、业务校验 |
+| 种子数据需求不匹配 | 阶段 2.5 (种子设计) | seed-designer 输出、测试用例覆盖 |
+| 数据不一致 | 阶段 3 (种子注入) | 种子脚本、业务校验 |
 | UI 流程缺失 | 阶段 4 (UI 设计) | user-journey 覆盖度检查 |
+| 前端显示异常 | 阶段 7 (组件开发) | UI 设计文档、shadcn 组件使用 |
+| E2E 测试失败 | 阶段 8 (E2E 测试) | 测试用例完整性 |
 
 ### 修复后改进
 
