@@ -15,11 +15,13 @@
 
 | 优先级 | 用例数 | 占比 | 建议时间点 |
 |--------|--------|------|------------|
-| P0 关键路径 | 89 | 16% | Sprint 1-2 |
-| P1 核心体验 | 135 | 24% | Sprint 2-3 |
-| P2 完整功能 | 145 | 26% | Sprint 3-4 |
-| P3 高级场景 | 69 | 13% | Sprint 4+ |
-| P4 负向测试 | 114 | 21% | 随对应正向用例 |
+| P0 关键路径 | 97 | 16% | Sprint 1-2 |
+| P1 核心体验 | 143 | 24% | Sprint 2-3 |
+| P2 完整功能 | 149 | 25% | Sprint 3-4 |
+| P3 高级场景 | 69 | 12% | Sprint 4+ |
+| P4 负向测试 | 117 | 20% | 随对应正向用例 |
+
+> 注：含 33-frontend-integration.md 新增 22 条前端集成测试用例
 
 ---
 
@@ -116,6 +118,19 @@
 | TC-CREATE-022 | 提案关联活动 | 24-content-creation.md |
 | TC-PART-010 | 新建参赛作品帖 | 23-activity-participation.md |
 | TC-PART-011 | 选择已有作品关联活动 | 23-activity-participation.md |
+
+### 前端集成 P0（8 条）⭐ 新增
+
+| TC ID | 描述 | 来源文件 |
+|-------|------|----------|
+| TC-FEINT-001 | 前端创建日常帖子调用后端 API | 33-frontend-integration.md |
+| TC-FEINT-002 | 前端保存帖子草稿调用后端 API | 33-frontend-integration.md |
+| TC-FEINT-010 | 前端创建团队调用后端 API | 33-frontend-integration.md |
+| TC-FEINT-030 | 前端登录调用后端 API | 33-frontend-integration.md |
+| TC-FEINT-031 | 前端注册调用后端 API | 33-frontend-integration.md |
+| TC-FEINT-040 | 前端编辑帖子调用后端 API | 33-frontend-integration.md |
+| TC-FEINT-090 | api-client.ts 包含所有 CRUD 方法 | 33-frontend-integration.md |
+| TC-FEINT-091 | 前端创建页面无 TODO 遗留 | 33-frontend-integration.md |
 
 ### 报名与提交（12 条）
 
@@ -362,9 +377,22 @@
 | TC-ASSETCOPY-005 | 资产作者拒绝复制申请 | 32-asset-copy-request.md |
 | TC-ASSETCOPY-006 | 申请人获得资产副本 | 32-asset-copy-request.md |
 
+### 前端集成 P1（8 条）⭐ 新增
+
+| TC ID | 描述 | 来源文件 |
+|-------|------|----------|
+| TC-FEINT-003 | 前端创建提案调用后端 API | 33-frontend-integration.md |
+| TC-FEINT-004 | 前端创建帖子失败显示错误 | 33-frontend-integration.md |
+| TC-FEINT-005 | 前端创建帖子时 API 返回错误 | 33-frontend-integration.md |
+| TC-FEINT-011 | 前端创建团队失败显示错误 | 33-frontend-integration.md |
+| TC-FEINT-012 | 前端创建私有团队调用后端 API | 33-frontend-integration.md |
+| TC-FEINT-032 | 前端登录失败显示错误 | 33-frontend-integration.md |
+| TC-FEINT-041 | 前端编辑团队信息调用后端 API | 33-frontend-integration.md |
+| TC-FEINT-050 | 前端删除帖子调用后端 API | 33-frontend-integration.md |
+
 ---
 
-## P2 完整功能（145 条）
+## P2 完整功能（149 条）
 
 > 提升用户体验，但不阻塞核心流程
 
@@ -585,6 +613,14 @@
 |-------|------|----------|
 | TC-CATTRACK-010 | 常规赛道（X类型）标识展示 | 14-category-association.md |
 | TC-CATTRACK-011 | 命题赛道（Y类型）标识展示 | 14-category-association.md |
+
+### 前端集成 P2（3 条）⭐ 新增
+
+| TC ID | 描述 | 来源文件 |
+|-------|------|----------|
+| TC-FEINT-020 | 前端创建活动调用后端 API | 33-frontend-integration.md |
+| TC-FEINT-021 | 非组织者无法访问活动创建页 | 33-frontend-integration.md |
+| TC-FEINT-051 | 前端删除团队调用后端 API | 33-frontend-integration.md |
 
 ### 提案可见性扩展（2 条）
 
@@ -893,6 +929,14 @@
 | TC-ASSETCOPY-902 | 已删除资产无法申请复制 | 32-asset-copy-request.md |
 | TC-ASSETCOPY-903 | 非团队成员无法申请团队提案内资产 | 32-asset-copy-request.md |
 
+### 前端集成 P4（3 条）⭐ 新增
+
+| TC ID | 描述 | 来源文件 |
+|-------|------|----------|
+| TC-FEINT-900 | 未登录用户创建帖子被拦截 | 33-frontend-integration.md |
+| TC-FEINT-901 | API 客户端网络错误处理 | 33-frontend-integration.md |
+| TC-FEINT-902 | 重复提交防护 | 33-frontend-integration.md |
+
 ---
 
 ## 附录：按文件统计
@@ -931,9 +975,10 @@
 | 30-proposal-iteration.md | 0 | 3 | 6 | 0 | 3 | 12 |
 | 31-page-interaction.md | 0 | 7 | 5 | 0 | 2 | 14 |
 | 32-asset-copy-request.md | 0 | 6 | 3 | 0 | 4 | 13 |
-| **总计** | **89** | **135** | **145** | **69** | **114** | **552** |
+| 33-frontend-integration.md ⭐ | 8 | 8 | 3 | 0 | 3 | 22 |
+| **总计** | **97** | **143** | **148** | **69** | **117** | **574** |
 
 ---
 
-*生成时间：2026-02-02*
-*测试用例总数：552 条*
+*更新时间：2026-02-05*
+*测试用例总数：574 条（含 22 条前端集成测试）*

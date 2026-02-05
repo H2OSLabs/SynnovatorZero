@@ -714,3 +714,32 @@
 | TC-ASSETCOPY-901 | 自己资产无法申请复制 |
 | TC-ASSETCOPY-902 | 已删除资产无法申请复制 |
 | TC-ASSETCOPY-903 | 非团队成员无法申请团队提案内资产 |
+
+## 33-frontend-integration.md (Frontend Integration) ⭐ 新增
+
+> 验证前端表单与后端 API 的集成链路
+
+| TC ID | Description |
+|-------|-------------|
+| TC-FEINT-001 | 前端创建日常帖子调用后端 API |
+| TC-FEINT-002 | 前端保存帖子草稿调用后端 API |
+| TC-FEINT-003 | 前端创建提案调用后端 API |
+| TC-FEINT-004 | 前端创建帖子失败显示错误 |
+| TC-FEINT-005 | 前端创建帖子时 API 返回错误 |
+| TC-FEINT-010 | 前端创建团队调用后端 API |
+| TC-FEINT-011 | 前端创建团队失败显示错误 |
+| TC-FEINT-012 | 前端创建私有团队调用后端 API |
+| TC-FEINT-020 | 前端创建活动调用后端 API |
+| TC-FEINT-021 | 非组织者无法访问活动创建页 |
+| TC-FEINT-030 | 前端登录调用后端 API |
+| TC-FEINT-031 | 前端注册调用后端 API |
+| TC-FEINT-032 | 前端登录失败显示错误 |
+| TC-FEINT-040 | 前端编辑帖子调用后端 API |
+| TC-FEINT-041 | 前端编辑团队信息调用后端 API |
+| TC-FEINT-050 | 前端删除帖子调用后端 API |
+| TC-FEINT-051 | 前端删除团队调用后端 API |
+| TC-FEINT-090 | api-client.ts 包含所有 CRUD 方法 |
+| TC-FEINT-091 | 前端创建页面无 TODO 遗留 |
+| TC-FEINT-900 | 未登录用户创建帖子被拦截 |
+| TC-FEINT-901 | API 客户端网络错误处理 |
+| TC-FEINT-902 | 重复提交防护 |

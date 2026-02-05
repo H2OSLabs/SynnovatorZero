@@ -31,6 +31,9 @@ Run this workflow **before committing any change** to synnovator skill scripts, 
      - `docs/relationships.md` → `TC-REL-*`, `TC-FRIEND-*`, `TC-STAGE-*`, `TC-TRACK-*`, `TC-PREREQ-*`
      - `docs/crud-operations.md` → `TC-PERM-*`, all CRUD TCs
      - `docs/rule-engine.md` → `TC-ENGINE-*`, `TC-ENTRY-*`, `TC-CLOSE-*`
+     - **frontend/lib/api-client.ts** → `TC-FEINT-090` (CRUD 完整性)
+     - **frontend/app/**/create/page.tsx** → `TC-FEINT-001~091` (前端集成)
+     - **frontend/app/**/edit/page.tsx** → `TC-FEINT-040~041` (编辑集成)
 
 3. **Read the affected test case files** in `specs/testcases/` and verify each scenario still holds given the proposed change.
 

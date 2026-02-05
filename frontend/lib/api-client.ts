@@ -243,6 +243,36 @@ export async function getPost(postId: number) {
   return apiFetch<Post>(`/posts/${postId}`)
 }
 
+export interface CreatePostData {
+  title: string
+  content?: string
+  type?: string
+  tags?: string[]
+  status?: PostStatus
+  visibility?: PostVisibility
+  category_id?: number | null
+}
+
+export async function createPost(data: CreatePostData) {
+  return apiFetch<Post>('/posts', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function updatePost(postId: number, data: Partial<CreatePostData>) {
+  return apiFetch<Post>(`/posts/${postId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deletePost(postId: number) {
+  return apiFetch<void>(`/posts/${postId}`, {
+    method: 'DELETE',
+  })
+}
+
 export type GroupVisibility = 'public' | 'private'
 
 export interface Group {
@@ -278,6 +308,34 @@ export async function getGroups(skip = 0, limit = 20, filters?: { visibility?: G
 
 export async function getGroup(groupId: number) {
   return apiFetch<Group>(`/groups/${groupId}`)
+}
+
+export interface CreateGroupData {
+  name: string
+  description?: string
+  visibility?: GroupVisibility
+  max_members?: number
+  require_approval?: boolean
+}
+
+export async function createGroup(data: CreateGroupData) {
+  return apiFetch<Group>('/groups', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function updateGroup(groupId: number, data: Partial<CreateGroupData>) {
+  return apiFetch<Group>(`/groups/${groupId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deleteGroup(groupId: number) {
+  return apiFetch<void>(`/groups/${groupId}`, {
+    method: 'DELETE',
+  })
 }
 
 export async function getGroupMembers(

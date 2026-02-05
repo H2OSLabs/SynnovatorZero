@@ -35,25 +35,6 @@ uv run pytest
 ## Project Structure
 
 ```
-<<<<<<< Updated upstream
-docs/               # Functional documentation
-  data-types.md     #   Content type schemas (7 types)
-  relationships.md  #   Relationship schemas (9 relations)
-  crud-operations.md #  CRUD operations and permissions
-  user-journeys.md  #   13 user flow documents
-  examples.md       #   Data operation examples
-specs/              # Development standards and guidelines
-  data-integrity.md #   Data constraints, soft delete, cascading
-  data-indexing.md  #   Database index recommendations
-  data-normalization.md # Denormalization decisions
-  cache-strategy.md #   Cache field maintenance strategy
-  spec-guideline.md #   AI agent spec writing guide
-  ui/               #   Design system (.pen files)
-.claude/            # Claude Code configuration, skills, plugins
-main.py             # Entry point (placeholder)
-pyproject.toml      # Python project config
-uv.toml             # UV package manager config (Tsinghua mirror)
-=======
 app/            # FastAPI backend (package name matches api-builder templates)
 frontend/       # Next.js 14 frontend
 docs/           # Functional documentation (data model, user journeys)
@@ -65,7 +46,6 @@ deploy/         # Docker & deployment configs
 pyproject.toml  # Python project config
 uv.toml         # UV package manager config (Tsinghua mirror)
 Makefile        # Build automation (make start/stop/clean)
->>>>>>> Stashed changes
 ```
 
 ## Architecture
@@ -135,3 +115,45 @@ Use **Plan Mode** (Shift+Tab) before implementing features. Read the relevant `d
 - Reference `docs/crud-operations.md` for CRUD operation definitions and permissions
 - Reference `docs/user-journeys.md` before implementing user-facing flows
 - Reference `specs/data-integrity.md` for data constraints and soft delete behavior
+
+## 问题追溯规则 (Root Cause Analysis)
+
+发现 bug 或缺失功能时，**必须**进行根因分析：
+
+### 追溯流程
+
+1. **定位问题阶段**
+   - 对照 `docs/development-workflow.md` 的 10 个阶段
+   - 判断问题属于哪个阶段的产出物
+
+2. **检查工作流覆盖**
+   - 该阶段的检查点是否覆盖了这类问题？
+   - 测试用例（`specs/testcases/`）是否有对应场景？
+
+3. **检查 Skill 实现**
+   - 相关 Skill 是否正确执行？
+   - Skill 的输出是否被正确验证？
+
+4. **记录分析结果**
+   - 在修复 bug 的 commit message 中记录 root cause
+   - 格式：`fix: [问题描述] (root cause: [阶段X] [具体原因])`
+
+### 追溯映射表
+
+| 问题类型 | 追溯阶段 | 检查项 |
+|---------|---------|-------|
+| API 返回错误数据 | 阶段 2 (后端生成) | schema 定义、api-builder 输出 |
+| 前端显示异常 | 阶段 7 (组件开发) | UI 设计文档、shadcn 组件使用 |
+| 缺少 API endpoint | 阶段 1 (需求设计) | OpenAPI spec、user-journeys 覆盖 |
+| E2E 测试失败 | 阶段 8 (E2E 测试) | 测试用例完整性 |
+| 数据不一致 | 阶段 3 (种子数据) | 种子脚本、业务校验 |
+| UI 流程缺失 | 阶段 4 (UI 设计) | user-journey 覆盖度检查 |
+
+### 修复后改进
+
+修复 bug 后，**必须**更新相关文档/流程：
+
+- [ ] 补充测试用例到 `specs/testcases/`
+- [ ] 更新 `docs/development-workflow.md` 的检查点（如需要）
+- [ ] 更新相关 Skill 的验证逻辑（如需要）
+- [ ] 在 `findings.md` 记录经验教训（如使用 planning-with-files）

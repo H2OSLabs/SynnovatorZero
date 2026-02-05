@@ -3,16 +3,23 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { X, Upload, Search } from "lucide-react"
+import { X, Upload, Search, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Header } from "@/components/layout/Header"
+import { createGroup, type GroupVisibility } from "@/lib/api-client"
 
 export default function CreateGroupPage() {
   const router = useRouter()
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string
+    description: string
+    visibility: GroupVisibility
+    require_approval: boolean
+  }>({
     name: "",
     description: "",
     visibility: "public",
@@ -20,15 +27,37 @@ export default function CreateGroupPage() {
   })
   const [invitedUsers, setInvitedUsers] = useState<Array<{ id: number; username: string; display_name: string }>>([])
   const [searchQuery, setSearchQuery] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleRemoveUser = (userId: number) => {
     setInvitedUsers(invitedUsers.filter((u) => u.id !== userId))
   }
 
-  const handleSubmit = () => {
-    // TODO: API call
-    console.log({ ...formData, invited_users: invitedUsers.map((u) => u.id) })
-    router.push("/groups")
+  const handleSubmit = async () => {
+    if (!formData.name.trim()) {
+      toast.error("请输入团队名称")
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const group = await createGroup({
+        name: formData.name,
+        description: formData.description || undefined,
+        visibility: formData.visibility,
+        require_approval: formData.require_approval,
+      })
+
+      // TODO: 如果有邀请用户，发送邀请请求
+      // invitedUsers.map(u => inviteUserToGroup(group.id, u.id))
+
+      toast.success("团队创建成功")
+      router.push(`/groups/${group.id}`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "创建失败，请重试")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -47,8 +76,16 @@ export default function CreateGroupPage() {
             size="sm"
             className="bg-nf-lime text-nf-near-black hover:bg-nf-lime/90"
             onClick={handleSubmit}
+            disabled={isSubmitting}
           >
-            创建
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                创建中...
+              </>
+            ) : (
+              "创建"
+            )}
           </Button>
         </div>
       </div>

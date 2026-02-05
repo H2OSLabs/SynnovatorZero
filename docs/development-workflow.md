@@ -837,7 +837,27 @@ uv run python .claude/skills/api-builder/scripts/cli.py \
 - `frontend/lib/api-client.ts` — API 方法
 - `frontend/lib/types.ts` — TypeScript 类型
 
-#### 6.2 配置环境变量
+#### 6.2 验证 API 客户端完整性 ⭐ 必须检查
+
+> **关键检查点**：api-client.ts 必须包含完整的 CRUD 方法，不能只有 GET 方法。
+
+```bash
+# 检查 api-client.ts 是否包含所有 CRUD 操作
+grep -E "method: '(POST|PATCH|DELETE)'" frontend/lib/api-client.ts | wc -l
+# 预期：每个内容类型至少有 create/update/delete 方法
+
+# 验证关键方法存在
+grep -q "createPost" frontend/lib/api-client.ts && echo "✅ createPost exists"
+grep -q "updatePost" frontend/lib/api-client.ts && echo "✅ updatePost exists"
+grep -q "deletePost" frontend/lib/api-client.ts && echo "✅ deletePost exists"
+grep -q "createGroup" frontend/lib/api-client.ts && echo "✅ createGroup exists"
+grep -q "updateGroup" frontend/lib/api-client.ts && echo "✅ updateGroup exists"
+grep -q "deleteGroup" frontend/lib/api-client.ts && echo "✅ deleteGroup exists"
+```
+
+**对应测试用例：** TC-FEINT-090（api-client.ts 包含所有 CRUD 方法）
+
+#### 6.3 配置环境变量
 
 ```bash
 # frontend/.env.development (开发环境)
@@ -933,7 +953,25 @@ def get_current_user(request: Request):
     raise HTTPException(401, "Unauthorized")
 ```
 
-#### 7.4 增量测试：验证前端集成
+#### 7.4 验证前端创建页面无 TODO 遗留 ⭐ 必须检查
+
+> **关键检查点**：所有前端创建页面的表单提交函数必须调用真实 API，不能有 `// TODO:` 占位符。
+
+```bash
+# 检查创建页面是否有 TODO 遗留
+grep -r "// TODO:" frontend/app/**/create/page.tsx && echo "❌ TODO found!" || echo "✅ No TODO"
+grep -r "// TODO:" frontend/app/**/edit/page.tsx && echo "❌ TODO found!" || echo "✅ No TODO"
+
+# 验证表单提交函数调用了 API
+grep -A5 "handleSubmit" frontend/app/posts/create/page.tsx | grep -q "createPost" && \
+  echo "✅ posts/create calls createPost"
+grep -A5 "handleSubmit" frontend/app/groups/create/page.tsx | grep -q "createGroup" && \
+  echo "✅ groups/create calls createGroup"
+```
+
+**对应测试用例：** TC-FEINT-091（前端创建页面无 TODO 遗留）
+
+#### 7.5 增量测试：验证前端集成
 
 ```bash
 # 验证 TypeScript 编译
@@ -947,7 +985,11 @@ npm run dev
 
 ### 阶段 8: E2E 测试 ⭐
 
-> **必须步骤**：E2E 测试覆盖核心用户旅程。
+> **必须步骤**：E2E 测试覆盖核心用户旅程和前端-后端集成。
+
+**测试维度：**
+1. **用户旅程测试**：验证完整业务流程（TC-JOUR-*）
+2. **前端集成测试**：验证前端表单真正调用后端 API（TC-FEINT-*）
 
 #### 8.1 配置 Playwright
 
@@ -1031,12 +1073,22 @@ npx playwright show-report
 ```
 
 **测试覆盖目标：**
+
+**用户旅程（业务流程）：**
 - [ ] J-001 用户注册/登录
 - [ ] J-002 创建活动
 - [ ] J-003 提交作品
 - [ ] J-004 团队组建
 - [ ] J-005 评审流程
 - [ ] ... (其他核心旅程)
+
+**前端集成（API 调用链路）：** ⭐ 新增维度
+- [ ] TC-FEINT-001 前端创建帖子调用后端 API
+- [ ] TC-FEINT-010 前端创建团队调用后端 API
+- [ ] TC-FEINT-030 前端登录调用后端 API
+- [ ] TC-FEINT-090 api-client.ts 包含所有 CRUD 方法
+- [ ] TC-FEINT-091 前端创建页面无 TODO 遗留
+- [ ] TC-FEINT-902 重复提交防护
 
 > 更新 `progress.md` 记录 E2E 测试结果。
 
