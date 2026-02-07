@@ -6,13 +6,27 @@ Code Generator using Jinja2 Templates
 
 Usage:
     python generate_code.py --parsed-data parsed.json --output-dir ./app --templates-dir ../assets/templates
+
+Options:
+    --conflict-strategy  How to handle existing files: skip | backup | overwrite (default: skip)
+    --dry-run           Show what would be generated without writing files
 """
 
 import sys
 import json
+import shutil
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Literal, Set
 from jinja2 import Environment, FileSystemLoader, Template
+
+
+ConflictStrategy = Literal['skip', 'backup', 'overwrite']
+
+
+class FileConflictError(Exception):
+    """Raised when file conflicts are detected and strategy is 'error'"""
+    pass
 
 
 def map_openapi_type_to_python(openapi_type: str, format: str = None) -> str:
@@ -246,8 +260,109 @@ def prepare_router_context(resource: str, endpoints: List[Dict[str, Any]]) -> Di
     return context
 
 
-def generate_files(parsed_data_file: str, output_dir: str, templates_dir: str):
-    """生成所有代码文件"""
+def detect_existing_files(output_dir: str, parsed: Dict[str, Any]) -> Dict[str, List[Path]]:
+    """
+    检测将要生成的文件中哪些已存在。
+
+    Returns:
+        Dict with keys 'models', 'schemas', 'routers' containing lists of existing file paths
+    """
+    output_path = Path(output_dir)
+    existing = {
+        'models': [],
+        'schemas': [],
+        'routers': [],
+    }
+
+    # 检查 models
+    models_dir = output_path / 'models'
+    if models_dir.exists():
+        for schema_name in parsed['schemas'].keys():
+            model_file = models_dir / f"{schema_name.lower()}.py"
+            if model_file.exists():
+                existing['models'].append(model_file)
+
+    # 检查 schemas
+    schemas_dir = output_path / 'schemas'
+    if schemas_dir.exists():
+        for schema_name in parsed['schemas'].keys():
+            schema_file = schemas_dir / f"{schema_name.lower()}.py"
+            if schema_file.exists():
+                existing['schemas'].append(schema_file)
+
+    # 检查 routers
+    routers_dir = output_path / 'routers'
+    if routers_dir.exists():
+        for resource in parsed['paths'].keys():
+            router_file = routers_dir / f"{resource}.py"
+            if router_file.exists():
+                existing['routers'].append(router_file)
+
+    return existing
+
+
+def backup_file(file_path: Path) -> Path:
+    """
+    备份文件，添加时间戳后缀。
+
+    Returns:
+        Path to backup file
+    """
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    backup_path = file_path.with_suffix(f'.{timestamp}.bak')
+    shutil.copy2(file_path, backup_path)
+    return backup_path
+
+
+def write_file_with_strategy(
+    file_path: Path,
+    content: str,
+    strategy: ConflictStrategy,
+    dry_run: bool = False
+) -> str:
+    """
+    根据策略写入文件。
+
+    Returns:
+        Status message describing what happened
+    """
+    if file_path.exists():
+        if strategy == 'skip':
+            return f"⏭️  Skipped (exists): {file_path}"
+        elif strategy == 'backup':
+            if not dry_run:
+                backup_path = backup_file(file_path)
+                file_path.write_text(content)
+                return f"✅ Generated (backup: {backup_path.name}): {file_path}"
+            else:
+                return f"[DRY-RUN] Would backup and overwrite: {file_path}"
+        elif strategy == 'overwrite':
+            if not dry_run:
+                file_path.write_text(content)
+                return f"⚠️  Overwritten: {file_path}"
+            else:
+                return f"[DRY-RUN] Would overwrite: {file_path}"
+    else:
+        if not dry_run:
+            file_path.write_text(content)
+            return f"✅ Generated: {file_path}"
+        else:
+            return f"[DRY-RUN] Would create: {file_path}"
+
+
+def generate_files(
+    parsed_data_file: str,
+    output_dir: str,
+    templates_dir: str,
+    conflict_strategy: ConflictStrategy = 'skip',
+    dry_run: bool = False
+) -> Dict[str, Any]:
+    """
+    生成所有代码文件。
+
+    Returns:
+        Dict with generation statistics
+    """
     # 加载解析后的数据
     parsed = json.loads(Path(parsed_data_file).read_text())
 
@@ -255,11 +370,33 @@ def generate_files(parsed_data_file: str, output_dir: str, templates_dir: str):
     env = Environment(loader=FileSystemLoader(templates_dir))
 
     output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
+
+    stats = {
+        'created': 0,
+        'skipped': 0,
+        'overwritten': 0,
+        'backed_up': 0,
+        'errors': 0,
+    }
+
+    # 检测现有文件
+    existing = detect_existing_files(output_dir, parsed)
+    total_existing = sum(len(v) for v in existing.values())
+
+    if total_existing > 0:
+        print(f"\n⚠️  Detected {total_existing} existing file(s):")
+        for category, files in existing.items():
+            if files:
+                print(f"   {category}: {len(files)} file(s)")
+        print(f"   Strategy: {conflict_strategy}\n")
+
+    if not dry_run:
+        output_path.mkdir(parents=True, exist_ok=True)
 
     # 生成 models
     models_dir = output_path / 'models'
-    models_dir.mkdir(exist_ok=True)
+    if not dry_run:
+        models_dir.mkdir(exist_ok=True)
 
     for schema_name, schema_def in parsed['schemas'].items():
         context = prepare_model_context(schema_name, schema_def)
@@ -267,12 +404,22 @@ def generate_files(parsed_data_file: str, output_dir: str, templates_dir: str):
         content = template.render(**context)
 
         model_file = models_dir / f"{schema_name.lower()}.py"
-        model_file.write_text(content)
-        print(f"✅ Generated: {model_file}")
+        msg = write_file_with_strategy(model_file, content, conflict_strategy, dry_run)
+        print(msg)
+
+        if 'Skipped' in msg:
+            stats['skipped'] += 1
+        elif 'Overwritten' in msg:
+            stats['overwritten'] += 1
+        elif 'backup' in msg:
+            stats['backed_up'] += 1
+        else:
+            stats['created'] += 1
 
     # 生成 schemas
     schemas_dir = output_path / 'schemas'
-    schemas_dir.mkdir(exist_ok=True)
+    if not dry_run:
+        schemas_dir.mkdir(exist_ok=True)
 
     for schema_name, schema_def in parsed['schemas'].items():
         context = prepare_schema_context(schema_name, schema_def)
@@ -280,12 +427,22 @@ def generate_files(parsed_data_file: str, output_dir: str, templates_dir: str):
         content = template.render(**context)
 
         schema_file = schemas_dir / f"{schema_name.lower()}.py"
-        schema_file.write_text(content)
-        print(f"✅ Generated: {schema_file}")
+        msg = write_file_with_strategy(schema_file, content, conflict_strategy, dry_run)
+        print(msg)
+
+        if 'Skipped' in msg:
+            stats['skipped'] += 1
+        elif 'Overwritten' in msg:
+            stats['overwritten'] += 1
+        elif 'backup' in msg:
+            stats['backed_up'] += 1
+        else:
+            stats['created'] += 1
 
     # 生成 routers
     routers_dir = output_path / 'routers'
-    routers_dir.mkdir(exist_ok=True)
+    if not dry_run:
+        routers_dir.mkdir(exist_ok=True)
 
     for resource, endpoints in parsed['paths'].items():
         context = prepare_router_context(resource, endpoints)
@@ -293,22 +450,82 @@ def generate_files(parsed_data_file: str, output_dir: str, templates_dir: str):
         content = template.render(**context)
 
         router_file = routers_dir / f"{resource}.py"
-        router_file.write_text(content)
-        print(f"✅ Generated: {router_file}")
+        msg = write_file_with_strategy(router_file, content, conflict_strategy, dry_run)
+        print(msg)
+
+        if 'Skipped' in msg:
+            stats['skipped'] += 1
+        elif 'Overwritten' in msg:
+            stats['overwritten'] += 1
+        elif 'backup' in msg:
+            stats['backed_up'] += 1
+        else:
+            stats['created'] += 1
+
+    return stats
 
 
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description='Generate FastAPI code from parsed OpenAPI data')
+    parser = argparse.ArgumentParser(
+        description='Generate FastAPI code from parsed OpenAPI data',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Conflict Strategies:
+  skip      - Do not overwrite existing files (default, safest)
+  backup    - Backup existing files before overwriting
+  overwrite - Overwrite existing files without backup (dangerous!)
+
+Examples:
+  # Safe generation (skip existing files)
+  python generate_code.py --parsed-data parsed.json --output-dir ./app --templates-dir ../assets/templates
+
+  # Preview what would be generated
+  python generate_code.py --parsed-data parsed.json --output-dir ./app --templates-dir ../assets/templates --dry-run
+
+  # Overwrite with backup
+  python generate_code.py --parsed-data parsed.json --output-dir ./app --templates-dir ../assets/templates --conflict-strategy backup
+"""
+    )
     parser.add_argument('--parsed-data', required=True, help='Path to parsed OpenAPI JSON file')
     parser.add_argument('--output-dir', required=True, help='Output directory for generated code')
     parser.add_argument('--templates-dir', required=True, help='Directory containing Jinja2 templates')
+    parser.add_argument(
+        '--conflict-strategy',
+        choices=['skip', 'backup', 'overwrite'],
+        default='skip',
+        help='How to handle existing files (default: skip)'
+    )
+    parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='Show what would be generated without writing files'
+    )
 
     args = parser.parse_args()
 
     try:
-        generate_files(args.parsed_data, args.output_dir, args.templates_dir)
+        if args.dry_run:
+            print("🔍 DRY RUN MODE - No files will be written\n")
+
+        stats = generate_files(
+            args.parsed_data,
+            args.output_dir,
+            args.templates_dir,
+            conflict_strategy=args.conflict_strategy,
+            dry_run=args.dry_run
+        )
+
+        print(f"\n📊 Generation Statistics:")
+        print(f"   Created:    {stats['created']}")
+        print(f"   Skipped:    {stats['skipped']}")
+        print(f"   Backed up:  {stats['backed_up']}")
+        print(f"   Overwritten:{stats['overwritten']}")
+
+        if stats['skipped'] > 0:
+            print(f"\n💡 Tip: Use --conflict-strategy=backup to update existing files safely")
+
         print("\n✅ Code generation complete!")
     except Exception as e:
         print(f"\n❌ Error generating code: {e}")
