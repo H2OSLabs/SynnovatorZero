@@ -132,7 +132,7 @@ export default function PostPage({ params }: { params: { id: string } }) {
           setAuthor(authorData)
         }
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to load")
+        setError(e instanceof Error ? e.message : "加载失败")
       } finally {
         setIsLoading(false)
       }
@@ -141,7 +141,7 @@ export default function PostPage({ params }: { params: { id: string } }) {
   }, [id])
 
   if (isLoading) return <Loader2 className="animate-spin" />
-  if (error || !post) return <div>{error || "Not found"}</div>
+  if (error || !post) return <div>{error || "未找到内容"}</div>
   return <PostContent post={post} author={author} />
 }
 ```

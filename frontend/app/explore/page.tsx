@@ -58,7 +58,7 @@ export default function ExplorePage() {
         const resp = await getCategories(0, 6, { status: "published" })
         setEvents(resp.items)
       } catch (e) {
-        setEventsError(e instanceof Error ? e.message : "Failed to load events")
+        setEventsError(e instanceof Error ? e.message : "加载活动失败")
         setEvents([])
       } finally {
         setIsLoadingEvents(false)
@@ -87,7 +87,7 @@ export default function ExplorePage() {
         )
         setPosts(postsWithAuthors)
       } catch (e) {
-        setPostsError(e instanceof Error ? e.message : "Failed to load posts")
+        setPostsError(e instanceof Error ? e.message : "加载帖子失败")
         setPosts([])
       } finally {
         setIsLoadingPosts(false)
@@ -102,7 +102,7 @@ export default function ExplorePage() {
         const resp = await getGroups(0, 6, { visibility: "public" })
         setGroups(resp.items)
       } catch (e) {
-        setGroupsError(e instanceof Error ? e.message : "Failed to load groups")
+        setGroupsError(e instanceof Error ? e.message : "加载团队失败")
         setGroups([])
       } finally {
         setIsLoadingGroups(false)
@@ -117,7 +117,7 @@ export default function ExplorePage() {
         const resp = await listUsers(0, 6)
         setUsers(resp.items)
       } catch (e) {
-        setUsersError(e instanceof Error ? e.message : "Failed to load users")
+        setUsersError(e instanceof Error ? e.message : "加载用户失败")
         setUsers([])
       } finally {
         setIsLoadingUsers(false)
@@ -148,8 +148,8 @@ export default function ExplorePage() {
     <PageLayout variant="compact">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="font-heading text-3xl font-bold text-nf-white mb-2">Explore</h1>
-        <p className="text-nf-muted">Discover the latest events and projects</p>
+        <h1 className="font-heading text-3xl font-bold text-nf-white mb-2">探索</h1>
+        <p className="text-nf-muted">发现最新活动与项目</p>
       </div>
 
       {/* Search & Filter */}
@@ -157,37 +157,37 @@ export default function ExplorePage() {
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-nf-muted" />
           <Input
-            placeholder="Search events, posts, teams, users..."
+            placeholder="搜索活动、帖子、团队、用户..."
             className="pl-10 bg-nf-surface border-nf-secondary"
           />
         </div>
         <Button variant="outline" className="border-nf-secondary">
           <SlidersHorizontal className="h-4 w-4 mr-2" />
-          Filter
+          筛选
         </Button>
       </div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="bg-nf-surface border-nf-secondary mb-6">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="events">Events</TabsTrigger>
-          <TabsTrigger value="posts">Posts</TabsTrigger>
-          <TabsTrigger value="groups">Teams</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="all">全部</TabsTrigger>
+          <TabsTrigger value="events">活动</TabsTrigger>
+          <TabsTrigger value="posts">帖子</TabsTrigger>
+          <TabsTrigger value="groups">团队</TabsTrigger>
+          <TabsTrigger value="users">用户</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all">
           <div className="space-y-8">
             {/* Events Section */}
             <section>
-              <h2 className="font-heading text-xl font-semibold text-nf-white mb-4">Events</h2>
+              <h2 className="font-heading text-xl font-semibold text-nf-white mb-4">活动</h2>
               {isLoadingEvents ? (
                 renderLoading()
               ) : eventsError ? (
                 renderError(eventsError)
               ) : events.length === 0 ? (
-                renderEmpty("No events found")
+                renderEmpty("暂无活动")
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {events.map((event) => (
@@ -211,13 +211,13 @@ export default function ExplorePage() {
 
             {/* Posts Section */}
             <section>
-              <h2 className="font-heading text-xl font-semibold text-nf-white mb-4">Posts</h2>
+              <h2 className="font-heading text-xl font-semibold text-nf-white mb-4">帖子</h2>
               {isLoadingPosts ? (
                 renderLoading()
               ) : postsError ? (
                 renderError(postsError)
               ) : posts.length === 0 ? (
-                renderEmpty("No posts found")
+                renderEmpty("暂无帖子")
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {posts.map((post) => (
@@ -243,13 +243,13 @@ export default function ExplorePage() {
 
             {/* Groups Section */}
             <section>
-              <h2 className="font-heading text-xl font-semibold text-nf-white mb-4">Teams</h2>
+              <h2 className="font-heading text-xl font-semibold text-nf-white mb-4">团队</h2>
               {isLoadingGroups ? (
                 renderLoading()
               ) : groupsError ? (
                 renderError(groupsError)
               ) : groups.length === 0 ? (
-                renderEmpty("No teams found")
+                renderEmpty("暂无团队")
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {groups.map((group) => (
@@ -273,7 +273,7 @@ export default function ExplorePage() {
           ) : eventsError ? (
             renderError(eventsError)
           ) : events.length === 0 ? (
-            renderEmpty("No events found")
+            renderEmpty("暂无活动")
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {events.map((event) => (
@@ -301,7 +301,7 @@ export default function ExplorePage() {
           ) : postsError ? (
             renderError(postsError)
           ) : posts.length === 0 ? (
-            renderEmpty("No posts found")
+            renderEmpty("暂无帖子")
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {posts.map((post) => (
@@ -331,7 +331,7 @@ export default function ExplorePage() {
           ) : groupsError ? (
             renderError(groupsError)
           ) : groups.length === 0 ? (
-            renderEmpty("No teams found")
+            renderEmpty("暂无团队")
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {groups.map((group) => (
@@ -353,7 +353,7 @@ export default function ExplorePage() {
           ) : usersError ? (
             renderError(usersError)
           ) : users.length === 0 ? (
-            renderEmpty("No users found")
+            renderEmpty("暂无用户")
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {users.map((user) => (

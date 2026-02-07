@@ -13,6 +13,36 @@ interface ApiOptions extends RequestInit {
   skipAuth?: boolean  // Skip auto-attaching user_id from localStorage
 }
 
+function formatApiErrorMessage(status: number, detail?: string): string {
+  const raw = typeof detail === 'string' ? detail.trim() : ''
+
+  const detailMap: Record<string, string> = {
+    'Unknown error': '未知错误',
+    'Not Found': '资源不存在',
+    'User not found': '用户不存在',
+    'Not authenticated': '未登录或登录已过期',
+    'Invalid credentials': '用户名或密码错误',
+    'Validation error': '参数校验失败',
+  }
+
+  if (raw && detailMap[raw]) return detailMap[raw]
+
+  if (status === 400) return raw || `请求参数错误（HTTP ${status}）`
+  if (status === 401) return raw || '未登录或登录已过期'
+  if (status === 403) return raw || '没有权限执行该操作'
+  if (status === 404) return raw || '资源不存在'
+  if (status === 409) return raw || '资源冲突，请刷新后重试'
+  if (status === 422) return raw || '参数校验失败'
+  if (status >= 500) return raw || `服务器错误（HTTP ${status}）`
+
+  return raw || `请求失败（HTTP ${status}）`
+}
+
+function isAbortError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  return 'name' in error && (error as { name?: unknown }).name === 'AbortError'
+}
+
 /**
  * Get current user_id from localStorage
  */
@@ -47,17 +77,33 @@ async function apiFetch<T>(endpoint: string, options: ApiOptions = {}): Promise<
   const signal = providedSignal ?? controller?.signal
   const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null
 
-  const response = await fetch(`${getApiBase()}${endpoint}`, {
-    ...rest,
-    headers,
-    signal,
-  }).finally(() => {
-    if (timeoutId) clearTimeout(timeoutId)
-  })
+  let response: Response
+  try {
+    response = await fetch(`${getApiBase()}${endpoint}`, {
+      ...rest,
+      headers,
+      signal,
+    }).finally(() => {
+      if (timeoutId) clearTimeout(timeoutId)
+    })
+  } catch (e) {
+    if (isAbortError(e)) {
+      throw new Error('请求超时，请稍后重试')
+    }
+    throw new Error('网络异常，请检查网络后重试')
+  }
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Unknown error' }))
-    throw new Error(error.detail || `HTTP ${response.status}`)
+    let detail: string | undefined
+    try {
+      const data = await response.clone().json()
+      if (data && typeof data === 'object' && 'detail' in data && typeof (data as { detail?: unknown }).detail === 'string') {
+        detail = (data as { detail: string }).detail
+      }
+    } catch {}
+
+    const message = formatApiErrorMessage(response.status, detail)
+    throw new Error(message)
   }
 
   // Handle 204 No Content

@@ -36,19 +36,23 @@ describe('api-client', () => {
 
   // Helper to create mock response
   const mockJsonResponse = (data: unknown, status = 200) => {
-    return Promise.resolve({
+    const response = {
       ok: status >= 200 && status < 300,
       status,
       json: () => Promise.resolve(data),
-    } as Response)
+    } as Response & { clone: () => Response }
+    response.clone = () => response
+    return Promise.resolve(response)
   }
 
   const mockErrorResponse = (status: number, detail: string) => {
-    return Promise.resolve({
+    const response = {
       ok: false,
       status,
       json: () => Promise.resolve({ detail }),
-    } as Response)
+    } as Response & { clone: () => Response }
+    response.clone = () => response
+    return Promise.resolve(response)
   }
 
   describe('User APIs', () => {
@@ -437,6 +441,51 @@ describe('api-client', () => {
     })
   })
 
+  describe('Error handling', () => {
+    test('translates 401 not authenticated message', async () => {
+      mockFetch.mockReturnValueOnce(mockErrorResponse(401, 'Not authenticated'))
+      await expect(apiClient.getUser(1)).rejects.toThrow('未登录或登录已过期')
+    })
+
+    test('translates 404 user not found message', async () => {
+      mockFetch.mockReturnValueOnce(mockErrorResponse(404, 'User not found'))
+      await expect(apiClient.getUser(999)).rejects.toThrow('用户不存在')
+    })
+
+    test('falls back to status-based message when body is not JSON', async () => {
+      const response = {
+        ok: false,
+        status: 500,
+        json: () => Promise.reject(new Error('invalid json')),
+        clone() {
+          return this
+        },
+      } as unknown as Response
+
+      mockFetch.mockReturnValueOnce(Promise.resolve(response))
+      await expect(apiClient.getUser(1)).rejects.toThrow('服务器错误（HTTP 500）')
+    })
+
+    test('shows timeout message on AbortError', async () => {
+      mockFetch.mockRejectedValueOnce(Object.assign(new Error('aborted'), { name: 'AbortError' }))
+      await expect(apiClient.getUser(1)).rejects.toThrow('请求超时，请稍后重试')
+    })
+
+    test('handles 204 No Content response', async () => {
+      mockFetch.mockReturnValueOnce(
+        Promise.resolve({
+          ok: true,
+          status: 204,
+          json: () => Promise.resolve({}),
+        } as Response)
+      )
+
+      const result = await apiClient.deletePost(1)
+      expect(result).toEqual({})
+    })
+  })
+
+
   describe('Group APIs', () => {
     test('getGroup fetches group by ID', async () => {
       const mockGroup = {
@@ -488,39 +537,6 @@ describe('api-client', () => {
           body: JSON.stringify(data),
         })
       )
-    })
-  })
-
-  describe('Error handling', () => {
-    test('throws error on non-OK response', async () => {
-      mockFetch.mockReturnValueOnce(mockErrorResponse(404, 'User not found'))
-
-      await expect(apiClient.getUser(999)).rejects.toThrow('User not found')
-    })
-
-    test('throws HTTP status on unknown error format', async () => {
-      mockFetch.mockReturnValueOnce(
-        Promise.resolve({
-          ok: false,
-          status: 500,
-          json: () => Promise.reject(new Error('Parse error')),
-        } as Response)
-      )
-
-      await expect(apiClient.getUser(1)).rejects.toThrow('Unknown error')
-    })
-
-    test('handles 204 No Content response', async () => {
-      mockFetch.mockReturnValueOnce(
-        Promise.resolve({
-          ok: true,
-          status: 204,
-          json: () => Promise.resolve({}),
-        } as Response)
-      )
-
-      const result = await apiClient.deletePost(1)
-      expect(result).toEqual({})
     })
   })
 
