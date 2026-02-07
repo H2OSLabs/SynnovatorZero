@@ -175,12 +175,12 @@ export function Header({ onMenuClick, showMenuButton = false }: HeaderProps) {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/my/posts" className="flex items-center gap-2">
+                    <Link href="/posts" className="flex items-center gap-2">
                       我的帖子
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/my/groups" className="flex items-center gap-2">
+                    <Link href="/groups" className="flex items-center gap-2">
                       我的团队
                     </Link>
                   </DropdownMenuItem>
