@@ -74,7 +74,7 @@ export async function searchUsers(query: string, limit = 5): Promise<SearchResul
         id: user.id,
         title: user.display_name || user.username,
         subtitle: `@${user.username}`,
-        url: `/profile/${user.id}`,
+        url: `/users/${user.id}`,
       }))
   } catch {
     return []
@@ -130,7 +130,7 @@ export async function searchPosts(query: string, limit = 5): Promise<SearchResul
         id: post.id,
         title: post.title,
         subtitle: getPostTypeLabel(post.type),
-        url: post.type === 'proposal' ? `/proposals/${post.id}` : `/posts/${post.id}`,
+        url: `/posts/${post.id}`,
       }))
   } catch {
     return []
