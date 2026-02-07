@@ -66,8 +66,46 @@
 - 用户旅程测试 (11): ❌ 无 E2E 实现
 - 前端集成测试 (33): ⚠️ 9 个 Jest，需补充 Playwright
 
+**Phase 9: 测试用例覆盖分析** ✅
+- 分析 User Journeys → Testcases 映射
+- 发现 14/14 (100%) 用户旅程已有对应测试用例
+- 测试用例分布: 33 个文件覆盖所有场景
+- specs/testcases/README.md 缺少 18-33 号文件的列表（待更新）
+
+**Phase 10: 总结与提交** ✅
+- 更新 task_plan.md 标记所有阶段完成
+- 更新 progress.md 添加最终总结
+- 提交: `17eac49 docs: 工作流审查与修复 - 移除废弃 pen-to-react 引用`
+
 ### 后续建议
 
-1. **短期**: 按 `specs/testcases/33-frontend-integration.md` 补充 Playwright E2E 测试
-2. **中期**: 考虑删除 `.claude/skills/pen-to-react/` 目录（已废弃）
-3. **长期**: 完善 E2E 测试覆盖，匹配 specs/testcases/11-user-journeys.md
+| 优先级 | 任务 | 说明 |
+|-------|------|------|
+| **立即** | 更新 specs/testcases/README.md | 补充 18-33 号文件列表 |
+| **短期** | 补充 Playwright E2E 测试 | 按 `specs/testcases/33-frontend-integration.md` |
+| **中期** | 删除废弃 Skill | `.claude/skills/pen-to-react/` 目录 |
+| **长期** | 完整 E2E 覆盖 | 实现 `specs/testcases/11-user-journeys.md` |
+
+### 测试用例映射总结
+
+| User Journey | 测试用例 | 状态 |
+|-------------|---------|------|
+| 用户注册登录 (J001-002) | 01-06, 12 | ✅ |
+| 帖子生命周期 (J003-005) | 07-09, 14-17 | ✅ |
+| 活动管理 (J006-009) | 10, 18-21 | ✅ |
+| 团队协作 (J010-012) | 22-26 | ✅ |
+| 社区互动 (J013-014) | 27-32 | ✅ |
+| 前端集成 | 33 | ⚠️ 需 Playwright |
+
+### 本次审查结论
+
+**问题根因**: 开发工作流 (Phase 5-7) 对 Next.js App Router + shadcn/ui 的配置不够完整
+
+**已修复的工作流缺陷**:
+1. ✅ shadcn/ui 组件 forwardRef 规范
+2. ✅ 前端路由验证机制
+3. ✅ SSR API 调用配置说明
+4. ✅ Next.js pages 目录配置
+5. ✅ UI 文本国际化规则
+6. ✅ 废弃 pen-to-react 引用清理
+7. ✅ Figma 设计资源索引
