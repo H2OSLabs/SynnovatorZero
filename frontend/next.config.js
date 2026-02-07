@@ -2,10 +2,12 @@
 const nextConfig = {
     output: "standalone",
     async rewrites() {
+        const internalApiUrl = process.env.INTERNAL_API_URL || "http://localhost:8000/api"
+        const base = internalApiUrl.replace(/\/$/, "")
         return [
             {
                 source: '/api/:path*',
-                destination: 'http://localhost:8000/api/:path*',
+                destination: `${base}/:path*`,
             },
         ];
     },
