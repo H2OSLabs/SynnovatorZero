@@ -68,7 +68,12 @@ export default async function HomePage() {
     const usersById: Record<number, { id: number; username: string; display_name?: string; avatar_url?: string }> = {}
     for (const u of users) {
       if (!u) continue
-      usersById[u.id] = { id: u.id, username: u.username, display_name: u.display_name, avatar_url: u.avatar_url }
+      usersById[u.id] = {
+        id: u.id,
+        username: u.username,
+        display_name: u.display_name ?? undefined,
+        avatar_url: u.avatar_url ?? undefined,
+      }
     }
     featuredPosts = resp.items.map((p) => ({
       id: p.id,

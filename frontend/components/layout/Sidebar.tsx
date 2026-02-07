@@ -51,7 +51,7 @@ const myNavItems: NavItem[] = [
 ]
 
 export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
-  const pathname = usePathname()
+  const pathname = usePathname() ?? ""
   const { user } = useAuth()
 
   const NavLink = ({ item }: { item: NavItem }) => {

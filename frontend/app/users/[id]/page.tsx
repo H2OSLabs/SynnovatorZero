@@ -14,7 +14,9 @@ import { getUser, type User } from "@/lib/api-client"
 
 export default function UserProfilePage() {
   const params = useParams()
-  const id = Number(params.id)
+  const idParam = params?.id
+  const rawId = Array.isArray(idParam) ? idParam[0] : idParam
+  const id = typeof rawId === "string" ? Number(rawId) : Number.NaN
 
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -26,7 +28,7 @@ export default function UserProfilePage() {
 
   useEffect(() => {
     if (!Number.isFinite(id)) {
-      setError("Invalid user ID")
+      setError("无效的用户 ID")
       setIsLoading(false)
       return
     }
@@ -40,7 +42,7 @@ export default function UserProfilePage() {
         setFollowerCount(userData.follower_count || 0)
         setFollowingCount(userData.following_count || 0)
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to load user")
+        setError(e instanceof Error ? e.message : "加载用户失败")
         setUser(null)
       } finally {
         setIsLoading(false)
@@ -71,9 +73,9 @@ export default function UserProfilePage() {
     return (
       <PageLayout variant="full">
         <div className="text-center py-12">
-          <p className="text-nf-error mb-4">{error || "User not found"}</p>
+          <p className="text-nf-error mb-4">{error || "用户不存在"}</p>
           <Link href="/explore">
-            <Button variant="outline">Back to explore</Button>
+            <Button variant="outline">返回探索</Button>
           </Link>
         </div>
       </PageLayout>
@@ -81,7 +83,7 @@ export default function UserProfilePage() {
   }
 
   const panelContent = (
-    <Panel title="User Actions">
+    <Panel title="用户操作">
       <PanelSection>
         <div className="space-y-3">
           <Button
@@ -89,28 +91,28 @@ export default function UserProfilePage() {
             variant={isFollowing ? "outline" : "default"}
             onClick={handleFollow}
           >
-            {isFollowing ? "Following" : "Follow"}
+            {isFollowing ? "已关注" : "关注"}
           </Button>
           <Button variant="outline" className="w-full border-nf-secondary">
             <MessageCircle className="h-4 w-4 mr-2" />
-            Message
+            私信
           </Button>
         </div>
       </PanelSection>
 
-      <PanelSection title="Stats">
+      <PanelSection title="统计">
         <PanelCard>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-nf-muted">Role</span>
+              <span className="text-nf-muted">角色</span>
               <Badge className="bg-nf-dark">{user.role}</Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-nf-muted">Following</span>
+              <span className="text-nf-muted">关注</span>
               <span className="text-nf-white font-medium">{followingCount}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-nf-muted">Followers</span>
+              <span className="text-nf-muted">粉丝</span>
               <span className="text-nf-white font-medium">{followerCount}</span>
             </div>
           </div>
@@ -150,11 +152,11 @@ export default function UserProfilePage() {
         <div className="flex items-center gap-6 text-sm">
           <span className="text-nf-white">
             <strong>{followingCount}</strong>{" "}
-            <span className="text-nf-muted">Following</span>
+            <span className="text-nf-muted">关注</span>
           </span>
           <span className="text-nf-white">
             <strong>{followerCount}</strong>{" "}
-            <span className="text-nf-muted">Followers</span>
+            <span className="text-nf-muted">粉丝</span>
           </span>
         </div>
       </div>
@@ -162,33 +164,33 @@ export default function UserProfilePage() {
       {/* Tabs */}
       <Tabs defaultValue="about">
         <TabsList className="bg-nf-surface border-nf-secondary mb-6">
-          <TabsTrigger value="about">About</TabsTrigger>
-          <TabsTrigger value="posts">Posts</TabsTrigger>
+          <TabsTrigger value="about">关于</TabsTrigger>
+          <TabsTrigger value="posts">帖子</TabsTrigger>
         </TabsList>
 
         <TabsContent value="about">
           <div className="bg-nf-surface rounded-xl p-6">
-            <h2 className="font-heading text-xl font-semibold text-nf-white mb-4">About</h2>
+            <h2 className="font-heading text-xl font-semibold text-nf-white mb-4">关于</h2>
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-nf-muted">Email</p>
+                <p className="text-sm text-nf-muted">邮箱</p>
                 <p className="text-nf-white">{user.email}</p>
               </div>
               <div>
-                <p className="text-sm text-nf-muted">Role</p>
+                <p className="text-sm text-nf-muted">角色</p>
                 <p className="text-nf-white capitalize">{user.role}</p>
               </div>
               {user.bio && (
                 <div>
-                  <p className="text-sm text-nf-muted">Bio</p>
+                  <p className="text-sm text-nf-muted">简介</p>
                   <p className="text-nf-white">{user.bio}</p>
                 </div>
               )}
               {user.created_at && (
                 <div>
-                  <p className="text-sm text-nf-muted">Member since</p>
+                  <p className="text-sm text-nf-muted">加入时间</p>
                   <p className="text-nf-white">
-                    {new Date(user.created_at).toLocaleDateString("en-US", {
+                    {new Date(user.created_at).toLocaleDateString("zh-CN", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
@@ -202,7 +204,7 @@ export default function UserProfilePage() {
 
         <TabsContent value="posts">
           <div className="text-center py-16">
-            <p className="text-nf-muted">User posts would be displayed here</p>
+            <p className="text-nf-muted">用户帖子将在这里展示</p>
           </div>
         </TabsContent>
       </Tabs>

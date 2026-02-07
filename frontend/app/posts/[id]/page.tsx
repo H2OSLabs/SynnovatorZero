@@ -38,7 +38,9 @@ interface ResourceWithDetails extends PostResource {
 export default function PostDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const id = Number(params.id)
+  const idParam = params?.id
+  const rawId = Array.isArray(idParam) ? idParam[0] : idParam
+  const id = typeof rawId === "string" ? Number(rawId) : Number.NaN
 
   const [post, setPost] = useState<Post | null>(null)
   const [author, setAuthor] = useState<User | null>(null)
@@ -101,8 +103,11 @@ export default function PostDetailPage() {
       }
     }
 
-    if (id) {
+    if (Number.isFinite(id)) {
       fetchData()
+    } else {
+      setError("无效的帖子 ID")
+      setLoading(false)
     }
   }, [id])
 

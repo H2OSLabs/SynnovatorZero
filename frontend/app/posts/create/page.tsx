@@ -16,7 +16,7 @@ import { createPost, type PostStatus } from "@/lib/api-client"
 function CreatePostForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const typeParam = searchParams.get("type") || ""
+  const typeParam = searchParams?.get("type") || ""
   const defaultType = isPostType(typeParam) ? typeParam : DEFAULT_POST_TYPE
 
   const [formData, setFormData] = useState({

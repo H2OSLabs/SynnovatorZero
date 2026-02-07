@@ -37,8 +37,9 @@ interface GroupWithDetails extends Group {
 
 export default function EventDetailPage() {
   const params = useParams()
-  const id = params.id as string
-  const eventId = Number(id)
+  const idParam = params?.id
+  const id = Array.isArray(idParam) ? idParam[0] : idParam
+  const eventId = typeof id === "string" ? Number(id) : Number.NaN
 
   const [event, setEvent] = useState<Event | null>(null)
   const [posts, setPosts] = useState<PostWithAuthor[]>([])
@@ -54,7 +55,7 @@ export default function EventDetailPage() {
 
   useEffect(() => {
     if (!Number.isFinite(eventId)) {
-      setError("Invalid event ID")
+      setError("无效的活动 ID")
       setIsLoading(false)
       return
     }

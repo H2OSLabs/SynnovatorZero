@@ -25,7 +25,9 @@ interface MemberWithUser extends Member {
 
 export default function GroupDetailPage() {
   const params = useParams()
-  const id = Number(params.id)
+  const idParam = params?.id
+  const rawId = Array.isArray(idParam) ? idParam[0] : idParam
+  const id = typeof rawId === "string" ? Number(rawId) : Number.NaN
 
   const [group, setGroup] = useState<Group | null>(null)
   const [members, setMembers] = useState<MemberWithUser[]>([])
@@ -37,7 +39,7 @@ export default function GroupDetailPage() {
 
   useEffect(() => {
     if (!Number.isFinite(id)) {
-      setError("Invalid group ID")
+      setError("无效的小组 ID")
       setIsLoading(false)
       return
     }

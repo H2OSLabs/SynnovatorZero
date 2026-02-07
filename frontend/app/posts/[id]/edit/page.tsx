@@ -21,7 +21,9 @@ interface ResourceItem {
 
 export default function EditPostPage() {
   const params = useParams()
-  const id = Number(params.id)
+  const idParam = params?.id
+  const rawId = Array.isArray(idParam) ? idParam[0] : idParam
+  const id = typeof rawId === "string" ? Number(rawId) : Number.NaN
   const router = useRouter()
 
   const [loading, setLoading] = useState(true)
@@ -68,8 +70,11 @@ export default function EditPostPage() {
       }
     }
 
-    if (id) {
+    if (Number.isFinite(id)) {
       fetchData()
+    } else {
+      setError("无效的帖子 ID")
+      setLoading(false)
     }
   }, [id])
 
