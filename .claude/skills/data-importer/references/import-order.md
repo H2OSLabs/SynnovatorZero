@@ -7,7 +7,7 @@
 这些类型没有外键依赖，可以首先导入：
 
 1. **user** - 其他内容类型的 `created_by` 引用 user
-2. **category** - 活动/竞赛
+2. **event** - 活动/竞赛
 3. **rule** - 规则定义
 
 ## Phase 2: Dependent Content Types
@@ -20,15 +20,15 @@
 
 ## Phase 3: Interactions
 
-7. **interaction** - `created_by` 引用 user，`target_id` 可能引用 post/category/resource
+7. **interaction** - `created_by` 引用 user，`target_id` 可能引用 post/event/resource
 
 ## Phase 4: Relations
 
 这些关系表必须在所有内容类型导入后才能导入：
 
-8. **category_rule** - 引用 category 和 rule
-9. **category_post** - 引用 category 和 post
-10. **category_group** - 引用 category 和 group
+8. **event_rule** - 引用 event 和 rule
+9. **event_post** - 引用 event 和 post
+10. **event_group** - 引用 event 和 group
 11. **post_post** - 引用 post
 12. **post_resource** - 引用 post 和 resource
 13. **group_user** - 引用 group 和 user

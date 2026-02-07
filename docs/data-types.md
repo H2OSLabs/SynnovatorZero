@@ -1,12 +1,12 @@
 # 内容类型 Schema
 
-本文档定义 Synnovator 平台的七种内容类型及其 Schema。
+本文档定义 Synnovator 平台的八种内容类型及其 Schema。
 
 > **字段命名规范：** 所有内容类型统一使用 `created_by` 表示创建者/作者/上传者。
 
 ---
 
-## category
+## event
 
 比赛活动或运营活动，关联不同的 Rule。格式为 YAML frontmatter + Markdown body。
 
@@ -53,11 +53,12 @@ title: string             # 帖子标题
 type: enum                # 帖子类型（可选，不填则为 general）:
                           #   profile      = 个人说明
                           #   team         = 团队介绍
-                          #   category     = 活动说明（由活动自动创建）
-                          #   for_category = 活动参赛提交
+                          #   event     = 活动说明（由活动自动创建）
+                          #   proposal     = 提案（可独立存在，也可关联活动参赛）
                           #   certificate  = 证书分享
                           #   general      = 日常帖子（默认）
                           #   可用枚举可通过 GET /api/meta/post-types 获取
+                          #   兼容说明：如历史数据中存在未知 type，API 会在返回时回退为 general
 tags: list[string]        # 标签列表（如 ["找队友", "提案", "日记"]）
 status: enum              # 帖子状态: draft | pending_review | published | rejected
                           #   draft          = 草稿（默认）
@@ -96,8 +97,8 @@ average_rating: number    # 平均评分（默认: null，基于所有 rating in
 |------|----------|
 | `profile` | 展示为个人资料卡片 |
 | `team` | 展示为团队卡片，含成员列表 |
-| `category` | 展示为活动说明页 |
-| `for_category` | 展示为参赛作品，含评分/审核状态 |
+| `event` | 展示为活动说明页 |
+| `proposal` | 展示为提案卡片，含评分/审核状态 |
 | `certificate` | 展示为证书卡片，含下载入口 |
 | `general` | 标准 Markdown 渲染 |
 
@@ -161,7 +162,7 @@ scoring_criteria:                 # 评分标准
 
 # === 可选字段（声明式规则引擎）===
 checks:                           # 声明式条件-动作列表
-  - trigger: string               #   操作点（如 create_relation(category_post)）
+  - trigger: string               #   操作点（如 create_relation(event_post)）
     phase: enum                   #   执行阶段: pre | post
     condition:                    #   条件定义（pre 阶段必填）
       type: string                #     条件类型（time_window | count | exists | field_match |
@@ -261,7 +262,7 @@ deleted_at: datetime      # 软删除时间（null 表示未删除）
 ---
 ```
 
-> **设计说明：** interaction 与目标内容（post/category/resource）的关联完全由 `target:interaction` 关系表维护，interaction 实体不冗余存储 `target_type` 和 `target_id`。这使得七种关系保持对称一致——所有实体间的连接均通过独立关系表管理。
+> **设计说明：** interaction 与目标内容（post/event/resource）的关联完全由 `target:interaction` 关系表维护，interaction 实体不冗余存储 `target_type` 和 `target_id`。这使得七种关系保持对称一致——所有实体间的连接均通过独立关系表管理。
 
 **不同 type 的 value 语义：**
 
@@ -293,18 +294,49 @@ value:
 
 ---
 
+## notification
+
+系统通知，用于推送活动状态变更、团队邀请、评审结果等消息给用户。
+
+```yaml
+---
+# === 必填字段 ===
+type: enum                # 通知类型: system | activity | team | social
+                          #   system   = 系统通知（平台公告、维护提醒）
+                          #   activity = 活动通知（报名成功、活动开始/结束、颁奖）
+                          #   team     = 团队通知（邀请、申请、审批结果）
+                          #   social   = 社交通知（关注、评论、点赞）
+content: string           # 通知内容
+
+# === 可选字段 ===
+title: string             # 通知标题（不填则使用 type 默认标题）
+related_url: string       # 相关链接（点击跳转目标）
+is_read: boolean          # 是否已读（默认: false）
+
+# === 自动生成字段 ===
+id: string                # 唯一标识
+user_id: user_id          # 接收者（目标用户）
+created_at: datetime      # 创建时间
+---
+```
+
+> **设计说明：** notification 不支持软删除，已读通知可通过定期清理任务归档。用户可批量标记已读，但不能删除系统发送的通知。
+
+---
+
 ## 枚举值汇总
 
 | 内容类型 | 字段 | 可选值 |
 |---------|------|-------|
-| category | type | `competition`, `operation` |
-| category | status | `draft`, `published`, `closed` |
-| post | type | `profile`, `team`, `category`, `for_category`, `certificate`, `general` |
+| event | type | `competition`, `operation` |
+| event | status | `draft`, `published`, `closed` |
+| post | type | `profile`, `team`, `event`, `proposal`, `certificate`, `general` |
 | post | status | `draft`, `pending_review`, `published`, `rejected` |
 | post | visibility | `public`, `private` |
 | user | role | `participant`, `organizer`, `admin` |
 | group | visibility | `public`, `private` |
 | interaction | type | `like`, `comment`, `rating` |
+| notification | type | `system`, `activity`, `team`, `social` |
 | rule.checks | phase | `pre`, `post` |
 | rule.checks | on_fail | `deny`, `warn`, `flag` |
 | rule.checks | condition.type | `time_window`, `count`, `exists`, `field_match`, `resource_format`, `resource_required`, `unique_per_scope`, `aggregate` |
@@ -312,14 +344,17 @@ value:
 
 | 关系 | 字段 | 可选值 |
 |-----|------|-------|
-| category:post | relation_type | `submission`, `reference` |
-| category:category | relation_type | `stage`, `track`, `prerequisite` |
+| event:post | relation_type | `submission`, `reference` |
+| event:event | relation_type | `stage`, `track`, `prerequisite` |
+| event:resource | display_type | `banner`, `attachment`, `inline` |
 | post:post | relation_type | `reference`, `reply`, `embed` |
 | post:resource | display_type | `attachment`, `inline` |
 | group:user | role | `owner`, `admin`, `member` |
 | group:user | status | `pending`, `accepted`, `rejected` |
+| group:post | relation_type | `team_submission`, `announcement`, `reference` |
+| group:resource | access_level | `read_only`, `read_write` |
 | user:user | relation_type | `follow`, `block` |
-| target:interaction | target_type | `post`, `category`, `resource` |
+| target:interaction | target_type | `post`, `event`, `resource` |
 
 ---
 
@@ -328,5 +363,5 @@ value:
 | 角色 | 说明 | 核心权限范围 |
 |------|------|-------------|
 | **参赛者（Participant）** | 普通用户，参与活动 | 浏览、注册、报名、创建/编辑自己的 Post、组队 |
-| **组织者（Organizer）** | 活动发起人，管理活动 | 创建/管理 Category 和 Rule、审核活动内容、管理活动相关 Post |
+| **组织者（Organizer）** | 活动发起人，管理活动 | 创建/管理 Event 和 Rule、审核活动内容、管理活动相关 Post |
 | **管理员（Admin）** | 平台运营，管理平台 | 平台级用户管理、全局内容管理、系统配置 |

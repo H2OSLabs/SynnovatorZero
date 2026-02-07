@@ -1,4 +1,4 @@
-"""Declarative Rule Engine — evaluates checks from Rules linked to a category.
+"""Declarative Rule Engine — evaluates checks from Rules linked to a event.
 
 The engine supports:
 - Fixed-field expansion: max_submissions, submission_start/deadline, submission_format,
@@ -40,7 +40,7 @@ def _expand_fixed_fields(rule) -> list[dict]:
         start_str = rule.submission_start.isoformat() if rule.submission_start else None
         end_str = rule.submission_deadline.isoformat() if rule.submission_deadline else None
         expanded.append({
-            "trigger": "create_relation(category_post)",
+            "trigger": "create_relation(event_post)",
             "phase": "pre",
             "condition": {
                 "type": "time_window",
@@ -53,12 +53,12 @@ def _expand_fixed_fields(rule) -> list[dict]:
     # max_submissions → count
     if rule.max_submissions is not None:
         expanded.append({
-            "trigger": "create_relation(category_post)",
+            "trigger": "create_relation(event_post)",
             "phase": "pre",
             "condition": {
                 "type": "count",
                 "params": {
-                    "entity": "category_post",
+                    "entity": "event_post",
                     "scope": "user",
                     "filter": {"relation_type": "submission"},
                     "op": "<",
@@ -72,7 +72,7 @@ def _expand_fixed_fields(rule) -> list[dict]:
     # submission_format → resource_format
     if rule.submission_format:
         expanded.append({
-            "trigger": "create_relation(category_post)",
+            "trigger": "create_relation(event_post)",
             "phase": "pre",
             "condition": {
                 "type": "resource_format",
@@ -85,7 +85,7 @@ def _expand_fixed_fields(rule) -> list[dict]:
     # min_team_size → count (group_user, scope=group)
     if rule.min_team_size is not None:
         expanded.append({
-            "trigger": "create_relation(category_post)",
+            "trigger": "create_relation(event_post)",
             "phase": "pre",
             "condition": {
                 "type": "count",
@@ -214,16 +214,16 @@ def _eval_count(db: Session, params: dict, context: dict) -> bool:
 
     actual = 0
 
-    if entity == "category_post":
-        category_id = context.get("category_id")
+    if entity == "event_post":
+        event_id = context.get("event_id")
         user_id = context.get("user_id")
-        if category_id and scope == "user" and user_id:
-            actual = crud.category_posts.count_submissions_by_user(
-                db, category_id=category_id, user_id=user_id,
+        if event_id and scope == "user" and user_id:
+            actual = crud.event_posts.count_submissions_by_user(
+                db, event_id=event_id, user_id=user_id,
             )
-        elif category_id:
-            rels = crud.category_posts.get_multi_by_category(
-                db, category_id=category_id,
+        elif event_id:
+            rels = crud.event_posts.get_multi_by_category(
+                db, event_id=event_id,
                 relation_type=filt.get("relation_type"),
             )
             actual = len(rels)
@@ -252,13 +252,13 @@ def _eval_exists(db: Session, params: dict, context: dict) -> bool:
             rels = crud.post_resources.get_multi_by_post(db, post_id=post_id)
             found = len(rels) > 0
 
-    elif entity == "category_post":
+    elif entity == "event_post":
         user_id = context.get("user_id")
-        category_id = context.get("category_id")
-        if user_id and category_id:
+        event_id = context.get("event_id")
+        if user_id and event_id:
             relation_type = filt.get("relation_type")
-            rels = crud.category_posts.get_multi_by_category(
-                db, category_id=category_id, relation_type=relation_type,
+            rels = crud.event_posts.get_multi_by_category(
+                db, event_id=event_id, relation_type=relation_type,
             )
             # Filter by user
             for rel in rels:
@@ -267,10 +267,10 @@ def _eval_exists(db: Session, params: dict, context: dict) -> bool:
                     found = True
                     break
 
-    elif entity == "category_group":
-        category_id = context.get("category_id")
-        if category_id:
-            rels = crud.category_groups.get_multi_by_category(db, category_id=category_id)
+    elif entity == "event_group":
+        event_id = context.get("event_id")
+        if event_id:
+            rels = crud.event_groups.get_multi_by_category(db, event_id=event_id)
             if scope == "user_group":
                 user_id = context.get("user_id")
                 if user_id:
@@ -323,10 +323,10 @@ def _eval_field_match(db: Session, params: dict, context: dict) -> bool:
     value = params.get("value")
 
     obj = None
-    if entity == "category":
-        cat_id = context.get("category_id")
+    if entity == "event":
+        cat_id = context.get("event_id")
         if cat_id:
-            obj = crud.categories.get(db, id=cat_id)
+            obj = crud.events.get(db, id=cat_id)
     elif entity == "post":
         post_id = context.get("post_id")
         if post_id:
@@ -410,11 +410,11 @@ def _eval_aggregate(db: Session, params: dict, context: dict) -> bool:
             value = getattr(rule_obj, field_name, 0) or 0
 
     if scope == "each_group_in_category":
-        category_id = context.get("category_id")
-        if not category_id:
+        event_id = context.get("event_id")
+        if not event_id:
             return True
-        # Get all groups registered to this category
-        cat_groups = crud.category_groups.get_multi_by_category(db, category_id=category_id)
+        # Get all groups registered to this event
+        cat_groups = crud.event_groups.get_multi_by_category(db, event_id=event_id)
         for cg in cat_groups:
             status_filter = filt.get("status")
             count = crud.members.count_by_group(db, group_id=cg.group_id, status=status_filter)
@@ -472,29 +472,29 @@ def _get_extension(filename: str) -> str:
 def run_pre_checks(
     db: Session,
     trigger: str,
-    category_id: int,
+    event_id: int,
     context: dict,
 ) -> list[RuleCheckWarning]:
-    """Run all pre-phase checks for a trigger on a category's rules.
+    """Run all pre-phase checks for a trigger on a event's rules.
 
     Args:
         db: Database session
-        trigger: The operation point (e.g., "create_relation(category_post)")
-        category_id: The category to get rules from
+        trigger: The operation point (e.g., "create_relation(event_post)")
+        event_id: The event to get rules from
         context: Dict with keys like user_id, post_id, group_id, etc.
 
     Returns:
         List of warnings (on_fail=warn). Raises RuleCheckError for on_fail=deny.
     """
     warnings = []
-    cat_rules = crud.category_rules.get_multi_by_category(db, category_id=category_id)
+    cat_rules = crud.event_rules.get_multi_by_category(db, event_id=event_id)
 
     for cr in cat_rules:
         rule = crud.rules.get(db, id=cr.rule_id)
         if rule is None:
             continue
 
-        ctx = {**context, "rule": rule, "category_id": category_id}
+        ctx = {**context, "rule": rule, "event_id": event_id}
         checks = _get_checks_for_trigger(rule, trigger, "pre")
 
         for check in checks:
@@ -520,10 +520,10 @@ def run_pre_checks(
 def run_post_hooks(
     db: Session,
     trigger: str,
-    category_id: int,
+    event_id: int,
     context: dict,
 ) -> list[str]:
-    """Run all post-phase checks/actions for a trigger on a category's rules.
+    """Run all post-phase checks/actions for a trigger on a event's rules.
 
     Post hooks never block the operation. They execute actions when conditions are met.
 
@@ -531,14 +531,14 @@ def run_post_hooks(
         List of action log messages.
     """
     logs = []
-    cat_rules = crud.category_rules.get_multi_by_category(db, category_id=category_id)
+    cat_rules = crud.event_rules.get_multi_by_category(db, event_id=event_id)
 
     for cr in cat_rules:
         rule = crud.rules.get(db, id=cr.rule_id)
         if rule is None:
             continue
 
-        ctx = {**context, "rule": rule, "category_id": category_id}
+        ctx = {**context, "rule": rule, "event_id": event_id}
         checks = _get_checks_for_trigger(rule, trigger, "post")
 
         for check in checks:
@@ -579,9 +579,9 @@ def _execute_action(db: Session, action: str, params: dict, context: dict):
 
 
 def _action_compute_ranking(db: Session, params: dict, context: dict):
-    """Compute ranking for posts in a category based on average_rating."""
-    category_id = context.get("category_id")
-    if not category_id:
+    """Compute ranking for posts in a event based on average_rating."""
+    event_id = context.get("event_id")
+    if not event_id:
         return
 
     source_field = params.get("source_field", "average_rating")
@@ -589,8 +589,8 @@ def _action_compute_ranking(db: Session, params: dict, context: dict):
     output_tag_prefix = params.get("output_tag_prefix", "rank_")
 
     # Get all submissions
-    rels = crud.category_posts.get_multi_by_category(
-        db, category_id=category_id, relation_type="submission",
+    rels = crud.event_posts.get_multi_by_category(
+        db, event_id=event_id, relation_type="submission",
     )
 
     scored_posts = []
@@ -643,9 +643,9 @@ def _action_compute_ranking(db: Session, params: dict, context: dict):
 
 
 def _action_flag_disqualified(db: Session, params: dict, context: dict):
-    """Flag disqualified groups/posts in a category."""
-    category_id = context.get("category_id")
-    if not category_id:
+    """Flag disqualified groups/posts in a event."""
+    event_id = context.get("event_id")
+    if not event_id:
         return
 
     target = params.get("target", "group")
@@ -658,15 +658,15 @@ def _action_flag_disqualified(db: Session, params: dict, context: dict):
         if min_size is None:
             return
 
-        cat_groups = crud.category_groups.get_multi_by_category(db, category_id=category_id)
+        cat_groups = crud.event_groups.get_multi_by_category(db, event_id=event_id)
         for cg in cat_groups:
             count = crud.members.count_by_group(db, group_id=cg.group_id, status="accepted")
             if count < min_size:
                 # Find submissions by group members and tag them
                 group_members = crud.members.get_multi_by_group(db, group_id=cg.group_id)
                 for member in group_members:
-                    rels = crud.category_posts.get_multi_by_category(
-                        db, category_id=category_id, relation_type="submission",
+                    rels = crud.event_posts.get_multi_by_category(
+                        db, event_id=event_id, relation_type="submission",
                     )
                     for rel in rels:
                         post = crud.posts.get(db, id=rel.post_id)
@@ -681,8 +681,8 @@ def _action_flag_disqualified(db: Session, params: dict, context: dict):
 
     # For posts: check each submission post directly (e.g., missing resource)
     elif target == "post":
-        rels = crud.category_posts.get_multi_by_category(
-            db, category_id=category_id, relation_type="submission",
+        rels = crud.event_posts.get_multi_by_category(
+            db, event_id=event_id, relation_type="submission",
         )
         for rel in rels:
             post = crud.posts.get(db, id=rel.post_id)
@@ -705,15 +705,15 @@ def _action_flag_disqualified(db: Session, params: dict, context: dict):
 
 def _action_award_certificate(db: Session, params: dict, context: dict):
     """Award certificates based on ranking. Depends on compute_ranking having run first."""
-    category_id = context.get("category_id")
-    if not category_id:
+    event_id = context.get("event_id")
+    if not event_id:
         return
 
     rules_list = params.get("rules", [])
     output_tag_prefix = "rank_"  # Must match compute_ranking output
 
-    rels = crud.category_posts.get_multi_by_category(
-        db, category_id=category_id, relation_type="submission",
+    rels = crud.event_posts.get_multi_by_category(
+        db, event_id=event_id, relation_type="submission",
     )
 
     for rel in rels:
@@ -754,8 +754,8 @@ def _action_award_certificate(db: Session, params: dict, context: dict):
                 db.add(cert_post)
                 db.commit()
                 db.refresh(cert_post)
-                # Link to category
-                crud.category_posts.create(
-                    db, category_id=category_id, post_id=cert_post.id, relation_type="reference",
+                # Link to event
+                crud.event_posts.create(
+                    db, event_id=event_id, post_id=cert_post.id, relation_type="reference",
                 )
                 break  # Only first matching rule

@@ -4,59 +4,59 @@
 
 ---
 
-## 8.1 category:rule（活动-规则）
+## 8.1 event:rule（活动-规则）
 
 **TC-REL-CR-001：将规则关联到活动**
-创建 category:rule 关系，设置 priority。创建成功，读取返回该关联记录。
+创建 event:rule 关系，设置 priority。创建成功，读取返回该关联记录。
 
-**TC-REL-CR-002：更新 category:rule priority**
+**TC-REL-CR-002：更新 event:rule priority**
 将规则优先级从 1 更新为 10。更新成功，读取返回新 priority 值。
 
-**TC-REL-CR-003：删除 category:rule 关系（不影响规则本身）**
+**TC-REL-CR-003：删除 event:rule 关系（不影响规则本身）**
 解除活动与规则的关联关系。关系被物理删除，但规则实体本身仍可读取。
 
 **TC-REL-CR-900：重复关联同一规则到同一活动被拒绝**
-同一 rule 已关联到同一 category 后，再次创建相同的 category:rule 关系。系统拒绝操作，返回唯一性约束错误。
+同一 rule 已关联到同一 event 后，再次创建相同的 event:rule 关系。系统拒绝操作，返回唯一性约束错误。
 
-## 8.2 category:post（活动-帖子）
+## 8.2 event:post（活动-帖子）
 
 **TC-REL-CP-001：将帖子关联为活动的 submission**
-创建 category:post 关系，relation_type=submission。前提：该 category 关联的 rule 的时间窗口、格式、提交次数、团队人数等约束均满足。创建成功。
+创建 event:post 关系，relation_type=submission。前提：该 event 关联的 rule 的时间窗口、格式、提交次数、团队人数等约束均满足。创建成功。
 
 **TC-REL-CP-002：将帖子关联为活动的 reference**
-创建 category:post 关系，relation_type=reference。创建成功。
+创建 event:post 关系，relation_type=reference。创建成功。
 
 **TC-REL-CP-003：按 relation_type 筛选活动帖子**
 同一活动下有 submission 和 reference 两种关系。按 relation_type=submission 筛选时，仅返回 submission 类型记录，不含 reference。
 
-**TC-REL-CP-004：不带筛选读取所有 category:post**
+**TC-REL-CP-004：不带筛选读取所有 event:post**
 不传 relation_type 过滤条件读取。返回结果包含 submission 和 reference 两类。
 
-**TC-REL-CP-900：规则截止后提交 category_post 被拒绝**
-活动关联了 `submission_deadline` 已过期的规则，用户尝试创建 category:post 关系。系统拒绝操作，返回 "deadline passed" 错误。
+**TC-REL-CP-900：规则截止后提交 event_post 被拒绝**
+活动关联了 `submission_deadline` 已过期的规则，用户尝试创建 event:post 关系。系统拒绝操作，返回 "deadline passed" 错误。
 
-**TC-REL-CP-901：格式不符时提交 category_post 被拒绝**
+**TC-REL-CP-901：格式不符时提交 event_post 被拒绝**
 活动关联了 `submission_format=["pdf"]` 的规则，帖子关联的 resource 为 `.pptx` 格式。系统拒绝操作，返回 "not allowed" 错误。
 
-**TC-REL-CP-902：超出 max_submissions 时提交 category_post 被拒绝**
+**TC-REL-CP-902：超出 max_submissions 时提交 event_post 被拒绝**
 活动关联了 `max_submissions=1` 的规则，用户已有一次提交。系统拒绝第二次操作，返回 "max submissions reached" 错误。
 
-## 8.3 category:group（活动-团队报名）
+## 8.3 event:group（活动-团队报名）
 
 **TC-REL-CG-001：团队报名活动**
-创建 category:group 关系。创建成功，读取活动已报名团队列表能查到该团队。
+创建 event:group 关系。创建成功，读取活动已报名团队列表能查到该团队。
 
 **TC-REL-CG-002：读取活动已报名团队列表**
 查询某活动下所有已报名团队，返回完整团队列表。
 
-**TC-REL-CG-003：团队取消报名（DELETE category:group）**
-删除 category:group 关系。关系被物理删除，读取不再返回该团队。
+**TC-REL-CG-003：团队取消报名（DELETE event:group）**
+删除 event:group 关系。关系被物理删除，读取不再返回该团队。
 
 **TC-REL-CG-900：重复报名同一活动被拒绝**
-同一团队对同一活动创建两次 category:group 关系。系统拒绝第二次操作，返回已注册错误。
+同一团队对同一活动创建两次 event:group 关系。系统拒绝第二次操作，返回已注册错误。
 
 **TC-REL-CG-901：同一用户在同一活动中属于多个团队被拒绝**
-用户 Alice 同时属于 Team Synnovator 和 Team Alpha，两个团队都报名同一活动。系统拒绝第二个团队的报名，返回"同一用户在同一 category 中只能属于一个 group"的错误。
+用户 Alice 同时属于 Team Synnovator 和 Team Alpha，两个团队都报名同一活动。系统拒绝第二个团队的报名，返回"同一用户在同一 event 中只能属于一个 group"的错误。
 
 ## 8.4 post:post（帖子间关系）
 

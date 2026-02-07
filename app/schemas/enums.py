@@ -6,8 +6,8 @@ from enum import StrEnum
 class PostType(StrEnum):
     profile = "profile"
     team = "team"
-    category = "category"
-    for_category = "for_category"
+    event = "event"
+    proposal = "proposal"  # 提案（可独立存在，也可关联活动参赛）
     certificate = "certificate"
     general = "general"
 

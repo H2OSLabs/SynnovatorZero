@@ -1,0 +1,106 @@
+# 阶段 4: UI 设计文档生成
+
+> 在编写前端代码之前，先生成完整的 UI 设计文档。
+
+## 现有设计资源 ⭐
+
+项目已有完整的 Figma 设计导出文档，位于 `specs/design/figma/`：
+
+| 文件/目录 | 描述 | 数量 |
+|----------|------|------|
+| `README.md` | 设计索引与使用说明 | - |
+| `components.md` | 组件库 | 54 个 |
+| `icons.md` | 图标库 | 69 个 |
+| `layouts.md` | 布局模板 | - |
+| `pages/*.md` | 页面设计 | 14 个 |
+
+**页面设计索引** (`specs/design/figma/pages/`)：
+
+| 页面 | 文件 | 前端路由 |
+|------|------|---------|
+| 首页 | `home.md` | `/` |
+| 探索 | `explore.md` | `/explore` |
+| 内容/帖子 | `content.md` | `/posts/*` |
+| 团队 | `team.md` | `/groups/*` |
+| 用户资料 | `profile.md` | `/users/*` |
+| 设置 | `settings.md` | `/settings` |
+| 活动/星球 | `planet.md` | `/events/*` |
+| 认证 | `auth.md` | `/login`, `/register` |
+| 搜索 | `search.md` | 搜索模态框 |
+| 消息 | `message.md` | 消息模态框 |
+| 营地 | `camp.md` | `/camp/*` |
+| 资产 | `asset.md` | 资产管理 |
+| 其他 | `misc.md` | 杂项页面 |
+
+> **使用原则**: 设计文档作为参考，优先实现核心功能，不追求像素级还原。
+
+## 输入数据源
+
+| 文件 | 描述 |
+|------|------|
+| `docs/user-journeys/*.md` | 用户旅程 |
+| `specs/testcases/` | 测试用例 |
+| `.synnovator/openapi.yaml` | API 规范 |
+| `specs/design/figma/` | Figma 设计文档 |
+
+## AI 生成 Prompt
+
+```
+依据原型是一个 hackathon 平台，用户可以发布活动、参与活动。
+按照业界例子（如 Devpost、HackerEarth），给出完整的 UI 设计文档。
+
+要求：
+1. 布局架构
+   - Header: 全局导航
+   - Sidebar: 页面级导航（可折叠）
+   - Body: 主内容区域
+   - Panel: 详情/编辑面板（右侧滑出）
+   - Footer: 版权信息
+
+2. 用户旅程覆盖检查
+   - 遍历 docs/user-journeys/ 每个流程
+   - 确保每个流程都能在 UI 中找到入口
+   - 标注流程对应的页面和组件
+
+3. API Endpoint 检查
+   - 为每个 UI 组件标注对应的 API endpoint
+   - 检查 .synnovator/openapi.yaml 是否已实现
+   - 若 endpoint 缺失，标注 "🚧 Not Implemented"
+
+4. shadcn 组件映射
+   - 优先使用 shadcn 现有组件
+   - 自定义组件单独标注
+
+5. 主题适配
+   - 使用 Neon Forge 主题
+   - Primary accent: #BBFD3B (Lime Green)
+   - 深色背景 + 亮色强调色
+```
+
+## 输出
+
+**`specs/ui/ui-design-spec.md`**
+
+## 验证
+
+### User Journey 覆盖检查
+
+| User Journey | UI 入口 | 相关页面 |
+|-------------|---------|---------|
+| J-001 用户注册 | Header → 注册按钮 | /register |
+| J-002 创建活动 | Sidebar → 创建活动 | /events/new |
+| J-003 提交作品 | 活动详情 → 提交按钮 | /events/[id]/submit |
+| ... | ... | ... |
+
+### Endpoint 覆盖检查
+
+```
+✅ GET /api/events — 已实现
+✅ POST /api/events — 已实现
+🚧 POST /api/events/{id}/submissions — Not Implemented
+🚧 GET /api/notifications — Not Implemented
+```
+
+## 下一步
+
+完成 UI 设计后，进入 [阶段 5-6: 前端配置](06-frontend-setup.md)。

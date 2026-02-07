@@ -26,7 +26,7 @@ flowchart TD
 
 | 步骤 | 操作者 | 数据操作 | 说明 |
 |------|-------|---------|------|
-| 1 | 组织者 | `UPDATE category`（status → closed） | 触发关闭流程 |
+| 1 | 组织者 | `UPDATE event`（status → closed） | 触发关闭流程 |
 | 2 | 系统 | 执行 pre-phase checks | 关闭前校验（如所有团队是否有提交） |
 | 3 | 系统 | 执行 post-phase actions | 关闭后自动处理（终审、排名、颁奖） |
 
@@ -43,17 +43,17 @@ flowchart TD
 
 | 步骤 | 系统行为 | 数据操作 | 说明 |
 |------|---------|---------|------|
-| 1 | 扫描所有报名团队 | `READ category:group` | 获取参赛团队列表 |
+| 1 | 扫描所有报名团队 | `READ event:group` | 获取参赛团队列表 |
 | 2 | 检查团队人数 | `READ group:user` | 验证 min_team_size 要求 |
 | 3 | 标记不合格团队 | `UPDATE group`（添加 tag） | 如 "team_too_small" |
-| 4 | 检查提交内容 | `READ category:post` | 验证提交要求 |
+| 4 | 检查提交内容 | `READ event:post` | 验证提交要求 |
 | 5 | 标记不合格提交 | `UPDATE post`（添加 tag） | 如 "missing_attachment" |
 
 ### 8.3.2 计算排名（compute_ranking）
 
 | 步骤 | 系统行为 | 数据操作 | 说明 |
 |------|---------|---------|------|
-| 1 | 获取合格提交 | `READ category:post`（排除已标记不合格） | 过滤有效参赛帖 |
+| 1 | 获取合格提交 | `READ event:post`（排除已标记不合格） | 过滤有效参赛帖 |
 | 2 | 按 average_rating 排序 | — | 降序排列 |
 | 3 | 添加排名标签 | `UPDATE post`（添加 tag） | 如 "rank_1"、"rank_2"、"rank_3" |
 

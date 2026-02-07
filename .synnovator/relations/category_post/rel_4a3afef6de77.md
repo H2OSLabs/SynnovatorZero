@@ -1,5 +1,5 @@
 ---
-category_id: cat_130ff6b240ec
+event_id: cat_130ff6b240ec
 post_id: post_50deb5813dc2
 relation_type: reference
 _id: rel_4a3afef6de77

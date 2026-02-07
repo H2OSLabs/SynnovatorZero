@@ -5,7 +5,7 @@ from typing import Literal
 
 
 class TargetInteractionCreate(BaseModel):
-    target_type: Literal["post", "category", "resource"]
+    target_type: Literal["post", "event", "resource"]
     target_id: int
     interaction_id: int
 

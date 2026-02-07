@@ -33,7 +33,12 @@ export default function GroupsPage() {
                 membersResp.items.map(async (m) => {
                   try {
                     const u = await getUser(m.user_id)
-                    return { id: u.id, username: u.username, display_name: u.display_name, avatar_url: u.avatar_url }
+                    return {
+                      id: u.id,
+                      username: u.username,
+                      display_name: u.display_name ?? undefined,
+                      avatar_url: u.avatar_url ?? undefined,
+                    }
                   } catch {
                     return { id: m.user_id, username: `user_${m.user_id}` }
                   }
@@ -71,7 +76,7 @@ export default function GroupsPage() {
   })
 
   return (
-    <PageLayout variant="compact" user={null}>
+    <PageLayout variant="compact">
       {/* Page Header */}
       <div className="flex items-center justify-between mb-8">
         <div>

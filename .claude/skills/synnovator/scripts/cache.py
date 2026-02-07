@@ -71,10 +71,10 @@ def _update_cache_stats(data_dir, target_type, target_id):
 def _find_scoring_criteria(data_dir, post_id):
     from relations import read_relation
 
-    cat_post_rels = read_relation(data_dir, "category_post", {"post_id": post_id})
+    cat_post_rels = read_relation(data_dir, "event_post", {"post_id": post_id})
     for rel in cat_post_rels:
-        cat_id = rel.get("category_id")
-        cat_rule_rels = read_relation(data_dir, "category_rule", {"category_id": cat_id})
+        cat_id = rel.get("event_id")
+        cat_rule_rels = read_relation(data_dir, "event_rule", {"event_id": cat_id})
         for cr in cat_rule_rels:
             rule_id = cr.get("rule_id")
             fp = find_record(data_dir, "rule", rule_id)

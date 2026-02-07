@@ -1,6 +1,8 @@
 # Frontend-API Mapping
 
-Backend Base URL: `http://localhost:8000/api`
+Backend Base URL:
+- Client-side (browser): `API_URL`（生产通常为 `/api`，由 Nginx 反代）
+- Server-side (Next.js Server Components): `INTERNAL_API_URL`（必须为绝对 URL，例如 `http://localhost:8000/api`）
 Auth Header: `X-User-Id: <int>` (temporary)
 
 ## Meta Endpoints
@@ -16,15 +18,15 @@ Auth Header: `X-User-Id: <int>` (temporary)
 | UI Element | HTTP Method | Endpoint | Notes |
 |-----------|-------------|----------|-------|
 | Card Grid (featured posts) | GET | `/api/posts?limit=6&status=published` | Top posts for main content |
-| Hot Proposals section | GET | `/api/posts?type=for_category&limit=4&status=published` | Proposals with type filter |
+| Hot Proposals section | GET | `/api/posts?type=proposal&limit=4&status=published` | Proposals with type filter |
 | "发布新内容" button | POST | `/api/posts` | Requires auth (X-User-Id) |
-| Tab navigation | GET | `/api/categories?limit=10` | Tabs map to categories |
+| Tab navigation | GET | `/api/events?limit=10` | Tabs map to events |
 
 ### 2. PostList (`components/pages/post-list.tsx`)
 
 | UI Element | HTTP Method | Endpoint | Notes |
 |-----------|-------------|----------|-------|
-| Tab navigation | GET | `/api/categories?limit=10` | Category tabs |
+| Tab navigation | GET | `/api/events?limit=10` | Event tabs |
 | 找队友 section | GET | `/api/groups?limit=4&visibility=public` | Public teams |
 | 找点子 section | GET | `/api/posts?limit=4&status=published` | Latest published posts |
 
@@ -47,8 +49,8 @@ Auth Header: `X-User-Id: <int>` (temporary)
 
 | UI Element | HTTP Method | Endpoint | Notes |
 |-----------|-------------|----------|-------|
-| Proposal grid | GET | `/api/posts?type=for_category&limit=10&status=published` | type=for_category for proposals |
-| Category filter tabs | GET | `/api/categories?limit=10` | Category list |
+| Proposal grid | GET | `/api/posts?type=proposal&limit=10&status=published` | type=proposal for proposals |
+| Event filter tabs | GET | `/api/events?limit=10` | Event list |
 
 ### 5. ProposalDetail (`components/pages/proposal-detail.tsx`)
 
@@ -64,15 +66,15 @@ Auth Header: `X-User-Id: <int>` (temporary)
 | Related proposals | GET | `/api/posts/{id}/related` | Related content |
 | Version history | GET | `/api/posts/{id}/related?relation_type=reference` | Version links |
 
-### 6. CategoryDetail (`components/pages/category-detail.tsx`)
+### 6. CategoryDetail (`components/pages/event-detail.tsx`)
 
 | UI Element | HTTP Method | Endpoint | Notes |
 |-----------|-------------|----------|-------|
-| Category info banner | GET | `/api/categories/{id}` | Name, description, status, type |
-| Posts in category | GET | `/api/categories/{id}/posts?relation_type=submission` | Submitted posts |
-| Registered teams | GET | `/api/categories/{id}/groups` | Team registrations |
-| Category rules | GET | `/api/categories/{id}/rules` | Linked rules |
-| Associated categories | GET | `/api/categories/{id}/associations` | Stage/track/prerequisite |
+| Event info banner | GET | `/api/events/{id}` | Name, description, status, type |
+| Posts in event | GET | `/api/events/{id}/posts?relation_type=submission` | Submitted posts |
+| Registered teams | GET | `/api/events/{id}/groups` | Team registrations |
+| Event rules | GET | `/api/events/{id}/rules` | Linked rules |
+| Associated events | GET | `/api/events/{id}/associations` | Stage/track/prerequisite |
 
 ### 7. UserProfile (`components/pages/user-profile.tsx`)
 
@@ -136,9 +138,9 @@ const getApiBase = () => getEnv().API_URL
 ```typescript
 // Core entities
 interface User { id: number; username: string; email: string; display_name?: string; bio?: string; role: "participant"|"organizer"|"admin"; }
-type PostType = "profile" | "team" | "category" | "for_category" | "certificate" | "general";
+type PostType = "profile" | "team" | "event" | "proposal" | "certificate" | "general";
 interface Post { id: number; title: string; body?: string; type: PostType; status: string; visibility: string; tags?: string[]; created_by: number; like_count: number; comment_count: number; average_rating?: number; }
-interface Category { id: number; name: string; description?: string; type: "competition"|"operation"; status: "draft"|"published"|"closed"; created_by: number; }
+interface Event { id: number; name: string; description?: string; type: "competition"|"operation"; status: "draft"|"published"|"closed"; created_by: number; }
 interface Group { id: number; name: string; description?: string; visibility: "public"|"private"; require_approval: boolean; max_members?: number; created_by: number; }
 interface Resource { id: number; filename: string; url?: string; display_name?: string; description?: string; mime_type?: string; file_size?: number; created_by?: number; }
 interface Rule { id: number; name: string; description?: string; max_submissions?: number; scoring_criteria?: object; checks?: object[]; created_by: number; }
@@ -153,4 +155,4 @@ interface Paginated<T> { items: T[]; total: number; skip: number; limit: number;
 1. User logs in → receives user ID (simplified, no JWT yet)
 2. Frontend stores user ID in local state/context
 3. All authenticated requests include `X-User-Id: {userId}` header
-4. Role-based endpoints (create category/rule) check user role server-side
+4. Role-based endpoints (create event/rule) check user role server-side

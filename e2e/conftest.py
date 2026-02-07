@@ -12,7 +12,7 @@ Usage:
         -- uv run pytest e2e/ -v
 """
 import pytest
-from playwright.sync_api import sync_playwright, Browser, Page, BrowserContext
+from playwright.sync_api import sync_playwright, Browser, Page, BrowserContext, Error as PlaywrightError
 
 
 # Server URLs
@@ -25,7 +25,10 @@ API_URL = f"{BACKEND_URL}/api"
 def browser():
     """Create a browser instance for the test session."""
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        try:
+            browser = p.chromium.launch(headless=True)
+        except PlaywrightError:
+            browser = p.chromium.launch(channel="chrome", headless=True)
         yield browser
         browser.close()
 

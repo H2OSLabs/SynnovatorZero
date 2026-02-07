@@ -12,27 +12,31 @@
 
 | 操作 | 说明 | 权限 |
 |------|------|------|
-| `CREATE category` | 创建活动，填写 YAML + Markdown | Organizer, Admin |
+| `CREATE event` | 创建活动，填写 YAML + Markdown | Organizer, Admin |
 | `CREATE post` | 创建帖子，编写 Markdown 内容 | 已登录用户 |
 | `CREATE resource` | 上传文件资源 | 已登录用户 |
 | `CREATE rule` | 创建活动规则 | Organizer, Admin |
 | `CREATE user` | 注册新用户 | 任何人 |
 | `CREATE group` | 创建团队/分组 | 已登录用户 |
 | `CREATE interaction` | 创建交互记录（点赞/评论/评分），需配合 `CREATE target:interaction` 关联到目标 | 已登录用户 |
+| `CREATE notification` | 创建通知（系统自动发送，如活动状态变更、团队邀请、颁奖等） | 系统, Admin |
 
 ### 创建关系
 
 | 操作 | 说明 | 权限 |
 |------|------|------|
-| `CREATE category:rule` | 将 Rule 关联到活动 | Category 创建者, Admin |
-| `CREATE category:post` | 将 Post 关联到活动（报名/提交） | Post 作者（需符合 Rule） |
-| `CREATE category:group` | 团队报名活动（建立团队与活动的绑定） | Group Owner（需符合 Rule 的团队人数要求） |
+| `CREATE event:rule` | 将 Rule 关联到活动 | Event 创建者, Admin |
+| `CREATE event:post` | 将 Post 关联到活动（报名/提交） | Post 作者（需符合 Rule） |
+| `CREATE event:group` | 团队报名活动（建立团队与活动的绑定） | Group Owner（需符合 Rule 的团队人数要求） |
 | `CREATE post:post` | 帖子间建立关联（引用/回复/嵌入） | 发起方 Post 作者 |
 | `CREATE post:resource` | 将资源关联到帖子 | Post 作者 |
 | `CREATE group:user` | 将用户加入分组（require_approval=true 时 status 初始为 pending） | Group owner/admin, 或自助申请 |
 | `CREATE target:interaction` | 将交互记录关联到目标对象（触发目标验证、去重校验、缓存更新） | 交互发起人（目标对象须可见） |
 | `CREATE user:user` | 关注或拉黑用户（禁止自引用，拉黑方阻止被拉黑方创建 follow） | 已登录用户 |
-| `CREATE category:category` | 创建活动间关联（赛段/赛道/前置条件，禁止自引用和循环依赖） | Category 创建者, Admin |
+| `CREATE event:event` | 创建活动间关联（赛段/赛道/前置条件，禁止自引用和循环依赖） | Event 创建者, Admin |
+| `CREATE event:resource` | 将资源关联到活动（封面图、命题文件、附件） | Event 创建者, Admin |
+| `CREATE group:post` | 将帖子关联到团队（团队提案、公告） | Group Owner/Admin, Post 作者 |
+| `CREATE group:resource` | 将资源关联到团队（团队共享资产） | Group Owner/Admin |
 
 ---
 
@@ -42,27 +46,31 @@
 
 | 操作 | 说明 | 权限 |
 |------|------|------|
-| `READ category` | 读取活动列表或详情 | 公开活动: 任何人；草稿: 创建者/Admin |
+| `READ event` | 读取活动列表或详情 | 公开活动: 任何人；草稿: 创建者/Admin |
 | `READ post` | 读取帖子列表或详情，支持按 tag/type/visibility 筛选 | 已发布且 visibility=public: 任何人；visibility=private: 作者/Admin；草稿: 作者/Admin |
 | `READ resource` | 读取/下载文件资源 | 关联帖子可见则可读 |
 | `READ rule` | 读取活动规则 | 关联活动可见则可读 |
 | `READ user` | 读取用户信息 | 公开信息: 任何人；完整信息: 本人/Admin |
 | `READ group` | 读取分组信息及成员列表 | public: 任何人；private: 成员/Admin |
 | `READ interaction` | 读取交互记录（支持按 type 筛选） | 目标对象可见则可读 |
+| `READ notification` | 读取通知列表（支持按 type、is_read 筛选） | 本人, Admin |
 
 ### 读取关系
 
 | 操作 | 说明 |
 |------|------|
-| `READ category:rule` | 查询活动关联的所有规则 |
-| `READ category:post` | 查询活动关联的所有帖子（可按 relation_type 筛选） |
-| `READ category:group` | 查询活动的报名团队列表 |
+| `READ event:rule` | 查询活动关联的所有规则 |
+| `READ event:post` | 查询活动关联的所有帖子（可按 relation_type 筛选） |
+| `READ event:group` | 查询活动的报名团队列表 |
 | `READ post:post` | 查询帖子的关联帖子（可按 relation_type 筛选） |
 | `READ post:resource` | 查询帖子的关联资源 |
 | `READ group:user` | 查询分组的成员列表（含角色和状态信息，可按 status 筛选） |
 | `READ target:interaction` | 查询目标对象的交互记录（可按 interaction.type 筛选） |
 | `READ user:user` | 查询用户的关注/粉丝/好友列表（可按 relation_type 筛选） |
-| `READ category:category` | 查询活动的赛段链、赛道列表、前置条件（可按 relation_type 筛选） |
+| `READ event:event` | 查询活动的赛段链、赛道列表、前置条件（可按 relation_type 筛选） |
+| `READ event:resource` | 查询活动关联的资源（封面图、命题文件等） |
+| `READ group:post` | 查询团队关联的帖子（团队提案、公告） |
+| `READ group:resource` | 查询团队共享的资源文件 |
 
 ---
 
@@ -72,37 +80,41 @@
 
 | 操作 | 说明 | 权限 |
 |------|------|------|
-| `UPDATE category` | 更新活动信息或状态变更（**严格单向**: draft→published→closed，不可逆转；如需修改已发布/已关闭活动，创建新版本） | 创建者, Admin |
+| `UPDATE event` | 更新活动信息或状态变更（**严格单向**: draft→published→closed，不可逆转；如需修改已发布/已关闭活动，创建新版本） | 创建者, Admin |
 | `UPDATE post` | 更新帖子内容、添加/修改 tag、状态变更（**严格单向**: draft→pending_review→published\|rejected; rejected→draft 允许修订；published 为终态，如需修改创建新版本）、visibility 变更（private 帖子发布时跳过 pending_review 流程） | 作者（编辑他人帖子需 Rule 允许或副本机制） |
 | `UPDATE resource` | 更新资源元信息（display_name, description） | 上传者, Admin |
 | `UPDATE rule` | 更新规则配置 | 创建者, Admin |
 | `UPDATE user` | 更新用户信息 | 本人, Admin |
 | `UPDATE group` | 更新分组信息和设置 | Owner, Admin |
 | `UPDATE interaction` | 更新交互内容（如修改评论文本、修改评分） | 交互发起人本人 |
+| `UPDATE notification` | 更新通知状态（标记已读） | 本人, Admin |
 
 ### 更新关系属性
 
 | 操作 | 说明 |
 |------|------|
-| `UPDATE category:rule` | 修改规则优先级等属性 |
-| `UPDATE category:post` | 修改关联类型（如 reference→submission） |
+| `UPDATE event:rule` | 修改规则优先级等属性 |
+| `UPDATE event:post` | 修改关联类型（如 reference→submission） |
 | `UPDATE post:post` | 修改关联类型或排序位置 |
 | `UPDATE post:resource` | 修改展示方式或排序位置 |
 | `UPDATE group:user` | 修改成员角色（如 member→admin）或审批状态（pending→accepted/rejected） |
-| `UPDATE category:category` | 修改赛段序号或关联类型 |
+| `UPDATE event:event` | 修改赛段序号或关联类型 |
+| `UPDATE event:resource` | 修改展示方式或排序位置 |
+| `UPDATE group:post` | 修改关联类型 |
+| `UPDATE group:resource` | 修改访问级别 |
 
 ### 状态机约束
 
 引擎层（`content.py`）在执行 UPDATE 操作时强制校验状态转换方向。不允许逆向变更。
 
-**category.status 状态机（严格单向）：**
+**event.status 状态机（严格单向）：**
 
 ```
 draft → published → closed
 ```
 
 - `closed` 是终态，不可变更。
-- 如需修改已发布或已关闭的活动，应创建新的 category 版本（重置为 `draft`）。
+- 如需修改已发布或已关闭的活动，应创建新的 event 版本（重置为 `draft`）。
 
 **post.status 状态机：**
 
@@ -140,13 +152,14 @@ draft → published（仅 visibility=private 帖子可跳过审核）
 
 | 操作 | 说明 | 权限 | 级联影响 |
 |------|------|------|----------|
-| `DELETE category` | 删除活动 | 创建者, Admin | **级联删除** target:interaction 关系及关联 interaction 记录；解除所有 category:rule、category:post、category:group、category:category 关系 |
-| `DELETE post` | 删除帖子 | 作者, Admin | **级联删除** target:interaction 关系及关联 interaction 记录；解除所有 post:post、post:resource、category:post 关系 |
+| `DELETE event` | 删除活动 | 创建者, Admin | **级联删除** target:interaction 关系及关联 interaction 记录；解除所有 event:rule、event:post、event:group、event:event、event:resource 关系 |
+| `DELETE post` | 删除帖子 | 作者, Admin | **级联删除** target:interaction 关系及关联 interaction 记录；解除所有 post:post、post:resource、event:post 关系 |
 | `DELETE resource` | 删除文件资源 | 上传者, Admin | **级联删除** target:interaction 关系及关联 interaction 记录；解除所有 post:resource 关系 |
-| `DELETE rule` | 删除规则 | 创建者, Admin | 解除所有 category:rule 关系 |
+| `DELETE rule` | 删除规则 | 创建者, Admin | 解除所有 event:rule 关系 |
 | `DELETE user` | 删除/注销用户 | 本人, Admin | 解除所有 group:user、user:user 关系；**级联删除**该用户创建的所有 interaction 及其 target:interaction 关系，并更新受影响目标的缓存计数 |
-| `DELETE group` | 删除分组 | Owner, Admin | 解除所有 group:user、category:group 关系 |
+| `DELETE group` | 删除分组 | Owner, Admin | 解除所有 group:user、event:group、group:post、group:resource 关系 |
 | `DELETE interaction` | 删除交互记录 | 交互发起人, Admin | **级联删除** target:interaction 关系；若为父评论，递归级联删除所有子回复及其 target:interaction 关系；更新受影响目标的缓存计数 |
+| `DELETE notification` | 删除通知（仅支持批量清理已读通知） | Admin | 无级联 |
 
 ### target:interaction 级联删除策略
 
@@ -154,12 +167,12 @@ draft → published（仅 visibility=private 帖子可跳过审核）
 
 | 被删除的目标类型 | 级联行为 | 实现位置 |
 |-----------------|---------|---------|
-| `category` | 删除所有 `target_type=category` 的 target:interaction 关系 + 关联 interaction 记录 | `endpoints/category.py` → `cascade._cascade_hard_delete_interactions()` |
+| `event` | 删除所有 `target_type=event` 的 target:interaction 关系 + 关联 interaction 记录 | `endpoints/event.py` → `cascade._cascade_hard_delete_interactions()` |
 | `post` | 删除所有 `target_type=post` 的 target:interaction 关系 + 关联 interaction 记录 | `endpoints/post.py` → `cascade._cascade_hard_delete_interactions()` |
 | `resource` | 删除所有 `target_type=resource` 的 target:interaction 关系 + 关联 interaction 记录 | `endpoints/resource.py` → `cascade._cascade_hard_delete_interactions()` |
 | `user`（非目标类型） | 删除该用户**创建的**所有 interaction + 对应 target:interaction 关系，并更新受影响目标的缓存计数 | `endpoints/user.py` → `cascade._cascade_hard_delete_user_interactions()` |
 
-> **注意：** `group` 和 `rule` 不是有效的 `target_interaction.target_type`（枚举值仅含 post、category、resource），因此删除 group/rule 时无需级联 interaction。
+> **注意：** `group` 和 `rule` 不是有效的 `target_interaction.target_type`（枚举值仅含 post、event、resource），因此删除 group/rule 时无需级联 interaction。
 
 ### 删除关系
 
@@ -167,15 +180,18 @@ draft → published（仅 visibility=private 帖子可跳过审核）
 
 | 操作 | 说明 |
 |------|------|
-| `DELETE category:rule` | 解除活动与规则的关联 |
-| `DELETE category:post` | 解除活动与帖子的关联 |
-| `DELETE category:group` | 解除团队与活动的报名绑定 |
+| `DELETE event:rule` | 解除活动与规则的关联 |
+| `DELETE event:post` | 解除活动与帖子的关联 |
+| `DELETE event:group` | 解除团队与活动的报名绑定 |
 | `DELETE post:post` | 解除帖子间的关联 |
 | `DELETE post:resource` | 解除帖子与资源的关联 |
 | `DELETE group:user` | 将成员移出分组（或撤回申请） |
 | `DELETE target:interaction` | 解除目标对象与交互记录的关联 |
 | `DELETE user:user` | 取消关注或解除拉黑 |
-| `DELETE category:category` | 解除活动间的赛段/赛道/前置条件关联 |
+| `DELETE event:event` | 解除活动间的赛段/赛道/前置条件关联 |
+| `DELETE event:resource` | 解除活动与资源的关联 |
+| `DELETE group:post` | 解除团队与帖子的关联 |
+| `DELETE group:resource` | 解除团队与资源的关联 |
 
 ---
 
@@ -202,11 +218,13 @@ draft → published（仅 visibility=private 帖子可跳过审核）
 
 | 操作 | participant | organizer | admin |
 |------|------------|-----------|-------|
-| CREATE category | - | Y | Y |
+| CREATE event | - | Y | Y |
 | CREATE post | Y | Y | Y |
 | CREATE resource | Y | Y | Y |
 | CREATE rule | - | Y | Y |
 | CREATE interaction | Y | Y | Y |
+| CREATE notification | - | - | Y |
+| READ notification (own) | Y | Y | Y |
 | UPDATE (own content) | Y | Y | Y |
 | UPDATE (others' content) | - | - | Y |
 | DELETE (own content) | Y | Y | Y |
@@ -247,37 +265,37 @@ CLI 入口（`engine.py`）已接受 `--user` 参数，负责将其传递给所�
 
 | 操作 | Phase | 说明 | 来源 |
 |------|-------|------|------|
-| `CREATE category:post` | pre | 提交帖子到活动前校验（时间窗口、提交次数、格式、团队人数、必要 resource） | 现有 + 扩展 |
-| `CREATE category:post` | post | 提交成功后触发动作（通知等） | 新增 |
+| `CREATE event:post` | pre | 提交帖子到活动前校验（时间窗口、提交次数、格式、团队人数、必要 resource） | 现有 + 扩展 |
+| `CREATE event:post` | post | 提交成功后触发动作（通知等） | 新增 |
 | `CREATE group:user` | pre | 成员加入团队前校验（团队人数上限） | 现有 |
 | `CREATE group:user` | post | 成员加入成功后触发动作 | 新增 |
-| `CREATE category:group` | pre | 团队报名活动前校验（前置条件、入场条件） | 现有 + 扩展 |
-| `CREATE category:group` | post | 团队报名成功后触发动作 | 新增 |
+| `CREATE event:group` | pre | 团队报名活动前校验（前置条件、入场条件） | 现有 + 扩展 |
+| `CREATE event:group` | post | 团队报名成功后触发动作 | 新增 |
 | `UPDATE post.status` | pre | 帖子状态变更前校验（发布路径、审核流程） | 现有 |
 | `UPDATE post.status` | post | 帖子状态变更后触发动作 | 新增 |
-| `UPDATE category.status` | pre | 活动状态变更前校验 | **新增** |
-| `UPDATE category.status` | post | 活动关闭时触发终审校验、排名计算、奖励发放 | **新增** |
+| `UPDATE event.status` | pre | 活动状态变更前校验 | **新增** |
+| `UPDATE event.status` | post | 活动关闭时触发终审校验、排名计算、奖励发放 | **新增** |
 
 ### 校验链
 
 引擎根据操作类型，沿关系链定位关联的 Rule，然后执行匹配 trigger + phase 的所有 checks：
 
 ```
-CREATE category_post:
-  post → category_post.category_id → category_rule → rule.checks[trigger=create_relation(category_post)]
+CREATE event_post:
+  post → event_post.event_id → event_rule → rule.checks[trigger=create_relation(event_post)]
 
 CREATE group_user:
-  group → category_group → category → category_rule → rule.checks[trigger=create_relation(group_user)]
+  group → event_group → event → event_rule → rule.checks[trigger=create_relation(group_user)]
 
-CREATE category_group:
-  category → category_category(prerequisite) → prerequisite 检查
-  category → category_rule → rule.checks[trigger=create_relation(category_group)]
+CREATE event_group:
+  event → event_event(prerequisite) → prerequisite 检查
+  event → event_rule → rule.checks[trigger=create_relation(event_group)]
 
 UPDATE post.status:
-  post → category_post → category → category_rule → rule.checks[trigger=update_content(post.status)]
+  post → event_post → event → event_rule → rule.checks[trigger=update_content(post.status)]
 
-UPDATE category.status:
-  category → category_rule → rule.checks[trigger=update_content(category.status)]
+UPDATE event.status:
+  event → event_rule → rule.checks[trigger=update_content(event.status)]
 ```
 
 ### AND 逻辑

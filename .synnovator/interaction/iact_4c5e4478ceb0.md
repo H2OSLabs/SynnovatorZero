@@ -1,6 +1,6 @@
 ---
 type: comment
-target_type: category
+target_type: event
 target_id: cat_c40145cf0cbb
 value: 测试评论
 id: iact_4c5e4478ceb0

@@ -25,14 +25,14 @@ def on_pre_update(data_dir, record_id, rec, updates):
         updates.pop(cache_field, None)
 
     # Rule enforcement: validate post status transitions
-    # Private posts skip category rule checks (can go draft → published directly)
+    # Private posts skip event rule checks (can go draft → published directly)
     if "status" in updates and rec.get("visibility") != "private":
         from relations import read_relation
         from rules import _validate_category_rules
 
-        cat_posts = read_relation(data_dir, "category_post", {"post_id": record_id})
+        cat_posts = read_relation(data_dir, "event_post", {"post_id": record_id})
         for cp in cat_posts:
-            _validate_category_rules(data_dir, cp["category_id"], "publish", {
+            _validate_category_rules(data_dir, cp["event_id"], "publish", {
                 "post_id": record_id,
                 "new_status": updates["status"],
             })
@@ -44,7 +44,7 @@ def on_delete_cascade(data_dir, record_id):
         _cascade_delete_relations,
     )
     _cascade_hard_delete_interactions(data_dir, "post", record_id)
-    _cascade_delete_relations(data_dir, "category_post", "post_id", record_id)
+    _cascade_delete_relations(data_dir, "event_post", "post_id", record_id)
     _cascade_delete_relations(data_dir, "post_post", "source_post_id", record_id)
     _cascade_delete_relations(data_dir, "post_post", "target_post_id", record_id)
     _cascade_delete_relations(data_dir, "post_resource", "post_id", record_id)

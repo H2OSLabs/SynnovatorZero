@@ -35,7 +35,7 @@ export interface UserCreate {
   bio?: string
 }
 
-export interface Category {
+export interface Event {
   id: number
   name: string
   type: 'competition' | 'event' | 'campaign' | 'program'
@@ -52,7 +52,7 @@ export interface Category {
 }
 
 export interface CategoryStage {
-  stage: Category['stage']
+  stage: Event['stage']
   label: string
   description: string
 }

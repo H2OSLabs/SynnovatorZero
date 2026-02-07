@@ -18,7 +18,7 @@ python cli.py import \
   --source ../../../.synnovator \
   --db ../../../data/synnovator.db \
   --models ../../../backend/models \
-  --types user,post,category
+  --types user,post,event
 ```
 
 ## Features

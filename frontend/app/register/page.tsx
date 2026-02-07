@@ -1,11 +1,28 @@
+'use client'
+
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
 import { Header } from "@/components/layout/Header"
-import { RegisterForm } from "@/components/auth/RegisterForm"
+import { useAuth } from "@/contexts/AuthContext"
+import { register } from "@/lib/api-client"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 export default function RegisterPage() {
+  const { user, login } = useAuth()
+  const router = useRouter()
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      router.push('/')
+    }
+  }, [user, router])
+
   return (
     <div className="min-h-screen bg-nf-dark">
-      <Header user={null} />
+      <Header />
 
       <main className="pt-[60px] flex items-center justify-center min-h-screen">
         <div className="w-full max-w-md mx-4">
@@ -20,7 +37,7 @@ export default function RegisterPage() {
             </div>
 
             {/* Register Form */}
-            <RegisterForm />
+            <RegisterFormWithAuth onSuccess={() => router.push('/')} />
 
             {/* Divider */}
             <div className="relative my-6">
@@ -32,7 +49,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Social Login */}
+            {/* Social Login - placeholder */}
             <div className="space-y-3">
               <button className="w-full flex items-center justify-center gap-3 h-11 rounded-lg border border-nf-dark bg-nf-dark hover:bg-nf-dark/80 transition-colors">
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -86,5 +103,128 @@ export default function RegisterPage() {
         </div>
       </main>
     </div>
+  )
+}
+
+function RegisterFormWithAuth({ onSuccess }: { onSuccess: () => void }) {
+  const { login } = useAuth()
+  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [role, setRole] = useState<'participant' | 'organizer'>('participant')
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setIsLoading(true)
+
+    try {
+      // Register the user
+      await register({ username, email, password, role })
+      // Then log them in
+      await login(username, password)
+      onSuccess()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '注册失败')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="p-3 rounded-md bg-nf-error/10 border border-nf-error/20 text-nf-error text-sm">
+          {error}
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <label htmlFor="username" className="text-sm font-medium text-nf-light-gray">
+          用户名
+        </label>
+        <Input
+          id="username"
+          type="text"
+          placeholder="输入用户名"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+          className="bg-nf-near-black border-nf-dark text-nf-white placeholder:text-nf-muted focus:border-nf-lime focus:ring-nf-lime/20"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label htmlFor="email" className="text-sm font-medium text-nf-light-gray">
+          邮箱
+        </label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="输入邮箱"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          className="bg-nf-near-black border-nf-dark text-nf-white placeholder:text-nf-muted focus:border-nf-lime focus:ring-nf-lime/20"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label htmlFor="password" className="text-sm font-medium text-nf-light-gray">
+          密码
+        </label>
+        <Input
+          id="password"
+          type="password"
+          placeholder="输入密码"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          className="bg-nf-near-black border-nf-dark text-nf-white placeholder:text-nf-muted focus:border-nf-lime focus:ring-nf-lime/20"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium text-nf-light-gray">
+          我是
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => setRole('participant')}
+            className={`p-3 rounded-lg border text-center transition-colors ${
+              role === 'participant'
+                ? 'border-nf-lime bg-nf-lime/10 text-nf-lime'
+                : 'border-nf-dark bg-nf-dark text-nf-muted hover:border-nf-light-gray'
+            }`}
+          >
+            <div className="font-medium">参赛者</div>
+            <div className="text-xs mt-1 opacity-70">参加活动、组队、提交作品</div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setRole('organizer')}
+            className={`p-3 rounded-lg border text-center transition-colors ${
+              role === 'organizer'
+                ? 'border-nf-lime bg-nf-lime/10 text-nf-lime'
+                : 'border-nf-dark bg-nf-dark text-nf-muted hover:border-nf-light-gray'
+            }`}
+          >
+            <div className="font-medium">组织者</div>
+            <div className="text-xs mt-1 opacity-70">创建活动、审核作品</div>
+          </button>
+        </div>
+      </div>
+
+      <Button
+        type="submit"
+        className="w-full bg-nf-lime text-nf-near-black hover:bg-nf-lime/90 font-medium"
+        disabled={isLoading || !username || !email || !password}
+      >
+        {isLoading ? '注册中...' : '注册'}
+      </Button>
+    </form>
   )
 }

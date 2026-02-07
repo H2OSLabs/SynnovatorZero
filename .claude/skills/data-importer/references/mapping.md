@@ -2,7 +2,7 @@
 
 ## Content Types
 
-### category
+### event
 | .md Field | Database Column | Type | Notes |
 |-----------|----------------|------|-------|
 | name | name | string | |
@@ -23,7 +23,7 @@
 | .md Field | Database Column | Type | Notes |
 |-----------|----------------|------|-------|
 | title | title | string | |
-| type | type | enum | profile \| team \| category \| for_category \| certificate \| general |
+| type | type | enum | profile \| team \| event \| proposal \| certificate \| general |
 | tags | tags | JSON | Array of strings |
 | status | status | enum | draft \| pending_review \| published \| rejected |
 | like_count | like_count | integer | Cache field |
@@ -105,7 +105,7 @@
 | .md Field | Database Column | Type | Notes |
 |-----------|----------------|------|-------|
 | type | type | enum | like \| comment \| rating |
-| target_type | target_type | enum | post \| category \| resource |
+| target_type | target_type | enum | post \| event \| resource |
 | target_id | target_id | string | |
 | value | value | JSON | Comment text or rating object |
 | parent_id | parent_id | string | For nested comments |
@@ -117,26 +117,26 @@
 
 ## Relation Types
 
-### category_rule
+### event_rule
 | .md Field | Database Column | Type |
 |-----------|----------------|------|
-| category_id | category_id | string |
+| event_id | event_id | string |
 | rule_id | rule_id | string |
 | priority | priority | integer |
 | created_at | created_at | datetime |
 
-### category_post
+### event_post
 | .md Field | Database Column | Type |
 |-----------|----------------|------|
-| category_id | category_id | string |
+| event_id | event_id | string |
 | post_id | post_id | string |
 | relation_type | relation_type | enum |
 | created_at | created_at | datetime |
 
-### category_group
+### event_group
 | .md Field | Database Column | Type |
 |-----------|----------------|------|
-| category_id | category_id | string |
+| event_id | event_id | string |
 | group_id | group_id | string |
 | created_at | created_at | datetime |
 

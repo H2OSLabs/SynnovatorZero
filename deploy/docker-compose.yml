@@ -8,6 +8,7 @@ services:
       # Runtime environment variable for API URL
       # Injected to client via window.__ENV__ in layout.tsx
       API_URL: /api
+      INTERNAL_API_URL: http://backend:8000/api
     networks:
       - synnovator_net
 

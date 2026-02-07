@@ -40,7 +40,12 @@ export default function PostsPage() {
         const map: Record<number, { id: number; username: string; display_name?: string; avatar_url?: string }> = {}
         for (const u of users) {
           if (!u) continue
-          map[u.id] = { id: u.id, username: u.username, display_name: u.display_name, avatar_url: u.avatar_url }
+          map[u.id] = {
+            id: u.id,
+            username: u.username,
+            display_name: u.display_name ?? undefined,
+            avatar_url: u.avatar_url ?? undefined,
+          }
         }
         setUsersById(map)
       } catch (e) {
@@ -56,14 +61,14 @@ export default function PostsPage() {
 
   const filteredPosts = posts.filter((post) => {
     if (activeTab === "all") return true
-    if (activeTab === "proposals") return post.type === "for_category"
+    if (activeTab === "proposals") return post.type === "proposal"
     if (activeTab === "teams") return post.type === "team"
     if (activeTab === "general") return post.type === "general"
     return true
   })
 
   return (
-    <PageLayout variant="compact" user={null}>
+    <PageLayout variant="compact">
       {/* Page Header */}
       <div className="flex items-center justify-between mb-8">
         <div>

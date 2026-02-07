@@ -78,7 +78,7 @@ class TestRule(TestRunner):
         pass  # Skeleton
 
     def test_tc_rule_020_delete_cascade(self):
-        """TC-RULE-020: Delete rule and cascade category_rule."""
+        """TC-RULE-020: Delete rule and cascade event_rule."""
         print("\n=== TC-RULE-020: Delete Cascade ===")
         pass  # Skeleton
 
@@ -97,7 +97,7 @@ class TestRule(TestRunner):
     def test_tc_rule_100_deadline_passed(self):
         """TC-RULE-100: Reject submission after deadline."""
         print("\n=== TC-RULE-100: Deadline Passed ===")
-        strict_cat = create_content(self.data_dir, "category", {
+        strict_cat = create_content(self.data_dir, "event", {
             "name": "Strict Contest", "description": "For rule tests",
             "type": "competition", "status": "published"
         }, current_user=self.ids["user_alice"])
@@ -107,17 +107,17 @@ class TestRule(TestRunner):
             "submission_start": "2024-01-01T00:00:00Z",
             "submission_deadline": "2024-12-31T23:59:59Z",
         }, current_user=self.ids["user_alice"])
-        create_relation(self.data_dir, "category_rule", {
-            "category_id": strict_cat["id"], "rule_id": expired_rule["id"]
+        create_relation(self.data_dir, "event_rule", {
+            "event_id": strict_cat["id"], "rule_id": expired_rule["id"]
         })
 
         post1 = create_content(self.data_dir, "post", {
-            "title": "Late Submission", "type": "for_category"
+            "title": "Late Submission", "type": "proposal"
         }, current_user=self.ids["user_bob"])
         self.assert_raises(
             "Reject submission past deadline",
-            lambda: create_relation(self.data_dir, "category_post", {
-                "category_id": strict_cat["id"], "post_id": post1["id"],
+            lambda: create_relation(self.data_dir, "event_post", {
+                "event_id": strict_cat["id"], "post_id": post1["id"],
                 "relation_type": "submission"
             }),
             "deadline passed"
@@ -126,7 +126,7 @@ class TestRule(TestRunner):
     def test_tc_rule_101_not_yet_open(self):
         """TC-RULE-101: Reject submission before start."""
         print("\n=== TC-RULE-101: Not Yet Open ===")
-        future_cat = create_content(self.data_dir, "category", {
+        future_cat = create_content(self.data_dir, "event", {
             "name": "Future Contest", "description": "Not yet open",
             "type": "competition", "status": "published"
         }, current_user=self.ids["user_alice"])
@@ -136,17 +136,17 @@ class TestRule(TestRunner):
             "submission_start": "2030-06-01T00:00:00Z",
             "submission_deadline": "2030-12-31T23:59:59Z",
         }, current_user=self.ids["user_alice"])
-        create_relation(self.data_dir, "category_rule", {
-            "category_id": future_cat["id"], "rule_id": future_rule["id"]
+        create_relation(self.data_dir, "event_rule", {
+            "event_id": future_cat["id"], "rule_id": future_rule["id"]
         })
 
         post1 = create_content(self.data_dir, "post", {
-            "title": "Early Submission", "type": "for_category"
+            "title": "Early Submission", "type": "proposal"
         }, current_user=self.ids["user_bob"])
         self.assert_raises(
             "Reject submission before start",
-            lambda: create_relation(self.data_dir, "category_post", {
-                "category_id": future_cat["id"], "post_id": post1["id"],
+            lambda: create_relation(self.data_dir, "event_post", {
+                "event_id": future_cat["id"], "post_id": post1["id"],
                 "relation_type": "submission"
             }),
             "not yet open"
@@ -155,7 +155,7 @@ class TestRule(TestRunner):
     def test_tc_rule_102_max_submissions(self):
         """TC-RULE-102: Reject exceeding max_submissions."""
         print("\n=== TC-RULE-102: Max Submissions ===")
-        limit_cat = create_content(self.data_dir, "category", {
+        limit_cat = create_content(self.data_dir, "event", {
             "name": "One-Shot Contest", "description": "Max 1 submission",
             "type": "competition", "status": "published"
         }, current_user=self.ids["user_alice"])
@@ -166,26 +166,26 @@ class TestRule(TestRunner):
             "submission_start": "2025-01-01T00:00:00Z",
             "submission_deadline": "2030-12-31T23:59:59Z",
         }, current_user=self.ids["user_alice"])
-        create_relation(self.data_dir, "category_rule", {
-            "category_id": limit_cat["id"], "rule_id": limit_rule["id"]
+        create_relation(self.data_dir, "event_rule", {
+            "event_id": limit_cat["id"], "rule_id": limit_rule["id"]
         })
 
         post2 = create_content(self.data_dir, "post", {
-            "title": "First Attempt", "type": "for_category"
+            "title": "First Attempt", "type": "proposal"
         }, current_user=self.ids["user_bob"])
-        create_relation(self.data_dir, "category_post", {
-            "category_id": limit_cat["id"], "post_id": post2["id"],
+        create_relation(self.data_dir, "event_post", {
+            "event_id": limit_cat["id"], "post_id": post2["id"],
             "relation_type": "submission"
         })
         self.assert_ok("First submission allowed", True)
 
         post3 = create_content(self.data_dir, "post", {
-            "title": "Second Attempt", "type": "for_category"
+            "title": "Second Attempt", "type": "proposal"
         }, current_user=self.ids["user_bob"])
         self.assert_raises(
             "Reject exceeding max_submissions",
-            lambda: create_relation(self.data_dir, "category_post", {
-                "category_id": limit_cat["id"], "post_id": post3["id"],
+            lambda: create_relation(self.data_dir, "event_post", {
+                "event_id": limit_cat["id"], "post_id": post3["id"],
                 "relation_type": "submission"
             }),
             "max submissions reached"
@@ -194,7 +194,7 @@ class TestRule(TestRunner):
     def test_tc_rule_103_format_validation(self):
         """TC-RULE-103: Reject disallowed submission format."""
         print("\n=== TC-RULE-103: Format Validation ===")
-        format_cat = create_content(self.data_dir, "category", {
+        format_cat = create_content(self.data_dir, "event", {
             "name": "PDF Only Contest", "description": "Only PDF",
             "type": "competition", "status": "published"
         }, current_user=self.ids["user_alice"])
@@ -205,12 +205,12 @@ class TestRule(TestRunner):
             "submission_start": "2025-01-01T00:00:00Z",
             "submission_deadline": "2030-12-31T23:59:59Z",
         }, current_user=self.ids["user_alice"])
-        create_relation(self.data_dir, "category_rule", {
-            "category_id": format_cat["id"], "rule_id": format_rule["id"]
+        create_relation(self.data_dir, "event_rule", {
+            "event_id": format_cat["id"], "rule_id": format_rule["id"]
         })
 
         post4 = create_content(self.data_dir, "post", {
-            "title": "Wrong Format", "type": "for_category"
+            "title": "Wrong Format", "type": "proposal"
         }, current_user=self.ids["user_bob"])
         bad_res = create_content(self.data_dir, "resource", {
             "filename": "slides.pptx"
@@ -222,8 +222,8 @@ class TestRule(TestRunner):
 
         self.assert_raises(
             "Reject disallowed format",
-            lambda: create_relation(self.data_dir, "category_post", {
-                "category_id": format_cat["id"], "post_id": post4["id"],
+            lambda: create_relation(self.data_dir, "event_post", {
+                "event_id": format_cat["id"], "post_id": post4["id"],
                 "relation_type": "submission"
             }),
             "not allowed"
@@ -232,7 +232,7 @@ class TestRule(TestRunner):
     def test_tc_rule_104_min_team_size(self):
         """TC-RULE-104: Reject submission with too few team members."""
         print("\n=== TC-RULE-104: Min Team Size ===")
-        team_cat = create_content(self.data_dir, "category", {
+        team_cat = create_content(self.data_dir, "event", {
             "name": "Team Contest", "description": "Need 3+ members",
             "type": "competition", "status": "published"
         }, current_user=self.ids["user_alice"])
@@ -243,8 +243,8 @@ class TestRule(TestRunner):
             "submission_start": "2025-01-01T00:00:00Z",
             "submission_deadline": "2030-12-31T23:59:59Z",
         }, current_user=self.ids["user_alice"])
-        create_relation(self.data_dir, "category_rule", {
-            "category_id": team_cat["id"], "rule_id": team_rule["id"]
+        create_relation(self.data_dir, "event_rule", {
+            "event_id": team_cat["id"], "rule_id": team_rule["id"]
         })
 
         small_grp = create_content(self.data_dir, "group", {
@@ -253,18 +253,18 @@ class TestRule(TestRunner):
         create_relation(self.data_dir, "group_user", {
             "group_id": small_grp["id"], "user_id": self.ids["user_alice"], "role": "owner"
         })
-        create_relation(self.data_dir, "category_group", {
-            "category_id": team_cat["id"], "group_id": small_grp["id"]
+        create_relation(self.data_dir, "event_group", {
+            "event_id": team_cat["id"], "group_id": small_grp["id"]
         })
 
         post5 = create_content(self.data_dir, "post", {
-            "title": "Small Team Submission", "type": "for_category"
+            "title": "Small Team Submission", "type": "proposal"
         }, current_user=self.ids["user_alice"])
 
         self.assert_raises(
             "Reject submission with too few members",
-            lambda: create_relation(self.data_dir, "category_post", {
-                "category_id": team_cat["id"], "post_id": post5["id"],
+            lambda: create_relation(self.data_dir, "event_post", {
+                "event_id": team_cat["id"], "post_id": post5["id"],
                 "relation_type": "submission"
             }),
             "team too small"
@@ -273,7 +273,7 @@ class TestRule(TestRunner):
     def test_tc_rule_105_max_team_size(self):
         """TC-RULE-105: Reject joining full team."""
         print("\n=== TC-RULE-105: Max Team Size ===")
-        tiny_cat = create_content(self.data_dir, "category", {
+        tiny_cat = create_content(self.data_dir, "event", {
             "name": "Solo Contest", "description": "Max 1 member",
             "type": "competition", "status": "published"
         }, current_user=self.ids["user_alice"])
@@ -282,8 +282,8 @@ class TestRule(TestRunner):
             "name": "Solo Rule", "description": "Max 1",
             "max_team_size": 1,
         }, current_user=self.ids["user_alice"])
-        create_relation(self.data_dir, "category_rule", {
-            "category_id": tiny_cat["id"], "rule_id": tiny_rule["id"]
+        create_relation(self.data_dir, "event_rule", {
+            "event_id": tiny_cat["id"], "rule_id": tiny_rule["id"]
         })
 
         solo_grp = create_content(self.data_dir, "group", {
@@ -292,8 +292,8 @@ class TestRule(TestRunner):
         create_relation(self.data_dir, "group_user", {
             "group_id": solo_grp["id"], "user_id": self.ids["user_alice"], "role": "owner"
         })
-        create_relation(self.data_dir, "category_group", {
-            "category_id": tiny_cat["id"], "group_id": solo_grp["id"]
+        create_relation(self.data_dir, "event_group", {
+            "event_id": tiny_cat["id"], "group_id": solo_grp["id"]
         })
 
         self.assert_raises(
@@ -308,7 +308,7 @@ class TestRule(TestRunner):
     def test_tc_rule_106_no_direct_publish(self):
         """TC-RULE-106: allow_public=false blocks direct publish."""
         print("\n=== TC-RULE-106: No Direct Publish ===")
-        strict_pub_cat = create_content(self.data_dir, "category", {
+        strict_pub_cat = create_content(self.data_dir, "event", {
             "name": "Review Required Contest", "description": "No direct publish",
             "type": "competition", "status": "published"
         }, current_user=self.ids["user_alice"])
@@ -319,15 +319,15 @@ class TestRule(TestRunner):
             "submission_start": "2025-01-01T00:00:00Z",
             "submission_deadline": "2030-12-31T23:59:59Z",
         }, current_user=self.ids["user_alice"])
-        create_relation(self.data_dir, "category_rule", {
-            "category_id": strict_pub_cat["id"], "rule_id": strict_pub_rule["id"]
+        create_relation(self.data_dir, "event_rule", {
+            "event_id": strict_pub_cat["id"], "rule_id": strict_pub_rule["id"]
         })
 
         post6 = create_content(self.data_dir, "post", {
-            "title": "Needs Review", "type": "for_category"
+            "title": "Needs Review", "type": "proposal"
         }, current_user=self.ids["user_bob"])
-        create_relation(self.data_dir, "category_post", {
-            "category_id": strict_pub_cat["id"], "post_id": post6["id"],
+        create_relation(self.data_dir, "event_post", {
+            "event_id": strict_pub_cat["id"], "post_id": post6["id"],
             "relation_type": "submission"
         })
 
@@ -340,7 +340,7 @@ class TestRule(TestRunner):
     def test_tc_rule_107_pending_review_allowed(self):
         """TC-RULE-107: allow_public=false allows pending_review."""
         print("\n=== TC-RULE-107: Pending Review Allowed ===")
-        strict_cat = create_content(self.data_dir, "category", {
+        strict_cat = create_content(self.data_dir, "event", {
             "name": "Review Only", "description": "No direct publish",
             "type": "competition", "status": "published"
         }, current_user=self.ids["user_alice"])
@@ -351,15 +351,15 @@ class TestRule(TestRunner):
             "submission_start": "2025-01-01T00:00:00Z",
             "submission_deadline": "2030-12-31T23:59:59Z",
         }, current_user=self.ids["user_alice"])
-        create_relation(self.data_dir, "category_rule", {
-            "category_id": strict_cat["id"], "rule_id": strict_rule["id"]
+        create_relation(self.data_dir, "event_rule", {
+            "event_id": strict_cat["id"], "rule_id": strict_rule["id"]
         })
 
         post = create_content(self.data_dir, "post", {
-            "title": "For Review", "type": "for_category"
+            "title": "For Review", "type": "proposal"
         }, current_user=self.ids["user_bob"])
-        create_relation(self.data_dir, "category_post", {
-            "category_id": strict_cat["id"], "post_id": post["id"],
+        create_relation(self.data_dir, "event_post", {
+            "event_id": strict_cat["id"], "post_id": post["id"],
             "relation_type": "submission"
         })
 
@@ -368,7 +368,7 @@ class TestRule(TestRunner):
         self.assert_ok("Pending review allowed", p["status"] == "pending_review")
 
     def test_tc_rule_108_no_rule_allows_freely(self):
-        """TC-RULE-108: No rule linked means category_post creates freely."""
+        """TC-RULE-108: No rule linked means event_post creates freely."""
         print("\n=== TC-RULE-108: No Rule ===")
         pass  # Skeleton
 

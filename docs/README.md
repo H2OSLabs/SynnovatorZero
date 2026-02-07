@@ -6,8 +6,8 @@
 
 ### 数据模型
 
-- [data-types.md](./data-types.md) — 内容类型 Schema（category, post, resource, rule, user, group, interaction）、枚举值汇总、角色定义
-- [relationships.md](./relationships.md) — 关系 Schema（category:rule, category:post, category:group, category:category, post:post, post:resource, group:user, user:user, target:interaction）
+- [data-types.md](./data-types.md) — 内容类型 Schema（event, post, resource, rule, user, group, interaction）、枚举值汇总、角色定义
+- [relationships.md](./relationships.md) — 关系 Schema（event:rule, event:post, event:group, event:event, post:post, post:resource, group:user, user:user, target:interaction）
 
 ### 操作规范
 
@@ -17,6 +17,10 @@
 
 - [user-journeys.md](./user-journeys.md) — 13 个核心用户流程（浏览、注册、登录、组队、创建活动、报名、发帖、编辑、删除、社区互动等）
 
-### 示例
+### 规则引擎
 
-- [examples.md](./examples.md) — 内容创建示例、关系操作示例、完整场景串联演示
+- [rule-engine.md](./rule-engine.md) — 声明式规则引擎规范（条件类型、触发点、执行阶段）
+
+### 开发流程
+
+- [development-workflow.md](./development-workflow.md) — 完整开发流程（12 个阶段）

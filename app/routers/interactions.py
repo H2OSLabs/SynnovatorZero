@@ -16,8 +16,8 @@ def _get_target(db: Session, target_type: str, target_id: int):
     """Validate target exists and is not deleted."""
     if target_type == "post":
         return crud.posts.get(db, id=target_id)
-    elif target_type == "category":
-        return crud.categories.get(db, id=target_id)
+    elif target_type == "event":
+        return crud.events.get(db, id=target_id)
     elif target_type == "resource":
         return crud.resources.get(db, id=target_id)
     return None

@@ -10,7 +10,7 @@
 
 ### 当前架构
 
-Rule 通过 `category_rule` 关联到活动后，引擎在固定操作点执行 pre-operation 校验。所有关联 rule 必须全部满足（AND 逻辑），任一违规即拒绝操作。
+Rule 通过 `event_rule` 关联到活动后，引擎在固定操作点执行 pre-operation 校验。所有关联 rule 必须全部满足（AND 逻辑），任一违规即拒绝操作。
 
 ### 扩展架构
 
@@ -38,16 +38,16 @@ Rule
 
 | 操作点 | Phase | 现有/新增 | 说明 |
 |--------|-------|----------|------|
-| `create_relation(category_post)` | pre | 现有 | 帖子提交到活动前校验 |
-| `create_relation(category_post)` | post | **新增** | 帖子提交成功后触发动作 |
+| `create_relation(event_post)` | pre | 现有 | 帖子提交到活动前校验 |
+| `create_relation(event_post)` | post | **新增** | 帖子提交成功后触发动作 |
 | `create_relation(group_user)` | pre | 现有 | 成员加入团队前校验 |
 | `create_relation(group_user)` | post | **新增** | 成员加入团队后触发动作 |
-| `create_relation(category_group)` | pre | 现有 | 团队报名活动前校验（含 prerequisite） |
-| `create_relation(category_group)` | post | **新增** | 团队报名成功后触发动作 |
+| `create_relation(event_group)` | pre | 现有 | 团队报名活动前校验（含 prerequisite） |
+| `create_relation(event_group)` | post | **新增** | 团队报名成功后触发动作 |
 | `update_content(post.status)` | pre | 现有 | 帖子状态变更前校验 |
 | `update_content(post.status)` | post | **新增** | 帖子状态变更后触发动作 |
-| `update_content(category.status)` | pre | **新增** | 活动状态变更前校验 |
-| `update_content(category.status)` | post | **新增** | 活动状态变更后触发动作（活动关闭时的终审/颁奖） |
+| `update_content(event.status)` | pre | **新增** | 活动状态变更前校验 |
+| `update_content(event.status)` | post | **新增** | 活动状态变更后触发动作（活动关闭时的终审/颁奖） |
 
 ### Phase 定义
 
@@ -57,21 +57,21 @@ Rule
 ### 校验链（Validation Chain）
 
 ```
-create category_post:
-  category → category_rule → rule.checks[trigger=create_relation(category_post), phase=pre]
+create event_post:
+  event → event_rule → rule.checks[trigger=create_relation(event_post), phase=pre]
 
 create group_user:
-  group → category_group → category → category_rule → rule.checks[trigger=create_relation(group_user), phase=pre]
+  group → event_group → event → event_rule → rule.checks[trigger=create_relation(group_user), phase=pre]
 
-create category_group:
-  category → category_category(prerequisite) → prerequisite.status == closed?
-  category → category_rule → rule.checks[trigger=create_relation(category_group), phase=pre]
+create event_group:
+  event → event_event(prerequisite) → prerequisite.status == closed?
+  event → event_rule → rule.checks[trigger=create_relation(event_group), phase=pre]
 
 update post.status:
-  post → category_post → category → category_rule → rule.checks[trigger=update_content(post.status), phase=pre]
+  post → event_post → event → event_rule → rule.checks[trigger=update_content(post.status), phase=pre]
 
-update category.status:
-  category → category_rule → rule.checks[trigger=update_content(category.status), phase=pre|post]
+update event.status:
+  event → event_rule → rule.checks[trigger=update_content(event.status), phase=pre|post]
 ```
 
 ---
@@ -131,14 +131,14 @@ condition:
 condition:
   type: count
   params:
-    entity: string            # 关系类型或内容类型（如 category_post, group_user）
-    scope: string             # 计数范围: user | team | group | category
+    entity: string            # 关系类型或内容类型（如 event_post, group_user）
+    scope: string             # 计数范围: user | team | group | event
     filter: object            # 过滤条件（如 { status: accepted, relation_type: submission }）
     op: string                # 比较运算符: < | <= | == | >= | >
     value: integer | "$rule.<field>"  # 目标值，支持引用 rule 自身字段
 ```
 
-**等价固定字段：** `max_submissions`（count + category_post + user + <= + N）、`min_team_size` / `max_team_size`（count + group_user + group + >=/<= + N）
+**等价固定字段：** `max_submissions`（count + event_post + user + <= + N）、`min_team_size` / `max_team_size`（count + group_user + group + >=/<= + N）
 
 **示例：**
 
@@ -147,7 +147,7 @@ condition:
 condition:
   type: count
   params:
-    entity: category_post
+    entity: event_post
     scope: user
     filter: { relation_type: submission }
     op: "<"
@@ -175,9 +175,9 @@ condition:
 condition:
   type: exists
   params:
-    entity: category_group
+    entity: event_group
     scope: user_group         # 当前用户所在团队
-    filter: { category_id: $target_category }
+    filter: { event_id: $target_category }
     require: true
 
 # 帖子必须至少关联一个 resource
@@ -197,7 +197,7 @@ condition:
 condition:
   type: field_match
   params:
-    entity: string            # 内容类型（如 category, post, group）
+    entity: string            # 内容类型（如 event, post, group）
     target: string            # 目标实体选择: $source | $target | $current
     field: string             # 字段名
     op: string                # 比较运算符: == | != | in | not_in | < | > | <= | >=
@@ -211,7 +211,7 @@ condition:
 condition:
   type: field_match
   params:
-    entity: category
+    entity: event
     target: $target
     field: status
     op: "=="
@@ -268,7 +268,7 @@ condition:
     key: string               # 唯一性键: user_id | group_id
 ```
 
-**等价已有约束：** CG-901（同一 category 内一个 user 只能属于一个 group）
+**等价已有约束：** CG-901（同一 event 内一个 user 只能属于一个 group）
 
 ### aggregate — 聚合检查
 
@@ -279,7 +279,7 @@ condition:
   type: aggregate
   params:
     entity: string            # 关系类型或内容类型
-    scope: string             # 聚合范围: category | group
+    scope: string             # 聚合范围: event | group
     filter: object            # 过滤条件
     field: string             # 聚合字段
     agg_func: string          # 聚合函数: count | sum | avg | min | max
@@ -330,7 +330,7 @@ action: compute_ranking
 action_params:
   source_field: string        # 排名依据字段（默认: average_rating）
   order: string               # 排序方向: desc | asc（默认: desc）
-  scope: string               # 排名范围: category（默认）
+  scope: string               # 排名范围: event（默认）
   output_tag_prefix: string   # 排名结果写入 tag 的前缀（如 "rank_"，则第一名 tag 为 "rank_1"）
 ```
 
@@ -366,7 +366,7 @@ action_params:
 ```yaml
 action: notify
 action_params:
-  target: string              # user | group | category
+  target: string              # user | group | event
   template: string            # 通知模板
 ```
 
@@ -378,10 +378,10 @@ action_params:
 
 | 固定字段 | 展开为 |
 |---------|--------|
-| `submission_start` + `submission_deadline` | `{ trigger: create_relation(category_post), phase: pre, condition: { type: time_window, params: { start: $submission_start, end: $submission_deadline } }, on_fail: deny }` |
-| `max_submissions` | `{ trigger: create_relation(category_post), phase: pre, condition: { type: count, params: { entity: category_post, scope: user, filter: { relation_type: submission }, op: "<", value: $max_submissions } }, on_fail: deny }` |
-| `submission_format` | `{ trigger: create_relation(category_post), phase: pre, condition: { type: resource_format, params: { formats: $submission_format } }, on_fail: deny }` |
-| `min_team_size` | `{ trigger: create_relation(category_post), phase: pre, condition: { type: count, params: { entity: group_user, scope: group, filter: { status: accepted }, op: ">=", value: $min_team_size } }, on_fail: deny }` |
+| `submission_start` + `submission_deadline` | `{ trigger: create_relation(event_post), phase: pre, condition: { type: time_window, params: { start: $submission_start, end: $submission_deadline } }, on_fail: deny }` |
+| `max_submissions` | `{ trigger: create_relation(event_post), phase: pre, condition: { type: count, params: { entity: event_post, scope: user, filter: { relation_type: submission }, op: "<", value: $max_submissions } }, on_fail: deny }` |
+| `submission_format` | `{ trigger: create_relation(event_post), phase: pre, condition: { type: resource_format, params: { formats: $submission_format } }, on_fail: deny }` |
+| `min_team_size` | `{ trigger: create_relation(event_post), phase: pre, condition: { type: count, params: { entity: group_user, scope: group, filter: { status: accepted }, op: ">=", value: $min_team_size } }, on_fail: deny }` |
 | `max_team_size` | `{ trigger: create_relation(group_user), phase: pre, condition: { type: count, params: { entity: group_user, scope: group, filter: { status: accepted }, op: "<", value: $max_team_size } }, on_fail: deny }` |
 | `allow_public` + `require_review` | `{ trigger: update_content(post.status), phase: pre, condition: { type: field_match, ... }, on_fail: deny }` |
 
@@ -419,7 +419,7 @@ scoring_criteria:
 
 checks:
   # 提交时要求帖子至少关联一个 resource
-  - trigger: create_relation(category_post)
+  - trigger: create_relation(event_post)
     phase: pre
     condition:
       type: resource_required
@@ -429,7 +429,7 @@ checks:
     message: "提案必须包含至少一个附件"
 
   # 报名时要求用户已加入团队
-  - trigger: create_relation(category_group)
+  - trigger: create_relation(event_group)
     phase: pre
     condition:
       type: exists
@@ -442,12 +442,12 @@ checks:
     message: "报名前必须先加入一个团队"
 
   # 活动关闭时校验团队人数
-  - trigger: update_content(category.status)
+  - trigger: update_content(event.status)
     phase: post
     condition:
       type: field_match
       params:
-        entity: category
+        entity: event
         target: $current
         field: status
         op: "=="
@@ -459,12 +459,12 @@ checks:
     message: "团队人数不足，标记为不合格"
 
   # 活动关闭时计算排名
-  - trigger: update_content(category.status)
+  - trigger: update_content(event.status)
     phase: post
     condition:
       type: field_match
       params:
-        entity: category
+        entity: event
         target: $current
         field: status
         op: "=="
@@ -477,12 +477,12 @@ checks:
     message: "计算最终排名"
 
   # 活动关闭时颁发证书
-  - trigger: update_content(category.status)
+  - trigger: update_content(event.status)
     phase: post
     condition:
       type: field_match
       params:
-        entity: category
+        entity: event
         target: $current
         field: status
         op: "=="
@@ -516,7 +516,7 @@ description: 完成指定任务即可获得奖励
 
 checks:
   # 参与时必须有已发布的个人资料帖
-  - trigger: create_relation(category_group)
+  - trigger: create_relation(event_group)
     phase: pre
     condition:
       type: exists
@@ -529,7 +529,7 @@ checks:
     message: "参与前请先完善个人资料（发布 profile 类型帖子）"
 
   # 提交时帖子必须包含附件
-  - trigger: create_relation(category_post)
+  - trigger: create_relation(event_post)
     phase: pre
     condition:
       type: resource_required

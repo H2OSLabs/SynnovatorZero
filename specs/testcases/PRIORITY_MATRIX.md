@@ -15,11 +15,13 @@
 
 | 优先级 | 用例数 | 占比 | 建议时间点 |
 |--------|--------|------|------------|
-| P0 关键路径 | 89 | 16% | Sprint 1-2 |
-| P1 核心体验 | 135 | 24% | Sprint 2-3 |
-| P2 完整功能 | 145 | 26% | Sprint 3-4 |
-| P3 高级场景 | 69 | 13% | Sprint 4+ |
-| P4 负向测试 | 114 | 21% | 随对应正向用例 |
+| P0 关键路径 | 97 | 16% | Sprint 1-2 |
+| P1 核心体验 | 143 | 24% | Sprint 2-3 |
+| P2 完整功能 | 149 | 25% | Sprint 3-4 |
+| P3 高级场景 | 69 | 12% | Sprint 4+ |
+| P4 负向测试 | 117 | 20% | 随对应正向用例 |
+
+> 注：含 33-frontend-integration.md 新增 22 条前端集成测试用例
 
 ---
 
@@ -48,21 +50,21 @@
 
 | TC ID | 描述 | 来源文件 |
 |-------|------|----------|
-| TC-CAT-001 | 创建 competition 类型活动 | 02-category.md |
-| TC-CAT-002 | 创建 operation 类型活动 | 02-category.md |
-| TC-CAT-003 | 读取已创建的活动 | 02-category.md |
-| TC-CAT-010 | 活动状态流转 draft → published → closed | 02-category.md |
-| TC-CATMGMT-001 | 发起常规赛道活动（X 类型） | 21-category-management.md |
-| TC-CATMGMT-002 | 发起企业命题活动（Y 类型） | 21-category-management.md |
-| TC-CATMGMT-003 | 发起悬赏组队活动（Y 类型） | 21-category-management.md |
-| TC-CATMGMT-004 | 创建运营活动 | 21-category-management.md |
-| TC-CATMGMT-010 | 编写活动说明 | 21-category-management.md |
-| TC-CATMGMT-011 | 设定活动规则 — 时间限制 | 21-category-management.md |
-| TC-CATMGMT-012 | 设定活动规则 — 团队要求 | 21-category-management.md |
-| TC-CATMGMT-013 | 设定活动规则 — 提交要求 | 21-category-management.md |
-| TC-CATMGMT-015 | 设定评分标准 | 21-category-management.md |
-| TC-CATMGMT-020 | 发布活动 — draft 到 published | 21-category-management.md |
-| TC-CATMGMT-021 | 关闭活动 — published 到 closed | 21-category-management.md |
+| TC-CAT-001 | 创建 competition 类型活动 | 02-event.md |
+| TC-CAT-002 | 创建 operation 类型活动 | 02-event.md |
+| TC-CAT-003 | 读取已创建的活动 | 02-event.md |
+| TC-CAT-010 | 活动状态流转 draft → published → closed | 02-event.md |
+| TC-CATMGMT-001 | 发起常规赛道活动（X 类型） | 21-event-management.md |
+| TC-CATMGMT-002 | 发起企业命题活动（Y 类型） | 21-event-management.md |
+| TC-CATMGMT-003 | 发起悬赏组队活动（Y 类型） | 21-event-management.md |
+| TC-CATMGMT-004 | 创建运营活动 | 21-event-management.md |
+| TC-CATMGMT-010 | 编写活动说明 | 21-event-management.md |
+| TC-CATMGMT-011 | 设定活动规则 — 时间限制 | 21-event-management.md |
+| TC-CATMGMT-012 | 设定活动规则 — 团队要求 | 21-event-management.md |
+| TC-CATMGMT-013 | 设定活动规则 — 提交要求 | 21-event-management.md |
+| TC-CATMGMT-015 | 设定评分标准 | 21-event-management.md |
+| TC-CATMGMT-020 | 发布活动 — draft 到 published | 21-event-management.md |
+| TC-CATMGMT-021 | 关闭活动 — published 到 closed | 21-event-management.md |
 
 ### 规则引擎（10 条）
 
@@ -71,12 +73,12 @@
 | TC-RULE-001 | 创建含完整 scoring_criteria 的规则 | 03-rule.md |
 | TC-RULE-002 | 创建 select-only 规则 | 03-rule.md |
 | TC-RULE-003 | 读取已创建的规则 | 03-rule.md |
-| TC-RULE-100 | 提交截止后创建 category_post 被拒绝 | 03-rule.md |
-| TC-RULE-101 | 提交未开始时创建 category_post 被拒绝 | 03-rule.md |
-| TC-RULE-102 | 超出 max_submissions 后创建 category_post 被拒绝 | 03-rule.md |
-| TC-RULE-103 | 提交格式不符时创建 category_post 被拒绝 | 03-rule.md |
-| TC-RULE-104 | 团队人数不足时创建 category_post 被拒绝 | 03-rule.md |
-| TC-RULE-108 | 无 rule 关联时 category_post 正常创建 | 03-rule.md |
+| TC-RULE-100 | 提交截止后创建 event_post 被拒绝 | 03-rule.md |
+| TC-RULE-101 | 提交未开始时创建 event_post 被拒绝 | 03-rule.md |
+| TC-RULE-102 | 超出 max_submissions 后创建 event_post 被拒绝 | 03-rule.md |
+| TC-RULE-103 | 提交格式不符时创建 event_post 被拒绝 | 03-rule.md |
+| TC-RULE-104 | 团队人数不足时创建 event_post 被拒绝 | 03-rule.md |
+| TC-RULE-108 | 无 rule 关联时 event_post 正常创建 | 03-rule.md |
 | TC-REL-CR-001 | 将规则关联到活动 | 08-relations.md |
 
 ### 团队基础（10 条）
@@ -102,7 +104,7 @@
 | TC-POST-002 | 显式发布帖子 | 05-post.md |
 | TC-POST-010 | 创建 team 类型帖子 | 05-post.md |
 | TC-POST-011 | 创建 profile 类型帖子 | 05-post.md |
-| TC-POST-012 | 创建 for_category 类型帖子 | 05-post.md |
+| TC-POST-012 | 创建 proposal 类型帖子 | 05-post.md |
 | TC-POST-033 | 草稿发布（draft → published） | 05-post.md |
 | TC-RES-001 | 最小字段创建资源 | 06-resource.md |
 | TC-REL-CP-001 | 将帖子关联为活动的 submission | 08-relations.md |
@@ -116,6 +118,19 @@
 | TC-CREATE-022 | 提案关联活动 | 24-content-creation.md |
 | TC-PART-010 | 新建参赛作品帖 | 23-activity-participation.md |
 | TC-PART-011 | 选择已有作品关联活动 | 23-activity-participation.md |
+
+### 前端集成 P0（8 条）⭐ 新增
+
+| TC ID | 描述 | 来源文件 |
+|-------|------|----------|
+| TC-FEINT-001 | 前端创建日常帖子调用后端 API | 33-frontend-integration.md |
+| TC-FEINT-002 | 前端保存帖子草稿调用后端 API | 33-frontend-integration.md |
+| TC-FEINT-010 | 前端创建团队调用后端 API | 33-frontend-integration.md |
+| TC-FEINT-030 | 前端登录调用后端 API | 33-frontend-integration.md |
+| TC-FEINT-031 | 前端注册调用后端 API | 33-frontend-integration.md |
+| TC-FEINT-040 | 前端编辑帖子调用后端 API | 33-frontend-integration.md |
+| TC-FEINT-090 | api-client.ts 包含所有 CRUD 方法 | 33-frontend-integration.md |
+| TC-FEINT-091 | 前端创建页面无 TODO 遗留 | 33-frontend-integration.md |
 
 ### 报名与提交（12 条）
 
@@ -177,12 +192,12 @@
 
 | TC ID | 描述 | 来源文件 |
 |-------|------|----------|
-| TC-CAT-011 | 修改活动名称和描述 | 02-category.md |
-| TC-CATMGMT-014 | 设定活动规则 — 内容审核 | 21-category-management.md |
-| TC-CATMGMT-022 | 修改已发布活动需创建新版本 | 21-category-management.md |
-| TC-CATMGMT-030 | 设置活动审核人员 | 21-category-management.md |
-| TC-CATMGMT-031 | 审核人员审核提交内容 | 21-category-management.md |
-| TC-CATMGMT-032 | 评委对参赛内容打分 | 21-category-management.md |
+| TC-CAT-011 | 修改活动名称和描述 | 02-event.md |
+| TC-CATMGMT-014 | 设定活动规则 — 内容审核 | 21-event-management.md |
+| TC-CATMGMT-022 | 修改已发布活动需创建新版本 | 21-event-management.md |
+| TC-CATMGMT-030 | 设置活动审核人员 | 21-event-management.md |
+| TC-CATMGMT-031 | 审核人员审核提交内容 | 21-event-management.md |
+| TC-CATMGMT-032 | 评委对参赛内容打分 | 21-event-management.md |
 | TC-RULE-010 | 修改规则配置字段 | 03-rule.md |
 | TC-RULE-011 | 修改 scoring_criteria 权重 | 03-rule.md |
 
@@ -279,8 +294,8 @@
 | TC-IACT-012 | 创建二级回复（回复的回复） | 07-interaction.md |
 | TC-IACT-014 | 删除父评论级联删除子回复 | 07-interaction.md |
 | TC-IACT-050 | 修改评论文本 | 07-interaction.md |
-| TC-IACT-060 | 对 category（活动）点赞 | 07-interaction.md |
-| TC-IACT-061 | 对 category 发表评论 | 07-interaction.md |
+| TC-IACT-060 | 对 event（活动）点赞 | 07-interaction.md |
+| TC-IACT-061 | 对 event 发表评论 | 07-interaction.md |
 | TC-FRIEND-001 | 用户 A 关注用户 B | 13-user-follow.md |
 | TC-FRIEND-002 | 用户 B 回关用户 A，双方成为好友 | 13-user-follow.md |
 | TC-FRIEND-004 | 取消关注 | 13-user-follow.md |
@@ -307,10 +322,10 @@
 
 | TC ID | 描述 | 来源文件 |
 |-------|------|----------|
-| TC-DEL-001 | 删除 category | 09-cascade-delete.md |
+| TC-DEL-001 | 删除 event | 09-cascade-delete.md |
 | TC-DEL-003 | 删除 user | 09-cascade-delete.md |
 | TC-DEL-004 | 删除 group | 09-cascade-delete.md |
-| TC-DEL-010 | 删除 category → 关联 interaction 级联硬删除 | 09-cascade-delete.md |
+| TC-DEL-010 | 删除 event → 关联 interaction 级联硬删除 | 09-cascade-delete.md |
 | TC-DEL-012 | 删除 post → 完整级联链 | 09-cascade-delete.md |
 | TC-DEL-015 | 删除父评论 → 级联删除所有子评论 | 09-cascade-delete.md |
 | TC-DEL-020 | 读取已删除记录返回 not found | 09-cascade-delete.md |
@@ -362,9 +377,22 @@
 | TC-ASSETCOPY-005 | 资产作者拒绝复制申请 | 32-asset-copy-request.md |
 | TC-ASSETCOPY-006 | 申请人获得资产副本 | 32-asset-copy-request.md |
 
+### 前端集成 P1（8 条）⭐ 新增
+
+| TC ID | 描述 | 来源文件 |
+|-------|------|----------|
+| TC-FEINT-003 | 前端创建提案调用后端 API | 33-frontend-integration.md |
+| TC-FEINT-004 | 前端创建帖子失败显示错误 | 33-frontend-integration.md |
+| TC-FEINT-005 | 前端创建帖子时 API 返回错误 | 33-frontend-integration.md |
+| TC-FEINT-011 | 前端创建团队失败显示错误 | 33-frontend-integration.md |
+| TC-FEINT-012 | 前端创建私有团队调用后端 API | 33-frontend-integration.md |
+| TC-FEINT-032 | 前端登录失败显示错误 | 33-frontend-integration.md |
+| TC-FEINT-041 | 前端编辑团队信息调用后端 API | 33-frontend-integration.md |
+| TC-FEINT-050 | 前端删除帖子调用后端 API | 33-frontend-integration.md |
+
 ---
 
-## P2 完整功能（145 条）
+## P2 完整功能（149 条）
 
 > 提升用户体验，但不阻塞核心流程
 
@@ -389,11 +417,11 @@
 
 | TC ID | 描述 | 来源文件 |
 |-------|------|----------|
-| TC-CATMGMT-050 | 组织者配置报名表单字段 | 21-category-management.md |
-| TC-CATMGMT-051 | 配置必填与选填字段 | 21-category-management.md |
-| TC-CATMGMT-052 | 配置字段类型 | 21-category-management.md |
-| TC-CATMGMT-053 | 报名时用户填写自定义字段 | 21-category-management.md |
-| TC-CATMGMT-054 | 预览报名表单 | 21-category-management.md |
+| TC-CATMGMT-050 | 组织者配置报名表单字段 | 21-event-management.md |
+| TC-CATMGMT-051 | 配置必填与选填字段 | 21-event-management.md |
+| TC-CATMGMT-052 | 配置字段类型 | 21-event-management.md |
+| TC-CATMGMT-053 | 报名时用户填写自定义字段 | 21-event-management.md |
+| TC-CATMGMT-054 | 预览报名表单 | 21-event-management.md |
 | TC-PART-023 | 资源关联指定显示方式 | 23-activity-participation.md |
 
 ### 个性化设置（14 条）
@@ -481,10 +509,10 @@
 
 | TC ID | 描述 | 来源文件 |
 |-------|------|----------|
-| TC-REL-CR-002 | 更新 category:rule priority | 08-relations.md |
-| TC-REL-CR-003 | 删除 category:rule 关系 | 08-relations.md |
+| TC-REL-CR-002 | 更新 event:rule priority | 08-relations.md |
+| TC-REL-CR-003 | 删除 event:rule 关系 | 08-relations.md |
 | TC-REL-CP-002 | 将帖子关联为活动的 reference | 08-relations.md |
-| TC-REL-CP-004 | 不带筛选读取所有 category:post | 08-relations.md |
+| TC-REL-CP-004 | 不带筛选读取所有 event:post | 08-relations.md |
 | TC-REL-CG-002 | 读取活动已报名团队列表 | 08-relations.md |
 | TC-REL-CG-003 | 团队取消报名 | 08-relations.md |
 | TC-REL-PP-001 | 创建 embed 关系（嵌入团队卡片） | 08-relations.md |
@@ -583,8 +611,16 @@
 
 | TC ID | 描述 | 来源文件 |
 |-------|------|----------|
-| TC-CATTRACK-010 | 常规赛道（X类型）标识展示 | 14-category-association.md |
-| TC-CATTRACK-011 | 命题赛道（Y类型）标识展示 | 14-category-association.md |
+| TC-CATTRACK-010 | 常规赛道（X类型）标识展示 | 14-event-association.md |
+| TC-CATTRACK-011 | 命题赛道（Y类型）标识展示 | 14-event-association.md |
+
+### 前端集成 P2（3 条）⭐ 新增
+
+| TC ID | 描述 | 来源文件 |
+|-------|------|----------|
+| TC-FEINT-020 | 前端创建活动调用后端 API | 33-frontend-integration.md |
+| TC-FEINT-021 | 非组织者无法访问活动创建页 | 33-frontend-integration.md |
+| TC-FEINT-051 | 前端删除团队调用后端 API | 33-frontend-integration.md |
 
 ### 提案可见性扩展（2 条）
 
@@ -625,7 +661,7 @@
 | TC-VISIBLE-002 | 企业出题活动中参赛者提案对其他参赛者不可见 | 27-bounty-enterprise.md |
 | TC-VISIBLE-003 | 悬赏方可查看所有提案 | 27-bounty-enterprise.md |
 | TC-VISIBLE-004 | 企业方可查看所有提案 | 27-bounty-enterprise.md |
-| TC-CATMGMT-042 | 一个提案参加多个关联活动 | 21-category-management.md |
+| TC-CATMGMT-042 | 一个提案参加多个关联活动 | 21-event-management.md |
 | TC-PLANET-004 | 按关联活动筛选 | 29-planet-camp.md |
 | TC-CAMP-021 | 筛选团队提案 | 29-planet-camp.md |
 
@@ -633,22 +669,22 @@
 
 | TC ID | 描述 | 来源文件 |
 |-------|------|----------|
-| TC-STAGE-001 | 创建连续赛段关联 | 14-category-association.md |
-| TC-STAGE-002 | 按 stage_order 排序读取赛段 | 14-category-association.md |
-| TC-STAGE-003 | 赛段未完成时无法进入下一赛段 | 14-category-association.md |
-| TC-STAGE-004 | 赛段完成后可进入下一赛段 | 14-category-association.md |
-| TC-TRACK-001 | 创建并行赛道关联 | 14-category-association.md |
-| TC-TRACK-002 | 团队可同时参加不同赛道 | 14-category-association.md |
-| TC-TRACK-003 | 团队在同一赛道内受 Rule 约束 | 14-category-association.md |
-| TC-PREREQ-001 | 悬赏活动作为前置条件关联到常规赛 | 14-category-association.md |
-| TC-PREREQ-002 | 前置活动完成后团队可报名目标活动 | 14-category-association.md |
-| TC-PREREQ-003 | 前置活动未完成时团队报名目标活动被拒绝 | 14-category-association.md |
-| TC-PREREQ-004 | 前置活动中组建的团队保持完整进入目标活动 | 14-category-association.md |
-| TC-CATREL-010 | 查看活动关联列表 | 14-category-association.md |
-| TC-CATREL-011 | 从关联活动跳转 | 14-category-association.md |
-| TC-CATREL-012 | 活动关联双向可见 | 14-category-association.md |
-| TC-CATREL-020 | 提案在多个关联活动中独立评审 | 14-category-association.md |
-| TC-CATREL-021 | 提案在多个活动中独立获奖 | 14-category-association.md |
+| TC-STAGE-001 | 创建连续赛段关联 | 14-event-association.md |
+| TC-STAGE-002 | 按 stage_order 排序读取赛段 | 14-event-association.md |
+| TC-STAGE-003 | 赛段未完成时无法进入下一赛段 | 14-event-association.md |
+| TC-STAGE-004 | 赛段完成后可进入下一赛段 | 14-event-association.md |
+| TC-TRACK-001 | 创建并行赛道关联 | 14-event-association.md |
+| TC-TRACK-002 | 团队可同时参加不同赛道 | 14-event-association.md |
+| TC-TRACK-003 | 团队在同一赛道内受 Rule 约束 | 14-event-association.md |
+| TC-PREREQ-001 | 悬赏活动作为前置条件关联到常规赛 | 14-event-association.md |
+| TC-PREREQ-002 | 前置活动完成后团队可报名目标活动 | 14-event-association.md |
+| TC-PREREQ-003 | 前置活动未完成时团队报名目标活动被拒绝 | 14-event-association.md |
+| TC-PREREQ-004 | 前置活动中组建的团队保持完整进入目标活动 | 14-event-association.md |
+| TC-CATREL-010 | 查看活动关联列表 | 14-event-association.md |
+| TC-CATREL-011 | 从关联活动跳转 | 14-event-association.md |
+| TC-CATREL-012 | 活动关联双向可见 | 14-event-association.md |
+| TC-CATREL-020 | 提案在多个关联活动中独立评审 | 14-event-association.md |
+| TC-CATREL-021 | 提案在多个活动中独立获奖 | 14-event-association.md |
 | TC-ENTRY-003 | 报名前必须已有 profile 帖子 | 15-entry-rules.md |
 | TC-ENTRY-012 | 帖子包含符合要求的 resource 时提交成功 | 15-entry-rules.md |
 | TC-ENTRY-022 | 不同活动中同一用户可分别提交提案 | 15-entry-rules.md |
@@ -683,15 +719,15 @@
 | TC ID | 描述 | 来源文件 |
 |-------|------|----------|
 | TC-USER-020 | 删除用户及级联影响 | 01-user.md |
-| TC-CAT-020 | 删除活动及级联影响 | 02-category.md |
+| TC-CAT-020 | 删除活动及级联影响 | 02-event.md |
 | TC-RULE-020 | 删除规则及级联 | 03-rule.md |
 | TC-GRP-020 | 删除团队及级联 | 04-group.md |
 | TC-RES-031 | 删除资源后级联解除 post:resource | 06-resource.md |
 | TC-DEL-002 | 删除 rule | 09-cascade-delete.md |
 | TC-DEL-005 | 删除 interaction | 09-cascade-delete.md |
 | TC-DEL-011 | 删除 user → interaction + group:user 级联处理 | 09-cascade-delete.md |
-| TC-DEL-013 | 删除 rule → 级联 category:rule | 09-cascade-delete.md |
-| TC-DEL-014 | 删除 group → 级联 category:group | 09-cascade-delete.md |
+| TC-DEL-013 | 删除 rule → 级联 event:rule | 09-cascade-delete.md |
+| TC-DEL-014 | 删除 group → 级联 event:group | 09-cascade-delete.md |
 
 ---
 
@@ -717,14 +753,14 @@
 
 | TC ID | 描述 | 来源文件 |
 |-------|------|----------|
-| TC-CAT-900 | 非法 type 枚举被拒绝 | 02-category.md |
-| TC-CAT-901 | 非法 status 枚举被拒绝 | 02-category.md |
-| TC-CAT-902 | participant 创建活动被拒绝 | 02-category.md |
+| TC-CAT-900 | 非法 type 枚举被拒绝 | 02-event.md |
+| TC-CAT-901 | 非法 status 枚举被拒绝 | 02-event.md |
+| TC-CAT-902 | participant 创建活动被拒绝 | 02-event.md |
 | TC-RULE-900 | participant 创建规则被拒绝 | 03-rule.md |
 | TC-RULE-901 | scoring_criteria 权重总和不等于 100 | 03-rule.md |
-| TC-CATMGMT-901 | closed 状态活动不可修改 | 21-category-management.md |
-| TC-CATMGMT-903 | 活动结束时间早于开始时间被拒绝 | 21-category-management.md |
-| TC-CATMGMT-904 | 报名时必填字段缺失被拒绝 | 21-category-management.md |
+| TC-CATMGMT-901 | closed 状态活动不可修改 | 21-event-management.md |
+| TC-CATMGMT-903 | 活动结束时间早于开始时间被拒绝 | 21-event-management.md |
+| TC-CATMGMT-904 | 报名时必填字段缺失被拒绝 | 21-event-management.md |
 | TC-ENGINE-042 | post phase check 失败不回滚主操作 | 17-rule-engine.md |
 | TC-ENGINE-061 | 活动未关联任何 Rule | 17-rule-engine.md |
 
@@ -774,27 +810,27 @@
 | TC ID | 描述 | 来源文件 |
 |-------|------|----------|
 | TC-REL-CR-900 | 重复关联同一规则到同一活动被拒绝 | 08-relations.md |
-| TC-REL-CP-900 | 规则截止后提交 category_post 被拒绝 | 08-relations.md |
-| TC-REL-CP-901 | 格式不符时提交 category_post 被拒绝 | 08-relations.md |
-| TC-REL-CP-902 | 超出 max_submissions 时提交 category_post 被拒绝 | 08-relations.md |
+| TC-REL-CP-900 | 规则截止后提交 event_post 被拒绝 | 08-relations.md |
+| TC-REL-CP-901 | 格式不符时提交 event_post 被拒绝 | 08-relations.md |
+| TC-REL-CP-902 | 超出 max_submissions 时提交 event_post 被拒绝 | 08-relations.md |
 | TC-REL-CG-900 | 重复报名同一活动被拒绝 | 08-relations.md |
 | TC-REL-CG-901 | 同一用户在同一活动中属于多个团队被拒绝 | 08-relations.md |
 | TC-REL-GU-902 | 团队已满时加入被拒绝（Rule Enforcement） | 08-relations.md |
-| TC-CATREL-900 | 重复创建同一活动关联被拒绝 | 14-category-association.md |
-| TC-CATREL-901 | 自引用被拒绝 | 14-category-association.md |
-| TC-CATREL-902 | 赛段循环依赖被拒绝 | 14-category-association.md |
-| TC-CATREL-903 | 非法 relation_type 被拒绝 | 14-category-association.md |
-| TC-CATREL-904 | 已关闭活动无法添加关联 | 14-category-association.md |
-| TC-CATREL-905 | 非关联活动无法共享提案 | 14-category-association.md |
+| TC-CATREL-900 | 重复创建同一活动关联被拒绝 | 14-event-association.md |
+| TC-CATREL-901 | 自引用被拒绝 | 14-event-association.md |
+| TC-CATREL-902 | 赛段循环依赖被拒绝 | 14-event-association.md |
+| TC-CATREL-903 | 非法 relation_type 被拒绝 | 14-event-association.md |
+| TC-CATREL-904 | 已关闭活动无法添加关联 | 14-event-association.md |
+| TC-CATREL-905 | 非关联活动无法共享提案 | 14-event-association.md |
 | TC-ENTRY-031 | 固定字段和自定义 checks 均满足时操作成功 | 15-entry-rules.md |
 
 ### 权限（12 条）
 
 | TC ID | 描述 | 来源文件 |
 |-------|------|----------|
-| TC-PERM-001 | participant 创建 category 被拒绝 | 10-permissions.md |
+| TC-PERM-001 | participant 创建 event 被拒绝 | 10-permissions.md |
 | TC-PERM-002 | participant 创建 rule 被拒绝 | 10-permissions.md |
-| TC-PERM-003 | participant 更新 category 被拒绝 | 10-permissions.md |
+| TC-PERM-003 | participant 更新 event 被拒绝 | 10-permissions.md |
 | TC-PERM-012 | 非本人修改用户信息被拒绝 | 10-permissions.md |
 | TC-PERM-013 | 非 Owner 修改团队信息被拒绝 | 10-permissions.md |
 | TC-PERM-014 | 非本人修改评论被拒绝 | 10-permissions.md |
@@ -893,6 +929,14 @@
 | TC-ASSETCOPY-902 | 已删除资产无法申请复制 | 32-asset-copy-request.md |
 | TC-ASSETCOPY-903 | 非团队成员无法申请团队提案内资产 | 32-asset-copy-request.md |
 
+### 前端集成 P4（3 条）⭐ 新增
+
+| TC ID | 描述 | 来源文件 |
+|-------|------|----------|
+| TC-FEINT-900 | 未登录用户创建帖子被拦截 | 33-frontend-integration.md |
+| TC-FEINT-901 | API 客户端网络错误处理 | 33-frontend-integration.md |
+| TC-FEINT-902 | 重复提交防护 | 33-frontend-integration.md |
+
 ---
 
 ## 附录：按文件统计
@@ -900,7 +944,7 @@
 | 文件 | P0 | P1 | P2 | P3 | P4 | 总计 |
 |------|----|----|----|----|-----|------|
 | 01-user.md | 4 | 1 | 1 | 1 | 4 | 11 |
-| 02-category.md | 4 | 1 | 0 | 1 | 3 | 9 |
+| 02-event.md | 4 | 1 | 0 | 1 | 3 | 9 |
 | 03-rule.md | 9 | 5 | 0 | 1 | 2 | 17 |
 | 04-group.md | 5 | 5 | 2 | 0 | 2 | 14 |
 | 05-post.md | 6 | 8 | 6 | 0 | 4 | 24 |
@@ -912,14 +956,14 @@
 | 11-user-journeys.md | 1 | 6 | 1 | 0 | 0 | 8 |
 | 12-resource-transfer.md | 0 | 0 | 2 | 2 | 0 | 4 |
 | 13-user-follow.md | 0 | 3 | 0 | 4 | 3 | 10 |
-| 14-category-association.md | 0 | 0 | 2 | 16 | 6 | 24 |
+| 14-event-association.md | 0 | 0 | 2 | 16 | 6 | 24 |
 | 15-entry-rules.md | 5 | 0 | 3 | 3 | 4 | 15 |
 | 16-closure-rules.md | 0 | 4 | 6 | 0 | 3 | 13 |
 | 17-rule-engine.md | 0 | 6 | 14 | 0 | 3 | 23 |
 | 18-content-browsing.md | 4 | 8 | 5 | 0 | 2 | 19 |
 | 19-auth-profile.md | 12 | 9 | 3 | 0 | 5 | 29 |
 | 20-notification.md | 0 | 10 | 6 | 0 | 2 | 18 |
-| 21-category-management.md | 13 | 5 | 5 | 1 | 3 | 27 |
+| 21-event-management.md | 13 | 5 | 5 | 1 | 3 | 27 |
 | 22-team-management.md | 5 | 8 | 1 | 0 | 2 | 16 |
 | 23-activity-participation.md | 10 | 0 | 1 | 0 | 2 | 13 |
 | 24-content-creation.md | 7 | 4 | 7 | 0 | 5 | 23 |
@@ -931,9 +975,10 @@
 | 30-proposal-iteration.md | 0 | 3 | 6 | 0 | 3 | 12 |
 | 31-page-interaction.md | 0 | 7 | 5 | 0 | 2 | 14 |
 | 32-asset-copy-request.md | 0 | 6 | 3 | 0 | 4 | 13 |
-| **总计** | **89** | **135** | **145** | **69** | **114** | **552** |
+| 33-frontend-integration.md ⭐ | 8 | 8 | 3 | 0 | 3 | 22 |
+| **总计** | **97** | **143** | **148** | **69** | **117** | **574** |
 
 ---
 
-*生成时间：2026-02-02*
-*测试用例总数：552 条*
+*更新时间：2026-02-05*
+*测试用例总数：574 条（含 22 条前端集成测试）*

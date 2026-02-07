@@ -23,6 +23,8 @@ const config: Config.InitialOptions = {
   },
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   testMatch: ["**/__tests__/**/*.test.(ts|tsx)"],
+  modulePathIgnorePatterns: ["<rootDir>/.next/"],
+  watchPathIgnorePatterns: ["<rootDir>/.next/"],
 }
 
 export default config

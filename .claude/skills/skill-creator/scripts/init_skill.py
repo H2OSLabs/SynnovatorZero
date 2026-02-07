@@ -38,7 +38,7 @@ description: [TODO: Complete and informative explanation of what the skill does 
 **2. Task-Based** (best for tool collections)
 - Works well when the skill offers different operations/capabilities
 - Example: PDF skill with "Quick Start" → "Merge PDFs" → "Split PDFs" → "Extract Text"
-- Structure: ## Overview → ## Quick Start → ## Task Category 1 → ## Task Category 2...
+- Structure: ## Overview → ## Quick Start → ## Task Event 1 → ## Task Event 2...
 
 **3. Reference/Guidelines** (best for standards or specifications)
 - Works well for brand guidelines, coding standards, or requirements

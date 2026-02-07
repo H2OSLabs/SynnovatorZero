@@ -114,16 +114,6 @@
 
 ### Phase 12: P2 Frontend Components
 
-#### 12.1 Demo Page Loading ✅
-
-| 测试项 | 期望结果 | 实际结果 | 状态 |
-|--------|----------|----------|------|
-| 页面加载 | "协创者 组件演示" 显示 | 正确显示 | PASS |
-| Phase 文本 | "Phase 12 前端组件预览" | 正确显示 | PASS |
-| 快捷键提示 | "⌘K 搜索" 显示 | 正确显示 | PASS |
-
-**截图**: `plans/e2e_demo_page_2.png`
-
 #### 12.2 PlatformStats Component ✅
 
 | 测试项 | 期望结果 | 实际结果 | 状态 |
@@ -133,8 +123,6 @@
 | 活动统计 | "活动数量" 显示数量 | 显示 "1" | PASS |
 | 作品统计 | "作品数量" 显示数量 | 显示 "3" | PASS |
 | API 调用 | GET /api/stats 返回数据 | 正常返回 | PASS |
-
-**截图**: `plans/e2e_demo_stats.png`
 
 #### 12.3 SearchModal Component ✅
 

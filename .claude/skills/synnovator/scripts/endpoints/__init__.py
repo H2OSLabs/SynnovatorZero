@@ -2,10 +2,10 @@
 Endpoint registry: maps content_type name to its module.
 """
 
-from endpoints import category, post, resource, rule, user, group, interaction
+from endpoints import event, post, resource, rule, user, group, interaction
 
 REGISTRY = {
-    "category": category,
+    "event": event,
     "post": post,
     "resource": resource,
     "rule": rule,

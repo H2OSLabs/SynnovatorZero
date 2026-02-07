@@ -11,13 +11,14 @@ from typing import Optional
 from app import crud
 from app.database import get_db
 from app.deps import require_current_user_id
+from app.schemas.user import UserCreate
 
 router = APIRouter()
 
 
 class LoginRequest(BaseModel):
     username: str
-    password: str
+    password: Optional[str] = None  # 可选，兼容旧前端
 
 
 class LoginResponse(BaseModel):
@@ -25,6 +26,19 @@ class LoginResponse(BaseModel):
     username: str
     role: str
     # TODO: Add access_token and refresh_token when JWT is implemented
+
+
+class RegisterRequest(BaseModel):
+    username: str
+    email: str
+    password: str
+    role: str = "participant"  # participant 或 organizer
+
+
+class RegisterResponse(BaseModel):
+    user_id: int
+    username: str
+    role: str
 
 
 class RefreshRequest(BaseModel):
@@ -36,6 +50,49 @@ class RefreshResponse(BaseModel):
     refresh_token: str
 
 
+@router.post("/auth/register", response_model=RegisterResponse, tags=["auth"])
+def register(
+    body: RegisterRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Register a new user.
+
+    角色只能是 participant 或 organizer。
+    """
+    # 验证角色
+    if body.role not in ("participant", "organizer"):
+        raise HTTPException(status_code=400, detail="Role must be 'participant' or 'organizer'")
+
+    # 检查用户名是否已存在
+    existing_user = crud.users.get_by_username(db, username=body.username)
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already exists")
+
+    # 检查邮箱是否已存在
+    existing_email = db.query(crud.users.model).filter(
+        crud.users.model.email == body.email,
+        crud.users.model.deleted_at.is_(None)
+    ).first()
+    if existing_email:
+        raise HTTPException(status_code=400, detail="Email already exists")
+
+    # 创建用户
+    user_create = UserCreate(
+        username=body.username,
+        email=body.email,
+        password=body.password,
+        role=body.role,
+    )
+    user = crud.users.create(db, obj_in=user_create)
+
+    return RegisterResponse(
+        user_id=user.id,
+        username=user.username,
+        role=user.role,
+    )
+
+
 @router.post("/auth/login", response_model=LoginResponse, tags=["auth"])
 def login(
     body: LoginRequest,
@@ -44,18 +101,18 @@ def login(
     """
     Authenticate user and return session info.
 
-    NOTE: This is a temporary implementation. Password verification is NOT implemented.
-    Use this endpoint to get the user_id for the X-User-Id header.
-
-    TODO: Implement proper password hashing and JWT token generation.
+    密码验证逻辑（明文比对，仅开发用）：
+    - 如果用户有密码且请求提供了密码：必须匹配
+    - 如果用户没有密码：跳过验证（兼容旧数据）
     """
     user = crud.users.get_by_username(db, username=body.username)
     if user is None:
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
-    # TODO: Verify password hash
-    # if not verify_password(body.password, user.password_hash):
-    #     raise HTTPException(status_code=401, detail="Invalid username or password")
+    # 密码验证（明文比对）
+    if user.password:
+        if not body.password or body.password != user.password:
+            raise HTTPException(status_code=401, detail="Invalid username or password")
 
     return LoginResponse(
         user_id=user.id,

@@ -21,13 +21,13 @@ flowchart TD
     C -->|Default| D[显示新建 Post 入口]
     C -->|Not create Only Select| E[屏蔽新建功能]
     C -->|Bounty/Enterprise| F[启用提案隐私保护]
-    D --> G[用户新建 Post for category]
+    D --> G[用户新建 Post for event]
     E --> H[强制跳转：选择已有 Post]
     F --> I[提案创建但互不可见]
     H --> J[用户从自己的 Post 列表中选择]
     J --> K[系统自动为 Post 添加活动 Tag]
     K --> L[报名完成]
-    G --> M[Post 关联到 Category]
+    G --> M[Post 关联到 Event]
     I --> M
     M --> L
 ```
@@ -40,6 +40,6 @@ flowchart TD
 | 2 | 选择规则类型 | `UPDATE rule`（type 字段） | 设置为 Default / Not create Only Select / Bounty 等 |
 | 3 | 配置附加参数 | `UPDATE rule` | 如：是否允许 public、审核人列表、提交截止时间、团队人数限制 |
 | 4 | 配置报名字段 | `UPDATE rule`（registration_fields） | 设置报名时需要用户填写的信息字段 |
-| 5 | 保存并关联到活动 | `UPDATE category:rule` | Rule 生效，影响后续所有报名用户 |
+| 5 | 保存并关联到活动 | `UPDATE event:rule` | Rule 生效，影响后续所有报名用户 |
 
 - **结果：** 活动规则配置完成，系统将根据 Rule 自动约束用户的报名行为

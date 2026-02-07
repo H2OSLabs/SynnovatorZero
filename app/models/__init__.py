@@ -1,7 +1,7 @@
 """Models package - import all models so Base.metadata knows about them"""
 from app.models.user import User
 from app.models.resource import Resource
-from app.models.category import Category
+from app.models.event import Event
 from app.models.post import Post
 from app.models.rule import Rule
 from app.models.group import Group
@@ -12,9 +12,12 @@ from app.models.member import Member
 from app.models.user_user import UserUser
 from app.models.post_resource import PostResource
 from app.models.post_post import PostPost
-from app.models.category_rule import CategoryRule
-from app.models.category_post import CategoryPost
-from app.models.category_group import CategoryGroup
+from app.models.event_rule import EventRule
+from app.models.event_post import EventPost
+from app.models.event_group import EventGroup
 from app.models.target_interaction import TargetInteraction
-from app.models.category_category import CategoryCategory
+from app.models.event_event import EventEvent
+from app.models.event_resource import EventResource
+from app.models.group_post import GroupPost
+from app.models.group_resource import GroupResource
 from app.models.notification import Notification

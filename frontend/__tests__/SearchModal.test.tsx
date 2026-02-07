@@ -5,7 +5,7 @@ import { SearchModal } from '@/components/search'
 jest.mock('@/lib/search-api', () => ({
   searchAll: jest.fn().mockResolvedValue({
     users: [],
-    categories: [],
+    events: [],
     posts: [],
   }),
 }))

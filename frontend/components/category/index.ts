@@ -6,4 +6,4 @@ export {
   StageTimeline,
 } from './CategoryStageView'
 export type { CategoryStage, StageConfig } from './CategoryStageView'
-export { CategoryTrackView } from './CategoryTrackView'
+export { CategoryTrackView } from '../event/EventTrackView'

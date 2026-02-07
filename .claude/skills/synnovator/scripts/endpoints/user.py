@@ -7,7 +7,7 @@ DEFAULTS = {
 }
 
 # Content types whose created_by field references user.id
-_OWNED_CONTENT_TYPES = ["category", "post", "resource", "rule", "group"]
+_OWNED_CONTENT_TYPES = ["event", "post", "resource", "rule", "group"]
 
 
 def on_create(data_dir, data, current_user):

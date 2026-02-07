@@ -50,11 +50,11 @@
 
 ## 7.5 非 post 目标的互动
 
-**TC-IACT-060：对 category（活动）点赞**
-用户对一个 published 状态的 category 点赞。创建成功，target_type 为 category。
+**TC-IACT-060：对 event（活动）点赞**
+用户对一个 published 状态的 event 点赞。创建成功，target_type 为 event。
 
-**TC-IACT-061：对 category 发表评论**
-用户对一个 category 发表评论。创建成功。
+**TC-IACT-061：对 event 发表评论**
+用户对一个 event 发表评论。创建成功。
 
 **TC-IACT-062：对 resource（资源）点赞**
 用户对一个 resource 点赞。创建成功，target_type 为 resource。

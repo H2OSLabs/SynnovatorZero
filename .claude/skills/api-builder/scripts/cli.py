@@ -162,22 +162,31 @@ def filter_resources(parsed_file: str, resources: Optional[List[str]]) -> bool:
     return True
 
 
-def generate_code(parsed_file: str, output_dir: str, templates_dir: str) -> bool:
+def generate_code(
+    parsed_file: str,
+    output_dir: str,
+    templates_dir: str,
+    conflict_strategy: str = 'skip',
+    dry_run: bool = False
+) -> bool:
     """生成代码"""
     print_step(4, "Generating FastAPI code")
 
     script_dir = Path(__file__).parent
     generate_script = script_dir / "generate_code.py"
 
-    return run_command(
-        [
-            sys.executable, str(generate_script),
-            "--parsed-data", parsed_file,
-            "--output-dir", output_dir,
-            "--templates-dir", templates_dir
-        ],
-        "Code generation"
-    )
+    cmd = [
+        sys.executable, str(generate_script),
+        "--parsed-data", parsed_file,
+        "--output-dir", output_dir,
+        "--templates-dir", templates_dir,
+        "--conflict-strategy", conflict_strategy,
+    ]
+
+    if dry_run:
+        cmd.append("--dry-run")
+
+    return run_command(cmd, "Code generation")
 
 
 def generate_client(parsed_file: str, output_file: str, templates_dir: str) -> bool:
@@ -356,6 +365,19 @@ def main():
         help='Migration message (default: "Auto-generated migration")'
     )
 
+    parser.add_argument(
+        '--conflict-strategy',
+        choices=['skip', 'backup', 'overwrite'],
+        default='skip',
+        help='How to handle existing files: skip (default) | backup | overwrite'
+    )
+
+    parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='Preview what would be generated without writing files'
+    )
+
     args = parser.parse_args()
 
     # 设置路径
@@ -390,7 +412,11 @@ def main():
         ("validate", lambda: validate_spec(args.spec, args.skip_validation)),
         ("parse", lambda: parse_spec(args.spec, str(parsed_file))),
         ("filter", lambda: filter_resources(str(parsed_file), resources)),
-        ("generate", lambda: generate_code(str(parsed_file), args.output, templates_dir)),
+        ("generate", lambda: generate_code(
+            str(parsed_file), args.output, templates_dir,
+            conflict_strategy=args.conflict_strategy,
+            dry_run=args.dry_run
+        )),
         ("init_files", lambda: (create_init_files(args.output), True)[1]),
     ]
 

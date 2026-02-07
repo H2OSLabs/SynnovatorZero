@@ -11,20 +11,12 @@ interface PageLayoutProps {
   children: React.ReactNode
   variant?: LayoutVariant
   panel?: React.ReactNode
-  user?: {
-    id: number
-    username: string
-    display_name?: string
-    avatar_url?: string
-    role: "participant" | "organizer" | "admin"
-  } | null
 }
 
 export function PageLayout({
   children,
   variant = "compact",
   panel,
-  user,
 }: PageLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(variant === "compact")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -60,7 +52,6 @@ export function PageLayout({
     <div className="min-h-screen bg-nf-dark">
       {/* Header */}
       <Header
-        user={user}
         showMenuButton={showSidebar}
         onMenuClick={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
@@ -70,7 +61,6 @@ export function PageLayout({
         <Sidebar
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-          user={user}
         />
       )}
 

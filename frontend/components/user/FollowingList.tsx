@@ -51,8 +51,8 @@ export function FollowingList({
             return {
               id: user.id,
               username: user.username,
-              avatar_url: user.avatar_url,
-              bio: user.bio,
+              avatar_url: user.avatar_url ?? undefined,
+              bio: user.bio ?? undefined,
             }
           } catch {
             return {

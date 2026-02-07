@@ -22,8 +22,8 @@ def _create_user(client, username="journey_user", role="organizer"):
     return resp.json()["id"]
 
 
-def _create_category(client, uid, name="Test Event", status="published"):
-    resp = client.post("/api/categories", json={
+def _create_event(client, uid, name="Test Event", status="published"):
+    resp = client.post("/api/events", json={
         "name": name,
         "description": f"Desc {name}",
         "type": "competition",
@@ -31,7 +31,7 @@ def _create_category(client, uid, name="Test Event", status="published"):
     cat_id = resp.json()["id"]
     if status != "draft":
         client.patch(
-            f"/api/categories/{cat_id}",
+            f"/api/events/{cat_id}",
             json={"status": status},
             headers={"X-User-Id": str(uid)},
         )
@@ -107,21 +107,21 @@ def test_anonymous_browsing(client):
 
     Steps:
     1. Create an organizer user.
-    2. Create a published category and a draft category.
+    2. Create a published event and a draft event.
     3. Create a published post and a draft post.
-    4. Without X-User-Id, list categories -- both appear (listing does not
+    4. Without X-User-Id, list events -- both appear (listing does not
        filter by status, only by soft-delete).
     5. Without X-User-Id, list posts -- both appear (same reason).
-    6. Without X-User-Id, GET draft category by ID -> 404.
-    7. With creator's X-User-Id, GET draft category by ID -> 200.
+    6. Without X-User-Id, GET draft event by ID -> 404.
+    7. With creator's X-User-Id, GET draft event by ID -> 200.
     8. Without X-User-Id, GET draft post by ID -> 404.
     9. Without X-User-Id, GET published post by ID -> 200.
     """
     uid = _create_user(client, "anon_organizer", role="organizer")
 
-    # Categories: one published, one draft
-    pub_cat = _create_category(client, uid, name="Published Event", status="published")
-    draft_cat = _create_category(client, uid, name="Draft Event", status="draft")
+    # Events: one published, one draft
+    pub_cat = _create_event(client, uid, name="Published Event", status="published")
+    draft_cat = _create_event(client, uid, name="Draft Event", status="draft")
 
     # Posts: one published, one draft
     pub_post = _create_post(client, uid, title="Published Post", status="published")
@@ -130,11 +130,11 @@ def test_anonymous_browsing(client):
     # --- List endpoints (no auth) ---
     # The list endpoints return all non-deleted records; they do NOT filter
     # by status.  Both published and draft items appear in the listing.
-    cats_resp = client.get("/api/categories")
+    cats_resp = client.get("/api/events")
     assert cats_resp.status_code == 200
     cat_ids = [c["id"] for c in cats_resp.json()["items"]]
     assert pub_cat in cat_ids
-    # Draft categories still appear in listing (no status filter on list)
+    # Draft events still appear in listing (no status filter on list)
     assert draft_cat in cat_ids
 
     posts_resp = client.get("/api/posts")
@@ -145,13 +145,13 @@ def test_anonymous_browsing(client):
     assert draft_post in post_ids
 
     # --- Single-item endpoints (visibility enforcement) ---
-    # Draft category: anonymous -> 404
-    resp = client.get(f"/api/categories/{draft_cat}")
+    # Draft event: anonymous -> 404
+    resp = client.get(f"/api/events/{draft_cat}")
     assert resp.status_code == 404
 
-    # Draft category: creator -> 200
+    # Draft event: creator -> 200
     resp = client.get(
-        f"/api/categories/{draft_cat}",
+        f"/api/events/{draft_cat}",
         headers={"X-User-Id": str(uid)},
     )
     assert resp.status_code == 200
@@ -260,12 +260,12 @@ def test_team_registration_flow(client):
     2. Organizer creates group with require_approval=False so members are
        immediately accepted.
     3. Alice and Bob join the group.
-    4. Organizer creates a published category.
+    4. Organizer creates a published event.
     5. Organizer creates a rule with max_submissions=1 and links it to
-       the category.
-    6. Group registers for the category.
-    7. Alice creates a submission post linked to the category.
-    8. Verify the group appears in category groups.
+       the event.
+    6. Group registers for the event.
+    7. Alice creates a submission post linked to the event.
+    8. Verify the group appears in event groups.
     9. Verify Alice + Bob are group members.
     """
     organizer = _create_user(client, "org_007", role="organizer")
@@ -284,20 +284,20 @@ def test_team_registration_flow(client):
     assert resp_b.status_code == 201
     assert resp_b.json()["status"] == "accepted"
 
-    # Create published category
-    cat_id = _create_category(client, organizer, name="Hackathon 2025", status="published")
+    # Create published event
+    cat_id = _create_event(client, organizer, name="Hackathon 2025", status="published")
 
-    # Create rule and link to category
+    # Create rule and link to event
     rule_id = _create_rule(client, organizer, name="Hackathon Rules", max_submissions=1)
     resp = client.post(
-        f"/api/categories/{cat_id}/rules",
+        f"/api/events/{cat_id}/rules",
         json={"rule_id": rule_id, "priority": 1},
     )
     assert resp.status_code == 201
 
-    # Register group for category
+    # Register group for event
     resp = client.post(
-        f"/api/categories/{cat_id}/groups",
+        f"/api/events/{cat_id}/groups",
         json={"group_id": gid},
     )
     assert resp.status_code == 201
@@ -306,19 +306,19 @@ def test_team_registration_flow(client):
     post_id = _create_post(
         client, alice,
         title="Our Submission",
-        post_type="for_category",
+        post_type="proposal",
         status="published",
     )
 
-    # Link post to category as submission
+    # Link post to event as submission
     resp = client.post(
-        f"/api/categories/{cat_id}/posts",
+        f"/api/events/{cat_id}/posts",
         json={"post_id": post_id, "relation_type": "submission"},
     )
     assert resp.status_code == 201
 
-    # Verify: group listed under category
-    resp = client.get(f"/api/categories/{cat_id}/groups")
+    # Verify: group listed under event
+    resp = client.get(f"/api/events/{cat_id}/groups")
     assert resp.status_code == 200
     group_ids = [g["group_id"] for g in resp.json()]
     assert gid in group_ids
@@ -336,15 +336,15 @@ def test_team_registration_flow(client):
 # ---------------------------------------------------------------------------
 
 def test_create_daily_and_competition_posts(client):
-    """TC-JOUR-009: Create a general post and a for_category post linked
-    to a competition category.
+    """TC-JOUR-009: Create a general post and a proposal post linked
+    to a competition event.
 
     Steps:
-    1. Create user (organizer, to also create categories).
-    2. Create a general post (published) -- publicly visible, no category.
-    3. Create a for_category post with tags.
-    4. Create a published category with a rule.
-    5. Link the for_category post as a submission.
+    1. Create user (organizer, to also create events).
+    2. Create a general post (published) -- publicly visible, no event.
+    3. Create a proposal post with tags.
+    4. Create a published event with a rule.
+    5. Link the proposal post as a submission.
     """
     uid = _create_user(client, "creator_009", role="organizer")
 
@@ -360,10 +360,10 @@ def test_create_daily_and_competition_posts(client):
     assert resp.json()["type"] == "general"
     assert resp.json()["status"] == "published"
 
-    # for_category post with tags
+    # proposal post with tags
     resp = client.post("/api/posts", json={
         "title": "Competition Entry",
-        "type": "for_category",
+        "type": "proposal",
         "status": "draft",
         "tags": ["AI", "innovation"],
     }, headers={"X-User-Id": str(uid)})
@@ -383,24 +383,24 @@ def test_create_daily_and_competition_posts(client):
         headers={"X-User-Id": str(uid)},
     )
 
-    # Create published category + rule
-    cat_id = _create_category(client, uid, name="AI Challenge", status="published")
+    # Create published event + rule
+    cat_id = _create_event(client, uid, name="AI Challenge", status="published")
     rule_id = _create_rule(client, uid, name="Challenge Rules")
     client.post(
-        f"/api/categories/{cat_id}/rules",
+        f"/api/events/{cat_id}/rules",
         json={"rule_id": rule_id, "priority": 1},
     )
 
     # Link post as submission
     resp = client.post(
-        f"/api/categories/{cat_id}/posts",
+        f"/api/events/{cat_id}/posts",
         json={"post_id": comp_pid, "relation_type": "submission"},
     )
     assert resp.status_code == 201
 
-    # Verify category-post relation
+    # Verify event-post relation
     h = {"X-User-Id": str(uid)}
-    resp = client.get(f"/api/categories/{cat_id}/posts", headers=h)
+    resp = client.get(f"/api/events/{cat_id}/posts", headers=h)
     assert resp.status_code == 200
     post_ids = [r["post_id"] for r in resp.json()]
     assert comp_pid in post_ids
@@ -416,7 +416,7 @@ def test_certificate_flow(client):
 
     Steps:
     1. Create organizer, participant.
-    2. Create and publish a category, then close it.
+    2. Create and publish a event, then close it.
     3. Create a certificate resource (PDF).
     4. Create a certificate post.
     5. Link resource to post.
@@ -425,10 +425,10 @@ def test_certificate_flow(client):
     organizer = _create_user(client, "org_010", role="organizer")
     participant = _create_user(client, "part_010", role="participant")
 
-    # Create category: draft -> published -> closed
-    cat_id = _create_category(client, organizer, name="Design Contest", status="published")
+    # Create event: draft -> published -> closed
+    cat_id = _create_event(client, organizer, name="Design Contest", status="published")
     resp = client.patch(
-        f"/api/categories/{cat_id}",
+        f"/api/events/{cat_id}",
         json={"status": "closed"},
         headers={"X-User-Id": str(organizer)},
     )
@@ -562,25 +562,25 @@ def test_delete_post_full_cascade(client):
     cascade-cleaned.
 
     Steps:
-    1. Create user, category, main post.
-    2. Link post to category as submission.
+    1. Create user, event, main post.
+    2. Link post to event as submission.
     3. Create another post and link via post_post (embed).
     4. Create resource and link to post.
     5. Like, comment, and rate the post.
     6. DELETE the main post -> 204.
     7. Verify: GET main post -> 404.
-    8. Verify: category_post relations cleared.
+    8. Verify: event_post relations cleared.
     9. Note: interactions are cascade-deleted with the post.
     """
     uid = _create_user(client, "deleter_012", role="organizer")
     h = {"X-User-Id": str(uid)}
 
-    cat_id = _create_category(client, uid, name="Delete Test Event", status="published")
+    cat_id = _create_event(client, uid, name="Delete Test Event", status="published")
     post_id = _create_post(client, uid, title="Post to Delete", status="published")
 
-    # Link post to category as submission
+    # Link post to event as submission
     resp = client.post(
-        f"/api/categories/{cat_id}/posts",
+        f"/api/events/{cat_id}/posts",
         json={"post_id": post_id, "relation_type": "submission"},
     )
     assert resp.status_code == 201
@@ -622,7 +622,7 @@ def test_delete_post_full_cascade(client):
     assert resp.status_code == 201
 
     # Verify relations exist before delete
-    assert len(client.get(f"/api/categories/{cat_id}/posts", headers=h).json()) >= 1
+    assert len(client.get(f"/api/events/{cat_id}/posts", headers=h).json()) >= 1
     assert len(client.get(f"/api/posts/{post_id}/resources").json()) >= 1
     assert len(client.get(f"/api/posts/{post_id}/related").json()) >= 1
     post_data = client.get(f"/api/posts/{post_id}", headers=h).json()
@@ -637,8 +637,8 @@ def test_delete_post_full_cascade(client):
     resp = client.get(f"/api/posts/{post_id}", headers=h)
     assert resp.status_code == 404
 
-    # Verify: category_post relations cleared
-    resp = client.get(f"/api/categories/{cat_id}/posts", headers=h)
+    # Verify: event_post relations cleared
+    resp = client.get(f"/api/events/{cat_id}/posts", headers=h)
     assert resp.status_code == 200
     remaining_post_ids = [r["post_id"] for r in resp.json()]
     assert post_id not in remaining_post_ids

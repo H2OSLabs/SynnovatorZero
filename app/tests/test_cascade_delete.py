@@ -1,16 +1,16 @@
 """Cascade delete tests — Phase 7 Layer 5
 
 Covers:
-- TC-DEL-001: Delete category
+- TC-DEL-001: Delete event
 - TC-DEL-002: Delete rule
 - TC-DEL-003: Delete user (interactions + group:user cascade)
-- TC-DEL-004: Delete group (members + category:group cascade)
+- TC-DEL-004: Delete group (members + event:group cascade)
 - TC-DEL-005: Delete interaction (like → cache update)
-- TC-DEL-010: Delete category → interactions cascade
+- TC-DEL-010: Delete event → interactions cascade
 - TC-DEL-011: Delete user → interaction + group:user cascade
 - TC-DEL-012: Delete post → full cascade chain
-- TC-DEL-013: Delete rule → category:rule cascade
-- TC-DEL-014: Delete group → category:group cascade
+- TC-DEL-013: Delete rule → event:rule cascade
+- TC-DEL-014: Delete group → event:group cascade
 - TC-DEL-015: Delete parent comment → child comments cascade
 - TC-DEL-020: Read deleted record returns not found
 - TC-DEL-022: Update deleted record returns not found
@@ -26,8 +26,8 @@ def _create_user(client, username="testuser"):
     return resp.json()["id"]
 
 
-def _create_category(client, uid, name="Test Category"):
-    resp = client.post("/api/categories", json={
+def _create_event(client, uid, name="Test Event"):
+    resp = client.post("/api/events", json={
         "name": name,
         "description": f"Description of {name}",
         "type": "competition",
@@ -71,15 +71,15 @@ def _create_resource(client, uid, name="Test Resource"):
     return resp.json()["id"]
 
 
-# --- TC-DEL-001: Delete category ---
+# --- TC-DEL-001: Delete event ---
 
-def test_delete_category_basic(client):
-    """TC-DEL-001: Delete a category; read returns not found."""
+def test_delete_event_basic(client):
+    """TC-DEL-001: Delete a event; read returns not found."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
-    resp = client.delete(f"/api/categories/{cat_id}", headers={"X-User-Id": str(uid)})
+    cat_id = _create_event(client, uid)
+    resp = client.delete(f"/api/events/{cat_id}", headers={"X-User-Id": str(uid)})
     assert resp.status_code == 204
-    resp = client.get(f"/api/categories/{cat_id}")
+    resp = client.get(f"/api/events/{cat_id}")
     assert resp.status_code == 404
 
 
@@ -131,23 +131,23 @@ def test_delete_user_cascades_interactions_and_members(client):
     assert members["total"] == 0
 
 
-# --- TC-DEL-004: Delete group → cascade members + category:group ---
+# --- TC-DEL-004: Delete group → cascade members + event:group ---
 
 def test_delete_group_cascades_members_and_category_groups(client):
-    """TC-DEL-004/014: Delete group; members removed, category:group removed."""
+    """TC-DEL-004/014: Delete group; members removed, event:group removed."""
     uid = _create_user(client)
     group_id = _create_group(client, uid, "Team A")
-    cat_id = _create_category(client, uid, "Event")
+    cat_id = _create_event(client, uid, "Event")
 
     # Add member
     member_user = _create_user(client, "member1")
     client.post(f"/api/groups/{group_id}/members", json={"user_id": member_user})
 
-    # Register group to category
-    client.post(f"/api/categories/{cat_id}/groups", json={"group_id": group_id})
+    # Register group to event
+    client.post(f"/api/events/{cat_id}/groups", json={"group_id": group_id})
 
     # Verify
-    assert len(client.get(f"/api/categories/{cat_id}/groups").json()) == 1
+    assert len(client.get(f"/api/events/{cat_id}/groups").json()) == 1
     assert client.get(f"/api/groups/{group_id}/members").json()["total"] == 1
 
     # Delete group
@@ -157,8 +157,8 @@ def test_delete_group_cascades_members_and_category_groups(client):
     # Group not found
     assert client.get(f"/api/groups/{group_id}").status_code == 404
 
-    # Category:group relation removed
-    assert len(client.get(f"/api/categories/{cat_id}/groups").json()) == 0
+    # Event:group relation removed
+    assert len(client.get(f"/api/events/{cat_id}/groups").json()) == 0
 
 
 # --- TC-DEL-005: Delete interaction (like) → cache update ---
@@ -178,39 +178,39 @@ def test_delete_like_updates_cache(client):
     assert client.get(f"/api/posts/{post_id}", headers={"X-User-Id": str(uid)}).json()["like_count"] == 0
 
 
-# --- TC-DEL-010: Delete category → interactions cascade ---
+# --- TC-DEL-010: Delete event → interactions cascade ---
 
-def test_delete_category_cascades_interactions(client):
-    """TC-DEL-010: Delete category with likes/comments; interactions cascade-deleted."""
+def test_delete_event_cascades_interactions(client):
+    """TC-DEL-010: Delete event with likes/comments; interactions cascade-deleted."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     rule_id = _create_rule(client, uid)
 
-    # Attach rule to category
-    client.post(f"/api/categories/{cat_id}/rules", json={"rule_id": rule_id, "priority": 1})
-    assert len(client.get(f"/api/categories/{cat_id}/rules").json()) == 1
+    # Attach rule to event
+    client.post(f"/api/events/{cat_id}/rules", json={"rule_id": rule_id, "priority": 1})
+    assert len(client.get(f"/api/events/{cat_id}/rules").json()) == 1
 
-    # Delete category
-    resp = client.delete(f"/api/categories/{cat_id}", headers={"X-User-Id": str(uid)})
+    # Delete event
+    resp = client.delete(f"/api/events/{cat_id}", headers={"X-User-Id": str(uid)})
     assert resp.status_code == 204
 
-    # Category not found, rule still exists
-    assert client.get(f"/api/categories/{cat_id}").status_code == 404
+    # Event not found, rule still exists
+    assert client.get(f"/api/events/{cat_id}").status_code == 404
     assert client.get(f"/api/rules/{rule_id}").status_code == 200
 
 
 # --- TC-DEL-012: Delete post → full cascade chain ---
 
 def test_delete_post_full_cascade(client):
-    """TC-DEL-012: Delete post with category:post, post:post, post:resource, interactions."""
+    """TC-DEL-012: Delete post with event:post, post:post, post:resource, interactions."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     post_id = _create_post(client, uid)
     resource_id = _create_resource(client, uid)
     related_post_id = _create_post(client, uid, "Related Post")
 
-    # category:post
-    client.post(f"/api/categories/{cat_id}/posts", json={
+    # event:post
+    client.post(f"/api/events/{cat_id}/posts", json={
         "post_id": post_id, "relation_type": "submission",
     })
     # post:resource
@@ -229,7 +229,7 @@ def test_delete_post_full_cascade(client):
 
     # Verify relations exist
     h = {"X-User-Id": str(uid)}
-    assert len(client.get(f"/api/categories/{cat_id}/posts", headers=h).json()) == 1
+    assert len(client.get(f"/api/events/{cat_id}/posts", headers=h).json()) == 1
     assert len(client.get(f"/api/posts/{post_id}/resources").json()) == 1
     assert len(client.get(f"/api/posts/{post_id}/related").json()) == 1
     assert client.get(f"/api/posts/{post_id}", headers=h).json()["like_count"] == 1
@@ -242,25 +242,25 @@ def test_delete_post_full_cascade(client):
     # Post not found
     assert client.get(f"/api/posts/{post_id}").status_code == 404
 
-    # category:post relation removed
-    assert len(client.get(f"/api/categories/{cat_id}/posts", headers=h).json()) == 0
+    # event:post relation removed
+    assert len(client.get(f"/api/events/{cat_id}/posts", headers=h).json()) == 0
 
     # Resource and related post still exist
     assert client.get(f"/api/resources/{resource_id}").status_code == 200
     assert client.get(f"/api/posts/{related_post_id}", headers=h).status_code == 200
 
 
-# --- TC-DEL-013: Delete rule → category:rule cascade ---
+# --- TC-DEL-013: Delete rule → event:rule cascade ---
 
 def test_delete_rule_cascades_category_rule(client):
-    """TC-DEL-013: Delete rule that's associated with a category; relation removed."""
+    """TC-DEL-013: Delete rule that's associated with a event; relation removed."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     rule_id = _create_rule(client, uid)
 
-    # Associate rule with category
-    client.post(f"/api/categories/{cat_id}/rules", json={"rule_id": rule_id, "priority": 1})
-    assert len(client.get(f"/api/categories/{cat_id}/rules").json()) == 1
+    # Associate rule with event
+    client.post(f"/api/events/{cat_id}/rules", json={"rule_id": rule_id, "priority": 1})
+    assert len(client.get(f"/api/events/{cat_id}/rules").json()) == 1
 
     # Delete rule
     resp = client.delete(f"/api/rules/{rule_id}", headers={"X-User-Id": str(uid)})
@@ -269,8 +269,8 @@ def test_delete_rule_cascades_category_rule(client):
     # Rule not found
     assert client.get(f"/api/rules/{rule_id}").status_code == 404
 
-    # category:rule relation removed
-    assert len(client.get(f"/api/categories/{cat_id}/rules").json()) == 0
+    # event:rule relation removed
+    assert len(client.get(f"/api/events/{cat_id}/rules").json()) == 0
 
 
 # --- TC-DEL-015: Delete parent comment → cascade child comments ---
@@ -335,64 +335,64 @@ def test_update_deleted_post_returns_not_found(client):
 
 # --- Additional cascade tests ---
 
-def test_delete_category_cascades_category_post(client):
-    """Delete category removes category:post relations."""
+def test_delete_event_cascades_category_post(client):
+    """Delete event removes event:post relations."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     post_id = _create_post(client, uid)
-    client.post(f"/api/categories/{cat_id}/posts", json={
+    client.post(f"/api/events/{cat_id}/posts", json={
         "post_id": post_id, "relation_type": "submission",
     })
     h = {"X-User-Id": str(uid)}
-    assert len(client.get(f"/api/categories/{cat_id}/posts", headers=h).json()) == 1
+    assert len(client.get(f"/api/events/{cat_id}/posts", headers=h).json()) == 1
 
-    client.delete(f"/api/categories/{cat_id}", headers={"X-User-Id": str(uid)})
+    client.delete(f"/api/events/{cat_id}", headers={"X-User-Id": str(uid)})
     # Post still exists
     assert client.get(f"/api/posts/{post_id}", headers=h).status_code == 200
 
 
-def test_delete_category_cascades_category_group(client):
-    """Delete category removes category:group relations."""
+def test_delete_event_cascades_category_group(client):
+    """Delete event removes event:group relations."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     group_id = _create_group(client, uid)
-    client.post(f"/api/categories/{cat_id}/groups", json={"group_id": group_id})
-    assert len(client.get(f"/api/categories/{cat_id}/groups").json()) == 1
+    client.post(f"/api/events/{cat_id}/groups", json={"group_id": group_id})
+    assert len(client.get(f"/api/events/{cat_id}/groups").json()) == 1
 
-    client.delete(f"/api/categories/{cat_id}", headers={"X-User-Id": str(uid)})
+    client.delete(f"/api/events/{cat_id}", headers={"X-User-Id": str(uid)})
     # Group still exists
     assert client.get(f"/api/groups/{group_id}").status_code == 200
 
 
-def test_delete_category_cascades_category_category(client):
-    """Delete category removes category:category associations (both directions)."""
+def test_delete_event_cascades_category_category(client):
+    """Delete event removes event:event associations (both directions)."""
     uid = _create_user(client)
-    cat_a = _create_category(client, uid, "A")
-    cat_b = _create_category(client, uid, "B")
-    cat_c = _create_category(client, uid, "C")
+    cat_a = _create_event(client, uid, "A")
+    cat_b = _create_event(client, uid, "B")
+    cat_c = _create_event(client, uid, "C")
 
     # A→B (stage)
-    client.post(f"/api/categories/{cat_a}/associations", json={
-        "target_category_id": cat_b, "relation_type": "stage", "stage_order": 1,
+    client.post(f"/api/events/{cat_a}/associations", json={
+        "target_event_id": cat_b, "relation_type": "stage", "stage_order": 1,
     })
     # C→A (track)
-    client.post(f"/api/categories/{cat_c}/associations", json={
-        "target_category_id": cat_a, "relation_type": "track",
+    client.post(f"/api/events/{cat_c}/associations", json={
+        "target_event_id": cat_a, "relation_type": "track",
     })
 
-    assert len(client.get(f"/api/categories/{cat_a}/associations").json()) == 1
-    assert len(client.get(f"/api/categories/{cat_c}/associations").json()) == 1
+    assert len(client.get(f"/api/events/{cat_a}/associations").json()) == 1
+    assert len(client.get(f"/api/events/{cat_c}/associations").json()) == 1
 
     # Delete A → removes both A→B and C→A
-    client.delete(f"/api/categories/{cat_a}", headers={"X-User-Id": str(uid)})
+    client.delete(f"/api/events/{cat_a}", headers={"X-User-Id": str(uid)})
 
     # B and C still exist
     h = {"X-User-Id": str(uid)}
-    assert client.get(f"/api/categories/{cat_b}", headers=h).status_code == 200
-    assert client.get(f"/api/categories/{cat_c}", headers=h).status_code == 200
+    assert client.get(f"/api/events/{cat_b}", headers=h).status_code == 200
+    assert client.get(f"/api/events/{cat_c}", headers=h).status_code == 200
 
     # C's association to A removed
-    assert len(client.get(f"/api/categories/{cat_c}/associations").json()) == 0
+    assert len(client.get(f"/api/events/{cat_c}/associations").json()) == 0
 
 
 def test_delete_user_cascades_user_user(client):

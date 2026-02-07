@@ -1,5 +1,6 @@
 """posts API 路由"""
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy import inspect as sa_inspect
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -9,6 +10,17 @@ from app.deps import get_current_user_id, require_current_user_id, require_role
 from app.schemas.post import POST_STATUSES, POST_TYPES, VALID_POST_STATUS_TRANSITIONS
 
 router = APIRouter()
+
+def _normalize_post_type(value: Optional[str]) -> str:
+    if value in POST_TYPES:
+        return value
+    return "general"
+
+
+def _post_to_dict(post) -> dict:
+    data = {attr.key: getattr(post, attr.key) for attr in sa_inspect(post).mapper.column_attrs}
+    data["type"] = _normalize_post_type(data.get("type"))
+    return data
 
 
 @router.get("/posts", response_model=schemas.PaginatedPostList, tags=["posts"])
@@ -33,7 +45,8 @@ def list_posts(
         query = query.filter(crud.posts.model.status == post_status)
     total = query.count()
     items = query.offset(skip).limit(limit).all()
-    return {"items": items, "total": total, "skip": skip, "limit": limit}
+    items_out = [_post_to_dict(p) for p in items]
+    return {"items": items_out, "total": total, "skip": skip, "limit": limit}
 
 
 @router.post("/posts", response_model=schemas.Post, status_code=status.HTTP_201_CREATED, tags=["posts"])
@@ -49,7 +62,7 @@ def create_post(
     db.add(db_obj)
     db.commit()
     db.refresh(db_obj)
-    return db_obj
+    return _post_to_dict(db_obj)
 
 
 @router.get("/posts/{post_id}", response_model=schemas.Post, tags=["posts"])
@@ -67,7 +80,7 @@ def get_post(
     # Visibility: private posts only visible to author
     if item.visibility == "private" and item.created_by != current_user_id:
         raise HTTPException(status_code=404, detail="Post not found")
-    return item
+    return _post_to_dict(item)
 
 
 @router.patch("/posts/{post_id}", response_model=schemas.Post, tags=["posts"])
@@ -98,7 +111,8 @@ def update_post(
                        f"Allowed: {current_status} → {', '.join(allowed) if allowed else '(none, terminal state)'}",
             )
 
-    return crud.posts.update(db, db_obj=item, obj_in=post_in)
+    updated = crud.posts.update(db, db_obj=item, obj_in=post_in)
+    return _post_to_dict(updated)
 
 
 @router.delete("/posts/{post_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["posts"])

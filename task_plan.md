@@ -1,215 +1,205 @@
-# Task Plan: 前端页面重构开发
+# Task Plan: 完整 E2E 用户旅程测试
 
-> **目标**: 根据 user-journeys.md 和 ui-design-spec.md，重新设计并实现前端页面
-> **创建时间**: 2026-02-03
-> **背景**: 上一版本代码已删除，从头开始重做前端
+> **目标**: 实现 specs/testcases/11-user-journeys.md 定义的完整 E2E 测试
+> **创建时间**: 2026-02-08
+> **状态**: `complete`
 
-## 当前阶段
+## 背景
 
-**Phase 2: 补充缺失的 UI 设计规范** - ✅ 已完成
+### 测试用例架构分析
+
+项目采用分层测试策略：
+
+| 层级 | 文件范围 | 测试类型 | 目的 |
+|-----|---------|---------|------|
+| 基础层 | 01-10 | 单元/CRUD | 验证基础数据操作和约束 |
+| 桥接层 | 11 | 集成测试 | **用户旅程完整流程** |
+| 高级层 | 12-17 | 功能测试 | 高级功能（转账、关注、规则引擎） |
+| 场景层 | 18-33 | 端到端 | 按 User Journey 组织的细粒度场景 |
+
+### 分散问题
+
+- 11-user-journeys.md 定义 8 个核心旅程，但只是规范
+- 18-33 按 User Journey 文档组织，与 11 存在重叠
+- 现有 E2E 测试（e2e/test_*.py）侧重前端集成，非完整旅程
+
+### 解决方案
+
+实现 11-user-journeys.md 的 8 个核心旅程作为**完整 E2E 测试**：
+- 涵盖多步骤、多角色、跨实体的业务流程
+- 验证前后端集成 + 业务逻辑 + 数据一致性
+- 与 18-33 细粒度测试互补，不重复
 
 ## 阶段列表
 
-| Phase | 描述 | 状态 | 完成度 |
-|-------|------|------|--------|
-| Phase 1 | 分析 User Journey 与 UI 设计的差距 | ✅ 完成 | 100% |
-| Phase 2 | 补充缺失的 UI 设计规范 | ✅ 完成 | 100% |
-| Phase 3 | 创建页面路由结构 | ✅ 完成 | 100% |
-| Phase 4 | 实现布局组件 (Header/Sidebar/Panel) | ✅ 完成 | 100% |
-| Phase 5 | 实现卡片组件 | ✅ 完成 | 100% |
-| Phase 6 | 实现页面 Body 内容 | ✅ 完成 | 100% |
-| Phase 7 | 集成测试与验证 | ✅ 完成 | 100% |
+| Phase | 描述 | 用例 | 状态 | 完成度 |
+|-------|------|------|------|--------|
+| Phase 1 | 分析 11-user-journeys.md 8 个旅程 | - | `complete` | 100% |
+| Phase 2 | 实现 TC-JOUR-002 匿名浏览 | 1 case | `complete` | 100% |
+| Phase 3 | 实现 TC-JOUR-005 团队加入流程 | 1 case | `complete` | 100% |
+| Phase 4 | 实现 TC-JOUR-007 团队报名活动 | 1 case | `complete` | 100% |
+| Phase 5 | 实现 TC-JOUR-009 发送帖子 | 1 case | `complete` | 100% |
+| Phase 6 | 实现 TC-JOUR-010 证书颁发流程 | 1 case | `complete` | 100% |
+| Phase 7 | 实现 TC-JOUR-011 编辑帖子 | 2 cases | `complete` | 100% |
+| Phase 8 | 实现 TC-JOUR-012 删除帖子级联 | 1 case | `complete` | 100% |
+| Phase 9 | 实现 TC-JOUR-013 社区互动 | 1 case | `complete` | 100% |
+| Phase 10 | 验证与提交 | - | `complete` | 100% |
 
 ---
 
-## Phase 1: 分析与差距检查 ✅
+## Phase 1: 分析 11-user-journeys.md `complete`
 
-### 1.1 User Journey → 页面需求映射
+### 8 个核心旅程摘要
 
-| Journey | 描述 | 需要的页面路由 | UI 设计章节 | 状态 |
-|---------|------|---------------|-------------|------|
-| J2 | 浏览探索页 | `/`, `/explore` | 7.1 首页, 7.2 探索页 | ✅ 已有设计 |
-| J3 | 注册 | `/register` | 7.9 登录/注册页 | ✅ 已有设计 |
-| J4 | 登录 | `/login` | 7.9 登录/注册页 | ✅ 已有设计 |
-| J5 | 加入组 | `/groups/[id]` | 7.6 团队详情页 | ✅ 已有设计 |
-| J6 | 创建活动 | `/events/create` | 7.11 创建活动页 | ✅ 已补充 |
-| J7 | 加入活动 | `/events/[id]` | 7.3 活动详情页 | ✅ 已有设计 |
-| J8 | 创建团队 | `/groups/create` | 7.12 创建团队页 | ✅ 已补充 |
-| J9 | 发送帖子 | `/posts/create`, `/posts/[id]/edit` | 7.5 创建/编辑帖子页 | ✅ 已有设计 |
-| J10 | 活动结束与颁奖 | `/events/[id]/ranking` | 7.8 排名页 | ✅ 已有设计 |
-| J11 | 编辑 Post | `/posts/[id]/edit` | 7.5 创建/编辑帖子页 | ✅ 已有设计 |
-| J12 | 删除 Post | (对话框组件) | 8.5.2 对话框 | ✅ 已有设计 |
-| J13 | 社区互动 | `/posts/[id]` | 7.4 帖子详情页 | ✅ 已有设计 |
-| J14 | 关注与好友 | `/users/[id]` | 7.7 用户主页 | ✅ 已有设计 |
-| J15 | 多阶段/多赛道 | `/events/[id]` | 7.10 多阶段活动页 | ✅ 已有设计 |
-| J16 | 资产转移 | (帖子编辑页附件) | 7.5 附件管理 | ✅ 已有设计 |
+| 旅程 | 用例ID | 描述 | 涉及实体 |
+|------|--------|------|---------|
+| 匿名浏览 | TC-JOUR-002 | 未登录访客浏览公开内容 | event, post |
+| 加入团队 | TC-JOUR-005 | 申请→审批→加入完整流程 | user, group, group_user |
+| 团队报名 | TC-JOUR-007 | 团队报名活动+提交作品 | group, event, post, rule |
+| 发送帖子 | TC-JOUR-009 | 日常帖子+参赛提案 | post, event, rule |
+| 获取证书 | TC-JOUR-010 | 活动结束→证书颁发 | event, resource, post |
+| 编辑帖子 | TC-JOUR-011 | 版本管理+副本机制 | post, post_post |
+| 删除帖子 | TC-JOUR-012 | 级联删除验证 | post, interaction, relation |
+| 社区互动 | TC-JOUR-013 | 点赞/评论/评分 | interaction, post |
 
-**分析结果**: 16/16 User Journey 现在都有对应的 UI 设计 ✅
+### 测试策略
 
-### 1.2 现有前端组件盘点
-
-**shadcn/ui 基础组件 (25个):**
-- 布局: sidebar, sheet, navigation-menu, breadcrumb, pagination, tabs
-- 按钮表单: button, input, textarea, select, checkbox, radio-group
-- 卡片展示: card, avatar, badge, skeleton, separator, scroll-area
-- 交互反馈: dialog, alert-dialog, dropdown-menu, popover, command, tooltip, sonner
-
-**已有业务组件 (10个):**
-- `auth/LoginForm.tsx` - 登录表单
-- `auth/RegisterForm.tsx` - 注册表单
-- `user/UserFollowButton.tsx` - 关注按钮
-- `user/FollowersList.tsx` - 粉丝列表
-- `user/FollowingList.tsx` - 关注列表
-- `category/CategoryStageView.tsx` - 活动阶段视图
-- `category/CategoryTrackView.tsx` - 活动赛道视图
-- `notification/NotificationDropdown.tsx` - 通知下拉
-- `search/SearchModal.tsx` - 搜索弹窗
-- `home/PlatformStats.tsx` - 平台统计
+- 每个旅程一个测试类
+- 使用 pytest + playwright (Python E2E)
+- 需要真实后端服务 + 数据库
+- 测试前清理/准备种子数据
 
 ---
 
-## Phase 2: 补充缺失的 UI 设计规范 ✅
+## Phase 2: TC-JOUR-002 匿名浏览 `pending`
 
-已在 `specs/ui/ui-design-spec.md` 中补充:
-- [x] 7.11 创建活动页 (Focus 布局, POST /categories)
-- [x] 7.12 创建团队页 (Focus 布局, POST /groups)
+**文件**: `e2e/test_journey_anonymous.py`
 
----
-
-## Phase 3: 创建页面路由结构
-
-### 3.1 页面路由清单
-
-按优先级分组:
-
-**P0 - 核心页面 (必须实现):**
-| 路由 | 布局 | 文件路径 | 对应 UI 设计 |
-|------|------|---------|-------------|
-| `/` | Landing | `app/page.tsx` | 7.1 首页 |
-| `/login` | Landing | `app/login/page.tsx` | 7.9 登录页 |
-| `/register` | Landing | `app/register/page.tsx` | 7.9 注册页 |
-| `/explore` | Compact | `app/explore/page.tsx` | 7.2 探索页 |
-| `/events` | Compact | `app/events/page.tsx` | 活动列表 |
-| `/events/[id]` | Full | `app/events/[id]/page.tsx` | 7.3 活动详情 |
-
-**P1 - 重要页面:**
-| 路由 | 布局 | 文件路径 | 对应 UI 设计 |
-|------|------|---------|-------------|
-| `/posts` | Compact | `app/posts/page.tsx` | 帖子列表 |
-| `/posts/[id]` | Full | `app/posts/[id]/page.tsx` | 7.4 帖子详情 |
-| `/posts/create` | Focus | `app/posts/create/page.tsx` | 7.5 创建帖子 |
-| `/posts/[id]/edit` | Focus | `app/posts/[id]/edit/page.tsx` | 7.5 编辑帖子 |
-| `/groups` | Compact | `app/groups/page.tsx` | 团队列表 |
-| `/groups/[id]` | Full | `app/groups/[id]/page.tsx` | 7.6 团队详情 |
-| `/users/[id]` | Full | `app/users/[id]/page.tsx` | 7.7 用户主页 |
-
-**P2 - 扩展页面:**
-| 路由 | 布局 | 文件路径 | 对应 UI 设计 |
-|------|------|---------|-------------|
-| `/events/create` | Focus | `app/events/create/page.tsx` | 7.11 创建活动 |
-| `/groups/create` | Focus | `app/groups/create/page.tsx` | 7.12 创建团队 |
-| `/settings` | Full | `app/settings/page.tsx` | 设置页 |
-
-### 3.2 待创建的路由文件
-
-```
-frontend/app/
-├── page.tsx                    # / (已存在，需更新)
-├── login/page.tsx              # /login
-├── register/page.tsx           # /register
-├── explore/page.tsx            # /explore
-├── events/
-│   ├── page.tsx                # /events
-│   ├── [id]/page.tsx           # /events/[id]
-│   └── create/page.tsx         # /events/create
-├── posts/
-│   ├── page.tsx                # /posts
-│   ├── [id]/
-│   │   ├── page.tsx            # /posts/[id]
-│   │   └── edit/page.tsx       # /posts/[id]/edit
-│   └── create/page.tsx         # /posts/create
-├── groups/
-│   ├── page.tsx                # /groups
-│   ├── [id]/page.tsx           # /groups/[id]
-│   └── create/page.tsx         # /groups/create
-├── users/
-│   └── [id]/page.tsx           # /users/[id]
-└── settings/page.tsx           # /settings
-```
+**测试场景**:
+1. 未登录访客访问首页
+2. 浏览 published 活动列表
+3. 浏览 published 帖子列表
+4. 按 tag/type 筛选
+5. 验证 draft 内容不可见
 
 ---
 
-## Phase 4: 实现布局组件
+## Phase 3: TC-JOUR-005 团队加入流程 `pending`
 
-### 4.1 布局组件清单
+**文件**: `e2e/test_journey_team_join.py`
 
-| 组件 | 文件路径 | 描述 |
-|------|---------|------|
-| Header | `components/layout/Header.tsx` | 60px 顶部导航 |
-| Sidebar | `components/layout/Sidebar.tsx` | 168px/60px 侧边栏 |
-| Panel | `components/layout/Panel.tsx` | 328px 右侧面板 |
-| PageLayout | `components/layout/PageLayout.tsx` | 4 种布局变体容器 |
-
-### 4.2 布局变体
-
-```tsx
-type LayoutVariant = 'full' | 'compact' | 'focus' | 'landing'
-
-// Full: Sidebar 展开 + Panel 显示
-// Compact: Sidebar 收起 + Panel 显示
-// Focus: 无 Sidebar + 无 Panel
-// Landing: 无 Sidebar + 无 Panel (居中内容)
-```
+**测试场景**:
+1. Carol 申请加入需审批团队
+2. 验证申请状态为 pending
+3. Owner Alice 批准申请
+4. 验证状态变为 accepted
+5. Bob 申请被拒绝
+6. Bob 再次申请
+7. 验证团队成员列表
 
 ---
 
-## Phase 5: 实现卡片组件
+## Phase 4: TC-JOUR-007 团队报名活动 `pending`
 
-| 组件 | 文件路径 | 对应 UI 设计 |
-|------|---------|-------------|
-| CategoryCard | `components/cards/CategoryCard.tsx` | 8.2.1 活动卡片 |
-| PostCard | `components/cards/PostCard.tsx` | 8.2.2 帖子卡片 |
-| GroupCard | `components/cards/GroupCard.tsx` | 8.2.3 团队卡片 |
-| UserCard | `components/cards/UserCard.tsx` | 8.2.4 用户卡片 |
+**文件**: `e2e/test_journey_team_registration.py`
 
----
-
-## Phase 6: 实现页面 Body 内容
-
-按优先级实现:
-1. P0 页面 (首页、登录、探索、活动列表/详情)
-2. P1 页面 (帖子、团队、用户)
-3. P2 页面 (创建页面、设置)
+**测试场景**:
+1. Alice 创建团队
+2. Bob 加入团队
+3. 团队报名活动
+4. 创建参赛帖子
+5. 验证规则约束检查
+6. 验证报名列表
+7. 验证成员列表
 
 ---
 
-## Phase 7: 集成测试与验证 ✅
+## Phase 5: TC-JOUR-009 发送帖子 `pending`
 
-- [x] 所有页面路由可访问 (16/16 通过)
-- [x] 布局变体正确渲染 (Full/Compact/Focus/Landing)
-- [x] Mock 数据正确渲染 (待 API 集成)
-- [x] 用户交互组件正常 (按钮/表单/标签)
-- [x] E2E 测试覆盖核心 Journey (J2-J16)
+**文件**: `e2e/test_journey_post_creation.py`
 
-**测试结果**: 详见 `plans/e2e_test.md` 第四轮测试
-
-**修复的问题**: Next.js 14 动态路由参数需使用 `useParams()` 而非 `use(params)`
+**测试场景**:
+1. 创建日常帖子（type=general）
+2. 验证公开可见
+3. 创建参赛提案（type=proposal）
+4. 关联到活动
+5. 验证规则约束
+6. 验证审核流程（如适用）
 
 ---
 
-## 决策记录
+## Phase 6: TC-JOUR-010 证书颁发 `pending`
 
-| 日期 | 决策 | 原因 |
-|------|------|------|
-| 2026-02-03 | 路由使用 `/events` 而非 `/categories` | 更符合 Hackathon 平台语义 |
-| 2026-02-03 | 布局组件使用 4 种变体 | 符合 ui-design-spec 1.2 节定义 |
-| 2026-02-03 | 复用已有的业务组件 | LoginForm, RegisterForm 等已存在 |
-| 2026-02-03 | 补充 7.11 创建活动页、7.12 创建团队页 | J6, J8 Journey 缺少 UI 设计 |
+**文件**: `e2e/test_journey_certificate.py`
+
+**测试场景**:
+1. 关闭活动
+2. 创建证书资源
+3. 关联到参赛帖子
+4. 创建分享帖子
+5. 验证可访问性
+
+---
+
+## Phase 7: TC-JOUR-011 编辑帖子 `pending`
+
+**文件**: `e2e/test_journey_post_edit.py`
+
+**测试场景**:
+1. TC-JOUR-011-1: 编辑自己帖子（版本管理）
+2. TC-JOUR-011-2: 编辑他人帖子（副本机制）
+
+---
+
+## Phase 8: TC-JOUR-012 删除帖子级联 `pending`
+
+**文件**: `e2e/test_journey_post_delete.py`
+
+**测试场景**:
+1. 创建复杂关联帖子
+2. 删除帖子
+3. 验证物理删除
+4. 验证关系解除
+5. 验证 interaction 级联删除
+
+---
+
+## Phase 9: TC-JOUR-013 社区互动 `pending`
+
+**文件**: `e2e/test_journey_community.py`
+
+**测试场景**:
+1. Dave 点赞帖子
+2. Bob 发表评论
+3. 评委进行评分
+4. 验证重复点赞被拒绝
+5. 验证计数器正确
+
+---
+
+## Phase 10: 验证与提交 `pending`
+
+- [ ] 运行所有 E2E 测试
+- [ ] 更新 progress.md
+- [ ] 提交所有更改
+- [ ] 推送到远程
+
+---
+
+## 与现有测试的关系
+
+| 现有测试 | 新增测试 | 关系 |
+|---------|---------|------|
+| test_home.py | - | 保留，基础检查 |
+| test_post_integration.py | test_journey_post_creation.py | 互补：前者验证 API 调用，后者验证完整业务流程 |
+| test_group_integration.py | test_journey_team_*.py | 互补 |
+| test_auth_integration.py | - | 保留，认证基础 |
 
 ---
 
 ## 错误记录
 
-| 错误 | 尝试 | 解决方案 |
-|------|------|----------|
-| (暂无) | | |
+| 时间 | 错误 | 尝试 | 解决方案 |
+|------|------|------|----------|
+| - | - | - | - |
+

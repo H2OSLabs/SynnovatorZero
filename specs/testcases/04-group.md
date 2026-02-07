@@ -46,10 +46,10 @@ Bob 加入一个 require_approval=false 的团队。创建的 group_user 记录 
 ## 4.4 删除团队
 
 **TC-GRP-020：删除团队及级联**
-删除一个已注册活动（category:group 关系存在）的团队。删除完成后：
+删除一个已注册活动（event:group 关系存在）的团队。删除完成后：
 - 团队记录被物理删除
 - group:user 关系被解除
-- category:group 关系被解除
+- event:group 关系被解除
 
 ## 4.5 负向/边界
 

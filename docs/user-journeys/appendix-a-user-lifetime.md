@@ -23,8 +23,8 @@ flowchart TD
     E --> E1[筛选浏览]
     E1 --> E2[个人说明 Post type=profile]
     E1 --> E3[团队 Post type=team]
-    E1 --> E4[活动说明 Post type=category]
-    E1 --> E5[活动提交 Post type=for_category]
+    E1 --> E4[活动说明 Post type=event]
+    E1 --> E5[活动提交 Post type=proposal]
     E1 --> E6[提案 Post type=proposal]
 
     F --> F1[选择内容类型]

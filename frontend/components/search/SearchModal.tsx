@@ -26,9 +26,9 @@ export function SearchModal({ defaultOpen = false, onOpenChange }: SearchModalPr
   const [query, setQuery] = React.useState('')
   const [results, setResults] = React.useState<{
     users: SearchResult[]
-    categories: SearchResult[]
+    events: SearchResult[]
     posts: SearchResult[]
-  }>({ users: [], categories: [], posts: [] })
+  }>({ users: [], events: [], posts: [] })
   const [isSearching, setIsSearching] = React.useState(false)
   const router = useRouter()
   const debounceRef = React.useRef<NodeJS.Timeout | null>(null)
@@ -59,7 +59,7 @@ export function SearchModal({ defaultOpen = false, onOpenChange }: SearchModalPr
     onOpenChange?.(newOpen)
     if (!newOpen) {
       setQuery('')
-      setResults({ users: [], categories: [], posts: [] })
+      setResults({ users: [], events: [], posts: [] })
     }
   }
 
@@ -70,7 +70,7 @@ export function SearchModal({ defaultOpen = false, onOpenChange }: SearchModalPr
     }
 
     if (!query.trim()) {
-      setResults({ users: [], categories: [], posts: [] })
+      setResults({ users: [], events: [], posts: [] })
       return
     }
 
@@ -81,7 +81,7 @@ export function SearchModal({ defaultOpen = false, onOpenChange }: SearchModalPr
         setResults(data)
       } catch (error) {
         console.error('Search error:', error)
-        setResults({ users: [], categories: [], posts: [] })
+        setResults({ users: [], events: [], posts: [] })
       } finally {
         setIsSearching(false)
       }
@@ -101,14 +101,14 @@ export function SearchModal({ defaultOpen = false, onOpenChange }: SearchModalPr
 
   const hasResults =
     results.users.length > 0 ||
-    results.categories.length > 0 ||
+    results.events.length > 0 ||
     results.posts.length > 0
 
   const getIcon = (type: SearchResult['type']) => {
     switch (type) {
       case 'user':
         return <UserIcon className="h-4 w-4 text-nf-muted" />
-      case 'category':
+      case 'event':
         return <FolderIcon className="h-4 w-4 text-nf-muted" />
       case 'post':
         return <FileTextIcon className="h-4 w-4 text-nf-muted" />
@@ -166,20 +166,20 @@ export function SearchModal({ defaultOpen = false, onOpenChange }: SearchModalPr
               </CommandGroup>
             )}
 
-            {results.users.length > 0 && results.categories.length > 0 && (
+            {results.users.length > 0 && results.events.length > 0 && (
               <CommandSeparator className="bg-nf-dark-bg" />
             )}
 
-            {results.categories.length > 0 && (
+            {results.events.length > 0 && (
               <CommandGroup heading="活动" className="text-nf-muted">
-                {results.categories.map(result => (
+                {results.events.map(result => (
                   <CommandItem
-                    key={`category-${result.id}`}
-                    value={`category-${result.id}-${result.title}`}
+                    key={`event-${result.id}`}
+                    value={`event-${result.id}-${result.title}`}
                     onSelect={() => handleSelect(result)}
                     className="cursor-pointer hover:bg-nf-dark-bg data-[selected=true]:bg-nf-dark-bg data-[selected=true]:text-nf-lime"
                   >
-                    {getIcon('category')}
+                    {getIcon('event')}
                     <div className="flex flex-col">
                       <span>{result.title}</span>
                       {result.subtitle && (
@@ -191,7 +191,7 @@ export function SearchModal({ defaultOpen = false, onOpenChange }: SearchModalPr
               </CommandGroup>
             )}
 
-            {(results.users.length > 0 || results.categories.length > 0) &&
+            {(results.users.length > 0 || results.events.length > 0) &&
               results.posts.length > 0 && (
               <CommandSeparator className="bg-nf-dark-bg" />
             )}

@@ -32,7 +32,7 @@ class DataImporter:
     IMPORT_ORDER = [
         # Phase 1: Independent content types
         "user",
-        "category",
+        "event",
         "rule",
         # Phase 2: Dependent content types
         "group",
@@ -41,20 +41,20 @@ class DataImporter:
         # Phase 3: Interactions
         "interaction",
         # Phase 4: Relations
-        "category_rule",
-        "category_post",
-        "category_group",
+        "event_rule",
+        "event_post",
+        "event_group",
         "post_post",
         "post_resource",
         "group_user",
         "target_interaction",
     ]
 
-    CONTENT_TYPES = ["user", "category", "rule", "group", "post", "resource", "interaction"]
+    CONTENT_TYPES = ["user", "event", "rule", "group", "post", "resource", "interaction"]
     RELATION_TYPES = [
-        "category_rule",
-        "category_post",
-        "category_group",
+        "event_rule",
+        "event_post",
+        "event_group",
         "post_post",
         "post_resource",
         "group_user",
@@ -114,7 +114,7 @@ class DataImporter:
 
     def get_model_class(self, type_name: str) -> Optional[Any]:
         """Get SQLAlchemy model class by type name."""
-        # Convert type name to class name (e.g., "user" -> "User", "category_rule" -> "CategoryRule")
+        # Convert type name to class name (e.g., "user" -> "User", "event_rule" -> "EventRule")
         class_name = "".join(word.capitalize() for word in type_name.split("_"))
 
         return getattr(self.models, class_name, None)

@@ -16,7 +16,7 @@ flowchart TD
     C -->|可选择已有内容| E[选择已有 Post]
     D --> F{提交 pre-checks 校验}
     E --> F
-    F -->|通过| G[Post 关联到 Category]
+    F -->|通过| G[Post 关联到 Event]
     F -->|失败| F0[显示错误提示]
     G --> H[报名完成]
 ```
@@ -25,11 +25,11 @@ flowchart TD
 
 | 用户旅程 | 说明 | 数据操作 |
 |---------|------|---------|
-| 浏览活动详情 | 查看活动说明、规则和奖励 | `READ category` + `READ rule` |
+| 浏览活动详情 | 查看活动说明、规则和奖励 | `READ event` + `READ rule` |
 | 点击报名 | 发起报名请求 | 触发 Rule pre-checks |
-| 团队报名 | 以团队身份报名活动 | `CREATE category:group` |
-| 个人报名 | 以个人身份报名活动 | `CREATE category:user` |
-| 提交参赛内容 | 将帖子关联到活动 | `CREATE category:post` |
+| 团队报名 | 以团队身份报名活动 | `CREATE event:group` |
+| 个人报名 | 以个人身份报名活动 | `CREATE event:user` |
+| 提交参赛内容 | 将帖子关联到活动 | `CREATE event:post` |
 
 ## 4.2 报名规则校验（Entry Rule Enforcement）
 
@@ -39,8 +39,8 @@ flowchart TD
 
 | 触发点 | 校验内容 | 失败处理 |
 |-------|---------|---------|
-| `create_relation(category_group)` | 团队报名前置条件 | `on_fail: deny` 拒绝操作 |
-| `create_relation(category_post)` | 帖子提交前置条件 | `on_fail: deny` 拒绝操作 |
+| `create_relation(event_group)` | 团队报名前置条件 | `on_fail: deny` 拒绝操作 |
+| `create_relation(event_post)` | 帖子提交前置条件 | `on_fail: deny` 拒绝操作 |
 
 ### 常见校验场景
 

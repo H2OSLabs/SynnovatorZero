@@ -1,6 +1,6 @@
 """Closure Rule Enforcement tests — Phase 8
 
-Tests that verify rule engine behavior when a category transitions to "closed" status.
+Tests that verify rule engine behavior when a event transitions to "closed" status.
 Post-phase actions (compute_ranking, flag_disqualified, award_certificate) fire after
 the status update. Pre-phase checks validate conditions before allowing the transition.
 
@@ -32,21 +32,21 @@ def _create_user(client, username, role="organizer"):
     return resp.json()["id"]
 
 
-def _create_category(client, uid, name="Closure Test"):
-    """Create a category and advance it to 'published' status."""
-    resp = client.post("/api/categories", json={
+def _create_event(client, uid, name="Closure Test"):
+    """Create a event and advance it to 'published' status."""
+    resp = client.post("/api/events", json={
         "name": name,
         "description": "test",
         "type": "competition",
     }, headers={"X-User-Id": str(uid)})
-    assert resp.status_code == 201, f"Category creation failed: {resp.text}"
+    assert resp.status_code == 201, f"Event creation failed: {resp.text}"
     cat_id = resp.json()["id"]
     pub_resp = client.patch(
-        f"/api/categories/{cat_id}",
+        f"/api/events/{cat_id}",
         json={"status": "published"},
         headers={"X-User-Id": str(uid)},
     )
-    assert pub_resp.status_code == 200, f"Category publish failed: {pub_resp.text}"
+    assert pub_resp.status_code == 200, f"Event publish failed: {pub_resp.text}"
     return cat_id
 
 
@@ -64,7 +64,7 @@ def _create_rule(client, uid, checks=None, **fields):
 
 
 def _link_rule(client, cat_id, rule_id):
-    resp = client.post(f"/api/categories/{cat_id}/rules", json={"rule_id": rule_id})
+    resp = client.post(f"/api/events/{cat_id}/rules", json={"rule_id": rule_id})
     assert resp.status_code == 201, f"Link rule failed: {resp.text}"
 
 
@@ -86,7 +86,7 @@ def _add_member(client, gid, uid):
     return resp
 
 
-def _create_post(client, uid, title="Submission", post_type="for_category"):
+def _create_post(client, uid, title="Submission", post_type="proposal"):
     resp = client.post("/api/posts", json={
         "title": title,
         "type": post_type,
@@ -97,16 +97,16 @@ def _create_post(client, uid, title="Submission", post_type="for_category"):
 
 
 def _submit_to_category(client, cat_id, post_id):
-    resp = client.post(f"/api/categories/{cat_id}/posts", json={
+    resp = client.post(f"/api/events/{cat_id}/posts", json={
         "post_id": post_id,
         "relation_type": "submission",
     })
-    assert resp.status_code == 201, f"Submit to category failed: {resp.text}"
+    assert resp.status_code == 201, f"Submit to event failed: {resp.text}"
     return resp.json()
 
 
 def _register_group(client, cat_id, gid):
-    resp = client.post(f"/api/categories/{cat_id}/groups", json={
+    resp = client.post(f"/api/events/{cat_id}/groups", json={
         "group_id": gid,
     })
     assert resp.status_code == 201, f"Register group failed: {resp.text}"
@@ -127,7 +127,7 @@ def _rate_post(client, post_id, user_id, scores):
 
 def _close_category(client, cat_id, uid):
     return client.patch(
-        f"/api/categories/{cat_id}",
+        f"/api/events/{cat_id}",
         json={"status": "closed"},
         headers={"X-User-Id": str(uid)},
     )
@@ -154,17 +154,17 @@ def _get_post(client, post_id, uid):
 # ---------------------------------------------------------------------------
 
 def test_close_001_pre_phase_warn_allows_close(client):
-    """A pre-phase check with on_fail=warn should allow category close to proceed."""
+    """A pre-phase check with on_fail=warn should allow event close to proceed."""
     org = _create_user(client, "close001_org")
-    cat_id = _create_category(client, org, "Warn Close Test")
+    cat_id = _create_event(client, org, "Warn Close Test")
 
     rule_id = _create_rule(client, org, checks=[{
-        "trigger": "update_content(category.status)",
+        "trigger": "update_content(event.status)",
         "phase": "pre",
         "condition": {
             "type": "field_match",
             "params": {
-                "entity": "category",
+                "entity": "event",
                 "target": "$current",
                 "field": "status",
                 "op": "==",
@@ -172,7 +172,7 @@ def test_close_001_pre_phase_warn_allows_close(client):
             },
         },
         "on_fail": "warn",
-        "message": "Category is being closed, proceed with caution",
+        "message": "Event is being closed, proceed with caution",
     }])
     _link_rule(client, cat_id, rule_id)
 
@@ -186,23 +186,23 @@ def test_close_001_pre_phase_warn_allows_close(client):
 # ---------------------------------------------------------------------------
 
 def test_close_002_pre_phase_deny_blocks_close(client, db_session):
-    """A pre-phase check with on_fail=deny should block category close.
+    """A pre-phase check with on_fail=deny should block event close.
 
     The rule uses a count condition: at least 1 submission must exist.
     We register a group but do not submit anything, so the check fails.
     """
     org = _create_user(client, "close002_org")
-    cat_id = _create_category(client, org, "Deny Close Test")
+    cat_id = _create_event(client, org, "Deny Close Test")
 
     # Rule: require at least 1 submission before closing
     rule_id = _create_rule(client, org, checks=[{
-        "trigger": "update_content(category.status)",
+        "trigger": "update_content(event.status)",
         "phase": "pre",
         "condition": {
             "type": "count",
             "params": {
-                "entity": "category_post",
-                "scope": "category",
+                "entity": "event_post",
+                "scope": "event",
                 "filter": {"relation_type": "submission"},
                 "op": ">=",
                 "value": 1,
@@ -238,11 +238,11 @@ def test_close_010_flag_disqualified_team_too_small(client):
     - Team C: 1 accepted member (disqualified)
 
     The rule sets min_team_size=2 which auto-expands to a pre-phase count check on
-    category_post submissions.  To avoid blocking submissions, we submit posts BEFORE
-    linking the rule to the category.
+    event_post submissions.  To avoid blocking submissions, we submit posts BEFORE
+    linking the rule to the event.
     """
     org = _create_user(client, "close010_org")
-    cat_id = _create_category(client, org, "Flag DQ Test")
+    cat_id = _create_event(client, org, "Flag DQ Test")
 
     # --- Team A: 3 members ---
     leader_a = _create_user(client, "close010_leader_a", role="participant")
@@ -280,14 +280,14 @@ def test_close_010_flag_disqualified_team_too_small(client):
     _rate_post(client, post_c, rater, {"Quality": 90})
 
     # NOW link the rule (after submissions, so pre-phase min_team_size check does
-    # not interfere with category_post creation)
+    # not interfere with event_post creation)
     rule_id = _create_rule(client, org, min_team_size=2, checks=[{
-        "trigger": "update_content(category.status)",
+        "trigger": "update_content(event.status)",
         "phase": "post",
         "condition": {
             "type": "field_match",
             "params": {
-                "entity": "category",
+                "entity": "event",
                 "target": "$current",
                 "field": "status",
                 "op": "==",
@@ -300,7 +300,7 @@ def test_close_010_flag_disqualified_team_too_small(client):
     }])
     _link_rule(client, cat_id, rule_id)
 
-    # Close category
+    # Close event
     resp = _close_category(client, cat_id, org)
     assert resp.status_code == 200
 
@@ -329,15 +329,15 @@ def test_close_020_compute_ranking_by_average_rating(client):
     Expected: rank_1 = 90.2, rank_2 = 85.5, rank_3 = 78.0
     """
     org = _create_user(client, "close020_org")
-    cat_id = _create_category(client, org, "Ranking Test")
+    cat_id = _create_event(client, org, "Ranking Test")
 
     rule_id = _create_rule(client, org, checks=[{
-        "trigger": "update_content(category.status)",
+        "trigger": "update_content(event.status)",
         "phase": "post",
         "condition": {
             "type": "field_match",
             "params": {
-                "entity": "category",
+                "entity": "event",
                 "target": "$current",
                 "field": "status",
                 "op": "==",
@@ -408,15 +408,15 @@ def test_close_020_compute_ranking_by_average_rating(client):
 def test_close_022_null_rating_excluded(client):
     """A submission with no rating (null average_rating) should not receive a rank tag."""
     org = _create_user(client, "close022_org")
-    cat_id = _create_category(client, org, "Null Rating Test")
+    cat_id = _create_event(client, org, "Null Rating Test")
 
     rule_id = _create_rule(client, org, checks=[{
-        "trigger": "update_content(category.status)",
+        "trigger": "update_content(event.status)",
         "phase": "post",
         "condition": {
             "type": "field_match",
             "params": {
-                "entity": "category",
+                "entity": "event",
                 "target": "$current",
                 "field": "status",
                 "op": "==",
@@ -476,17 +476,17 @@ def test_close_022_null_rating_excluded(client):
 def test_close_030_award_certificate(client):
     """After ranking, award_certificate should create certificate posts for ranked submissions."""
     org = _create_user(client, "close030_org")
-    cat_id = _create_category(client, org, "Award Cert Test")
+    cat_id = _create_event(client, org, "Award Cert Test")
 
     # Two actions: first compute_ranking, then award_certificate
     rule_id = _create_rule(client, org, checks=[
         {
-            "trigger": "update_content(category.status)",
+            "trigger": "update_content(event.status)",
             "phase": "post",
             "condition": {
                 "type": "field_match",
                 "params": {
-                    "entity": "category",
+                    "entity": "event",
                     "target": "$current",
                     "field": "status",
                     "op": "==",
@@ -502,12 +502,12 @@ def test_close_030_award_certificate(client):
             "message": "Compute ranking",
         },
         {
-            "trigger": "update_content(category.status)",
+            "trigger": "update_content(event.status)",
             "phase": "post",
             "condition": {
                 "type": "field_match",
                 "params": {
-                    "entity": "category",
+                    "entity": "event",
                     "target": "$current",
                     "field": "status",
                     "op": "==",
@@ -542,9 +542,9 @@ def test_close_030_award_certificate(client):
     resp = _close_category(client, cat_id, org)
     assert resp.status_code == 200
 
-    # Verify certificate posts were created by listing category posts with type reference
+    # Verify certificate posts were created by listing event posts with type reference
     cat_posts_resp = client.get(
-        f"/api/categories/{cat_id}/posts?relation_type=reference",
+        f"/api/events/{cat_id}/posts?relation_type=reference",
         headers={"X-User-Id": str(org)},
     )
     assert cat_posts_resp.status_code == 200
@@ -587,7 +587,7 @@ def test_close_040_full_closure_flow(client):
     submissions.  We submit posts BEFORE linking the rule to avoid pre-check conflicts.
     """
     org = _create_user(client, "close040_org")
-    cat_id = _create_category(client, org, "Full Flow Test")
+    cat_id = _create_event(client, org, "Full Flow Test")
 
     # --- Team A: 3 members ---
     leader_a = _create_user(client, "close040_la", role="participant")
@@ -648,12 +648,12 @@ def test_close_040_full_closure_flow(client):
     rule_id = _create_rule(client, org, min_team_size=2, checks=[
         # 1. flag_disqualified
         {
-            "trigger": "update_content(category.status)",
+            "trigger": "update_content(event.status)",
             "phase": "post",
             "condition": {
                 "type": "field_match",
                 "params": {
-                    "entity": "category",
+                    "entity": "event",
                     "target": "$current",
                     "field": "status",
                     "op": "==",
@@ -666,12 +666,12 @@ def test_close_040_full_closure_flow(client):
         },
         # 2. compute_ranking
         {
-            "trigger": "update_content(category.status)",
+            "trigger": "update_content(event.status)",
             "phase": "post",
             "condition": {
                 "type": "field_match",
                 "params": {
-                    "entity": "category",
+                    "entity": "event",
                     "target": "$current",
                     "field": "status",
                     "op": "==",
@@ -688,12 +688,12 @@ def test_close_040_full_closure_flow(client):
         },
         # 3. award_certificate
         {
-            "trigger": "update_content(category.status)",
+            "trigger": "update_content(event.status)",
             "phase": "post",
             "condition": {
                 "type": "field_match",
                 "params": {
-                    "entity": "category",
+                    "entity": "event",
                     "target": "$current",
                     "field": "status",
                     "op": "==",
@@ -712,7 +712,7 @@ def test_close_040_full_closure_flow(client):
     ])
     _link_rule(client, cat_id, rule_id)
 
-    # --- Close category ---
+    # --- Close event ---
     resp = _close_category(client, cat_id, org)
     assert resp.status_code == 200
 
@@ -757,7 +757,7 @@ def test_close_040_full_closure_flow(client):
 
     # --- Verify award_certificate ---
     cat_posts_resp = client.get(
-        f"/api/categories/{cat_id}/posts?relation_type=reference",
+        f"/api/events/{cat_id}/posts?relation_type=reference",
         headers={"X-User-Id": str(org)},
     )
     assert cat_posts_resp.status_code == 200
@@ -785,8 +785,8 @@ def test_close_040_full_closure_flow(client):
 def test_close_900_non_closed_status_no_trigger(client):
     """Transitioning from draft to published should not trigger closure hooks."""
     org = _create_user(client, "close900_org")
-    # Create category in draft state (not yet published)
-    resp = client.post("/api/categories", json={
+    # Create event in draft state (not yet published)
+    resp = client.post("/api/events", json={
         "name": "No Trigger Test",
         "description": "test",
         "type": "competition",
@@ -796,12 +796,12 @@ def test_close_900_non_closed_status_no_trigger(client):
 
     # Rule with compute_ranking on status==closed
     rule_id = _create_rule(client, org, checks=[{
-        "trigger": "update_content(category.status)",
+        "trigger": "update_content(event.status)",
         "phase": "post",
         "condition": {
             "type": "field_match",
             "params": {
-                "entity": "category",
+                "entity": "event",
                 "target": "$current",
                 "field": "status",
                 "op": "==",
@@ -821,7 +821,7 @@ def test_close_900_non_closed_status_no_trigger(client):
     # Create a rated submission
     user_a = _create_user(client, "close900_ua", role="participant")
     post_a = _create_post(client, user_a, "Submission 900")
-    client.post(f"/api/categories/{cat_id}/posts", json={
+    client.post(f"/api/events/{cat_id}/posts", json={
         "post_id": post_a, "relation_type": "submission",
     })
     rater = _create_user(client, "close900_rater")
@@ -829,7 +829,7 @@ def test_close_900_non_closed_status_no_trigger(client):
 
     # Transition: draft -> published (NOT closed)
     pub_resp = client.patch(
-        f"/api/categories/{cat_id}",
+        f"/api/events/{cat_id}",
         json={"status": "published"},
         headers={"X-User-Id": str(org)},
     )
@@ -847,9 +847,9 @@ def test_close_900_non_closed_status_no_trigger(client):
 # ---------------------------------------------------------------------------
 
 def test_close_901_no_rules_no_checks(client):
-    """A category with no rules should close cleanly with no side effects."""
+    """A event with no rules should close cleanly with no side effects."""
     org = _create_user(client, "close901_org")
-    cat_id = _create_category(client, org, "No Rules Test")
+    cat_id = _create_event(client, org, "No Rules Test")
 
     # Submit and rate a post
     user_a = _create_user(client, "close901_ua", role="participant")
@@ -875,18 +875,18 @@ def test_close_901_no_rules_no_checks(client):
 # ---------------------------------------------------------------------------
 
 def test_close_902_post_hook_failure_no_rollback(client):
-    """If award_certificate encounters bad action_params, the category stays closed."""
+    """If award_certificate encounters bad action_params, the event stays closed."""
     org = _create_user(client, "close902_org")
-    cat_id = _create_category(client, org, "Hook Fail Test")
+    cat_id = _create_event(client, org, "Hook Fail Test")
 
     # Rule with deliberately invalid award_certificate params (missing "rules" key)
     rule_id = _create_rule(client, org, checks=[{
-        "trigger": "update_content(category.status)",
+        "trigger": "update_content(event.status)",
         "phase": "post",
         "condition": {
             "type": "field_match",
             "params": {
-                "entity": "category",
+                "entity": "event",
                 "target": "$current",
                 "field": "status",
                 "op": "==",
@@ -913,7 +913,7 @@ def test_close_902_post_hook_failure_no_rollback(client):
 
     # Verify no certificate posts were created
     cat_posts_resp = client.get(
-        f"/api/categories/{cat_id}/posts?relation_type=reference",
+        f"/api/events/{cat_id}/posts?relation_type=reference",
         headers={"X-User-Id": str(org)},
     )
     assert cat_posts_resp.status_code == 200

@@ -30,7 +30,7 @@
 **TC-RULE-020：删除规则及级联**
 删除一个已关联到活动的规则。删除完成后：
 - 规则记录被物理删除
-- category:rule 关系被解除
+- event:rule 关系被解除
 - 读取返回 "not found" 错误
 
 ## 3.5 负向/边界
@@ -43,34 +43,34 @@
 
 ## 3.6 规则执行校验（Rule Enforcement）
 
-> 规则通过 `category_rule` 关联到活动后，引擎在 `create_relation(category_post)`、`create_relation(group_user)`、`update_content(post status)` 三个操作点自动执行 pre-operation 校验。所有关联的 rule 必须全部满足（AND 逻辑），任一违规即拒绝操作。
+> 规则通过 `event_rule` 关联到活动后，引擎在 `create_relation(event_post)`、`create_relation(group_user)`、`update_content(post status)` 三个操作点自动执行 pre-operation 校验。所有关联的 rule 必须全部满足（AND 逻辑），任一违规即拒绝操作。
 
-**TC-RULE-100：提交截止后创建 category_post 被拒绝**
-活动关联了一条 `submission_deadline` 已过期的规则。用户创建帖子并尝试通过 `category_post` 关联到该活动。系统拒绝操作，返回错误信息包含 "deadline passed"。
+**TC-RULE-100：提交截止后创建 event_post 被拒绝**
+活动关联了一条 `submission_deadline` 已过期的规则。用户创建帖子并尝试通过 `event_post` 关联到该活动。系统拒绝操作，返回错误信息包含 "deadline passed"。
 
-**TC-RULE-101：提交未开始时创建 category_post 被拒绝**
+**TC-RULE-101：提交未开始时创建 event_post 被拒绝**
 活动关联了一条 `submission_start` 为未来时间的规则。用户尝试提前提交。系统拒绝操作，返回错误信息包含 "not yet open"。
 
-**TC-RULE-102：超出 max_submissions 后创建 category_post 被拒绝**
+**TC-RULE-102：超出 max_submissions 后创建 event_post 被拒绝**
 活动关联了一条 `max_submissions=1` 的规则。用户已有一次提交后，再次创建新帖子并关联到该活动。系统拒绝操作，返回错误信息包含 "max submissions reached"。
 
-**TC-RULE-103：提交格式不符时创建 category_post 被拒绝**
-活动关联了一条 `submission_format=["pdf"]` 的规则。用户的帖子关联了一个 filename 为 "slides.pptx" 的 resource。尝试通过 `category_post` 关联到该活动时，系统拒绝操作，返回错误信息包含 "not allowed"。
+**TC-RULE-103：提交格式不符时创建 event_post 被拒绝**
+活动关联了一条 `submission_format=["pdf"]` 的规则。用户的帖子关联了一个 filename 为 "slides.pptx" 的 resource。尝试通过 `event_post` 关联到该活动时，系统拒绝操作，返回错误信息包含 "not allowed"。
 
-**TC-RULE-104：团队人数不足时创建 category_post 被拒绝**
+**TC-RULE-104：团队人数不足时创建 event_post 被拒绝**
 活动关联了一条 `min_team_size=3` 的规则。用户所在团队仅有 1 人（owner），团队已注册该活动。用户尝试提交作品时，系统拒绝操作，返回错误信息包含 "team too small"。
 
 **TC-RULE-105：团队已满时创建 group_user 被拒绝**
 团队已注册一个活动，该活动关联了一条 `max_team_size=1` 的规则。团队已有 1 名 accepted 成员，另一用户尝试加入该团队。系统拒绝操作，返回错误信息包含 "team is full"。
 
 **TC-RULE-106：allow_public=false 时直接发布被拒绝**
-帖子已通过 `category_post` 关联到活动，活动关联了一条 `allow_public=false, require_review=true` 的规则。用户尝试将帖子 status 直接更新为 published。系统拒绝操作，返回错误信息包含 "direct publish not allowed"。
+帖子已通过 `event_post` 关联到活动，活动关联了一条 `allow_public=false, require_review=true` 的规则。用户尝试将帖子 status 直接更新为 published。系统拒绝操作，返回错误信息包含 "direct publish not allowed"。
 
 **TC-RULE-107：allow_public=false 时 pending_review 状态被允许**
 同上场景，用户将帖子 status 更新为 `pending_review`。系统允许操作，帖子进入待审核状态。
 
-**TC-RULE-108：无 rule 关联时 category_post 正常创建**
-活动未关联任何规则。用户创建帖子并通过 `category_post` 关联到该活动。系统正常允许，无约束校验。
+**TC-RULE-108：无 rule 关联时 event_post 正常创建**
+活动未关联任何规则。用户创建帖子并通过 `event_post` 关联到该活动。系统正常允许，无约束校验。
 
 **TC-RULE-109：多条 rule 全部满足才允许（AND 逻辑）**
 活动关联了两条规则：规则 A 限制 `submission_format=["pdf"]`，规则 B 限制 `max_submissions=2`。用户的帖子格式符合规则 A，但提交次数已达规则 B 上限。系统拒绝操作，返回规则 B 的违规信息。
