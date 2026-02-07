@@ -54,6 +54,12 @@ make start  # 后端 8000 + 前端 3000
 
 如果浏览器控制台出现 “A tree hydrated but some attributes… didn’t match” 且差异类似 `data-gr-ext-installed`、`data-new-gr-c-s-check-loaded`，通常是 Grammarly 等浏览器扩展在 React 加载前向 `<body>` 注入了属性导致的，并不一定是业务代码问题。
 
+### ENOENT: pages/_document.js（开发/构建产物）
+
+如果出现 `ENOENT: no such file or directory, open .../.next/server/pages/_document.js`，通常是 `.next` 构建缓存残缺或历史构建产物引用不一致导致。解决方式：
+
+- 删除 `frontend/.next` 后重启前端开发服务
+
 ## 完整工作流图
 
 ```
