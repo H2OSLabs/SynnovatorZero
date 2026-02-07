@@ -1,13 +1,13 @@
-version: '3.8'
-
 services:
   frontend:
     build:
       context: ..
       dockerfile: deploy/Dockerfile.frontend
     restart: always
-    env_file:
-      - ../.env
+    environment:
+      # Runtime environment variable for API URL
+      # Injected to client via window.__ENV__ in layout.tsx
+      API_URL: /api
     networks:
       - synnovator_net
 
@@ -18,8 +18,10 @@ services:
     restart: always
     env_file:
       - ../.env
-    depends_on:
-      - postgres
+    environment:
+      - SYNNOVATOR_DATA_DIR=/app/data
+    volumes:
+      - /app/synnovator-zero/data:/app/data
     networks:
       - synnovator_net
 
@@ -37,17 +39,18 @@ services:
     networks:
       - synnovator_net
 
-  postgres:
-    image: registry.h2os.cloud/postgres:17-alpine
-    restart: always
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-synnovator_zero}
-    volumes:
-      - /app/synnovator-zero/postgres:/var/lib/postgresql/data
-    networks:
-      - synnovator_net
+  # postgres:
+  #   image: registry.h2os.cloud/postgres:17-alpine
+  #   restart: always
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER:-postgres}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+  #     POSTGRES_DB: ${POSTGRES_DB:-synnovator_zero}
+  #   volumes:
+  #     - /app/synnovator-zero/postgres:/var/lib/postgresql/data
+  #   networks:
+  #     - synnovator_net
+
   # redis:
   #   image: redis:alpine
   #   restart: always

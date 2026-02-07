@@ -2,7 +2,10 @@
  * API client for Synnovator backend
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api'
+import { getEnv } from './env'
+
+// Lazy getter to ensure window.__ENV__ is available when called
+const getApiBase = () => getEnv().API_URL
 const STORAGE_KEY = 'synnovator_user'
 
 interface ApiOptions extends RequestInit {
@@ -39,7 +42,7 @@ async function apiFetch<T>(endpoint: string, options: ApiOptions = {}): Promise<
     (headers as Record<string, string>)['X-User-Id'] = String(effectiveUserId)
   }
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
+  const response = await fetch(`${getApiBase()}${endpoint}`, {
     ...rest,
     headers,
   })

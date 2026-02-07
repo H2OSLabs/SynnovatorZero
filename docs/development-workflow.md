@@ -1072,6 +1072,67 @@ grep -q "deleteGroup" frontend/lib/api-client.ts && echo "✅ deleteGroup exists
 
 **对应测试用例：** TC-FEINT-090（api-client.ts 包含所有 CRUD 方法）
 
+**生成的 API 客户端示例：**
+
+```typescript
+// 类型定义（从 OpenAPI schemas 生成）
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  display_name?: string;
+  role: 'participant' | 'organizer' | 'admin';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserCreate {
+  username: string;
+  email: string;
+  display_name?: string;
+  role?: 'participant' | 'organizer' | 'admin';
+}
+
+// API 客户端类
+class ApiClient {
+  private baseURL: string;
+
+  constructor(baseURL?: string) {
+    // 使用运行时环境变量，通过 lib/env.ts 的 getEnv() 获取
+    // 开发环境: http://localhost:8000 (来自 .env.development)
+    // 生产环境: /api (来自 Docker 环境变量)
+    this.baseURL = baseURL || 'http://localhost:8000';
+  }
+
+  // User endpoints
+  async listUsers(): Promise<User[]> {
+    const response = await fetch(`${this.baseURL}/users`);
+    if (!response.ok) throw new Error('Failed to fetch users');
+    return response.json();
+  }
+
+  async createUser(data: UserCreate): Promise<User> {
+    const response = await fetch(`${this.baseURL}/users`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to create user');
+    return response.json();
+  }
+
+  async getUser(id: string): Promise<User> {
+    const response = await fetch(`${this.baseURL}/users/${id}`);
+    if (!response.ok) throw new Error('Failed to fetch user');
+    return response.json();
+  }
+
+  // ... 其他 endpoints
+}
+
+export const apiClient = new ApiClient();
+```
+
 #### 6.3 配置环境变量
 
 ```bash
@@ -1469,6 +1530,17 @@ make seed
 2. 查看种子脚本错误日志
 3. 检查外键依赖（确保依赖的数据先创建）
 4. 逐步调试种子脚本：先注入用户，再注入活动，依次类推
+
+### Q: 生产环境请求 `/api/*` 返回 404，但后端日志显示收到的是 `/*`？
+
+现象示例：浏览器请求 `GET /api/categories`，但后端日志却是 `GET /categories`，从而触发 404。
+
+常见原因是 Nginx 反向代理的 `proxy_pass` 写法导致路径前缀被剥离：
+
+- 错误写法：`location /api/ { proxy_pass http://backend/; }`（会把 `/api/...` 转发成 `/...`）
+- 正确写法：`location /api/ { proxy_pass http://backend; }`（保留原始 URI，后端可匹配 `/api/...`）
+
+本仓库的对应配置文件在 `deploy/nginx.conf`，修改后需要 reload/restart Nginx 容器或主机 Nginx 才会生效。
 
 ### Q: 如何添加认证？
 
