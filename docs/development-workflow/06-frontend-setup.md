@@ -72,6 +72,7 @@ grep -q "deletePost" frontend/lib/api-client.ts && echo "✅ deletePost"
 ```bash
 # frontend/.env.development
 API_URL=/api
+INTERNAL_API_URL=http://localhost:8000/api
 ```
 
 > 环境变量通过 `lib/env.ts` 读取，注入到 `window.__ENV__`。

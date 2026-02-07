@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { getServerEnv } from "@/lib/env"
+import { getPublicServerEnv } from "@/lib/env"
 import "./globals.css"
 import { Providers } from "@/components/Providers"
 
@@ -14,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   // Read environment variables on the server and inject into client
-  const env = getServerEnv()
+  const env = getPublicServerEnv()
 
   return (
     <html lang="zh-CN" className="dark" suppressHydrationWarning>

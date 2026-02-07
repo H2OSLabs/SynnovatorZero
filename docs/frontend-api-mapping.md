@@ -1,6 +1,8 @@
 # Frontend-API Mapping
 
-Backend Base URL: `http://localhost:8000/api`
+Backend Base URL:
+- Client-side (browser): `API_URL`（生产通常为 `/api`，由 Nginx 反代）
+- Server-side (Next.js Server Components): `INTERNAL_API_URL`（必须为绝对 URL，例如 `http://localhost:8000/api`）
 Auth Header: `X-User-Id: <int>` (temporary)
 
 ## Meta Endpoints
