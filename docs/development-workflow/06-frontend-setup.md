@@ -35,6 +35,8 @@ const colors = {
 - Poppins — 数字/代码
 - Noto Sans SC — 中文
 
+说明：为兼容离线/受限网络的预览与 CI 环境，前端默认不从 Google Fonts 在线加载字体，以上字体会自动回退到系统字体；如需固定字体效果，建议使用 `next/font`（构建期拉取并本地化）或自托管字体文件。
+
 ---
 
 ## 阶段 6: 前端 API 客户端生成
@@ -117,6 +119,23 @@ curl http://localhost:3000/api/users
 | `__mocks__/api-client.ts` | 组件测试使用的 mock |
 
 **绕过 moduleNameMapper 的自动 mock：**
+
+---
+
+## 常见问题排查
+
+### 看到 `GET /@vite/client 404`（或预览控制台报 Vite Client）
+
+这不是本仓库前端（Next.js）主动发出的请求。一般意味着你当前打开的页面 HTML 里被注入了 Vite 的 HMR 脚本，或你访问到了错误的上游/端口。
+
+建议按以下顺序排查：
+
+1. 在浏览器对首页执行 View Source，搜索是否包含 `/@vite/client`：
+   - 如果包含：说明当前服务出来的 HTML 不是 Next.js 产物（或被某层反代/静态服务器替换），检查 Nginx 反代与启动命令是否指向本仓库的 `frontend`。
+   - 如果不包含：更可能是浏览器插件、缓存或开发工具引入，尝试禁用相关插件并进行 Hard Reload。
+2. 确认启动方式为 `make frontend` 或 `cd frontend && npm run dev`，不要在其它目录误启动 Vite 项目。
+
+项目中提供了一个兼容兜底：`frontend/middleware.ts` 会对 `/@vite/client` 返回空模块，避免在受限预览环境产生 404 噪音；如果你的环境不会出现该请求，可以直接删除该 middleware。
 
 ```typescript
 // __tests__/api-client.test.ts

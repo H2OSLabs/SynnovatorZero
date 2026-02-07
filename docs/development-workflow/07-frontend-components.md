@@ -66,18 +66,18 @@
 
 > 默认使用 Mock 登录，仅当用户明确要求时才实现真实认证。
 
-```typescript
-// frontend/lib/auth.ts
-export function getMockUserId(): string {
-  return localStorage.getItem('mockUserId') || 'user_1';
-}
+当前实现：
 
-// 在 API 请求中添加 header
-const headers = {
-  'Content-Type': 'application/json',
-  'X-User-Id': getMockUserId(),
-};
-```
+- 前端登录态存储在 `localStorage` 的 `synnovator_user`（包含 `user_id/username/role`）
+- `frontend/lib/api-client.ts` 会自动从 `synnovator_user` 读取 `user_id`，并在请求里附加 `X-User-Id`
+- 后端 `MOCK_AUTH=true` 时：
+  - 未提供 `X-User-Id` 的端点会自动创建/使用默认 mock 用户
+  - 提供了无效 `X-User-Id` 会返回 401（User not found）
+
+常见问题：
+
+- 如果你重置/删除了本地数据库，浏览器里残留的 `synnovator_user` 可能变成“脏登录态”，导致通知轮询等请求持续 401。
+- 现在前端会在启动时校验 `synnovator_user.user_id` 是否存在，不存在则自动清理该 localStorage 项，避免持续报错。
 
 ## 7.4 验证创建页面无 TODO 遗留 ⭐
 
@@ -145,6 +145,12 @@ export default function PostPage({ params }: { params: { id: string } }) {
   return <PostContent post={post} author={author} />
 }
 ```
+
+## 7.7 文案与国际化（i18n）
+
+- 当前前端未接入统一国际化框架，页面/组件文案以 TSX 内硬编码为主。
+- 现阶段默认面向中文用户：新页面/新功能的按钮、标题、提示语优先使用中文（与现有页面保持一致）。
+- 如需中英双语：建议引入统一 i18n 方案（例如 next-intl 或 i18next），将文案集中管理后再做全量替换。
 
 **并行获取关联数据：**
 

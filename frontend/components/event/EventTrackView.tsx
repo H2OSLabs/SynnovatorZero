@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getCategories } from '@/lib/api-client'
-import { CategoryStageView, STAGE_CONFIGS, type CategoryStage } from './CategoryStageView'
+import { CategoryStageView, STAGE_CONFIGS, type CategoryStage } from '@/components/category'
 
 interface CategoryTrack {
   id: number

@@ -261,6 +261,19 @@ def test_list_posts(client):
     assert resp.json()["total"] == 2
 
 
+def test_list_posts_legacy_unknown_type_falls_back_to_general(client, db_session):
+    uid = _create_user(client)
+    from app.models.post import Post as PostModel
+    db_session.add(PostModel(title="Legacy", type="for_category", status="published", visibility="public", created_by=uid))
+    db_session.commit()
+
+    resp = client.get("/api/posts?status=published")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] == 1
+    assert data["items"][0]["type"] == "general"
+
+
 def test_list_posts_filter_by_status(client):
     uid = _create_user(client)
     _create_post(client, uid, title="Draft1", status="draft")

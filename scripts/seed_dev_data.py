@@ -11,6 +11,7 @@ from app.models.group import Group
 from app.models.member import Member
 from app.models.post import Post
 from app.models.user import User
+from app.schemas.enums import PostType
 
 
 def _has_category_tags_column(db_path: str) -> bool:
@@ -170,6 +171,17 @@ def _seed_categories(db: Session, creator_user_id: int) -> None:
 
 
 def _seed_posts(db: Session, author_user_ids: dict[str, int]) -> None:
+    allowed_post_types = {t.value for t in PostType}
+
+    normalized = (
+        db.query(Post)
+        .filter(Post.deleted_at.is_(None), ~Post.type.in_(allowed_post_types))
+        .update({"type": PostType.general.value}, synchronize_session=False)
+    )
+    if normalized:
+        db.commit()
+        print(f"Normalized legacy posts with unknown type: {normalized} → {PostType.general.value}")
+
     posts = [
         {
             "title": "基于大模型的智能教育平台",
@@ -242,6 +254,8 @@ def _seed_posts(db: Session, author_user_ids: dict[str, int]) -> None:
     existing_titles = {t for (t,) in db.query(Post.title).filter(Post.deleted_at.is_(None)).all()}
     inserted = 0
     for p in posts:
+        if p["type"] not in allowed_post_types:
+            raise ValueError(f"Invalid post.type in seed data: {p['type']}")
         if p["title"] in existing_titles:
             continue
         db.add(Post(**p))

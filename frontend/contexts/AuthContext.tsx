@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { login as apiLogin, logout as apiLogout } from '@/lib/api-client'
+import { getUser as apiGetUser, login as apiLogin, logout as apiLogout } from '@/lib/api-client'
 
 export interface AuthUser {
   user_id: number
@@ -29,15 +29,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Load user from localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      try {
-        setUser(JSON.parse(stored))
-      } catch {
-        localStorage.removeItem(STORAGE_KEY)
+    let cancelled = false
+    const init = async () => {
+      const stored = localStorage.getItem(STORAGE_KEY)
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as AuthUser
+          if (parsed?.user_id) {
+            try {
+              await apiGetUser(parsed.user_id)
+              if (!cancelled) setUser(parsed)
+            } catch {
+              localStorage.removeItem(STORAGE_KEY)
+              if (!cancelled) setUser(null)
+            }
+          } else {
+            localStorage.removeItem(STORAGE_KEY)
+          }
+        } catch {
+          localStorage.removeItem(STORAGE_KEY)
+        }
       }
+      if (!cancelled) setIsLoading(false)
     }
-    setIsLoading(false)
+    void init()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const login = async (username: string, password: string) => {

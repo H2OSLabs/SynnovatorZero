@@ -29,7 +29,7 @@ function getStoredUserId(): number | null {
 }
 
 async function apiFetch<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
-  const { userId, skipAuth, headers: customHeaders, ...rest } = options
+  const { userId, skipAuth, headers: customHeaders, signal: providedSignal, ...rest } = options
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -42,9 +42,17 @@ async function apiFetch<T>(endpoint: string, options: ApiOptions = {}): Promise<
     (headers as Record<string, string>)['X-User-Id'] = String(effectiveUserId)
   }
 
+  const timeoutMs = typeof window === 'undefined' ? 3000 : 15000
+  const controller = providedSignal ? null : new AbortController()
+  const signal = providedSignal ?? controller?.signal
+  const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null
+
   const response = await fetch(`${getApiBase()}${endpoint}`, {
     ...rest,
     headers,
+    signal,
+  }).finally(() => {
+    if (timeoutId) clearTimeout(timeoutId)
   })
 
   if (!response.ok) {

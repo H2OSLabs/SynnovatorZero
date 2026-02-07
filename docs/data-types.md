@@ -58,6 +58,7 @@ type: enum                # 帖子类型（可选，不填则为 general）:
                           #   certificate  = 证书分享
                           #   general      = 日常帖子（默认）
                           #   可用枚举可通过 GET /api/meta/post-types 获取
+                          #   兼容说明：如历史数据中存在未知 type，API 会在返回时回退为 general
 tags: list[string]        # 标签列表（如 ["找队友", "提案", "日记"]）
 status: enum              # 帖子状态: draft | pending_review | published | rejected
                           #   draft          = 草稿（默认）

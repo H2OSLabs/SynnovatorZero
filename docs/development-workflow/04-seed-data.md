@@ -58,6 +58,8 @@ make seed
 ```
 
 > **为什么用 API 注入？** 确保数据通过业务校验规则，与生产环境一致。
+>
+> **开发库提示：** 如果你看到 `GET /api/posts ... 500 ResponseValidationError` 且报错指向 `Post.type` 枚举，通常是旧库里残留了历史脏数据。请优先执行 `make resetdb && make seed` 重新生成干净的开发库。
 
 ### 验证
 
