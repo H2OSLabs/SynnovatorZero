@@ -121,7 +121,7 @@ Phase 3:   种子数据注入          make resetdb && make seed
 Phase 4:   UI 设计文档生成
 Phase 5:   前端样式框架配置      shadcn/ui + Neon Forge
 Phase 6:   前端 API 客户端生成   [api-builder --generate-client]
-Phase 7:   前端组件开发          [pen-to-react / openapi-to-components]
+Phase 7:   前端组件开发          [Figma 参考 + shadcn 组件]
 Phase 8:   E2E 测试             Playwright
 Phase 9:   最终集成验证          [tests-kit Guard]
 ```
@@ -135,7 +135,6 @@ Phase 9:   最终集成验证          [tests-kit Guard]
 | **api-builder** | Generate FastAPI backend + TypeScript client from OpenAPI spec. Default `--conflict-strategy skip` protects existing files; use `--dry-run` to preview |
 | **seed-designer** | Derive seed data requirements from test case preconditions |
 | **tests-kit** | Guard mode (verify test cases) + Insert mode (add test cases) |
-| **pen-to-react** | Convert .pen design files → React components |
 | **openapi-to-components** | Wire frontend components to backend API |
 | **planning-with-files** | File-based planning (task_plan.md, findings.md, progress.md) for context persistence |
 
@@ -147,6 +146,8 @@ Phase 9:   最终集成验证          [tests-kit Guard]
 - Use `uv` for all Python commands (not pip/poetry)
 - Frontend auth defaults to Mock login (`X-User-Id` header); real auth only when explicitly requested
 - **回答问题时使用中文**（代码注释和变量名除外）
+- **前端 UI 文本使用中文**：页面标题、按钮、表单标签、错误提示、Toast 消息等用户可见文本必须使用中文
+- **前端路由验证**：所有 `<Link href="...">` 必须指向 `app/` 目录中实际存在的路由
 
 ## Boundaries
 

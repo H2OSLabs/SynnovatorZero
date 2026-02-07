@@ -2,6 +2,38 @@
 
 > 在编写前端代码之前，先生成完整的 UI 设计文档。
 
+## 现有设计资源 ⭐
+
+项目已有完整的 Figma 设计导出文档，位于 `specs/design/figma/`：
+
+| 文件/目录 | 描述 | 数量 |
+|----------|------|------|
+| `README.md` | 设计索引与使用说明 | - |
+| `components.md` | 组件库 | 54 个 |
+| `icons.md` | 图标库 | 69 个 |
+| `layouts.md` | 布局模板 | - |
+| `pages/*.md` | 页面设计 | 14 个 |
+
+**页面设计索引** (`specs/design/figma/pages/`)：
+
+| 页面 | 文件 | 前端路由 |
+|------|------|---------|
+| 首页 | `home.md` | `/` |
+| 探索 | `explore.md` | `/explore` |
+| 内容/帖子 | `content.md` | `/posts/*` |
+| 团队 | `team.md` | `/groups/*` |
+| 用户资料 | `profile.md` | `/users/*` |
+| 设置 | `settings.md` | `/settings` |
+| 活动/星球 | `planet.md` | `/events/*` |
+| 认证 | `auth.md` | `/login`, `/register` |
+| 搜索 | `search.md` | 搜索模态框 |
+| 消息 | `message.md` | 消息模态框 |
+| 营地 | `camp.md` | `/camp/*` |
+| 资产 | `asset.md` | 资产管理 |
+| 其他 | `misc.md` | 杂项页面 |
+
+> **使用原则**: 设计文档作为参考，优先实现核心功能，不追求像素级还原。
+
 ## 输入数据源
 
 | 文件 | 描述 |
@@ -9,6 +41,7 @@
 | `docs/user-journeys/*.md` | 用户旅程 |
 | `specs/testcases/` | 测试用例 |
 | `.synnovator/openapi.yaml` | API 规范 |
+| `specs/design/figma/` | Figma 设计文档 |
 
 ## AI 生成 Prompt
 

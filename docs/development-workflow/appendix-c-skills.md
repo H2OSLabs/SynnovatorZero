@@ -17,8 +17,10 @@
 |-------|------|---------|
 | **synnovator** | 管理 .synnovator/*.md 文件数据 | 需要通过文件管理测试数据时 |
 | **data-importer** | 从 .synnovator 导入数据到 SQLite | 需要从文件批量导入数据时 |
-| **pen-to-react** | 从 .pen 设计文件转换 React 组件 | 有 .pen 设计稿时 |
+| **openapi-to-components** | 将 OpenAPI spec 连接到前端组件 | 需要自动生成 API 调用代码时 |
 | **journey-validator** | 验证 user-journeys 文档完整性 | 阶段 0.5 前 |
+
+> **注意**: `pen-to-react` skill 已废弃。项目设计资源已迁移到 Figma，位于 `specs/design/figma/`。
 
 ## 外部工具
 

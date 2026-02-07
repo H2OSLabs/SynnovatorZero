@@ -14,7 +14,59 @@ npm install -D tailwindcss @tailwindcss/postcss postcss
 npx shadcn@latest init
 ```
 
-### 5.2 配置 Neon Forge 主题
+### 5.2 Next.js 配置检查清单 ⭐
+
+> 即使使用 App Router，某些场景仍需要 pages 目录文件。
+
+**必须存在的文件：**
+
+```
+frontend/
+├── pages/
+│   ├── _app.tsx        # 自定义 App 组件
+│   ├── _document.tsx   # 自定义 Document（HTML 结构）
+│   └── _error.tsx      # 自定义错误页面
+├── next.config.js      # Next.js 配置
+└── next-env.d.ts       # TypeScript 类型声明
+```
+
+**pages/_document.tsx 示例：**
+
+```typescript
+import { Head, Html, Main, NextScript } from "next/document"
+
+export default function Document() {
+  return (
+    <Html lang="zh-CN" className="dark">
+      <Head />
+      <body className="font-body antialiased">
+        <Main />
+        <NextScript />
+      </body>
+    </Html>
+  )
+}
+```
+
+**验证配置：**
+
+```bash
+# 检查必要文件存在
+ls frontend/pages/_app.tsx frontend/pages/_document.tsx frontend/pages/_error.tsx
+
+# 验证 Next.js 构建成功
+cd frontend && npm run build
+```
+
+**常见问题：**
+
+| 错误 | 原因 | 解决 |
+|------|------|------|
+| `ENOENT: _document.js` | 缺少 pages 目录文件 | 创建 `pages/_document.tsx` |
+| Hydration mismatch | SSR/CSR 不一致 | 检查 useEffect 内的状态更新 |
+| TypeScript 类型错误 | `next-env.d.ts` 过时 | 运行 `npm run build` 自动更新 |
+
+### 5.3 配置 Neon Forge 主题
 
 **tailwind.config.ts：**
 

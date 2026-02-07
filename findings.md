@@ -1,97 +1,286 @@
-# Findings & Decisions
+# Findings: 前端运行时错误根因分析
 
-## 当前任务: 前端页面重构开发
+> **更新时间**: 2026-02-08
+> **分析对象**: 用户修复的 19 个提交 (d17ea88..4c8ce11)
 
-### 项目当前状态 (2026-02-03)
-- 后端已完成 (373 tests passed)
-- 前端代码已删除，从头开始重做
-- 保留了 shadcn/ui 组件 (25个) 和业务组件 (10个)
-- 当前可访问页面: `/`（其余页面按路由规划逐步实现）
+## 问题分类汇总
 
-### User Journey 覆盖分析
-
-**已有 UI 设计 (14/16):**
-- J2 浏览探索 → 7.1 首页, 7.2 探索页
-- J3 注册 → 7.9 登录/注册页
-- J4 登录 → 7.9 登录/注册页
-- J5 加入组 → 7.6 团队详情页
-- J7 加入活动 → 7.3 活动详情页
-- J9 发送帖子 → 7.5 创建/编辑帖子页
-- J10 颁奖 → 7.8 排名页
-- J11 编辑 Post → 7.5 创建/编辑帖子页
-- J12 删除 Post → 8.5.2 对话框组件
-- J13 社区互动 → 7.4 帖子详情页
-- J14 关注好友 → 7.7 用户主页
-- J15 多阶段赛道 → 7.10 多阶段活动页
-- J16 资产转移 → 7.5 附件管理
-
-**缺失 UI 设计 (2/16):**
-- J6 创建活动 → ❌ 需要补充 7.11 创建活动页
-- J8 创建团队 → ❌ 需要补充 7.12 创建团队页
-
-### 页面路由规划
-
-| 路由 | 布局 | Journey | 优先级 |
-|------|------|---------|--------|
-| `/` | Landing | J2 | P0 |
-| `/login` | Landing | J4 | P0 |
-| `/register` | Landing | J3 | P0 |
-| `/explore` | Compact | J2 | P0 |
-| `/events` | Compact | J2, J7 | P0 |
-| `/events/[id]` | Full | J7, J10, J15 | P0 |
-| `/posts` | Compact | J2 | P1 |
-| `/posts/[id]` | Full | J13 | P1 |
-| `/posts/create` | Focus | J9 | P1 |
-| `/posts/[id]/edit` | Focus | J11 | P1 |
-| `/groups` | Compact | J5 | P1 |
-| `/groups/[id]` | Full | J5 | P1 |
-| `/groups/create` | Focus | J8 | P2 |
-| `/events/create` | Focus | J6 | P2 |
-| `/users/[id]` | Full | J14 | P1 |
-| `/settings` | Full | - | P2 |
-
-### 布局变体规范 (from ui-design-spec 1.2)
-
-| 变体 | Sidebar | Panel | 适用 |
-|------|---------|-------|------|
-| Full | 展开 168px | 显示 328px | 详情页 |
-| Compact | 收起 60px | 显示 | 列表页 |
-| Focus | 隐藏 | 隐藏 | 编辑页 |
-| Landing | 隐藏 | 隐藏 | 首页/登录 |
-
-### 组件开发顺序
-
-**Phase 4: 布局组件**
-1. Header (60px 高度, 固定顶部)
-2. Sidebar (168px/60px 宽度, 可收起)
-3. Panel (328px 宽度, 右侧面板)
-4. PageLayout (组合 4 种布局变体)
-
-**Phase 5: 卡片组件**
-1. CategoryCard (活动卡片)
-2. PostCard (帖子卡片)
-3. GroupCard (团队卡片)
-4. UserCard (用户卡片)
-
-**Phase 6: 页面 Body**
-按优先级实现 P0 → P1 → P2 页面
+| 类别 | 问题数 | 根本原因 | 责任阶段 |
+|------|--------|----------|----------|
+| UI 组件 ref 警告 | 6 | shadcn/ui 组件未使用 forwardRef | Phase 5/7 (前端框架配置) |
+| 路由不一致 | 3 | 路由设计与实现不匹配 | Phase 4/7 (UI 设计/组件开发) |
+| API/环境配置 | 4 | 服务端渲染需要绝对 URL | Phase 6 (前端 API 客户端) |
+| Next.js 配置 | 4 | App Router + Pages Router 混用问题 | Phase 5 (前端框架配置) |
+| 国际化 | 1 | 代码生成时使用英文 | Phase 7 (组件开发) |
+| 测试/类型 | 2 | Jest 类型配置不完整 | Phase 8 (E2E 测试) |
+| 认证状态 | 1 | localStorage 脏数据未清理 | Phase 7 (组件开发) |
 
 ---
 
-## 历史记录
+## 详细分析
 
-### 后端开发 (2026-01-27)
-- 从零依赖底层模块开始，逐层向上开发 Synnovator 后端
-- 8 层依赖图: user/resource → rule/group/event → post/interaction → 关系 → 规则引擎 → 集成
-- 最终 373 tests passed
+### 1. UI 组件 ref 警告 (6 个提交)
 
-### 技术决策
-| Decision | Rationale |
-|----------|-----------|
-| 后端包名 `app/` | api-builder 模板兼容 |
-| 路由使用 `/events` | 比 `/events` 更符合 Hackathon 语义 |
-| 布局 4 种变体 | 符合 ui-design-spec 1.2 定义 |
-| 复用已有业务组件 | LoginForm, RegisterForm 等已实现 |
+**问题现象**: 控制台警告 `forwardRef warning`
+
+**涉及组件**: Button, Dialog, Popover, Tabs, DropdownMenu
+
+**修复内容**:
+```typescript
+// Before: 函数组件，无法传递 ref
+function Button({ ... }: Props) { ... }
+
+// After: forwardRef 包装
+const Button = React.forwardRef<HTMLButtonElement, Props>(
+  ({ ... }, ref) => { ... }
+)
+Button.displayName = "Button"
+```
+
+**根本原因分析**:
+- shadcn/ui 官方模板使用 `forwardRef` 模式
+- 项目早期手动创建组件时未遵循此模式
+- 开发工作流缺少 UI 组件规范检查步骤
+
+**责任归属**:
+| 责任方 | 说明 |
+|--------|------|
+| Phase 5 (前端框架配置) | shadcn/ui 组件未按官方规范配置 |
+| Phase 7 (组件开发) | 手动创建组件时未遵循 forwardRef 模式 |
+| 开发工作流 | 缺少 UI 组件规范检查步骤 |
+
+**已完成改进**:
+1. ✅ 在 `07-frontend-components.md` 添加 shadcn/ui 组件规范说明
+2. ✅ 添加验证脚本检查 forwardRef 使用
 
 ---
-*Update this file after every 2 view/browser/search operations*
+
+### 2. 路由不一致 (3 个提交)
+
+**问题现象**: 点击链接 404，路由不存在
+
+**具体问题**:
+
+| 错误路由 | 正确路由 | 来源 |
+|----------|----------|------|
+| `/my/posts` | `/posts` | Header.tsx 菜单 |
+| `/my/groups` | `/groups` | Header.tsx 菜单 |
+| `/profile/{id}` | `/users/{id}` | search-api.ts |
+| `/proposals/{id}` | `/posts/{id}` | search-api.ts |
+
+**根本原因分析**:
+- 缺少前端路由文档，开发时凭记忆编写链接
+- 路由命名不一致（有些用 `/profile/`，有些用 `/users/`）
+
+**责任归属**:
+| 责任方 | 说明 |
+|--------|------|
+| Phase 4 (UI 设计) | 设计文档中的路由与实现不匹配 |
+| Phase 7 (组件开发) | 编码时未验证路由是否存在 |
+| 开发工作流 | 缺少前端路由文档 |
+
+**已完成改进**:
+1. ✅ 创建 `docs/frontend-routes.md` 记录所有前端路由
+2. ✅ 在 `07-frontend-components.md` 添加路由验证步骤
+3. ✅ 添加验证脚本检查错误路由引用
+
+---
+
+### 3. API/环境配置问题 (4 个提交)
+
+**问题现象**:
+- 服务端渲染时 API 调用失败
+- CORS 错误
+- 前端无法连接后端
+
+**具体修复**:
+
+1. **INTERNAL_API_URL 支持** (`env.ts`, `next.config.js`)
+   ```typescript
+   // 服务端需要绝对 URL
+   if (process.env.INTERNAL_API_URL) return process.env.INTERNAL_API_URL
+   return `http://localhost:8000${configured}`
+   ```
+
+2. **CORS origins 扩展** (`app/core/config.py`)
+   ```python
+   cors_origins: list[str] = [
+       "http://localhost:3000",
+       "http://127.0.0.1:3000",
+       "http://localhost:9080",  # 新增
+       "http://127.0.0.1:9080",  # 新增
+   ]
+   ```
+
+**根本原因分析**:
+- Next.js App Router 的 Server Components 在服务端执行
+- 服务端无法解析相对路径 `/api`，需要完整 URL
+- 开发工作流只考虑了客户端场景
+
+**责任归属**:
+| 责任方 | 说明 |
+|--------|------|
+| Phase 6 (前端 API 客户端) | 未考虑 SSR 场景 |
+| 开发工作流 | 缺少 SSR API 调用说明 |
+
+**已完成改进**:
+1. ✅ 更新 `06-frontend-setup.md` 添加 INTERNAL_API_URL 说明
+2. ✅ 添加 API 代理配置示例
+
+---
+
+### 4. Next.js 配置问题 (4 个提交)
+
+**问题现象**:
+- `ENOENT: _document.js` 运行时错误
+- TypeScript 类型错误
+- Hydration mismatch 警告
+
+**具体修复**:
+
+1. **pages 目录文件** (`pages/_app.tsx`, `_document.tsx`, `_error.tsx`)
+   - Next.js 即使使用 App Router，某些场景仍需要 pages 目录文件
+
+2. **next-env.d.ts 更新**
+   ```typescript
+   /// <reference types="next/navigation-types/compat/navigation" />
+   ```
+
+3. **导航参数空值处理**
+   ```typescript
+   // Before
+   const id = params.id
+   // After
+   const id = params?.id ?? ''
+   ```
+
+**根本原因分析**:
+- Next.js 14 App Router 与 Pages Router 的混合使用
+- 项目模板未包含必要的 pages 目录文件
+
+**责任归属**:
+| 责任方 | 说明 |
+|--------|------|
+| Phase 0 (项目初始化) | 项目模板不完整 |
+| Phase 5 (前端框架配置) | Next.js 配置不完整 |
+
+**已完成改进**:
+1. ✅ 更新 `06-frontend-setup.md` 添加 Next.js 配置检查清单
+2. ✅ 添加 pages 目录文件示例
+
+---
+
+### 5. 国际化问题 (1 个提交)
+
+**问题现象**: 页面显示英文，应显示中文
+
+**修复内容**: 探索页所有文本从英文改为中文
+
+```typescript
+// Before
+<h1>Explore</h1>
+<p>Discover the latest events and projects</p>
+
+// After
+<h1>探索</h1>
+<p>发现最新活动与项目</p>
+```
+
+**根本原因分析**:
+- CLAUDE.md 规定 "回答问题时使用中文"，但未明确 UI 文本规范
+- 开发时习惯性使用英文
+
+**责任归属**:
+| 责任方 | 说明 |
+|--------|------|
+| Phase 7 (组件开发) | 生成代码时未使用中文 |
+| CLAUDE.md | 规则不够明确 |
+
+**已完成改进**:
+1. ✅ 更新 CLAUDE.md: "前端 UI 文本使用中文"
+2. ✅ 在 `07-frontend-components.md` 添加 7.7 国际化规范
+
+---
+
+### 6. 测试/类型问题 (2 个提交)
+
+**问题现象**:
+- Jest 测试类型错误
+- 测试文件无法编译
+
+**修复内容**:
+1. 添加 `frontend/__tests__/tsconfig.json` 专用于测试
+2. 安装 `@types/jest`
+
+**根本原因分析**:
+- 项目 tsconfig.json 未配置测试文件
+- Jest 类型声明未安装
+
+**责任归属**:
+| 责任方 | 说明 |
+|--------|------|
+| Phase 8 (E2E 测试) | 测试配置不完整 |
+
+---
+
+### 7. 认证状态问题 (1 个提交)
+
+**问题现象**: localStorage 中存储的用户可能已被删除，但前端仍认为已登录
+
+**修复内容**:
+```typescript
+// 从 localStorage 读取后，验证用户是否存在
+const parsed = JSON.parse(stored) as AuthUser
+try {
+  await apiGetUser(parsed.user_id)  // 验证用户存在
+  setUser(parsed)
+} catch {
+  localStorage.removeItem(STORAGE_KEY)  // 清理脏数据
+  setUser(null)
+}
+```
+
+**根本原因分析**:
+- 原实现只检查 localStorage，不验证后端
+- 用户被删除或数据库重置后，前端状态不同步
+
+---
+
+## 工作流审查发现
+
+### pen-to-react 已废弃
+
+**现状**:
+- 项目中没有 .pen 文件
+- 设计资源已迁移到 `specs/design/figma/` (Figma 导出的 Markdown)
+- `pen-to-react` skill 虽然存在但无用
+
+**已完成改进**:
+1. ✅ 从 CLAUDE.md 移除 pen-to-react 引用
+2. ✅ 从 appendix-c-skills.md 移除 pen-to-react
+3. ✅ 更新 05-ui-design.md 添加 Figma 设计资源说明
+
+---
+
+## 结论
+
+**核心问题**: 开发工作流 (Phase 5-7) 对 Next.js App Router + shadcn/ui 的配置不够完整，导致运行时出现多种问题。
+
+**主要差距**:
+1. 前端框架配置不完整 (pages 目录、SSR 支持)
+2. UI 组件规范未遵循 shadcn/ui 官方模式
+3. 路由设计与实现不一致
+4. 国际化规范不明确
+5. pen-to-react 已废弃但仍被引用
+
+**已完成的改进**:
+1. ✅ 更新 `06-frontend-setup.md` - Next.js 配置检查清单
+2. ✅ 更新 `07-frontend-components.md` - 组件规范、国际化、路由验证
+3. ✅ 更新 `05-ui-design.md` - Figma 设计资源说明
+4. ✅ 更新 `CLAUDE.md` - UI 文本中文化、路由验证、移除 pen-to-react
+5. ✅ 更新 `appendix-c-skills.md` - 移除 pen-to-react、添加废弃说明
+6. ✅ 创建 `docs/frontend-routes.md` - 前端路由映射表
+
+**待完成**:
+1. 按 `specs/testcases/33-frontend-integration.md` 补充 Playwright E2E 测试
+2. 验证工作流完整性

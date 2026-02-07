@@ -1,148 +1,171 @@
-# Task Plan: 简单用户认证系统
+# Task Plan: 工作流审查与修复
 
-> **目标**: 实现简单的用户名密码认证，区分参赛者(participant)和组织者(organizer)权限
-> **创建时间**: 2026-02-04
-> **状态**: ✅ 完成
+> **目标**: 审查整个开发工作流，修复过时的 Skills 引用，确保文档与实际一致
+> **创建时间**: 2026-02-08
+> **状态**: `in_progress`
 
-## 设计决策
+## 背景
 
-| 决策项 | 选择 | 原因 |
-|--------|------|------|
-| 密码方案 | 明文存储比对 | 开发/演示用，快速实现 |
-| 角色选择 | 注册时用户自选 | 简单直接，适合原型 |
-| 页面权限 | 混合方式 | 核心页面共用，管理功能用 `/manage/*` |
-| 会话管理 | X-User-Id header + localStorage | 当前代码已有，改动最小 |
-| 种子密码 | 密码 = 用户名 | 方便记忆和演示 |
+1. 用户修复了 19 个前端运行时错误 (d17ea88..4c8ce11)
+2. 分析发现多个根本原因来自工作流和 Skills
+3. 用户指出 `pen-to-react` 已废弃，项目中没有 .pen 文件
+4. 需要全面审查工作流，移除过时内容
+
+## 发现的问题
+
+### 问题 1: pen-to-react 已废弃但仍被引用
+
+**现状**：
+- 项目中没有 .pen 文件
+- 设计文档已迁移到 `specs/design/figma/*.md` (Figma 导出)
+- `pen-to-react` skill 仍存在于 `.claude/skills/` 但无用
+
+**被引用的位置**：
+
+| 文件 | 引用内容 |
+|------|---------|
+| `CLAUDE.md` | Phase 7: [pen-to-react / openapi-to-components] |
+| `CLAUDE.md` | Key Skills 表格 |
+| `appendix-c-skills.md` | 可选 Skills 表格 |
+| `findings.md` | 错误分析（我之前写的） |
+
+### 问题 2: openapi-to-components 的实际使用
+
+**现状**：
+- `openapi-to-components` skill 仍存在
+- 用途：将 OpenAPI spec 连接到前端组件
+- 但目前前端组件主要手动编写或参考 Figma 设计
+
+### 问题 3: 设计资源位置不明确
+
+**现状**：
+- 设计资源在 `specs/design/figma/` (18 个文件)
+- 工作流 Phase 4 (UI 设计) 未提及 Figma 目录
+- Phase 7 提到了 Figma 参考但不够清晰
 
 ## 阶段列表
 
 | Phase | 描述 | 状态 | 完成度 |
 |-------|------|------|--------|
-| Phase 1 | 后端 - 数据模型 | `complete` | 100% |
-| Phase 2 | 后端 - API | `complete` | 100% |
-| Phase 3 | 前端 - 状态管理 | `complete` | 100% |
-| Phase 4 | 前端 - 页面 | `complete` | 100% |
-| Phase 5 | 前端 - 管理路由 | `complete` | 100% |
-| Phase 6 | 测试验证 | `pending` | 0% |
+| Phase 1 | 分析 19 个修复提交 | `complete` | 100% |
+| Phase 2 | 更新工作流文档 (组件规范/国际化/路由) | `complete` | 100% |
+| Phase 3 | 更新 CLAUDE.md (UI 文本规则) | `complete` | 100% |
+| Phase 4 | 创建前端路由文档 | `complete` | 100% |
+| Phase 5 | 移除 pen-to-react 引用 | `complete` | 100% |
+| Phase 6 | 更新 Phase 4 (UI 设计) 文档 | `complete` | 100% |
+| Phase 7 | 清理 findings.md 中的错误引用 | `complete` | 100% |
+| Phase 8 | 验证工作流完整性 | `complete` | 100% |
+| Phase 9 | 测试用例覆盖分析 | `complete` | 100% |
+| Phase 10 | 总结与提交 | `in_progress` | 50% |
 
 ---
 
-## Phase 1: 后端 - 数据模型 `complete`
+## Phase 5: 移除 pen-to-react 引用 `in_progress`
 
-- [x] 1.1 User 模型添加 password 字段
-- [x] 1.2 重建数据库 (使用 Base.metadata.create_all)
-- [x] 1.3 更新种子数据添加密码
+### 5.1 更新 CLAUDE.md
 
-### 涉及文件
-- `app/models/user.py` ✅
-- `scripts/seed_dev_data.py` ✅
+- [ ] 移除 Phase 7 中的 `[pen-to-react / openapi-to-components]`
+- [ ] 改为 `[Figma 参考 / shadcn 组件]`
+- [ ] 从 Key Skills 表格移除 `pen-to-react`
 
----
+### 5.2 更新 appendix-c-skills.md
 
-## Phase 2: 后端 - API `complete`
+- [ ] 从可选 Skills 移除 `pen-to-react`
+- [ ] 添加说明：设计资源已迁移到 Figma
 
-- [x] 2.1 修改登录 API 验证密码
-- [x] 2.2 新增注册 API
-- [x] 2.3 添加注册和密码验证测试用例
+### 5.3 更新 07-frontend-components.md
 
-### 涉及文件
-- `app/routers/auth.py` ✅
-- `app/schemas/user.py` ✅
-- `app/tests/test_auth.py` ✅
-
-### 测试结果
-- 18 tests passed
+- [ ] 确认 7.0 Figma 设计参考正确
+- [ ] 移除任何 .pen 文件引用
 
 ---
 
-## Phase 3: 前端 - 状态管理 `complete`
+## Phase 6: 更新 Phase 4 (UI 设计) 文档 `pending`
 
-- [x] 3.1 创建 AuthContext 管理登录状态
-- [x] 3.2 更新 api-client 自动附加 user_id
-- [x] 3.3 添加 register API 函数
-- [x] 3.4 在 RootLayout 中添加 Providers
-
-### 涉及文件
-- `frontend/contexts/AuthContext.tsx` ✅ (新建)
-- `frontend/components/Providers.tsx` ✅ (新建)
-- `frontend/lib/api-client.ts` ✅
-- `frontend/app/layout.tsx` ✅
+- [ ] 6.1 明确设计资源位置 (`specs/design/figma/`)
+- [ ] 6.2 添加 Figma 文件索引
+- [ ] 6.3 说明设计到代码的工作流
 
 ---
 
-## Phase 4: 前端 - 页面 `complete`
+## Phase 7: 清理 findings.md 中的错误引用 `pending`
 
-- [x] 4.1 更新登录页面使用 AuthContext
-- [x] 4.2 创建/更新注册页面（含角色选择）
-- [x] 4.3 添加权限检查组件 RequireRole
-- [x] 4.4 更新 Header 使用 AuthContext
-
-### 涉及文件
-- `frontend/app/login/page.tsx` ✅
-- `frontend/app/register/page.tsx` ✅
-- `frontend/components/auth/RequireRole.tsx` ✅ (新建)
-- `frontend/components/layout/Header.tsx` ✅
-- `frontend/components/layout/Sidebar.tsx` ✅
-- `frontend/components/layout/PageLayout.tsx` ✅
+- [ ] 7.1 移除 pen-to-react 相关分析
+- [ ] 7.2 更正 UI 组件问题的责任归属
+- [ ] 7.3 更新建议（不再建议更新 pen-to-react）
 
 ---
 
-## Phase 5: 前端 - 管理路由 `complete`
+## Phase 8: 验证工作流完整性 `pending`
 
-- [x] 5.1 创建 /manage 路由结构
-- [x] 5.2 创建管理仪表盘页面
-- [x] 5.3 创建活动管理页面
-- [x] 5.4 Header 添加组织者管理入口
+检查清单：
 
-### 涉及文件
-- `frontend/app/manage/layout.tsx` ✅ (新建)
-- `frontend/app/manage/page.tsx` ✅ (新建)
-- `frontend/app/manage/events/page.tsx` ✅ (新建)
+- [ ] 所有 skills 引用都指向实际存在的 skills
+- [ ] 所有路径引用都正确
+- [ ] 工作流图与文档一致
+- [ ] CLAUDE.md 与 development-workflow 一致
 
 ---
 
-## Phase 6: 测试验证 `pending`
+## Phase 9: 测试用例覆盖分析 `pending`
 
-等待手动验证：
+**当前测试状态**：
 
-- [ ] 6.1 测试登录：alice/alice (参赛者)
-- [ ] 6.2 测试登录：techcorp/techcorp (组织者)
-- [ ] 6.3 验证参赛者无法访问 /manage/*
-- [ ] 6.4 验证组织者能看到管理功能
+| 测试类型 | 位置 | 状态 |
+|----------|------|------|
+| 后端 pytest | `app/tests/` | ✅ 390+ |
+| 前端 Jest | `frontend/__tests__/` | ⚠️ 9 个 |
+| E2E Playwright | 无 | ❌ 缺失 |
+
+**specs/testcases 覆盖差距**：
+
+| 测试用例 | 实现 |
+|---------|------|
+| 01-10 (后端) | ✅ 覆盖 |
+| 11 (用户旅程) | ❌ 无 E2E |
+| 33 (前端集成) | ⚠️ 部分 |
 
 ---
 
-## 使用说明
+## Phase 10: 总结与提交 `pending`
 
-### 测试账号
+- [ ] 10.1 更新 progress.md
+- [ ] 10.2 提交所有更改
+- [ ] 10.3 推送到远程
 
-| 用户名 | 密码 | 角色 |
-|--------|------|------|
-| techcorp | techcorp | 组织者 |
-| alice | alice | 参赛者 |
-| bob | bob | 参赛者 |
-| carol | carol | 参赛者 |
+---
 
-### 权限区分
+## 设计资源现状
 
-**参赛者可以:**
-- 浏览所有页面
-- 发布帖子
-- 加入团队和活动
+**Figma 设计目录** (`specs/design/figma/`)：
 
-**组织者额外可以:**
-- 访问 `/manage/*` 管理页面
-- Header 显示"管理"导航链接
-- 下拉菜单显示"管理中心"入口
-- 创建活动
-
-### 启动方式
-
-```bash
-make start  # 启动前后端
+```
+specs/design/figma/
+├── README.md         # 设计索引
+├── assets.md         # 资源图标
+├── components.md     # 组件库 (54 个)
+├── icons.md          # 图标库 (69 个)
+├── layouts.md        # 布局模板
+└── pages/            # 页面设计 (14 个)
+    ├── asset.md
+    ├── auth.md
+    ├── camp.md
+    ├── content.md
+    ├── explore.md
+    ├── home.md
+    ├── message.md
+    ├── misc.md
+    ├── planet.md
+    ├── profile.md
+    ├── search.md
+    ├── settings.md
+    └── team.md
 ```
 
-然后访问:
-- http://localhost:3000/login - 登录
-- http://localhost:3000/register - 注册（可选角色）
-- http://localhost:3000/manage - 管理中心（仅组织者）
+---
+
+## 错误记录
+
+| 时间 | 错误 | 尝试 | 解决方案 |
+|------|------|------|----------|
+| - | - | - | - |

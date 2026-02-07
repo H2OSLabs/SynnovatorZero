@@ -46,6 +46,39 @@
    - 遵循 shadcn 组件风格
    - 放置在 `frontend/components/ui/`
 
+### shadcn/ui 组件规范 ⭐
+
+所有 UI 组件必须使用 `forwardRef` 模式，否则会产生 React ref 警告：
+
+```typescript
+// ✅ 正确：使用 forwardRef
+const Button = React.forwardRef<
+  React.ComponentRef<"button">,
+  React.ComponentPropsWithoutRef<"button"> & VariantProps<typeof buttonVariants>
+>(({ className, variant, size, ...props }, ref) => {
+  return (
+    <button
+      ref={ref}
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
+  )
+})
+Button.displayName = "Button"
+
+// ❌ 错误：普通函数组件，无法传递 ref
+function Button({ className, ...props }: Props) {
+  return <button className={className} {...props} />
+}
+```
+
+**验证组件规范：**
+```bash
+# 检查 UI 组件是否使用 forwardRef
+grep -L "forwardRef" frontend/components/ui/*.tsx | head -5
+# 如有输出，说明这些文件需要更新
+```
+
 ## 7.2 组件开发顺序
 
 ```
@@ -146,11 +179,32 @@ export default function PostPage({ params }: { params: { id: string } }) {
 }
 ```
 
-## 7.7 文案与国际化（i18n）
+## 7.7 文案与国际化（i18n）⭐
+
+> **规则**：所有用户可见的 UI 文本必须使用中文。
 
 - 当前前端未接入统一国际化框架，页面/组件文案以 TSX 内硬编码为主。
 - 现阶段默认面向中文用户：新页面/新功能的按钮、标题、提示语优先使用中文（与现有页面保持一致）。
 - 如需中英双语：建议引入统一 i18n 方案（例如 next-intl 或 i18next），将文案集中管理后再做全量替换。
+
+**必须中文化的内容**：
+- 页面标题、副标题
+- 按钮文本（"发布"、"保存"、"取消"）
+- 表单标签和 placeholder
+- 错误提示和 toast 消息
+- Tab 标签、菜单项
+- 空状态提示（"暂无数据"）
+
+**允许保留英文**：
+- 代码中的变量名、函数名
+- 技术术语（API、URL 等）
+- 品牌名称
+
+**验证中文化：**
+```bash
+# 检查是否有常见英文 UI 文本
+grep -rn "Submit\|Cancel\|Loading\|Error\|No data" frontend/app/ --include="*.tsx" | head -10
+```
 
 **并行获取关联数据：**
 
@@ -173,6 +227,46 @@ const commentsWithUsers = await Promise.all(
 - [ ] 添加 `useEffect` 获取数据
 - [ ] 实现 Loading / Error / Empty 状态
 - [ ] 验证 TypeScript 类型
+
+## 7.8 路由链接验证 ⭐
+
+> 所有 `<Link href="...">` 必须指向实际存在的路由。
+
+**当前前端路由映射**（基于 `app/` 目录）：
+
+| 路由 | 页面文件 |
+|------|---------|
+| `/` | `app/page.tsx` |
+| `/explore` | `app/explore/page.tsx` |
+| `/posts` | `app/posts/page.tsx` |
+| `/posts/[id]` | `app/posts/[id]/page.tsx` |
+| `/posts/[id]/edit` | `app/posts/[id]/edit/page.tsx` |
+| `/posts/create` | `app/posts/create/page.tsx` |
+| `/events` | `app/events/page.tsx` |
+| `/events/[id]` | `app/events/[id]/page.tsx` |
+| `/groups` | `app/groups/page.tsx` |
+| `/groups/[id]` | `app/groups/[id]/page.tsx` |
+| `/users/[id]` | `app/users/[id]/page.tsx` |
+| `/settings` | `app/settings/page.tsx` |
+| `/login` | `app/login/page.tsx` |
+| `/register` | `app/register/page.tsx` |
+
+**常见错误路由**：
+
+| ❌ 错误 | ✅ 正确 | 说明 |
+|--------|--------|------|
+| `/my/posts` | `/posts` | 不存在 `/my/` 前缀 |
+| `/my/groups` | `/groups` | 不存在 `/my/` 前缀 |
+| `/profile/{id}` | `/users/{id}` | 使用 `/users/` 不是 `/profile/` |
+| `/proposals/{id}` | `/posts/{id}` | 提案也是帖子，统一使用 `/posts/` |
+
+**验证路由链接：**
+```bash
+# 检查是否有不存在的路由引用
+grep -rn "href=\"/my/" frontend/ --include="*.tsx"
+grep -rn "href=\"/profile/" frontend/ --include="*.tsx"
+grep -rn "href=\"/proposals/" frontend/ --include="*.tsx"
+```
 
 ## 下一步
 
