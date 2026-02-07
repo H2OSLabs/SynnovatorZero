@@ -1,6 +1,6 @@
 # 内容类型 Schema
 
-本文档定义 Synnovator 平台的七种内容类型及其 Schema。
+本文档定义 Synnovator 平台的八种内容类型及其 Schema。
 
 > **字段命名规范：** 所有内容类型统一使用 `created_by` 表示创建者/作者/上传者。
 
@@ -293,6 +293,36 @@ value:
 
 ---
 
+## notification
+
+系统通知，用于推送活动状态变更、团队邀请、评审结果等消息给用户。
+
+```yaml
+---
+# === 必填字段 ===
+type: enum                # 通知类型: system | activity | team | social
+                          #   system   = 系统通知（平台公告、维护提醒）
+                          #   activity = 活动通知（报名成功、活动开始/结束、颁奖）
+                          #   team     = 团队通知（邀请、申请、审批结果）
+                          #   social   = 社交通知（关注、评论、点赞）
+content: string           # 通知内容
+
+# === 可选字段 ===
+title: string             # 通知标题（不填则使用 type 默认标题）
+related_url: string       # 相关链接（点击跳转目标）
+is_read: boolean          # 是否已读（默认: false）
+
+# === 自动生成字段 ===
+id: string                # 唯一标识
+user_id: user_id          # 接收者（目标用户）
+created_at: datetime      # 创建时间
+---
+```
+
+> **设计说明：** notification 不支持软删除，已读通知可通过定期清理任务归档。用户可批量标记已读，但不能删除系统发送的通知。
+
+---
+
 ## 枚举值汇总
 
 | 内容类型 | 字段 | 可选值 |
@@ -305,6 +335,7 @@ value:
 | user | role | `participant`, `organizer`, `admin` |
 | group | visibility | `public`, `private` |
 | interaction | type | `like`, `comment`, `rating` |
+| notification | type | `system`, `activity`, `team`, `social` |
 | rule.checks | phase | `pre`, `post` |
 | rule.checks | on_fail | `deny`, `warn`, `flag` |
 | rule.checks | condition.type | `time_window`, `count`, `exists`, `field_match`, `resource_format`, `resource_required`, `unique_per_scope`, `aggregate` |
@@ -314,10 +345,13 @@ value:
 |-----|------|-------|
 | category:post | relation_type | `submission`, `reference` |
 | category:category | relation_type | `stage`, `track`, `prerequisite` |
+| category:resource | display_type | `banner`, `attachment`, `inline` |
 | post:post | relation_type | `reference`, `reply`, `embed` |
 | post:resource | display_type | `attachment`, `inline` |
 | group:user | role | `owner`, `admin`, `member` |
 | group:user | status | `pending`, `accepted`, `rejected` |
+| group:post | relation_type | `team_submission`, `announcement`, `reference` |
+| group:resource | access_level | `read_only`, `read_write` |
 | user:user | relation_type | `follow`, `block` |
 | target:interaction | target_type | `post`, `category`, `resource` |
 

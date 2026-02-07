@@ -3,99 +3,69 @@
 **Date:** 2025-02-08
 **Files scanned:** 17 (docs/user-journeys/*.md)
 **Validator:** journey-validator skill
+**Status:** ✅ All issues resolved
 
 ## Summary
 
 | Category | HIGH | MEDIUM | LOW |
 |----------|------|--------|-----|
 | Structure | 0 | 0 | 0 |
-| Logic | 4 | 0 | 0 |
+| Logic | 0 | 0 | 0 |
 | Conflict | 0 | 0 | 0 |
 | Redundancy | 0 | 0 | 0 |
 | Coverage | 0 | 0 | 0 |
-| **Total** | **4** | **0** | **0** |
+| **Total** | **0** | **0** | **0** |
 
-## MEDIUM Severity Issues (Logic Inconsistencies)
+## Resolved Issues
 
-These issues indicate entities or relations used in journeys but not defined in the domain model.
+All 4 logic inconsistencies have been resolved by updating the domain model.
 
-### L-001: Undefined relation `category:resource`
+### L-001: ✅ Resolved — `category:resource` relation
 
 - **Location:** 02-activity-setup.md:39
-- **Context:** "上传命题文件 | 企业方/悬赏人上传资产文件作为参赛命题 | `CREATE resource` + `CREATE category:resource`"
-- **Action Required:** Add `category:resource` relation to `docs/relationships.md` with fields:
-  ```yaml
-  category_id: string       # 活动 ID（必填）
-  resource_id: string       # 资源 ID（必填）
-  display_type: enum        # 展示方式: banner | attachment | inline
-  position: integer         # 排序位置
-  ```
+- **Resolution:** Added `category:resource` relation to `docs/relationships.md`
+- **Fields:** `category_id`, `resource_id`, `display_type` (banner/attachment/inline), `position`
 
-### L-002: Undefined relation `group:post`
+### L-002: ✅ Resolved — `group:post` relation
 
 - **Location:** 03-team-management.md:23
-- **Context:** "关联团队提案 | 将个人提案作为团队提案与团队进行关联 | `CREATE group:post`（关联）"
-- **Action Required:** Add `group:post` relation to `docs/relationships.md` with fields:
-  ```yaml
-  group_id: string          # 团队 ID（必填）
-  post_id: string           # 帖子 ID（必填）
-  relation_type: enum       # 关联类型: team_submission | reference
-  ```
+- **Resolution:** Added `group:post` relation to `docs/relationships.md`
+- **Fields:** `group_id`, `post_id`, `relation_type` (team_submission/announcement/reference), `created_at`
 
-### L-003: Undefined relation `group:resource`
+### L-003: ✅ Resolved — `group:resource` relation
 
 - **Location:** 03-team-management.md:34-35
-- **Context:** "团队共享资产 | 团队成员共享团队资产文件 | `READ resource`（通过 group:resource）"
-- **Action Required:** Add `group:resource` relation to `docs/relationships.md` with fields:
-  ```yaml
-  group_id: string          # 团队 ID（必填）
-  resource_id: string       # 资源 ID（必填）
-  access_level: enum        # 访问级别: read_only | read_write
-  ```
+- **Resolution:** Added `group:resource` relation to `docs/relationships.md`
+- **Fields:** `group_id`, `resource_id`, `access_level` (read_only/read_write), `created_at`
 
-### L-004: Undefined entity `notification`
+### L-004: ✅ Resolved — `notification` entity
 
 - **Location:** 08-activity-close.md:89
-- **Context:** "收到颁奖通知 | — | 系统推送通知"
-- **Action Required:** Add `notification` entity to `docs/data-types.md` with fields:
-  ```yaml
-  id: string                # Primary key
-  user_id: string(FK→user)  # 接收者
-  type: enum                # 通知类型: system | activity | team | social
-  title: string             # 标题（可选）
-  content: string           # 内容
-  related_url: string       # 相关链接（可选）
-  is_read: boolean          # 是否已读（默认: false）
-  created_at: datetime      # 创建时间
-  ```
+- **Resolution:** Added `notification` entity to `docs/data-types.md`
+- **Fields:** `id`, `user_id`, `type` (system/activity/team/social), `title`, `content`, `related_url`, `is_read`, `created_at`
 
-## Resolution Status
+## Domain Model Updates
 
-| Issue ID | Status | Resolved By |
-|----------|--------|-------------|
-| L-001 | TODO | Pending domain model update |
-| L-002 | TODO | Pending domain model update |
-| L-003 | TODO | Pending domain model update |
-| L-004 | TODO | Pending domain model update |
+| File | Changes |
+|------|---------|
+| `docs/data-types.md` | Added `notification` entity (8 → 8 content types), updated enum summary |
+| `docs/relationships.md` | Added 3 relations: `category:resource`, `group:post`, `group:resource` (9 → 12 relations) |
 
 ## Next Steps
 
-1. **Update domain model:** Add the missing relations and entity to:
-   - `docs/relationships.md` (L-001, L-002, L-003)
-   - `docs/data-types.md` (L-004)
+The domain model is now complete and consistent with user journeys. You can proceed with:
 
-2. **Regenerate OpenAPI spec:** After domain model update, run:
+1. **Phase 0.5 (Domain Modeling):** ✅ Ready — domain model is aligned with user journeys
+2. **Phase 1 (API Design):** Regenerate OpenAPI spec with new entities/relations
    ```bash
    uv run python .claude/skills/schema-to-openapi/scripts/generate_openapi.py
    ```
-
-3. **Regenerate backend code:** If API endpoints are affected:
+3. **Phase 2 (Backend Generation):** Generate new models/routers for notification and new relations
    ```bash
    uv run python .claude/skills/api-builder/scripts/cli.py --spec .synnovator/openapi.yaml --output app
    ```
 
-4. **Remove TODO markers:** After resolution, remove the `<!-- TODO [L-xxx]: ... -->` comments from journey files.
-
 ---
 
 *Generated by journey-validator skill*
+*Last updated: 2025-02-08*

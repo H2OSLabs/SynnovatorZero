@@ -36,7 +36,6 @@ Y命题赛道包含**企业命题活动**和**悬赏组队活动**，区别在�
 
 | 用户旅程 | 说明 | 数据操作 |
 |---------|------|---------|
-<!-- TODO [L-001]: category:resource relation is not defined in relationships.md -->
 | 上传命题文件 | 企业方/悬赏人上传资产文件作为参赛命题 | `CREATE resource` + `CREATE category:resource` |
 
 ## 2.3 活动评审与关联

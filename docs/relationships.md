@@ -1,6 +1,6 @@
 # 关系 Schema
 
-本文档定义 Synnovator 平台九种内容类型之间的关系及其属性。
+本文档定义 Synnovator 平台十二种内容类型之间的关系及其属性。
 
 关系用于连接内容类型，不同关系可以携带属性。
 
@@ -46,6 +46,24 @@ registered_at: datetime   # 报名时间（自动生成）
 ```
 
 > **业务规则：** 同一 group 在同一 category 中只能注册一次。一个 user 可以通过不同 group 参加不同 category，但在同一 category 中只能属于一个 group。
+
+## category : resource
+
+活动关联资源文件（封面图、命题文件、附件等）。
+
+```yaml
+category_id: string       # 活动 ID（必填）
+resource_id: string       # 资源 ID（必填）
+
+# === 关系属性 ===
+display_type: enum        # 展示方式: banner | attachment | inline
+                          #   banner     = 封面/头图
+                          #   attachment = 附件（下载列表）
+                          #   inline     = 内联（活动说明中嵌入）
+position: integer         # 排序位置（默认: 0）
+```
+
+> **使用场景：** Y 命题赛道中，企业方/悬赏人上传的命题文件通过此关系关联到活动。
 
 ## post : post
 
@@ -116,6 +134,41 @@ status_changed_at: datetime  # 状态变更时间（每次 status 变更时自�
                                 ↓                           ↓
                             accepted                    rejected
 ```
+
+## group : post
+
+团队关联帖子（团队提案、团队公告等）。
+
+```yaml
+group_id: string          # 团队 ID（必填）
+post_id: string           # 帖子 ID（必填）
+
+# === 关系属性 ===
+relation_type: enum       # 关联类型: team_submission | announcement | reference
+                          #   team_submission = 团队提案（代表团队提交的参赛内容）
+                          #   announcement    = 团队公告
+                          #   reference       = 引用（团队主页展示）
+created_at: datetime      # 关联时间（自动生成）
+```
+
+> **使用场景：** 参赛者将个人提案作为团队提案关联到团队，该提案在活动中代表整个团队。
+
+## group : resource
+
+团队关联资源文件（团队共享资产）。
+
+```yaml
+group_id: string          # 团队 ID（必填）
+resource_id: string       # 资源 ID（必填）
+
+# === 关系属性 ===
+access_level: enum        # 访问级别: read_only | read_write
+                          #   read_only  = 仅查看/下载
+                          #   read_write = 可编辑/替换（仅 owner/admin）
+created_at: datetime      # 关联时间（自动生成）
+```
+
+> **使用场景：** 团队成员共享团队资产文件，如设计稿、代码仓库链接、参考资料等。
 
 ## target : interaction
 
