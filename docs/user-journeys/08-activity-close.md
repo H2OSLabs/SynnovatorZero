@@ -86,6 +86,7 @@ awards:
 
 | 步骤 | 用户操作 | 数据操作 | 说明 |
 |------|---------|---------|------|
+<!-- TODO [L-004]: notification entity is not defined in data-types.md -->
 | 1 | 收到颁奖通知 | — | 系统推送通知 |
 | 2 | 查看证书帖子 | `READ post`（type: certificate） | 证书帖子已自动创建 |
 | 3 | 下载证书文件 | `READ resource` | 获取证书 PDF |

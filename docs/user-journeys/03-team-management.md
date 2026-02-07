@@ -20,6 +20,7 @@
 | 用户旅程 | 说明 | 数据操作 |
 |---------|------|---------|
 | 创建团队 | 发起并命名一个新的团队，添加团队简介 | `CREATE group` |
+<!-- TODO [L-002]: group:post relation is not defined in relationships.md -->
 | 关联团队提案 | 将个人提案作为团队提案与团队进行关联 | `CREATE group:post`（关联） |
 | 邀请成员 | 在团队中搜索并邀请他人，等待对方批准 | `CREATE group:user`（status: pending） |
 | 成员批准 | 被邀请成员可在通知界面选择加入/拒绝 | `UPDATE group:user`（status: accepted/rejected） |
@@ -31,5 +32,6 @@
 
 | 用户旅程 | 说明 | 数据操作 |
 |---------|------|---------|
+<!-- TODO [L-003]: group:resource relation is not defined in relationships.md -->
 | 团队共享资产 | 团队成员共享团队资产文件 | `READ resource`（通过 group:resource） |
 | 上传团队资产 | 向团队空间上传文件 | `CREATE resource` + `CREATE group:resource` |
