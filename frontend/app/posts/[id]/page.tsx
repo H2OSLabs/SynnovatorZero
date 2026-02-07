@@ -38,7 +38,7 @@ const mockPost = {
 - Alice - 全栈开发
 - Bob - AI 工程师
 - Carol - 产品设计`,
-  type: "for_category",
+  type: "proposal",
   status: "published",
   tags: ["AI", "Education", "LLM", "个性化学习"],
   created_at: "2024-03-10T10:30:00Z",

@@ -138,12 +138,12 @@ class TestUserJourneys(TestRunner):
 
         post = create_content(self.data_dir, "post", {
             "title": "AI Code Review Copilot",
-            "type": "for_category",
+            "type": "proposal",
             "tags": ["AI", "Developer Tools"],
             "_body": "## Project\nCodeReview Copilot is an AI-powered code review tool."
         }, current_user=self.ids["user_alice"])
         self.ids["post_submission"] = post["id"]
-        self.assert_ok("Create submission post", post["type"] == "for_category")
+        self.assert_ok("Create submission post", post["type"] == "proposal")
 
         rel = create_relation(self.data_dir, "category_post", {
             "category_id": self.ids["cat1"],
@@ -283,7 +283,7 @@ class TestUserJourneys(TestRunner):
 
         new_version = create_content(self.data_dir, "post", {
             "title": "AI Code Review Copilot v2",
-            "type": "for_category",
+            "type": "proposal",
             "tags": post.get("tags", []),
             "_body": "## Updated Project\nNow with better error handling."
         }, current_user=self.ids["user_alice"])
@@ -306,7 +306,7 @@ class TestUserJourneys(TestRunner):
 
         review_post = create_content(self.data_dir, "post", {
             "title": "Needs Review Post",
-            "type": "for_category",
+            "type": "proposal",
         }, current_user=self.ids["user_bob"])
         update_content(self.data_dir, "post", review_post["id"], {"status": "pending_review"}, current_user=self.ids["user_bob"])
         p = read_content(self.data_dir, "post", review_post["id"], current_user=self.ids["user_bob"])
@@ -318,7 +318,7 @@ class TestUserJourneys(TestRunner):
 
         reject_post = create_content(self.data_dir, "post", {
             "title": "Will Be Rejected",
-            "type": "for_category",
+            "type": "proposal",
         }, current_user=self.ids["user_bob"])
         update_content(self.data_dir, "post", reject_post["id"], {"status": "pending_review"}, current_user=self.ids["user_bob"])
         update_content(self.data_dir, "post", reject_post["id"], {"status": "rejected"}, current_user=self.ids["user_bob"])

@@ -51,8 +51,8 @@ class TestPost(TestRunner):
         print("\n=== TC-POST-011: Profile Type ===")
         pass
 
-    def test_tc_post_012_create_for_category_type(self):
-        """TC-POST-012: Create for_category type post."""
+    def test_tc_post_012_create_proposal_type(self):
+        """TC-POST-012: Create proposal type post."""
         print("\n=== TC-POST-012: For Category Type ===")
         pass
 

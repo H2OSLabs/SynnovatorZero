@@ -86,7 +86,7 @@ def _add_member(client, gid, uid):
     return resp
 
 
-def _create_post(client, uid, title="Submission", post_type="for_category"):
+def _create_post(client, uid, title="Submission", post_type="proposal"):
     resp = client.post("/api/posts", json={
         "title": title,
         "type": post_type,

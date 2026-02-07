@@ -58,7 +58,7 @@
 具有审核权限的用户可以查看 pending_review 状态的帖子，并批准或驳回。
 
 **TC-CATMGMT-032：评委对参赛内容打分**
-具有评委身份的用户可以对 for_category 类型帖子进行多维度评分（创建 rating interaction）。
+具有评委身份的用户可以对 proposal 类型帖子进行多维度评分（创建 rating interaction）。
 
 ## 21.5 报名信息配置
 

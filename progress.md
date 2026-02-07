@@ -240,7 +240,7 @@
 | TC-POST-001 | 最小字段创建帖子 | PASS |
 | TC-POST-002 | 创建时直接发布 | PASS |
 | TC-POST-003 | 创建帖子带标签 | PASS |
-| TC-POST-010~013 | 不同类型帖子 (team, profile, for_category, certificate) | PASS |
+| TC-POST-010~013 | 不同类型帖子 (team, profile, proposal, certificate) | PASS |
 | TC-POST-030 | draft→pending_review | PASS |
 | TC-POST-031 | pending_review→published | PASS |
 | TC-POST-032 | pending_review→rejected | PASS |

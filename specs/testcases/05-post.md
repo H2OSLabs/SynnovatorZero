@@ -16,7 +16,7 @@
 创建帖子时附带 tags（如 ["找队友", "提案"]）。创建完成后，可通过 tag 筛选查询命中该帖子。
 
 **TC-POST-004：按 type 筛选帖子**
-创建多种 type 的帖子（general、team、for_category、certificate）后，按 type=for_category 筛选。返回结果仅包含 type=for_category 的帖子。
+创建多种 type 的帖子（general、team、proposal、certificate）后，按 type=proposal 筛选。返回结果仅包含 type=proposal 的帖子。
 
 ## 5.2 类型语义覆盖
 
@@ -26,8 +26,8 @@
 **TC-POST-011：创建 profile 类型帖子**
 创建一个 type=profile 的帖子（个人资料卡片）。创建成功。
 
-**TC-POST-012：创建 for_category 类型帖子**
-创建一个 type=for_category 的帖子（参赛提案）。创建成功后，可被关联到某个活动（category:post relation_type=submission）。
+**TC-POST-012：创建 proposal 类型帖子**
+创建一个 type=proposal 的帖子（参赛提案）。创建成功后，可被关联到某个活动（category:post relation_type=submission）。
 
 **TC-POST-013：创建 certificate 类型帖子**
 创建一个 type=certificate 的帖子（证书分享帖）。创建成功后，可挂载 resource（证书文件）作为附件或内联。

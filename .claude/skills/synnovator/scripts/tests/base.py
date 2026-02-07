@@ -229,7 +229,7 @@ def create_submission_scenario(data_dir, ids):
     # Create submission post
     post = create_content(data_dir, "post", {
         "title": "AI Code Review Copilot",
-        "type": "for_category",
+        "type": "proposal",
         "tags": ["AI", "Developer Tools"],
         "_body": "## Project\nCodeReview Copilot is an AI-powered code review tool."
     }, current_user=ids["user_alice"])

@@ -112,7 +112,7 @@ class TestRule(TestRunner):
         })
 
         post1 = create_content(self.data_dir, "post", {
-            "title": "Late Submission", "type": "for_category"
+            "title": "Late Submission", "type": "proposal"
         }, current_user=self.ids["user_bob"])
         self.assert_raises(
             "Reject submission past deadline",
@@ -141,7 +141,7 @@ class TestRule(TestRunner):
         })
 
         post1 = create_content(self.data_dir, "post", {
-            "title": "Early Submission", "type": "for_category"
+            "title": "Early Submission", "type": "proposal"
         }, current_user=self.ids["user_bob"])
         self.assert_raises(
             "Reject submission before start",
@@ -171,7 +171,7 @@ class TestRule(TestRunner):
         })
 
         post2 = create_content(self.data_dir, "post", {
-            "title": "First Attempt", "type": "for_category"
+            "title": "First Attempt", "type": "proposal"
         }, current_user=self.ids["user_bob"])
         create_relation(self.data_dir, "category_post", {
             "category_id": limit_cat["id"], "post_id": post2["id"],
@@ -180,7 +180,7 @@ class TestRule(TestRunner):
         self.assert_ok("First submission allowed", True)
 
         post3 = create_content(self.data_dir, "post", {
-            "title": "Second Attempt", "type": "for_category"
+            "title": "Second Attempt", "type": "proposal"
         }, current_user=self.ids["user_bob"])
         self.assert_raises(
             "Reject exceeding max_submissions",
@@ -210,7 +210,7 @@ class TestRule(TestRunner):
         })
 
         post4 = create_content(self.data_dir, "post", {
-            "title": "Wrong Format", "type": "for_category"
+            "title": "Wrong Format", "type": "proposal"
         }, current_user=self.ids["user_bob"])
         bad_res = create_content(self.data_dir, "resource", {
             "filename": "slides.pptx"
@@ -258,7 +258,7 @@ class TestRule(TestRunner):
         })
 
         post5 = create_content(self.data_dir, "post", {
-            "title": "Small Team Submission", "type": "for_category"
+            "title": "Small Team Submission", "type": "proposal"
         }, current_user=self.ids["user_alice"])
 
         self.assert_raises(
@@ -324,7 +324,7 @@ class TestRule(TestRunner):
         })
 
         post6 = create_content(self.data_dir, "post", {
-            "title": "Needs Review", "type": "for_category"
+            "title": "Needs Review", "type": "proposal"
         }, current_user=self.ids["user_bob"])
         create_relation(self.data_dir, "category_post", {
             "category_id": strict_pub_cat["id"], "post_id": post6["id"],
@@ -356,7 +356,7 @@ class TestRule(TestRunner):
         })
 
         post = create_content(self.data_dir, "post", {
-            "title": "For Review", "type": "for_category"
+            "title": "For Review", "type": "proposal"
         }, current_user=self.ids["user_bob"])
         create_relation(self.data_dir, "category_post", {
             "category_id": strict_cat["id"], "post_id": post["id"],

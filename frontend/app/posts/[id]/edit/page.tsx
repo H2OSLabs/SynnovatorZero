@@ -16,7 +16,7 @@ const mockPost = {
   id: 1,
   title: "基于大模型的智能教育平台",
   body: "## 项目介绍\n\n我们开发了一个基于大语言模型的个性化学习平台...",
-  type: "for_category",
+  type: "proposal",
   tags: ["AI", "Education", "LLM"],
   resources: [
     { id: 1, filename: "proposal.pdf", display_name: "项目提案" },

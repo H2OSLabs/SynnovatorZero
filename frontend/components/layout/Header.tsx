@@ -128,7 +128,7 @@ export function Header({ onMenuClick, showMenuButton = false }: HeaderProps) {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/posts/create?type=for_category" className="flex items-center gap-2">
+                    <Link href="/posts/create?type=proposal" className="flex items-center gap-2">
                       <FileText className="h-4 w-4" />
                       发布提案
                     </Link>

@@ -15,8 +15,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getCategory, type Category } from "@/lib/api-client"
 
 const mockPosts = [
-  { id: 1, title: "基于大模型的智能教育平台", type: "for_category", status: "published", tags: ["AI"], like_count: 128, comment_count: 32, created_by: { id: 1, username: "alice", display_name: "Alice" } },
-  { id: 2, title: "智能客服机器人", type: "for_category", status: "published", tags: ["AI", "NLP"], like_count: 96, comment_count: 24, created_by: { id: 2, username: "bob", display_name: "Bob" } },
+  { id: 1, title: "基于大模型的智能教育平台", type: "proposal", status: "published", tags: ["AI"], like_count: 128, comment_count: 32, created_by: { id: 1, username: "alice", display_name: "Alice" } },
+  { id: 2, title: "智能客服机器人", type: "proposal", status: "published", tags: ["AI", "NLP"], like_count: 96, comment_count: 24, created_by: { id: 2, username: "bob", display_name: "Bob" } },
 ]
 
 const mockGroups = [

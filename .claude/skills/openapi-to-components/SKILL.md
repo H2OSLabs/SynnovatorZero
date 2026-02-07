@@ -56,7 +56,7 @@ export interface Post {
   updated_at: string;
 }
 
-export type PostType = "profile" | "team" | "category" | "for_category" | "certificate" | "general";
+export type PostType = "profile" | "team" | "category" | "proposal" | "certificate" | "general";
 export type PostStatus = "draft" | "pending_review" | "published" | "rejected";
 ```
 
@@ -281,7 +281,7 @@ After generating all files:
 | `home.tsx` | `listPosts`, `listCategories`, `getUser` |
 | `post-list.tsx` | `listPosts` (type=team), `listPosts` (type=general) |
 | `post-detail.tsx` | `getPost`, `getUser`, `listPostComments`, `listPostResources`, `listPostRelated` |
-| `proposal-list.tsx` | `listPosts` (type=for_category), `listCategories` |
+| `proposal-list.tsx` | `listPosts` (type=proposal), `listCategories` |
 | `proposal-detail.tsx` | `getPost`, `getUser`, `listPostComments`, `listPostRatings`, `listPostRelated`, `listPostResources` |
 | `category-detail.tsx` | `getCategory`, `listCategoryRules`, `listCategoryPosts`, `listCategoryGroups` |
 | `user-profile.tsx` | `getUser`, `listPosts` (filtered by user), `listResources` |

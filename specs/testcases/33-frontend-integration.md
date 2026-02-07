@@ -15,7 +15,7 @@
 用户在 `/posts/create` 页面填写内容，点击"保存草稿"按钮，系统调用 `POST /api/posts` 创建 status=draft 的帖子，成功后跳转到帖子详情页。
 
 **TC-FEINT-003：前端创建提案调用后端 API**
-用户在 `/posts/create?type=for_category` 页面创建提案，点击"发布"按钮，系统调用 `POST /api/posts` 创建 type=for_category 的帖子，成功后跳转到提案详情页。
+用户在 `/posts/create?type=proposal` 页面创建提案，点击"发布"按钮，系统调用 `POST /api/posts` 创建 type=proposal 的帖子，成功后跳转到提案详情页。
 
 **TC-FEINT-004：前端创建帖子失败显示错误**
 用户在 `/posts/create` 页面未填写标题直接点击"发布"，系统显示错误提示"请输入帖子标题"，不调用后端 API。

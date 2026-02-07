@@ -104,7 +104,7 @@
 | TC-POST-002 | 显式发布帖子 | 05-post.md |
 | TC-POST-010 | 创建 team 类型帖子 | 05-post.md |
 | TC-POST-011 | 创建 profile 类型帖子 | 05-post.md |
-| TC-POST-012 | 创建 for_category 类型帖子 | 05-post.md |
+| TC-POST-012 | 创建 proposal 类型帖子 | 05-post.md |
 | TC-POST-033 | 草稿发布（draft → published） | 05-post.md |
 | TC-RES-001 | 最小字段创建资源 | 06-resource.md |
 | TC-REL-CP-001 | 将帖子关联为活动的 submission | 08-relations.md |

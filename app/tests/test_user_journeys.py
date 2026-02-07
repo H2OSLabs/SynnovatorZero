@@ -306,7 +306,7 @@ def test_team_registration_flow(client):
     post_id = _create_post(
         client, alice,
         title="Our Submission",
-        post_type="for_category",
+        post_type="proposal",
         status="published",
     )
 
@@ -336,15 +336,15 @@ def test_team_registration_flow(client):
 # ---------------------------------------------------------------------------
 
 def test_create_daily_and_competition_posts(client):
-    """TC-JOUR-009: Create a general post and a for_category post linked
+    """TC-JOUR-009: Create a general post and a proposal post linked
     to a competition category.
 
     Steps:
     1. Create user (organizer, to also create categories).
     2. Create a general post (published) -- publicly visible, no category.
-    3. Create a for_category post with tags.
+    3. Create a proposal post with tags.
     4. Create a published category with a rule.
-    5. Link the for_category post as a submission.
+    5. Link the proposal post as a submission.
     """
     uid = _create_user(client, "creator_009", role="organizer")
 
@@ -360,10 +360,10 @@ def test_create_daily_and_competition_posts(client):
     assert resp.json()["type"] == "general"
     assert resp.json()["status"] == "published"
 
-    # for_category post with tags
+    # proposal post with tags
     resp = client.post("/api/posts", json={
         "title": "Competition Entry",
-        "type": "for_category",
+        "type": "proposal",
         "status": "draft",
         "tags": ["AI", "innovation"],
     }, headers={"X-User-Id": str(uid)})

@@ -54,7 +54,7 @@ type: enum                # 帖子类型（可选，不填则为 general）:
                           #   profile      = 个人说明
                           #   team         = 团队介绍
                           #   category     = 活动说明（由活动自动创建）
-                          #   for_category = 活动参赛提交
+                          #   proposal     = 提案（可独立存在，也可关联活动参赛）
                           #   certificate  = 证书分享
                           #   general      = 日常帖子（默认）
                           #   可用枚举可通过 GET /api/meta/post-types 获取
@@ -97,7 +97,7 @@ average_rating: number    # 平均评分（默认: null，基于所有 rating in
 | `profile` | 展示为个人资料卡片 |
 | `team` | 展示为团队卡片，含成员列表 |
 | `category` | 展示为活动说明页 |
-| `for_category` | 展示为参赛作品，含评分/审核状态 |
+| `proposal` | 展示为提案卡片，含评分/审核状态 |
 | `certificate` | 展示为证书卡片，含下载入口 |
 | `general` | 标准 Markdown 渲染 |
 
@@ -329,7 +329,7 @@ created_at: datetime      # 创建时间
 |---------|------|-------|
 | category | type | `competition`, `operation` |
 | category | status | `draft`, `published`, `closed` |
-| post | type | `profile`, `team`, `category`, `for_category`, `certificate`, `general` |
+| post | type | `profile`, `team`, `category`, `proposal`, `certificate`, `general` |
 | post | status | `draft`, `pending_review`, `published`, `rejected` |
 | post | visibility | `public`, `private` |
 | user | role | `participant`, `organizer`, `admin` |

@@ -203,7 +203,7 @@ function CreatePostForm() {
           </div>
 
           {/* Category Selection (for proposals) */}
-          {formData.type === "for_category" && (
+          {formData.type === "proposal" && (
             <div className="border-t border-nf-secondary pt-8">
               <h2 className="font-heading text-lg font-semibold text-nf-white mb-4">🎯 关联活动</h2>
               <Button variant="outline" className="border-nf-secondary w-full text-left justify-start">

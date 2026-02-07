@@ -34,7 +34,7 @@ def _create_group(client, uid, name="Team Alpha"):
     return resp.json()["id"]
 
 
-def test_register_team_for_category(client):
+def test_register_team_proposal(client):
     """TC-REL-CG-001: Team registers for category."""
     uid = _create_user(client)
     cat_id = _create_category(client, uid)

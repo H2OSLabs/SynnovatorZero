@@ -22,7 +22,7 @@
 | Field | Type | Required | Default | Notes |
 |-------|------|----------|---------|-------|
 | title | string | yes | — | Post title |
-| type | enum | no | `general` | `profile` \| `team` \| `category` \| `for_category` \| `certificate` \| `general` |
+| type | enum | no | `general` | `profile` \| `team` \| `category` \| `proposal` \| `certificate` \| `general` |
 | tags | list[string] | no | [] | Tag list |
 | status | enum | no | `draft` | `draft` \| `pending_review` \| `published` \| `rejected` |
 | like_count | integer | cache | 0 | Read-only, auto-maintained via `target_interaction` |

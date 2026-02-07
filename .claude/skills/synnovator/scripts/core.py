@@ -44,7 +44,7 @@ BODY_TYPES = ["category", "post", "rule"]
 ENUMS = {
     "category.type": ["competition", "operation"],
     "category.status": ["draft", "published", "closed"],
-    "post.type": ["profile", "team", "category", "for_category", "certificate", "general"],
+    "post.type": ["profile", "team", "category", "proposal", "certificate", "general"],
     "post.status": ["draft", "pending_review", "published", "rejected"],
     "post.visibility": ["public", "private"],
     "user.role": ["participant", "organizer", "admin"],

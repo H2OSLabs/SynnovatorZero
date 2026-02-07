@@ -39,7 +39,7 @@ API 规范参考：`.synnovator/openapi.yaml`
 | 精选内容卡片 | L17-33 | `const cards = [...]` | `GET /posts?status=published&limit=6` | `Post` -> `title`, `created_by` + `GET /users/{id}` 获取 author |
 | 卡片封面图 | L22,27,32 | `card.image` | 帖子关联资源 `GET /posts/{id}/resources` | `Resource` -> `url` |
 | 卡片作者头像 | L137 | `<div className="w-[18px]...bg-[#555555]" />` | `GET /users/{id}` | `User` -> `avatar_url` |
-| 热门提案列表 | L35-50 | `const proposals = [...]` | `GET /posts?type=for_category&limit=4` | `Post` -> `title`, `content` |
+| 热门提案列表 | L35-50 | `const proposals = [...]` | `GET /posts?type=proposal&limit=4` | `Post` -> `title`, `content` |
 | 提案作者 | L39,47 | `prop.author`, `prop.avatarColor` | `GET /users/{id}` | `User` -> `display_name`, `avatar_url` |
 | 分类导航 tabs | L15 | `const tabs = [...]` | `GET /categories?limit=10` | `Category` -> `name` |
 
@@ -86,7 +86,7 @@ API 规范参考：`.synnovator/openapi.yaml`
 
 | Mock 数据 / UI 区域 | 行号 | 变量/元素 | API 端点 | 对应 Schema |
 |---------------------|------|----------|---------|------------|
-| 提案卡片 | L14-43 | `const proposals = [...]` | `GET /posts?type=for_category` 或 `GET /categories/{id}/posts?relation_type=submission` | `Post` -> `title` |
+| 提案卡片 | L14-43 | `const proposals = [...]` | `GET /posts?type=proposal` 或 `GET /categories/{id}/posts?relation_type=submission` | `Post` -> `title` |
 | 卡片封面 | L21,28,34,41 | `prop.image` | `GET /posts/{id}/resources` | `Resource` -> `url` |
 | 作者信息 | L18-20, L25-27 | `prop.author`, `prop.avatarColor` | `GET /users/{id}` | `User` -> `display_name`, `avatar_url` |
 | 赛道筛选栏 | L100-108 | `"赛道探索"`, `"热门"`, `"最新"` | `GET /categories` | `Category[]` -> `name` |
@@ -151,7 +151,7 @@ API 规范参考：`.synnovator/openapi.yaml`
 | 个人签名 | L111-113 | `"Personal Signature：..."` | `GET /users/{user_id}` | `User` -> `bio` |
 | 资产卡片 | L20-24 | `const assets = [...]` | `GET /resources` (按用户过滤) | `Resource[]` 聚合统计 |
 | Tab: 帖子 | L152-161 | 3 个 placeholder 灰色块 | `GET /posts?created_by={user_id}` (API 缺口：缺 `created_by` 参数) | `Post[]` |
-| Tab: 提案 | L163-167 | `"暂无提案"` | `GET /posts?type=for_category&created_by={user_id}` | `Post[]` |
+| Tab: 提案 | L163-167 | `"暂无提案"` | `GET /posts?type=proposal&created_by={user_id}` | `Post[]` |
 | Tab: 收藏 | L169-173 | `"暂无收藏"` | 无端点（API 缺口） | 需新增收藏 API |
 
 ---
@@ -169,7 +169,7 @@ API 规范参考：`.synnovator/openapi.yaml`
 | 队员头像列表 | L13-16 | `const members = [...]` | `GET /groups/{group_id}/members` | `Member[]` -> `user_id` -> `GET /users/{id}` -> `avatar_url` |
 | 添加队员按钮 | L107-109 | `<Plus>` 按钮 | `POST /groups/{group_id}/members` | body: `{user_id, role?}` |
 | 资产卡片 | L18-22 | `const assets = [...]` | `GET /resources` (按 group 过滤，API 缺口) | `Resource[]` 聚合统计 |
-| Tab: 提案 | L165-168 | placeholder 灰色块 | `GET /posts?type=for_category` (按 group 过滤，API 缺口) | `Post[]` |
+| Tab: 提案 | L165-168 | placeholder 灰色块 | `GET /posts?type=proposal` (按 group 过滤，API 缺口) | `Post[]` |
 | Tab: 帖子 | L170-172 | `"暂无帖子"` | `GET /posts` (按 group 过滤，API 缺口) | `Post[]` |
 | Tab: 收藏 | L174-176 | `"暂无收藏"` | 无端点（API 缺口） | -- |
 
@@ -241,7 +241,7 @@ API 规范参考：`.synnovator/openapi.yaml`
 
 | 枚举 | 值 | 前端 UI 对应 |
 |------|----|-------------|
-| `PostType` | `profile`, `team`, `category`, `for_category`, `certificate`, `general` | 帖子分类 tab / 筛选器 |
+| `PostType` | `profile`, `team`, `category`, `proposal`, `certificate`, `general` | 帖子分类 tab / 筛选器 |
 | `PostStatus` | `draft`, `pending_review`, `published`, `rejected` | 帖子状态 badge |
 | `CategoryType` | `competition`, `operation` | 赛事类型标签 |
 | `CategoryStatus` | `draft`, `published`, `closed` | 赛事状态 badge |

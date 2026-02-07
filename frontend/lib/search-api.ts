@@ -130,7 +130,7 @@ export async function searchPosts(query: string, limit = 5): Promise<SearchResul
         id: post.id,
         title: post.title,
         subtitle: getPostTypeLabel(post.type),
-        url: post.type === 'for_category' ? `/proposals/${post.id}` : `/posts/${post.id}`,
+        url: post.type === 'proposal' ? `/proposals/${post.id}` : `/posts/${post.id}`,
       }))
   } catch {
     return []

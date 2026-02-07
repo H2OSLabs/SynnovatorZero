@@ -768,7 +768,7 @@ TC-ENTRY-001：活动报名
 | 标识 | 类型 | 状态 | 关联测试用例 |
 |------|------|------|-------------|
 | post_daily_1 | daily | published | TC-POST-001~010 |
-| post_for_category_1 | for_category | draft | TC-POST-050~076 |
+| post_proposal_1 | proposal | draft | TC-POST-050~076 |
 
 ## 团队数据
 

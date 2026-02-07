@@ -85,7 +85,7 @@
 | TC-POST-004 | 按 type 筛选帖子 |
 | TC-POST-010 | 创建 team 类型帖子 |
 | TC-POST-011 | 创建 profile 类型帖子 |
-| TC-POST-012 | 创建 for_category 类型帖子 |
+| TC-POST-012 | 创建 proposal 类型帖子 |
 | TC-POST-013 | 创建 certificate 类型帖子 |
 | TC-POST-030 | 帖子进入 pending_review 状态 |
 | TC-POST-031 | 帖子被审核通过 |

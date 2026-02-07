@@ -173,7 +173,7 @@ def _seed_posts(db: Session, author_user_ids: dict[str, int]) -> None:
     posts = [
         {
             "title": "基于大模型的智能教育平台",
-            "type": "for_category",
+            "type": "proposal",
             "status": "published",
             "visibility": "public",
             "tags": ["AI", "Education", "LLM"],
@@ -184,7 +184,7 @@ def _seed_posts(db: Session, author_user_ids: dict[str, int]) -> None:
         },
         {
             "title": "去中心化身份认证系统",
-            "type": "for_category",
+            "type": "proposal",
             "status": "published",
             "visibility": "public",
             "tags": ["Web3", "DID", "Privacy"],

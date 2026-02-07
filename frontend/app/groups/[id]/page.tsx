@@ -32,7 +32,7 @@ const mockMembers = [
 ]
 
 const mockPosts = [
-  { id: 1, title: "基于大模型的智能教育平台", type: "for_category", status: "published", tags: ["AI"], like_count: 128, comment_count: 32, created_by: { id: 1, username: "alice", display_name: "Alice" } },
+  { id: 1, title: "基于大模型的智能教育平台", type: "proposal", status: "published", tags: ["AI"], like_count: 128, comment_count: 32, created_by: { id: 1, username: "alice", display_name: "Alice" } },
 ]
 
 const mockCategories = [

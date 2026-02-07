@@ -43,7 +43,7 @@
 |------|------|------|---------|--------|-------------|
 | post_daily_1 | daily | published | 无 | user_participant_1 | TC-POST-001~010, TC-IACT-001~030 |
 | post_daily_2 | daily | draft | 无 | user_participant_1 | TC-POST-002 |
-| post_for_category_1 | for_category | published | cat_hackathon_1 | user_participant_1 | TC-POST-050~076 |
+| post_proposal_1 | proposal | published | cat_hackathon_1 | user_participant_1 | TC-POST-050~076 |
 
 ---
 
@@ -62,7 +62,7 @@
 |------|------|------|--------|-------------|
 | iact_like_1 | like | post_daily_1 | user_participant_2 | TC-IACT-001~010 |
 | iact_comment_1 | comment | post_daily_1 | user_participant_2 | TC-IACT-011~020 |
-| iact_rating_1 | rating | post_for_category_1 | user_organizer_1 | TC-IACT-021~030 |
+| iact_rating_1 | rating | post_proposal_1 | user_organizer_1 | TC-IACT-021~030 |
 
 ---
 
@@ -74,7 +74,7 @@
 | group_user | group_public_1 | user_participant_2 | role=member | TC-REL-GU-011~020 |
 | category_rule | cat_hackathon_1 | rule_entry_1 | - | TC-REL-CR-001~010 |
 | category_rule | cat_hackathon_1 | rule_submit_1 | - | TC-REL-CR-001~010 |
-| category_post | cat_hackathon_1 | post_for_category_1 | relation=submission | TC-REL-CP-001~020 |
+| category_post | cat_hackathon_1 | post_proposal_1 | relation=submission | TC-REL-CP-001~020 |
 | target_interaction | post_daily_1 | iact_like_1 | - | TC-REL-TI-001~010 |
 | user_user | user_participant_1 | user_participant_2 | relation=follow | TC-FRIEND-001~010 |
 

@@ -44,7 +44,7 @@
 |---------|------|------|------|----------|
 | TC-POST-010 | type=team（团队卡片） | 待执行 | - | - |
 | TC-POST-011 | type=profile（个人资料卡片） | 待执行 | - | - |
-| TC-POST-012 | type=for_category（参赛提交） | 待执行 | - | - |
+| TC-POST-012 | type=proposal（参赛提交） | 待执行 | - | - |
 | TC-POST-013 | type=certificate（证书分享帖） | 待执行 | - | - |
 
 ### A3. 关系驱动的可用性

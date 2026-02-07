@@ -16,7 +16,7 @@ Auth Header: `X-User-Id: <int>` (temporary)
 | UI Element | HTTP Method | Endpoint | Notes |
 |-----------|-------------|----------|-------|
 | Card Grid (featured posts) | GET | `/api/posts?limit=6&status=published` | Top posts for main content |
-| Hot Proposals section | GET | `/api/posts?type=for_category&limit=4&status=published` | Proposals with type filter |
+| Hot Proposals section | GET | `/api/posts?type=proposal&limit=4&status=published` | Proposals with type filter |
 | "发布新内容" button | POST | `/api/posts` | Requires auth (X-User-Id) |
 | Tab navigation | GET | `/api/categories?limit=10` | Tabs map to categories |
 
@@ -47,7 +47,7 @@ Auth Header: `X-User-Id: <int>` (temporary)
 
 | UI Element | HTTP Method | Endpoint | Notes |
 |-----------|-------------|----------|-------|
-| Proposal grid | GET | `/api/posts?type=for_category&limit=10&status=published` | type=for_category for proposals |
+| Proposal grid | GET | `/api/posts?type=proposal&limit=10&status=published` | type=proposal for proposals |
 | Category filter tabs | GET | `/api/categories?limit=10` | Category list |
 
 ### 5. ProposalDetail (`components/pages/proposal-detail.tsx`)
@@ -136,7 +136,7 @@ const getApiBase = () => getEnv().API_URL
 ```typescript
 // Core entities
 interface User { id: number; username: string; email: string; display_name?: string; bio?: string; role: "participant"|"organizer"|"admin"; }
-type PostType = "profile" | "team" | "category" | "for_category" | "certificate" | "general";
+type PostType = "profile" | "team" | "category" | "proposal" | "certificate" | "general";
 interface Post { id: number; title: string; body?: string; type: PostType; status: string; visibility: string; tags?: string[]; created_by: number; like_count: number; comment_count: number; average_rating?: number; }
 interface Category { id: number; name: string; description?: string; type: "competition"|"operation"; status: "draft"|"published"|"closed"; created_by: number; }
 interface Group { id: number; name: string; description?: string; visibility: "public"|"private"; require_approval: boolean; max_members?: number; created_by: number; }

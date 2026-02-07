@@ -74,10 +74,10 @@ def test_create_profile_post(client):
     assert post["type"] == "profile"
 
 
-def test_create_for_category_post(client):
+def test_create_proposal_post(client):
     uid = _create_user(client)
-    post = _create_post(client, uid, type="for_category", title="My Submission")
-    assert post["type"] == "for_category"
+    post = _create_post(client, uid, type="proposal", title="My Submission")
+    assert post["type"] == "proposal"
 
 
 def test_create_certificate_post(client):

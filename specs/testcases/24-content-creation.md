@@ -26,7 +26,7 @@
 ## 24.3 提案发布
 
 **TC-CREATE-020：发布提案并创建新资产**
-用户发布 type=for_category 的提案，在提案中直接创建新的资产（resource）并关联。
+用户发布 type=proposal 的提案，在提案中直接创建新的资产（resource）并关联。
 
 **TC-CREATE-021：发布提案并放入已有资产**
 用户发布提案时选择自己已有的资产，通过 post:resource 关系关联到提案。

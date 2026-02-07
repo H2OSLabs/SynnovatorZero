@@ -56,7 +56,7 @@ export default function PostsPage() {
 
   const filteredPosts = posts.filter((post) => {
     if (activeTab === "all") return true
-    if (activeTab === "proposals") return post.type === "for_category"
+    if (activeTab === "proposals") return post.type === "proposal"
     if (activeTab === "teams") return post.type === "team"
     if (activeTab === "general") return post.type === "general"
     return true

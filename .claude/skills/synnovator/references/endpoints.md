@@ -106,7 +106,7 @@ engine.py update group_user --filters '{"group_id":"grp_xxx","user_id":"user_bob
 
 ### Create post and link to category
 ```bash
-engine.py --user user_alice create post --data '{"title":"My Submission","type":"for_category","tags":["AI"]}'
+engine.py --user user_alice create post --data '{"title":"My Submission","type":"proposal","tags":["AI"]}'
 engine.py create category_post --data '{"category_id":"cat_xxx","post_id":"post_xxx","relation_type":"submission"}'
 ```
 

@@ -33,7 +33,7 @@ Carol 申请加入 require_approval=true 的团队：
 
 **TC-JOUR-009：创建日常帖子和参赛提案**
 - 创建日常帖子（type=general），发布后公开可见（不受 rule 约束，未关联 category）
-- 创建参赛提案（type=for_category），关联到活动（category:post submission）— 引擎自动校验该活动关联的 rule 约束（时间窗口、格式、提交次数、团队人数），全部满足后关联成功
+- 创建参赛提案（type=proposal），关联到活动（category:post submission）— 引擎自动校验该活动关联的 rule 约束（时间窗口、格式、提交次数、团队人数），全部满足后关联成功
 - 帖子附带 Markdown 正文和 tags
 - 若帖子关联了 category 且 rule 设置 `allow_public=false`，发布需走 `pending_review` 审核路径
 

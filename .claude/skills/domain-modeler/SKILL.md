@@ -49,7 +49,7 @@ Extracted nouns:
   参赛者 → User (entity)
   活动   → Category (entity)
   团队   → Group (entity)
-  提案   → Post (entity, type=for_category)
+  提案   → Post (entity, type=proposal)
 ```
 
 **Checklist:**

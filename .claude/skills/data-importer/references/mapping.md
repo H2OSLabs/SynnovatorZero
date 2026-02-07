@@ -23,7 +23,7 @@
 | .md Field | Database Column | Type | Notes |
 |-----------|----------------|------|-------|
 | title | title | string | |
-| type | type | enum | profile \| team \| category \| for_category \| certificate \| general |
+| type | type | enum | profile \| team \| category \| proposal \| certificate \| general |
 | tags | tags | JSON | Array of strings |
 | status | status | enum | draft \| pending_review \| published \| rejected |
 | like_count | like_count | integer | Cache field |
