@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Search, SlidersHorizontal } from "lucide-react"
+import { Search, SlidersHorizontal, Loader2 } from "lucide-react"
 import { PageLayout } from "@/components/layout/PageLayout"
 import { CategoryCard } from "@/components/cards/CategoryCard"
 import { PostCard } from "@/components/cards/PostCard"
@@ -10,52 +10,146 @@ import { UserCard } from "@/components/cards/UserCard"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getCategories, type Event } from "@/lib/api-client"
+import {
+  getCategories,
+  getPosts,
+  getGroups,
+  listUsers,
+  getUser,
+  type Event,
+  type Post,
+  type Group,
+  type User,
+} from "@/lib/api-client"
 
-const mockPosts = [
-  { id: 1, title: "基于大模型的智能教育平台", type: "proposal", status: "published", tags: ["AI"], like_count: 128, comment_count: 32, created_by: { id: 1, username: "alice", display_name: "Alice" } },
-  { id: 2, title: "去中心化身份认证系统", type: "proposal", status: "published", tags: ["Web3"], like_count: 96, comment_count: 24, created_by: { id: 2, username: "bob", display_name: "Bob" } },
-]
-
-const mockGroups = [
-  { id: 1, name: "创新先锋队", visibility: "public" as const, member_count: 5, description: "热爱技术，热爱开源" },
-  { id: 2, name: "AI 实验室", visibility: "public" as const, member_count: 8, description: "探索 AI 的无限可能" },
-]
-
-const mockUsers = [
-  { id: 1, username: "alice", display_name: "Alice", bio: "全栈开发者", post_count: 20, event_count: 5, like_count: 500 },
-  { id: 2, username: "bob", display_name: "Bob", bio: "Web3 爱好者", post_count: 15, event_count: 3, like_count: 320 },
-]
+interface PostWithAuthor extends Post {
+  author?: User
+}
 
 export default function ExplorePage() {
   const [activeTab, setActiveTab] = useState("all")
-  const [events, setCategories] = useState<Event[]>([])
-  const [isLoadingCategories, setIsLoadingCategories] = useState(true)
-  const [categoriesError, setCategoriesError] = useState<string | null>(null)
+
+  // Events state
+  const [events, setEvents] = useState<Event[]>([])
+  const [isLoadingEvents, setIsLoadingEvents] = useState(true)
+  const [eventsError, setEventsError] = useState<string | null>(null)
+
+  // Posts state
+  const [posts, setPosts] = useState<PostWithAuthor[]>([])
+  const [isLoadingPosts, setIsLoadingPosts] = useState(true)
+  const [postsError, setPostsError] = useState<string | null>(null)
+
+  // Groups state
+  const [groups, setGroups] = useState<Group[]>([])
+  const [isLoadingGroups, setIsLoadingGroups] = useState(true)
+  const [groupsError, setGroupsError] = useState<string | null>(null)
+
+  // Users state
+  const [users, setUsers] = useState<User[]>([])
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true)
+  const [usersError, setUsersError] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      setIsLoadingCategories(true)
-      setCategoriesError(null)
+    // Fetch events
+    const fetchEvents = async () => {
+      setIsLoadingEvents(true)
+      setEventsError(null)
       try {
         const resp = await getCategories(0, 6, { status: "published" })
-        setCategories(resp.items)
+        setEvents(resp.items)
       } catch (e) {
-        setCategoriesError(e instanceof Error ? e.message : "加载失败")
-        setCategories([])
+        setEventsError(e instanceof Error ? e.message : "Failed to load events")
+        setEvents([])
       } finally {
-        setIsLoadingCategories(false)
+        setIsLoadingEvents(false)
       }
     }
-    fetchCategories()
+
+    // Fetch posts with author info
+    const fetchPosts = async () => {
+      setIsLoadingPosts(true)
+      setPostsError(null)
+      try {
+        const resp = await getPosts(0, 6, { status: "published" })
+        // Fetch author details for each post
+        const postsWithAuthors = await Promise.all(
+          resp.items.map(async (post) => {
+            if (post.created_by) {
+              try {
+                const author = await getUser(post.created_by)
+                return { ...post, author }
+              } catch {
+                return post
+              }
+            }
+            return post
+          })
+        )
+        setPosts(postsWithAuthors)
+      } catch (e) {
+        setPostsError(e instanceof Error ? e.message : "Failed to load posts")
+        setPosts([])
+      } finally {
+        setIsLoadingPosts(false)
+      }
+    }
+
+    // Fetch groups
+    const fetchGroups = async () => {
+      setIsLoadingGroups(true)
+      setGroupsError(null)
+      try {
+        const resp = await getGroups(0, 6, { visibility: "public" })
+        setGroups(resp.items)
+      } catch (e) {
+        setGroupsError(e instanceof Error ? e.message : "Failed to load groups")
+        setGroups([])
+      } finally {
+        setIsLoadingGroups(false)
+      }
+    }
+
+    // Fetch users
+    const fetchUsers = async () => {
+      setIsLoadingUsers(true)
+      setUsersError(null)
+      try {
+        const resp = await listUsers(0, 6)
+        setUsers(resp.items)
+      } catch (e) {
+        setUsersError(e instanceof Error ? e.message : "Failed to load users")
+        setUsers([])
+      } finally {
+        setIsLoadingUsers(false)
+      }
+    }
+
+    fetchEvents()
+    fetchPosts()
+    fetchGroups()
+    fetchUsers()
   }, [])
+
+  const renderLoading = () => (
+    <div className="flex items-center justify-center py-10">
+      <Loader2 className="h-6 w-6 animate-spin text-nf-lime" />
+    </div>
+  )
+
+  const renderError = (error: string) => (
+    <div className="text-center py-10 text-nf-muted">{error}</div>
+  )
+
+  const renderEmpty = (message: string) => (
+    <div className="text-center py-10 text-nf-muted">{message}</div>
+  )
 
   return (
     <PageLayout variant="compact">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="font-heading text-3xl font-bold text-nf-white mb-2">🔍 探索</h1>
-        <p className="text-nf-muted">发现最新的 Hackathon 活动和精彩项目</p>
+        <h1 className="font-heading text-3xl font-bold text-nf-white mb-2">Explore</h1>
+        <p className="text-nf-muted">Discover the latest events and projects</p>
       </div>
 
       {/* Search & Filter */}
@@ -63,50 +157,52 @@ export default function ExplorePage() {
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-nf-muted" />
           <Input
-            placeholder="搜索活动、帖子、团队、用户..."
+            placeholder="Search events, posts, teams, users..."
             className="pl-10 bg-nf-surface border-nf-secondary"
           />
         </div>
         <Button variant="outline" className="border-nf-secondary">
           <SlidersHorizontal className="h-4 w-4 mr-2" />
-          筛选
+          Filter
         </Button>
       </div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="bg-nf-surface border-nf-secondary mb-6">
-          <TabsTrigger value="all">全部</TabsTrigger>
-          <TabsTrigger value="events">活动</TabsTrigger>
-          <TabsTrigger value="posts">帖子</TabsTrigger>
-          <TabsTrigger value="groups">团队</TabsTrigger>
-          <TabsTrigger value="users">用户</TabsTrigger>
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="events">Events</TabsTrigger>
+          <TabsTrigger value="posts">Posts</TabsTrigger>
+          <TabsTrigger value="groups">Teams</TabsTrigger>
+          <TabsTrigger value="users">Users</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all">
           <div className="space-y-8">
             {/* Events Section */}
             <section>
-              <h2 className="font-heading text-xl font-semibold text-nf-white mb-4">活动</h2>
-              {isLoadingCategories ? (
-                <div className="text-center py-10 text-nf-muted">加载中...</div>
-              ) : categoriesError ? (
-                <div className="text-center py-10 text-nf-muted">{categoriesError}</div>
+              <h2 className="font-heading text-xl font-semibold text-nf-white mb-4">Events</h2>
+              {isLoadingEvents ? (
+                renderLoading()
+              ) : eventsError ? (
+                renderError(eventsError)
+              ) : events.length === 0 ? (
+                renderEmpty("No events found")
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {events.map((cat) => (
+                  {events.map((event) => (
                     <CategoryCard
-                      key={cat.id}
-                      id={cat.id}
-                      name={cat.name}
-                      description={cat.description}
-                      type={cat.type}
-                      status={cat.status}
-                      tags={cat.tags ?? []}
-                      cover_image={cat.cover_image ?? undefined}
-                      start_date={cat.start_date ?? undefined}
-                      end_date={cat.end_date ?? undefined}
-                      participant_count={cat.participant_count ?? 0}
+                      key={event.id}
+                      id={event.id}
+                      name={event.name}
+                      description={event.description}
+                      type={event.type}
+                      status={event.status}
+                      tags={event.tags ?? []}
+                      cover_image={event.cover_image ?? undefined}
+                      start_date={event.start_date ?? undefined}
+                      end_date={event.end_date ?? undefined}
+                      participant_count={event.participant_count ?? 0}
                     />
                   ))}
                 </div>
@@ -115,46 +211,84 @@ export default function ExplorePage() {
 
             {/* Posts Section */}
             <section>
-              <h2 className="font-heading text-xl font-semibold text-nf-white mb-4">帖子</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {mockPosts.map((post) => (
-                  <PostCard key={post.id} {...post} />
-                ))}
-              </div>
+              <h2 className="font-heading text-xl font-semibold text-nf-white mb-4">Posts</h2>
+              {isLoadingPosts ? (
+                renderLoading()
+              ) : postsError ? (
+                renderError(postsError)
+              ) : posts.length === 0 ? (
+                renderEmpty("No posts found")
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {posts.map((post) => (
+                    <PostCard
+                      key={post.id}
+                      id={post.id}
+                      title={post.title}
+                      type={post.type}
+                      status={post.status}
+                      tags={post.tags ?? []}
+                      like_count={post.like_count}
+                      comment_count={post.comment_count}
+                      created_by={post.author ? {
+                        id: post.author.id,
+                        username: post.author.username,
+                        display_name: post.author.display_name || post.author.username,
+                      } : undefined}
+                    />
+                  ))}
+                </div>
+              )}
             </section>
 
             {/* Groups Section */}
             <section>
-              <h2 className="font-heading text-xl font-semibold text-nf-white mb-4">团队</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {mockGroups.map((group) => (
-                  <GroupCard key={group.id} {...group} />
-                ))}
-              </div>
+              <h2 className="font-heading text-xl font-semibold text-nf-white mb-4">Teams</h2>
+              {isLoadingGroups ? (
+                renderLoading()
+              ) : groupsError ? (
+                renderError(groupsError)
+              ) : groups.length === 0 ? (
+                renderEmpty("No teams found")
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {groups.map((group) => (
+                    <GroupCard
+                      key={group.id}
+                      id={group.id}
+                      name={group.name}
+                      visibility={group.visibility}
+                      description={group.description || undefined}
+                    />
+                  ))}
+                </div>
+              )}
             </section>
           </div>
         </TabsContent>
 
         <TabsContent value="events">
-          {isLoadingCategories ? (
-            <div className="text-center py-10 text-nf-muted">加载中...</div>
-          ) : categoriesError ? (
-            <div className="text-center py-10 text-nf-muted">{categoriesError}</div>
+          {isLoadingEvents ? (
+            renderLoading()
+          ) : eventsError ? (
+            renderError(eventsError)
+          ) : events.length === 0 ? (
+            renderEmpty("No events found")
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {events.map((cat) => (
+              {events.map((event) => (
                 <CategoryCard
-                  key={cat.id}
-                  id={cat.id}
-                  name={cat.name}
-                  description={cat.description}
-                  type={cat.type}
-                  status={cat.status}
-                  tags={cat.tags ?? []}
-                  cover_image={cat.cover_image ?? undefined}
-                  start_date={cat.start_date ?? undefined}
-                  end_date={cat.end_date ?? undefined}
-                  participant_count={cat.participant_count ?? 0}
+                  key={event.id}
+                  id={event.id}
+                  name={event.name}
+                  description={event.description}
+                  type={event.type}
+                  status={event.status}
+                  tags={event.tags ?? []}
+                  cover_image={event.cover_image ?? undefined}
+                  start_date={event.start_date ?? undefined}
+                  end_date={event.end_date ?? undefined}
+                  participant_count={event.participant_count ?? 0}
                 />
               ))}
             </div>
@@ -162,27 +296,78 @@ export default function ExplorePage() {
         </TabsContent>
 
         <TabsContent value="posts">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockPosts.map((post) => (
-              <PostCard key={post.id} {...post} />
-            ))}
-          </div>
+          {isLoadingPosts ? (
+            renderLoading()
+          ) : postsError ? (
+            renderError(postsError)
+          ) : posts.length === 0 ? (
+            renderEmpty("No posts found")
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {posts.map((post) => (
+                <PostCard
+                  key={post.id}
+                  id={post.id}
+                  title={post.title}
+                  type={post.type}
+                  status={post.status}
+                  tags={post.tags ?? []}
+                  like_count={post.like_count}
+                  comment_count={post.comment_count}
+                  created_by={post.author ? {
+                    id: post.author.id,
+                    username: post.author.username,
+                    display_name: post.author.display_name || post.author.username,
+                  } : undefined}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="groups">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockGroups.map((group) => (
-              <GroupCard key={group.id} {...group} />
-            ))}
-          </div>
+          {isLoadingGroups ? (
+            renderLoading()
+          ) : groupsError ? (
+            renderError(groupsError)
+          ) : groups.length === 0 ? (
+            renderEmpty("No teams found")
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {groups.map((group) => (
+                <GroupCard
+                  key={group.id}
+                  id={group.id}
+                  name={group.name}
+                  visibility={group.visibility}
+                  description={group.description || undefined}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="users">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockUsers.map((user) => (
-              <UserCard key={user.id} {...user} />
-            ))}
-          </div>
+          {isLoadingUsers ? (
+            renderLoading()
+          ) : usersError ? (
+            renderError(usersError)
+          ) : users.length === 0 ? (
+            renderEmpty("No users found")
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {users.map((user) => (
+                <UserCard
+                  key={user.id}
+                  id={user.id}
+                  username={user.username}
+                  display_name={user.display_name || undefined}
+                  bio={user.bio || undefined}
+                  avatar_url={user.avatar_url || undefined}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </PageLayout>

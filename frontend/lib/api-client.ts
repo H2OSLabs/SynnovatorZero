@@ -103,17 +103,7 @@ export async function createUser(data: {
 }
 
 export async function getUser(userId: number) {
-  return apiFetch<{
-    id: number
-    username: string
-    email: string
-    role: string
-    display_name?: string
-    avatar_url?: string
-    bio?: string
-    follower_count: number
-    following_count: number
-  }>(`/users/${userId}`)
+  return apiFetch<User>(`/users/${userId}`)
 }
 
 export interface User {
@@ -391,4 +381,136 @@ export async function markAllNotificationsAsRead(userId: number) {
     method: 'POST',
     userId,
   })
+}
+
+// Interactions (Comments, Likes, Ratings)
+export interface Interaction {
+  id: number
+  type: 'like' | 'comment' | 'rating'
+  value?: string | { score: number } | null
+  parent_id?: number | null
+  created_by?: number | null
+  created_at: string
+  updated_at?: string | null
+  deleted_at?: string | null
+}
+
+export async function getPostComments(postId: number, skip = 0, limit = 100) {
+  return apiFetch<{ items: Interaction[]; total: number; skip: number; limit: number }>(
+    `/posts/${postId}/comments?skip=${skip}&limit=${limit}`
+  )
+}
+
+export async function addPostComment(postId: number, value: string, parentId?: number) {
+  return apiFetch<Interaction>(`/posts/${postId}/comments`, {
+    method: 'POST',
+    body: JSON.stringify({ type: 'comment', value, parent_id: parentId }),
+  })
+}
+
+export async function likePost(postId: number) {
+  return apiFetch<Interaction>(`/posts/${postId}/likes`, {
+    method: 'POST',
+    body: JSON.stringify({ type: 'like' }),
+  })
+}
+
+export async function unlikePost(postId: number) {
+  return apiFetch<void>(`/posts/${postId}/likes`, {
+    method: 'DELETE',
+  })
+}
+
+export async function checkPostLiked(postId: number): Promise<boolean> {
+  try {
+    await apiFetch<{ liked: boolean }>(`/posts/${postId}/likes/check`)
+    return true
+  } catch {
+    return false
+  }
+}
+
+// Post Resources
+export interface PostResource {
+  id: number
+  post_id: number
+  resource_id: number
+  display_type: 'attachment' | 'inline'
+  position?: number | null
+  created_at: string
+}
+
+export interface Resource {
+  id: number
+  filename: string
+  display_name?: string | null
+  file_type?: string | null
+  file_size?: number | null
+  url?: string | null
+  created_by?: number | null
+  created_at: string
+}
+
+export async function getPostResources(postId: number) {
+  return apiFetch<PostResource[]>(`/posts/${postId}/resources`)
+}
+
+export async function getResource(resourceId: number) {
+  return apiFetch<Resource>(`/resources/${resourceId}`)
+}
+
+// Event-related APIs
+export interface EventRule {
+  id: number
+  event_id: number
+  rule_id: number
+  priority: number
+  position?: number | null
+  created_at: string
+}
+
+export interface EventPost {
+  id: number
+  event_id: number
+  post_id: number
+  submission_type: string
+  status: string
+  position?: number | null
+  created_at: string
+}
+
+export interface EventGroup {
+  id: number
+  event_id: number
+  group_id: number
+  status: string
+  position?: number | null
+  created_at: string
+}
+
+export async function getEventRules(eventId: number) {
+  return apiFetch<EventRule[]>(`/events/${eventId}/rules`)
+}
+
+export async function getEventPosts(eventId: number) {
+  return apiFetch<EventPost[]>(`/events/${eventId}/posts`)
+}
+
+export async function getEventGroups(eventId: number) {
+  return apiFetch<EventGroup[]>(`/events/${eventId}/groups`)
+}
+
+// Rules
+export interface Rule {
+  id: number
+  name: string
+  description?: string | null
+  type: string
+  config?: Record<string, unknown> | null
+  created_by?: number | null
+  created_at: string
+}
+
+export async function getRule(ruleId: number) {
+  return apiFetch<Rule>(`/rules/${ruleId}`)
 }

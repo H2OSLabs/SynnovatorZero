@@ -100,7 +100,7 @@ Theme: **"Neon Forge"** — dark theme with neon accents.
 
 ## Development Approach
 
-This project follows **spec-driven, skill-automated development** with a 12-phase workflow documented in `docs/development-workflow.md`.
+This project follows **spec-driven, skill-automated development** with a 12-phase workflow documented in `docs/development-workflow/` (see README.md for index).
 
 ### Core Principles
 
@@ -164,7 +164,7 @@ Phase 9:   最终集成验证          [tests-kit Guard]
 ### 追溯流程
 
 1. **定位问题阶段**
-   - 对照 `docs/development-workflow.md` 的 12 个阶段
+   - 对照 `docs/development-workflow/` 的 12 个阶段
    - 判断问题属于哪个阶段的产出物
 
 2. **检查工作流覆盖**
@@ -198,6 +198,6 @@ Phase 9:   最终集成验证          [tests-kit Guard]
 修复 bug 后，**必须**更新相关文档/流程：
 
 - [ ] 补充测试用例到 `specs/testcases/`
-- [ ] 更新 `docs/development-workflow.md` 的检查点（如需要）
+- [ ] 更新 `docs/development-workflow/` 的检查点（如需要）
 - [ ] 更新相关 Skill 的验证逻辑（如需要）
 - [ ] 在 `findings.md` 记录经验教训（如使用 planning-with-files）
