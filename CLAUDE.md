@@ -132,7 +132,7 @@ Phase 9:   最终集成验证          [tests-kit Guard]
 |-------|---------|
 | **domain-modeler** | Extract entities, relationships, constraints from user-journeys → domain model docs |
 | **schema-to-openapi** | Generate OpenAPI 3.0 spec from domain model docs |
-| **api-builder** | Generate FastAPI backend + TypeScript client from OpenAPI spec |
+| **api-builder** | Generate FastAPI backend + TypeScript client from OpenAPI spec. Default `--conflict-strategy skip` protects existing files; use `--dry-run` to preview |
 | **seed-designer** | Derive seed data requirements from test case preconditions |
 | **tests-kit** | Guard mode (verify test cases) + Insert mode (add test cases) |
 | **pen-to-react** | Convert .pen design files → React components |
@@ -146,6 +146,7 @@ Phase 9:   最终集成验证          [tests-kit Guard]
 - Documentation is bilingual (Chinese primary, English where applicable)
 - Use `uv` for all Python commands (not pip/poetry)
 - Frontend auth defaults to Mock login (`X-User-Id` header); real auth only when explicitly requested
+- **回答问题时使用中文**（代码注释和变量名除外）
 
 ## Boundaries
 
@@ -190,6 +191,7 @@ Phase 9:   最终集成验证          [tests-kit Guard]
 | UI 流程缺失 | 阶段 4 (UI 设计) | user-journey 覆盖度检查 |
 | 前端显示异常 | 阶段 7 (组件开发) | UI 设计文档、shadcn 组件使用 |
 | E2E 测试失败 | 阶段 8 (E2E 测试) | 测试用例完整性 |
+| 测试用例与需求不符 | user-journeys 更新后 | tests-kit Insert 同步、种子数据更新 |
 
 ### 修复后改进
 

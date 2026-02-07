@@ -17,4 +17,7 @@ from app.models.category_post import CategoryPost
 from app.models.category_group import CategoryGroup
 from app.models.target_interaction import TargetInteraction
 from app.models.category_category import CategoryCategory
+from app.models.category_resource import CategoryResource
+from app.models.group_post import GroupPost
+from app.models.group_resource import GroupResource
 from app.models.notification import Notification

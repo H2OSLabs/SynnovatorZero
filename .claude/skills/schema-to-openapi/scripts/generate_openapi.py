@@ -709,6 +709,9 @@ def generate_paths(_schema: dict) -> dict:
         {"name": "relation_type", "in": "query", "schema": {"type": "string", "enum": ["submission", "reference"]}}
     ])
     paths["/categories/{category_id}/groups"] = nested_list_add("categories", "category_id", "groups", "Group", "CategoryGroupAdd")
+    paths["/categories/{category_id}/resources"] = nested_list_add("categories", "category_id", "resources", "Resource", "CategoryResourceAdd", extra_params=[
+        {"name": "display_type", "in": "query", "schema": {"type": "string", "enum": ["banner", "attachment", "inline"]}}
+    ])
 
     # Posts
     paths["/posts"] = crud_list_create("posts", "Post", list_params=[
@@ -772,6 +775,34 @@ def generate_paths(_schema: dict) -> dict:
         "delete": {"summary": "Remove member from group", "operationId": "remove_group_member", "tags": ["groups"],
                    "parameters": [path_param("group_id"), path_param("user_id")],
                    "responses": {"204": {"description": "Member removed"}}}
+    }
+    paths["/groups/{group_id}/posts"] = nested_list_add("groups", "group_id", "posts", "Post", "GroupPostAdd", extra_params=[
+        {"name": "relation_type", "in": "query", "schema": {"type": "string", "enum": ["team_submission", "announcement", "reference"]}}
+    ])
+    paths["/groups/{group_id}/resources"] = nested_list_add("groups", "group_id", "resources", "Resource", "GroupResourceAdd", extra_params=[
+        {"name": "access_level", "in": "query", "schema": {"type": "string", "enum": ["read_only", "read_write"]}}
+    ])
+
+    # Notifications
+    paths["/notifications"] = {
+        "get": {"summary": "List notifications", "operationId": "list_notifications", "tags": ["notifications"],
+                "parameters": [{"$ref": "#/components/parameters/SkipParam"}, {"$ref": "#/components/parameters/LimitParam"},
+                              {"name": "type", "in": "query", "schema": {"type": "string", "enum": ["system", "activity", "team", "social"]}},
+                              {"name": "is_read", "in": "query", "schema": {"type": "boolean"}}],
+                "responses": {"200": {"description": "List of notifications", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/PaginatedNotificationList"}}}}}}
+    }
+    paths["/notifications/{notification_id}"] = {
+        "get": {"summary": "Get notification", "operationId": "get_notification", "tags": ["notifications"],
+                "parameters": [path_param("notification_id")],
+                "responses": {"200": {"description": "Notification details", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Notification"}}}}}},
+        "patch": {"summary": "Mark notification as read", "operationId": "update_notification", "tags": ["notifications"],
+                  "parameters": [path_param("notification_id")],
+                  "requestBody": {"required": True, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/NotificationUpdate"}}}},
+                  "responses": {"200": {"description": "Notification updated", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Notification"}}}}}}
+    }
+    paths["/notifications/read-all"] = {
+        "post": {"summary": "Mark all notifications as read", "operationId": "mark_all_notifications_read", "tags": ["notifications"],
+                 "responses": {"200": {"description": "Marked count", "content": {"application/json": {"schema": {"type": "object", "properties": {"marked_count": {"type": "integer"}}}}}}}}
     }
 
     # Admin batch operations

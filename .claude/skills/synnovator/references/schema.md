@@ -107,6 +107,19 @@ Supports two constraint styles: **fixed fields** (syntactic sugar) and **declara
 
 > **Note:** `interaction` does not store target info. The link between an interaction and its target is maintained exclusively via the `target_interaction` relation (`target_type` + `target_id` + `interaction_id`).
 
+### notification
+| Field | Type | Required | Default | Notes |
+|-------|------|----------|---------|-------|
+| type | enum | yes | — | `system` \| `activity` \| `team` \| `social` |
+| content | string | yes | — | Notification content |
+| title | string | no | — | Notification title |
+| related_url | string | no | — | Related link |
+| is_read | boolean | no | false | Read status |
+| user_id | user_id | yes | — | Recipient user |
+| id, created_at | — | auto | — | Standard fields (no soft delete) |
+
+> **Note:** Notifications do not support soft delete. Read notifications can be archived via periodic cleanup.
+
 ## Relation Types
 
 ### category_rule
@@ -118,6 +131,9 @@ Supports two constraint styles: **fixed fields** (syntactic sugar) and **declara
 ### category_group
 `category_id` + `group_id` + auto `registered_at`
 
+### category_resource
+`category_id` + `resource_id` + `display_type` (`banner` \| `attachment` \| `inline`) + optional `position`
+
 ### post_post
 `source_post_id` + `target_post_id` + `relation_type` (`reference` \| `reply` \| `embed`) + optional `position`
 
@@ -126,6 +142,12 @@ Supports two constraint styles: **fixed fields** (syntactic sugar) and **declara
 
 ### group_user
 `group_id` + `user_id` + `role` (`owner` \| `admin` \| `member`) + `status` (`pending` \| `accepted` \| `rejected`) + auto `joined_at`, `status_changed_at`
+
+### group_post
+`group_id` + `post_id` + `relation_type` (`team_submission` \| `announcement` \| `reference`) + auto `created_at`
+
+### group_resource
+`group_id` + `resource_id` + `access_level` (`read_only` \| `read_write`) + auto `created_at`
 
 ### user_user
 `source_user_id` + `target_user_id` + `relation_type` (`follow` \| `block`) + auto `created_at`

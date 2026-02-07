@@ -562,6 +562,12 @@ uv run python .claude/skills/api-builder/scripts/cli.py \
   --run-migrations
 ```
 
+> **⚠️ 文件冲突处理（v1.1+）：**
+> - 默认使用 `--conflict-strategy skip`，**不会覆盖已存在的文件**
+> - 使用 `--conflict-strategy backup` 先备份再覆盖（推荐用于更新已有项目）
+> - 使用 `--conflict-strategy overwrite` 直接覆盖（危险！仅限全新项目）
+> - 使用 `--dry-run` 预览将要生成的文件，而不实际写入
+
 **生成内容：**
 
 ```
@@ -1048,6 +1054,8 @@ uv run python .claude/skills/api-builder/scripts/cli.py \
   --client-output frontend/lib/
 ```
 
+> **注意：** 客户端生成同样遵循 `--conflict-strategy` 规则。使用 `--dry-run` 可预览变更。
+
 **生成文件：**
 - `frontend/lib/api-client.ts` — API 方法
 - `frontend/lib/types.ts` — TypeScript 类型
@@ -1441,9 +1449,10 @@ uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 # 2. 重新生成 OpenAPI spec
 uv run python .claude/skills/schema-to-openapi/scripts/generate_openapi.py
 
-# 3. 重新生成后端代码
+# 3. 重新生成后端代码（skip 策略保护已有文件）
 uv run python .claude/skills/api-builder/scripts/cli.py \
-  --spec .synnovator/openapi.yaml --output app
+  --spec .synnovator/openapi.yaml --output app \
+  --conflict-strategy skip
 
 # 4. 生成数据库迁移
 cd app && uv run alembic revision --autogenerate -m "Add new field"
@@ -1471,9 +1480,10 @@ uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 # 1. 更新 docs/data-types.md 和 docs/relationships.md
 # 2. 重新生成 OpenAPI spec
 uv run python .claude/skills/schema-to-openapi/scripts/generate_openapi.py
-# 3. 重新生成后端
+# 3. 重新生成后端（skip 策略保护已有文件，只生成新类型）
 uv run python .claude/skills/api-builder/scripts/cli.py \
-  --spec .synnovator/openapi.yaml --output app
+  --spec .synnovator/openapi.yaml --output app \
+  --conflict-strategy skip
 
 # 4. 生成迁移
 cd app && uv run alembic revision --autogenerate -m "Add new content type"
@@ -1499,9 +1509,10 @@ uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 # 1. 更新 docs/relationships.md
 # 2. 重新生成 OpenAPI spec
 uv run python .claude/skills/schema-to-openapi/scripts/generate_openapi.py
-# 3. 重新生成后端
+# 3. 重新生成后端（skip 策略保护已有文件）
 uv run python .claude/skills/api-builder/scripts/cli.py \
-  --spec .synnovator/openapi.yaml --output app
+  --spec .synnovator/openapi.yaml --output app \
+  --conflict-strategy skip
 # 4. 生成迁移（可能需要手动调整）
 cd app && uv run alembic revision --autogenerate -m "Update relations"
 uv run alembic upgrade head && cd ..
@@ -1513,6 +1524,58 @@ make resetdb && make seed
 uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 ```
 
+### 场景 4: 更新用户旅程 (User Journey)
+
+> **核心原则：User Journey 是需求的源头，其变更会向下传播到领域模型、测试用例、种子数据。**
+
+```bash
+# 0. 修改 docs/user-journeys.md（添加/修改/删除用户旅程）
+
+# 1. [journey-validator] 验证 user journey 文档结构和一致性
+# 检查：实体/关系引用是否在 data-types.md 中定义
+
+# 2. [domain-modeler] 检查是否需要更新领域模型
+# 如果 user journey 引入了新实体/关系/字段，需先更新 docs/data-types.md
+
+# 3. ⭐ [tests-kit Insert] 为新增/修改的用户旅程添加测试用例
+# 每个用户旅程步骤应对应至少一个测试用例
+uv run python .claude/skills/tests-kit/scripts/add_testcase.py \
+  --journey "UJ-XX" \
+  --output specs/testcases/
+
+# 4. [seed-designer] 检查新测试用例的前置数据需求
+# 如果新测试用例需要额外的种子数据，更新 seed-data-requirements.md
+uv run python .claude/skills/seed-designer/scripts/analyze_testcases.py
+
+# 5. 更新种子数据脚本（如需要）
+# 编辑 scripts/seed_dev_data.py 添加新测试用例所需的前置数据
+
+# 6. 重置并注入种子数据
+make resetdb && make seed
+
+# 7. [tests-kit Guard] 验证所有测试用例通过
+uv run python .claude/skills/tests-kit/scripts/check_testcases.py
+
+# 8. 运行后端测试
+uv run pytest app/tests/ -v
+```
+
+**User Journey → 测试用例映射规则：**
+
+| User Journey 变更类型 | 测试用例影响 | 操作 |
+|---------------------|------------|------|
+| 新增用户旅程 | 需要新增对应测试用例 | tests-kit Insert |
+| 修改旅程步骤 | 检查现有测试用例是否仍然有效 | tests-kit Guard + 手动审查 |
+| 删除用户旅程 | 标记相关测试用例为废弃或删除 | 手动处理 |
+| 新增前置条件 | 可能需要新增种子数据 | seed-designer 分析 |
+
+**检查清单：**
+
+- [ ] 每个 User Journey 至少有一个对应的测试用例（TC-* 前缀）
+- [ ] 新增的业务规则在测试用例中有验证场景
+- [ ] 种子数据覆盖所有测试用例的前置条件
+- [ ] E2E 测试（如有）覆盖修改的用户旅程
+
 ---
 
 ## 常见问题
@@ -1523,6 +1586,15 @@ uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 make resetdb
 make seed
 ```
+
+### Q: api-builder 意外覆盖了现有文件怎么办？
+
+1. 使用 Git 恢复被覆盖的文件：
+   ```bash
+   git checkout HEAD -- app/models/ app/schemas/ app/routers/
+   ```
+2. 以后请使用 `--conflict-strategy skip`（默认）或 `--dry-run` 先预览
+3. 如果需要更新，使用 `--conflict-strategy backup` 会先备份原文件
 
 ### Q: 种子数据注入失败怎么办？
 
