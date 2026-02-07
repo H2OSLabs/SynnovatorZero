@@ -48,6 +48,12 @@ make resetdb && make seed
 make start  # 后端 8000 + 前端 3000
 ```
 
+## 常见问题
+
+### Hydration mismatch（开发环境）
+
+如果浏览器控制台出现 “A tree hydrated but some attributes… didn’t match” 且差异类似 `data-gr-ext-installed`、`data-new-gr-c-s-check-loaded`，通常是 Grammarly 等浏览器扩展在 React 加载前向 `<body>` 注入了属性导致的，并不一定是业务代码问题。
+
 ## 完整工作流图
 
 ```
