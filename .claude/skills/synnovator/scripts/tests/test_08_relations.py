@@ -21,28 +21,28 @@ class TestRelations(TestRunner):
     def _run_fixtures(self):
         create_full_baseline(self.data_dir, self.ids)
 
-    # --- category_rule ---
+    # --- event_rule ---
     def test_tc_rel_cr_001_link_rule(self):
-        """TC-REL-CR-001: Link rule to category."""
+        """TC-REL-CR-001: Link rule to event."""
         print("\n=== TC-REL-CR-001: Link Rule ===")
         pass
 
     def test_tc_rel_cr_002_update_priority(self):
-        """TC-REL-CR-002: Update category:rule priority."""
+        """TC-REL-CR-002: Update event:rule priority."""
         print("\n=== TC-REL-CR-002: Update Priority ===")
         pass
 
     def test_tc_rel_cr_003_delete(self):
-        """TC-REL-CR-003: Delete category:rule (rule itself survives)."""
+        """TC-REL-CR-003: Delete event:rule (rule itself survives)."""
         print("\n=== TC-REL-CR-003: Delete ===")
         pass
 
     def test_tc_rel_cr_900_duplicate(self):
-        """TC-REL-CR-900: Duplicate category:rule rejected."""
+        """TC-REL-CR-900: Duplicate event:rule rejected."""
         print("\n=== TC-REL-CR-900: Duplicate ===")
         pass
 
-    # --- category_post ---
+    # --- event_post ---
     def test_tc_rel_cp_001_submission(self):
         """TC-REL-CP-001: Link post as submission."""
         print("\n=== TC-REL-CP-001: Submission ===")
@@ -54,22 +54,22 @@ class TestRelations(TestRunner):
         pass
 
     def test_tc_rel_cp_003_filter_by_type(self):
-        """TC-REL-CP-003: Filter category:post by relation_type."""
+        """TC-REL-CP-003: Filter event:post by relation_type."""
         print("\n=== TC-REL-CP-003: Filter By Type ===")
         pass
 
     def test_tc_rel_cp_004_read_all(self):
-        """TC-REL-CP-004: Read all category:post without filter."""
+        """TC-REL-CP-004: Read all event:post without filter."""
         print("\n=== TC-REL-CP-004: Read All ===")
         pass
 
     def test_tc_rel_cp_900_deadline(self):
-        """TC-REL-CP-900: Deadline enforcement on category_post."""
+        """TC-REL-CP-900: Deadline enforcement on event_post."""
         print("\n=== TC-REL-CP-900: Deadline ===")
         pass
 
     def test_tc_rel_cp_901_format(self):
-        """TC-REL-CP-901: Format enforcement on category_post."""
+        """TC-REL-CP-901: Format enforcement on event_post."""
         print("\n=== TC-REL-CP-901: Format ===")
         pass
 
@@ -78,7 +78,7 @@ class TestRelations(TestRunner):
         print("\n=== TC-REL-CP-902: Max Submissions ===")
         pass
 
-    # --- category_group ---
+    # --- event_group ---
     def test_tc_rel_cg_001_register(self):
         """TC-REL-CG-001: Team registers for activity."""
         print("\n=== TC-REL-CG-001: Register ===")

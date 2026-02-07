@@ -6,24 +6,24 @@
 
 ---
 
-## category : rule
+## event : rule
 
 活动关联其规则。一个活动可以关联多条规则。
 
 ```yaml
-category_id: string       # 活动 ID（必填）
+event_id: string       # 活动 ID（必填）
 rule_id: string           # 规则 ID（必填）
 
 # === 关系属性 ===
 priority: integer         # 规则优先级/排序（默认: 0，数值越小越靠前）
 ```
 
-## category : post
+## event : post
 
 活动关联帖子（报名内容、参赛提交等）。
 
 ```yaml
-category_id: string       # 活动 ID（必填）
+event_id: string       # 活动 ID（必填）
 post_id: string           # 帖子 ID（必填）
 
 # === 关系属性 ===
@@ -33,26 +33,26 @@ relation_type: enum       # 关联类型: submission | reference
 created_at: datetime      # 关联时间（自动生成）
 ```
 
-## category : group
+## event : group
 
 团队在特定活动中的报名绑定。一个用户在不同活动中可以代表不同团队，通过此关系进行隔离。
 
 ```yaml
-category_id: string       # 活动 ID（必填）
+event_id: string       # 活动 ID（必填）
 group_id: string          # 团队 ID（必填）
 
 # === 关系属性 ===
 registered_at: datetime   # 报名时间（自动生成）
 ```
 
-> **业务规则：** 同一 group 在同一 category 中只能注册一次。一个 user 可以通过不同 group 参加不同 category，但在同一 category 中只能属于一个 group。
+> **业务规则：** 同一 group 在同一 event 中只能注册一次。一个 user 可以通过不同 group 参加不同 event，但在同一 event 中只能属于一个 group。
 
-## category : resource
+## event : resource
 
 活动关联资源文件（封面图、命题文件、附件等）。
 
 ```yaml
-category_id: string       # 活动 ID（必填）
+event_id: string       # 活动 ID（必填）
 resource_id: string       # 资源 ID（必填）
 
 # === 关系属性 ===
@@ -172,15 +172,15 @@ created_at: datetime      # 关联时间（自动生成）
 
 ## target : interaction
 
-内容对象与交互记录（点赞、评论、评分）之间的**唯一关联路径**。interaction 实体本身不存储目标信息，所有 interaction 与目标内容的连接均通过此关系维护。target 可以是 post、category 或 resource。
+内容对象与交互记录（点赞、评论、评分）之间的**唯一关联路径**。interaction 实体本身不存储目标信息，所有 interaction 与目标内容的连接均通过此关系维护。target 可以是 post、event 或 resource。
 
 ```yaml
-target_type: enum         # 目标类型: post | category | resource（必填）
+target_type: enum         # 目标类型: post | event | resource（必填）
 target_id: string         # 目标对象 ID（必填）
 interaction_id: string    # 交互记录 ID（必填）
 ```
 
-> **权限规则：** 只要目标对象（post/category/resource）对当前用户可见，其关联的所有 interaction 即公开可读。
+> **权限规则：** 只要目标对象（post/event/resource）对当前用户可见，其关联的所有 interaction 即公开可读。
 >
 > **副作用：** 创建此关系时，系统自动执行以下操作：
 > - **目标验证**：校验 `target_id` 对应的记录存在且未被软删除
@@ -210,7 +210,7 @@ created_at: datetime      # 创建时间（自动生成）
 >
 > **自引用限制：** `source_user_id` 不能等于 `target_user_id`（不能关注/拉黑自己）
 
-## category : category
+## event : event
 
 活动间关联关系，支持赛段（有序执行）、赛道（并行执行）和前置条件（依赖关系）。
 

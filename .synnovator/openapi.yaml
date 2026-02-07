@@ -14,14 +14,14 @@ servers:
 - url: https://api.synnovator.com
   description: Production server
 tags:
-- name: categories
-  description: Activity and competition categories
+- name: events
+  description: Activity and competition events
 - name: posts
   description: User posts and submissions
 - name: resources
   description: File resources and attachments
 - name: rules
-  description: Category rules and scoring criteria
+  description: Event rules and scoring criteria
 - name: users
   description: User management
 - name: groups
@@ -31,27 +31,27 @@ tags:
 - name: admin
   description: Admin batch operations
 paths:
-  /categories:
+  /events:
     get:
-      summary: List categories
+      summary: List events
       operationId: list_categories
       tags:
-      - categories
+      - events
       parameters:
       - $ref: '#/components/parameters/SkipParam'
       - $ref: '#/components/parameters/LimitParam'
       responses:
         '200':
-          description: List of categories
+          description: List of events
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedCategoryList'
     post:
-      summary: Create category
+      summary: Create event
       operationId: create_category
       tags:
-      - categories
+      - events
       requestBody:
         required: true
         content:
@@ -60,41 +60,41 @@ paths:
               $ref: '#/components/schemas/CategoryCreate'
       responses:
         '201':
-          description: Category created
+          description: Event created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Category'
+                $ref: '#/components/schemas/Event'
         '422':
           $ref: '#/components/responses/ValidationError'
-  /categories/{category_id}:
+  /events/{event_id}:
     get:
-      summary: Get category
+      summary: Get event
       operationId: get_category
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
           type: string
       responses:
         '200':
-          description: Category details
+          description: Event details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Category'
+                $ref: '#/components/schemas/Event'
         '404':
           $ref: '#/components/responses/NotFound'
     patch:
-      summary: Update category
+      summary: Update event
       operationId: update_category
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -107,20 +107,20 @@ paths:
               $ref: '#/components/schemas/CategoryUpdate'
       responses:
         '200':
-          description: Category updated
+          description: Event updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Category'
+                $ref: '#/components/schemas/Event'
         '404':
           $ref: '#/components/responses/NotFound'
     delete:
-      summary: Delete category
+      summary: Delete event
       operationId: delete_category
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -130,14 +130,14 @@ paths:
           description: Deleted
         '404':
           $ref: '#/components/responses/NotFound'
-  /categories/{category_id}/rules:
+  /events/{event_id}/rules:
     get:
-      summary: List category rules
+      summary: List event rules
       operationId: list_category_rules
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -152,12 +152,12 @@ paths:
                 items:
                   $ref: '#/components/schemas/Rule'
     post:
-      summary: Add rule to category
+      summary: Add rule to event
       operationId: add_category_rule
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -173,14 +173,14 @@ paths:
           description: Added
         '404':
           $ref: '#/components/responses/NotFound'
-  /categories/{category_id}/rules/{rule_id}:
+  /events/{event_id}/rules/{rule_id}:
     delete:
-      summary: Remove rule from category
+      summary: Remove rule from event
       operationId: remove_category_rule
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -195,14 +195,14 @@ paths:
           description: Removed
         '404':
           $ref: '#/components/responses/NotFound'
-  /categories/{category_id}/posts:
+  /events/{event_id}/posts:
     get:
-      summary: List category posts
+      summary: List event posts
       operationId: list_category_posts
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -224,12 +224,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedPostList'
     post:
-      summary: Add post to category
+      summary: Add post to event
       operationId: add_category_post
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -245,14 +245,14 @@ paths:
           description: Added
         '404':
           $ref: '#/components/responses/NotFound'
-  /categories/{category_id}/groups:
+  /events/{event_id}/groups:
     get:
-      summary: List category groups
+      summary: List event groups
       operationId: list_category_groups
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -267,12 +267,12 @@ paths:
                 items:
                   $ref: '#/components/schemas/Group'
     post:
-      summary: Add group to category
+      summary: Add group to event
       operationId: add_category_group
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -288,14 +288,14 @@ paths:
           description: Added
         '404':
           $ref: '#/components/responses/NotFound'
-  /categories/{category_id}/resources:
+  /events/{event_id}/resources:
     get:
-      summary: List category resources
+      summary: List event resources
       operationId: list_category_resources
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -318,12 +318,12 @@ paths:
                 items:
                   $ref: '#/components/schemas/Resource'
     post:
-      summary: Add resource to category
+      summary: Add resource to event
       operationId: add_category_resource
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -1520,20 +1520,20 @@ components:
       enum:
       - competition
       - operation
-      description: Category type
+      description: Event type
     CategoryStatus:
       type: string
       enum:
       - draft
       - published
       - closed
-      description: Category status
+      description: Event status
     PostType:
       type: string
       enum:
       - profile
       - team
-      - category
+      - event
       - proposal
       - certificate
       - general
@@ -1630,7 +1630,7 @@ components:
         content:
           type: string
           description: Markdown content body
-    Category:
+    Event:
       type: object
       required:
       - id
@@ -2083,7 +2083,7 @@ components:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/Category'
+            $ref: '#/components/schemas/Event'
         total:
           type: integer
           description: Total number of records

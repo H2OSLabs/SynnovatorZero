@@ -7,9 +7,9 @@
 
 | 用户旅程 | 说明 | 数据操作 |
 |---------|------|---------|
-| 浏览首页/探索页 | 查看当前热门或推荐的活动和帖子 | `READ category`（公开列表）, `READ post`（推荐列表） |
+| 浏览首页/探索页 | 查看当前热门或推荐的活动和帖子 | `READ event`（公开列表）, `READ post`（推荐列表） |
 | 筛选内容 | 根据标签或详情界面搜索或设置内容类型筛选感兴趣的帖子 | `READ post`（带 tag/type 筛选） |
-| 查看详情 | 点击并阅读活动说明帖或参赛提案 | `READ post` / `READ category` |
+| 查看详情 | 点击并阅读活动说明帖或参赛提案 | `READ post` / `READ event` |
 | 浏览热门帖子 | 点击右侧热点榜对应帖子跳转 | `READ post`（按热度排序） |
 
 ## 1.2 账号与登录
@@ -34,7 +34,7 @@
 | 用户旅程 | 说明 | 数据操作 |
 |---------|------|---------|
 | 点击通知提示查看通知 | 点击顶部或侧边的通知图标 | `READ notification`（列表） |
-| 点击通知中的页面进入对应页面 | 从具体通知条目跳转至目标内容 | `READ post` / `READ category` / `READ group` |
+| 点击通知中的页面进入对应页面 | 从具体通知条目跳转至目标内容 | `READ post` / `READ event` / `READ group` |
 | 点击通知中的按钮完成批准 | 直接在通知中心处理申请 | `UPDATE group:user` / `UPDATE` 相关关联 |
 
 ## 1.5 可见性规则
@@ -43,7 +43,7 @@
 
 | 内容类型 | 可见性条件 | 说明 |
 |---------|-----------|------|
-| Category（活动） | `status=published` | draft 状态的活动对访客不可见 |
+| Event（活动） | `status=published` | draft 状态的活动对访客不可见 |
 | Post（帖子） | `status=published` + `visibility=public` | draft 帖子、private 帖子对非作者不可见 |
 | Group（团队） | `visibility=public` | private 团队仅成员可见 |
 | Resource（资源） | 继承关联 Post 的可见性 | 若关联帖子不可见，则资源也不可见 |

@@ -97,7 +97,7 @@
 ### 涉及文件
 - `frontend/app/manage/layout.tsx` ✅ (新建)
 - `frontend/app/manage/page.tsx` ✅ (新建)
-- `frontend/app/manage/categories/page.tsx` ✅ (新建)
+- `frontend/app/manage/events/page.tsx` ✅ (新建)
 
 ---
 

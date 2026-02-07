@@ -37,7 +37,7 @@ Use this checklist during Stage 2 (Plan) to systematically gather information fo
 - Test file location and naming convention
 - How to run a single test / test file
 - Coverage expectations or thresholds
-- Test categories (unit, integration, e2e) and how to run each
+- Test events (unit, integration, e2e) and how to run each
 
 **Output format:**
 ```

@@ -8,11 +8,11 @@ import { CategoryCard } from "@/components/cards/CategoryCard"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getCategories, type Category } from "@/lib/api-client"
+import { getCategories, type Event } from "@/lib/api-client"
 
 export default function EventsPage() {
   const [activeTab, setActiveTab] = useState("all")
-  const [categories, setCategories] = useState<Category[]>([])
+  const [events, setCategories] = useState<Event[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -41,7 +41,7 @@ export default function EventsPage() {
     fetchData()
   }, [activeTab])
 
-  const filteredCategories = categories
+  const filteredCategories = events
 
   return (
     <PageLayout variant="compact">

@@ -40,7 +40,7 @@ export default function ManageDashboard() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Link
-            href="/manage/categories"
+            href="/manage/events"
             className="flex items-center gap-3 p-4 rounded-lg border border-nf-dark-bg hover:border-nf-lime transition-colors"
           >
             <span className="text-2xl">🎯</span>

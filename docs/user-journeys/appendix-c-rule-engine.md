@@ -11,7 +11,7 @@
 | `time_window` | 时间窗口限制 | `{ start: "2024-01-01", end: "2024-12-31" }` |
 | `count` | 计数校验 | `{ entity: group_user, scope: group, filter: { status: accepted }, op: ">=", value: 2 }` |
 | `exists` | 存在性检查 | `{ entity: post_resource, scope: post, require: true }` |
-| `field_match` | 字段匹配 | `{ entity: category, field: status, op: "==", value: "published" }` |
+| `field_match` | 字段匹配 | `{ entity: event, field: status, op: "==", value: "published" }` |
 | `resource_format` | 附件格式校验 | `{ formats: ["pdf", "zip"] }` |
 | `resource_required` | 附件数量和格式 | `{ min_count: 2, formats: ["pdf"] }` |
 | `aggregate` | 聚合计算 | `{ entity: group_user, agg_func: count, op: ">=", value: 2 }` |
@@ -22,8 +22,8 @@ Rule 的固定字段会自动展开为 checks：
 
 | 固定字段 | 展开为 |
 |---------|-------|
-| `max_submissions=2` | `{ trigger: create_relation(category_post), phase: pre, condition: { type: count, ... } }` |
-| `min_team_size=2` | `{ trigger: create_relation(category_group), phase: pre, condition: { type: count, ... } }` |
+| `max_submissions=2` | `{ trigger: create_relation(event_post), phase: pre, condition: { type: count, ... } }` |
+| `min_team_size=2` | `{ trigger: create_relation(event_group), phase: pre, condition: { type: count, ... } }` |
 
 **执行顺序：** 固定字段展开的 check → 自定义 checks（TC-ENGINE-021）
 

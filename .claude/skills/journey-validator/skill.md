@@ -77,7 +77,7 @@ L-001: Entity "notification" used in journey but not defined in data-types.md
 | Element Type | Example | Check Against |
 |-------------|---------|---------------|
 | Entity | `notification`, `certificate` | data-types.md entities |
-| Relation | `category:resource`, `group:post` | relationships.md relations |
+| Relation | `event:resource`, `group:post` | relationships.md relations |
 | Enum value | `vote`, `bounty` | data-types.md `type` enums |
 | Role | `jury`, `mentor` | data-types.md user.role enum |
 | Status | `reviewing`, `approved` | Entity status enums |
@@ -223,7 +223,7 @@ M-001: Missing operation coverage
    - LOW: Redundancy
 
 2. Generate validation report:
-   - Summary counts by category
+   - Summary counts by event
    - Detailed issue list with locations and actions
    - Recommended fixes
 
@@ -299,7 +299,7 @@ Marker format:
 
 ## Summary
 
-| Category | HIGH | MEDIUM | LOW |
+| Event | HIGH | MEDIUM | LOW |
 |----------|------|--------|-----|
 | Structure | 0 | 0 | 0 |
 | Logic | 5 | 3 | 0 |
@@ -322,13 +322,13 @@ Marker format:
 
 ## MEDIUM Severity Issues
 
-### L-002: Undefined relation "category:resource"
+### L-002: Undefined relation "event:resource"
 - **Location:** 02-activity-setup.md:60
-- **Action:** Add to relationships.md if banner images are attached to categories
+- **Action:** Add to relationships.md if banner images are attached to events
 
 ### M-001: Missing DELETE journey for "rule"
 - **Location:** N/A (no journey covers rule deletion)
-- **Action:** Add as admin-only operation, or note as immutable after category publish
+- **Action:** Add as admin-only operation, or note as immutable after event publish
 
 ## LOW Severity Issues
 
@@ -343,7 +343,7 @@ This skill is designed for Synnovator but can be adapted:
 
 1. **Replace file paths** — Change `docs/user-journeys/` to your journey doc location
 2. **Adjust domain model references** — Point to your schema documentation
-3. **Customize issue categories** — Add project-specific validation checks
+3. **Customize issue events** — Add project-specific validation checks
 4. **Adjust severity thresholds** — Some projects may tolerate more redundancy
 
 ## Anti-Patterns

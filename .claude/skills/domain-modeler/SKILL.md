@@ -47,7 +47,7 @@ User Journey: "参赛者在活动详情页点击报名，填写团队信息，�
 
 Extracted nouns:
   参赛者 → User (entity)
-  活动   → Category (entity)
+  活动   → Event (entity)
   团队   → Group (entity)
   提案   → Post (entity, type=proposal)
 ```
@@ -68,7 +68,7 @@ For each pair of entities, determine if and how they relate based on the user jo
 
 ```
 "用户 创建 帖子"    → User -[creates]-> Post (1:N, via created_by)
-"帖子 关联到 活动"  → Category -[has]-> Post (M:N, via category_post)
+"帖子 关联到 活动"  → Event -[has]-> Post (M:N, via event_post)
 "用户 加入 团队"    → Group -[has]-> User (M:N, via group_user)
 ```
 
@@ -76,9 +76,9 @@ For each pair of entities, determine if and how they relate based on the user jo
 | Type | Pattern | Example |
 |------|---------|---------|
 | Ownership (1:N) | "A creates B" | User creates Post |
-| Association (M:N) | "A belongs to B" / "A joins B" | Post submitted to Category |
-| Self-referential | "A relates to A" | Category stages/tracks |
-| Polymorphic | "A targets any of B/C/D" | Interaction on Post/Category/Resource |
+| Association (M:N) | "A belongs to B" / "A joins B" | Post submitted to Event |
+| Self-referential | "A relates to A" | Event stages/tracks |
+| Polymorphic | "A targets any of B/C/D" | Interaction on Post/Event/Resource |
 
 **Checklist:**
 - [ ] Every entity pair has been considered
@@ -123,15 +123,15 @@ For each entity, define its fields based on what the user journeys require.
 
 Extract constraints that go beyond simple field types.
 
-**Categories of constraints:**
+**Events of constraints:**
 
-| Category | Examples | Output File |
+| Event | Examples | Output File |
 |----------|----------|-------------|
 | Uniqueness | username must be unique | `specs/data-integrity.md` |
 | Soft delete | All types use deleted_at, queries exclude deleted | `specs/data-integrity.md` |
 | Cascade rules | Deleting a user soft-deletes their posts | `specs/data-integrity.md` |
 | Cached fields | post.like_count auto-maintained | `specs/cache-strategy.md` |
-| Business rules | Only organizers can create categories | `docs/crud-operations.md` |
+| Business rules | Only organizers can create events | `docs/crud-operations.md` |
 | Complex rules | Rule engine with declarative checks | `docs/rule-engine.md` |
 
 **Checklist:**

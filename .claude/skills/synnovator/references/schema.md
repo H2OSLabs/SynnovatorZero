@@ -2,7 +2,7 @@
 
 ## Content Types
 
-### category
+### event
 | Field | Type | Required | Default | Notes |
 |-------|------|----------|---------|-------|
 | name | string | yes | — | Activity name |
@@ -22,7 +22,7 @@
 | Field | Type | Required | Default | Notes |
 |-------|------|----------|---------|-------|
 | title | string | yes | — | Post title |
-| type | enum | no | `general` | `profile` \| `team` \| `category` \| `proposal` \| `certificate` \| `general` |
+| type | enum | no | `general` | `profile` \| `team` \| `event` \| `proposal` \| `certificate` \| `general` |
 | tags | list[string] | no | [] | Tag list |
 | status | enum | no | `draft` | `draft` \| `pending_review` \| `published` \| `rejected` |
 | like_count | integer | cache | 0 | Read-only, auto-maintained via `target_interaction` |
@@ -66,7 +66,7 @@ Supports two constraint styles: **fixed fields** (syntactic sugar) and **declara
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
-| trigger | string | yes | Hook point: `create_relation(category_post)`, `create_relation(group_user)`, `create_relation(category_group)`, `update_content(post.status)`, `update_content(category.status)` |
+| trigger | string | yes | Hook point: `create_relation(event_post)`, `create_relation(group_user)`, `create_relation(event_group)`, `update_content(post.status)`, `update_content(event.status)` |
 | phase | enum | yes | `pre` \| `post` |
 | condition | object | pre: yes | `{ type: string, params: object }` — see condition types |
 | on_fail | enum | no | `deny` (default) \| `warn` \| `flag` |
@@ -122,17 +122,17 @@ Supports two constraint styles: **fixed fields** (syntactic sugar) and **declara
 
 ## Relation Types
 
-### category_rule
-`category_id` + `rule_id` + optional `priority` (integer, default 0)
+### event_rule
+`event_id` + `rule_id` + optional `priority` (integer, default 0)
 
-### category_post
-`category_id` + `post_id` + `relation_type` (`submission` \| `reference`) + auto `created_at`
+### event_post
+`event_id` + `post_id` + `relation_type` (`submission` \| `reference`) + auto `created_at`
 
-### category_group
-`category_id` + `group_id` + auto `registered_at`
+### event_group
+`event_id` + `group_id` + auto `registered_at`
 
-### category_resource
-`category_id` + `resource_id` + `display_type` (`banner` \| `attachment` \| `inline`) + optional `position`
+### event_resource
+`event_id` + `resource_id` + `display_type` (`banner` \| `attachment` \| `inline`) + optional `position`
 
 ### post_post
 `source_post_id` + `target_post_id` + `relation_type` (`reference` \| `reply` \| `embed`) + optional `position`
@@ -152,7 +152,7 @@ Supports two constraint styles: **fixed fields** (syntactic sugar) and **declara
 ### user_user
 `source_user_id` + `target_user_id` + `relation_type` (`follow` \| `block`) + auto `created_at`
 
-### category_category
+### event_event
 `source_category_id` + `target_category_id` + `relation_type` (`stage` \| `track` \| `prerequisite`) + optional `stage_order` (integer, for stage ordering) + auto `created_at`
 
 ### target_interaction
@@ -161,13 +161,13 @@ Supports two constraint styles: **fixed fields** (syntactic sugar) and **declara
 ## Uniqueness Constraints
 - user: `(username)`, `(email)`
 - target_interaction (like): `(created_by, target_type, target_id)` — enforced when creating `target_interaction` relation for a `like` interaction
-- category_rule: `(category_id, rule_id)`
-- category_group: `(category_id, group_id)`
+- event_rule: `(event_id, rule_id)`
+- event_group: `(event_id, group_id)`
 - group_user: `(group_id, user_id)`
 - user_user: `(source_user_id, target_user_id, relation_type)`
-- category_category: `(source_category_id, target_category_id)`
-- **Business rule**: A user can only belong to one group per category — enforced at `category_group` creation by checking all accepted members against other groups in the same category
-- **Self-reference**: `user_user` and `category_category` cannot have the same entity as both source and target
+- event_event: `(source_category_id, target_category_id)`
+- **Business rule**: A user can only belong to one group per event — enforced at `event_group` creation by checking all accepted members against other groups in the same event
+- **Self-reference**: `user_user` and `event_event` cannot have the same entity as both source and target
 - **Block enforcement**: If B blocks A, A cannot follow B
-- **Circular dependency**: `category_category` stage/prerequisite chains cannot form cycles
-- **Prerequisite enforcement**: `category_group` creation checks all prerequisite categories are closed
+- **Circular dependency**: `event_event` stage/prerequisite chains cannot form cycles
+- **Prerequisite enforcement**: `event_group` creation checks all prerequisite events are closed

@@ -11,7 +11,7 @@
 | 文件 | 模块 | 用例前缀 |
 |------|------|----------|
 | [01-user.md](01-user.md) | 用户（User） | TC-USER |
-| [02-category.md](02-category.md) | 活动（Category） | TC-CAT |
+| [02-event.md](02-event.md) | 活动（Event） | TC-CAT |
 | [03-rule.md](03-rule.md) | 规则（Rule） | TC-RULE |
 | [04-group.md](04-group.md) | 团队（Group） | TC-GRP |
 | [05-post.md](05-post.md) | 帖子（Post） | TC-POST |
@@ -43,7 +43,7 @@
 |------|------|----------|
 | [12-resource-transfer.md](12-resource-transfer.md) | 资产转移 | TC-TRANSFER |
 | [13-user-follow.md](13-user-follow.md) | 好友（User Follow） | TC-FRIEND |
-| [14-category-association.md](14-category-association.md) | 活动关联 | TC-STAGE / TC-TRACK / TC-PREREQ / TC-CATREL |
+| [14-event-association.md](14-event-association.md) | 活动关联 | TC-STAGE / TC-TRACK / TC-PREREQ / TC-CATREL |
 
 ### 规则引擎（Rule Engine）
 

@@ -22,8 +22,8 @@ class TestPermissions(TestRunner):
         create_full_baseline(self.data_dir, self.ids)
 
     def test_tc_perm_001_participant_create_category(self):
-        """TC-PERM-001: Participant cannot create category."""
-        print("\n=== TC-PERM-001: Participant Create Category ===")
+        """TC-PERM-001: Participant cannot create event."""
+        print("\n=== TC-PERM-001: Participant Create Event ===")
         pass
 
     def test_tc_perm_002_participant_create_rule(self):
@@ -32,8 +32,8 @@ class TestPermissions(TestRunner):
         pass
 
     def test_tc_perm_003_participant_update_category(self):
-        """TC-PERM-003: Participant cannot update category."""
-        print("\n=== TC-PERM-003: Participant Update Category ===")
+        """TC-PERM-003: Participant cannot update event."""
+        print("\n=== TC-PERM-003: Participant Update Event ===")
         pass
 
     def test_tc_perm_012_non_owner_update_user(self):
@@ -57,8 +57,8 @@ class TestPermissions(TestRunner):
         pass
 
     def test_tc_perm_021_visitor_draft_category(self):
-        """TC-PERM-021: Visitor cannot see draft categories."""
-        print("\n=== TC-PERM-021: Visitor Draft Category ===")
+        """TC-PERM-021: Visitor cannot see draft events."""
+        print("\n=== TC-PERM-021: Visitor Draft Event ===")
         pass
 
     def test_tc_perm_022_non_member_private_group(self):
@@ -67,17 +67,17 @@ class TestPermissions(TestRunner):
         pass
 
     def test_tc_perm_023_draft_post_in_category(self):
-        """TC-PERM-023: Draft posts hidden in published category list."""
-        print("\n=== TC-PERM-023: Draft Post In Category ===")
+        """TC-PERM-023: Draft posts hidden in published event list."""
+        print("\n=== TC-PERM-023: Draft Post In Event ===")
         pass
 
     def test_tc_perm_024_private_post_in_category(self):
-        """TC-PERM-024: Private posts hidden in published category list."""
-        print("\n=== TC-PERM-024: Private Post In Category ===")
+        """TC-PERM-024: Private posts hidden in published event list."""
+        print("\n=== TC-PERM-024: Private Post In Event ===")
         pass
 
     def test_tc_perm_025_private_post_resource_hidden(self):
-        """TC-PERM-025: Private post resources hidden in category resource list."""
+        """TC-PERM-025: Private post resources hidden in event resource list."""
         print("\n=== TC-PERM-025: Private Post Resource Hidden ===")
         pass
 

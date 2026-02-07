@@ -72,9 +72,9 @@
 |----------|-----|------|--------|-------------|
 | group_user | group_public_1 | user_participant_1 | role=owner | TC-REL-GU-001~010 |
 | group_user | group_public_1 | user_participant_2 | role=member | TC-REL-GU-011~020 |
-| category_rule | cat_hackathon_1 | rule_entry_1 | - | TC-REL-CR-001~010 |
-| category_rule | cat_hackathon_1 | rule_submit_1 | - | TC-REL-CR-001~010 |
-| category_post | cat_hackathon_1 | post_proposal_1 | relation=submission | TC-REL-CP-001~020 |
+| event_rule | cat_hackathon_1 | rule_entry_1 | - | TC-REL-CR-001~010 |
+| event_rule | cat_hackathon_1 | rule_submit_1 | - | TC-REL-CR-001~010 |
+| event_post | cat_hackathon_1 | post_proposal_1 | relation=submission | TC-REL-CP-001~020 |
 | target_interaction | post_daily_1 | iact_like_1 | - | TC-REL-TI-001~010 |
 | user_user | user_participant_1 | user_participant_2 | relation=follow | TC-FRIEND-001~010 |
 

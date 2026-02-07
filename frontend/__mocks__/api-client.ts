@@ -56,7 +56,7 @@ export const getCategories = jest.fn().mockResolvedValue({
 
 export const getCategory = jest.fn().mockResolvedValue({
   id: 1,
-  name: 'Test Category',
+  name: 'Test Event',
   description: 'Test description',
   type: 'competition',
   status: 'draft',

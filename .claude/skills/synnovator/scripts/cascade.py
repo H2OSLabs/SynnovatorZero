@@ -81,12 +81,12 @@ def _cascade_delete_user_user_relations(data_dir, user_id):
             })
 
 
-def _cascade_delete_category_category_relations(data_dir, category_id):
-    """Delete all category_category relations where category is source or target."""
+def _cascade_delete_category_category_relations(data_dir, event_id):
+    """Delete all event_event relations where event is source or target."""
     from relations import read_relation, delete_relation
-    for rel in read_relation(data_dir, "category_category"):
-        if rel.get("source_category_id") == category_id or rel.get("target_category_id") == category_id:
-            delete_relation(data_dir, "category_category", {
+    for rel in read_relation(data_dir, "event_event"):
+        if rel.get("source_category_id") == event_id or rel.get("target_category_id") == event_id:
+            delete_relation(data_dir, "event_event", {
                 "source_category_id": rel["source_category_id"],
                 "target_category_id": rel["target_category_id"],
             })

@@ -7,7 +7,7 @@
 
 ## Summary
 
-| Category | HIGH | MEDIUM | LOW |
+| Event | HIGH | MEDIUM | LOW |
 |----------|------|--------|-----|
 | Structure | 0 | 0 | 0 |
 | Logic | 0 | 0 | 0 |
@@ -20,11 +20,11 @@
 
 All 4 logic inconsistencies have been resolved by updating the domain model.
 
-### L-001: ✅ Resolved — `category:resource` relation
+### L-001: ✅ Resolved — `event:resource` relation
 
 - **Location:** 02-activity-setup.md:39
-- **Resolution:** Added `category:resource` relation to `docs/relationships.md`
-- **Fields:** `category_id`, `resource_id`, `display_type` (banner/attachment/inline), `position`
+- **Resolution:** Added `event:resource` relation to `docs/relationships.md`
+- **Fields:** `event_id`, `resource_id`, `display_type` (banner/attachment/inline), `position`
 
 ### L-002: ✅ Resolved — `group:post` relation
 
@@ -49,7 +49,7 @@ All 4 logic inconsistencies have been resolved by updating the domain model.
 | File | Changes |
 |------|---------|
 | `docs/data-types.md` | Added `notification` entity (8 → 8 content types), updated enum summary |
-| `docs/relationships.md` | Added 3 relations: `category:resource`, `group:post`, `group:resource` (9 → 12 relations) |
+| `docs/relationships.md` | Added 3 relations: `event:resource`, `group:post`, `group:resource` (9 → 12 relations) |
 
 ## Next Steps
 

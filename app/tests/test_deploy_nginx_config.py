@@ -23,6 +23,6 @@ def test_nginx_api_proxy_pass_preserves_api_prefix():
     )
     assert not re.search(r"\bproxy_pass\s+http://backend/;\s*", block), (
         "deploy/nginx.conf 检测到 proxy_pass http://backend/; "
-        "它会把 /api/categories 转发为 /categories，导致后端 404"
+        "它会把 /api/events 转发为 /events，导致后端 404"
     )
 

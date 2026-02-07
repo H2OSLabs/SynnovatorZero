@@ -385,9 +385,9 @@ def generate_files(
 
     if total_existing > 0:
         print(f"\n⚠️  Detected {total_existing} existing file(s):")
-        for category, files in existing.items():
+        for event, files in existing.items():
             if files:
-                print(f"   {category}: {len(files)} file(s)")
+                print(f"   {event}: {len(files)} file(s)")
         print(f"   Strategy: {conflict_strategy}\n")
 
     if not dry_run:

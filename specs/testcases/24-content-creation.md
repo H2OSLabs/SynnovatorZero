@@ -32,7 +32,7 @@
 用户发布提案时选择自己已有的资产，通过 post:resource 关系关联到提案。
 
 **TC-CREATE-022：提案关联活动**
-用户将提案与活动关联（创建 category:post submission 关系），成为参赛作品。
+用户将提案与活动关联（创建 event:post submission 关系），成为参赛作品。
 
 ## 24.4 内容编辑
 

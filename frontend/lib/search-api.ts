@@ -8,7 +8,7 @@ import { getEnv } from './env'
 const getApiBase = () => getEnv().API_URL
 
 export interface SearchResult {
-  type: 'user' | 'category' | 'post'
+  type: 'user' | 'event' | 'post'
   id: number
   title: string
   subtitle?: string
@@ -82,12 +82,12 @@ export async function searchUsers(query: string, limit = 5): Promise<SearchResul
 }
 
 /**
- * Search categories by name
+ * Search events by name
  */
 export async function searchCategories(query: string, limit = 5): Promise<SearchResult[]> {
   try {
     const data = await fetchJson<PaginatedResponse<CategoryResult>>(
-      `${getApiBase()}/categories?limit=100`
+      `${getApiBase()}/events?limit=100`
     )
 
     const q = query.toLowerCase()
@@ -98,11 +98,11 @@ export async function searchCategories(query: string, limit = 5): Promise<Search
       )
       .slice(0, limit)
       .map(cat => ({
-        type: 'category' as const,
+        type: 'event' as const,
         id: cat.id,
         title: cat.name,
         subtitle: cat.type === 'competition' ? '比赛' : '活动',
-        url: `/categories/${cat.id}`,
+        url: `/events/${cat.id}`,
       }))
   } catch {
     return []
@@ -142,18 +142,18 @@ export async function searchPosts(query: string, limit = 5): Promise<SearchResul
  */
 export async function searchAll(query: string): Promise<{
   users: SearchResult[]
-  categories: SearchResult[]
+  events: SearchResult[]
   posts: SearchResult[]
 }> {
   if (!query.trim()) {
-    return { users: [], categories: [], posts: [] }
+    return { users: [], events: [], posts: [] }
   }
 
-  const [users, categories, posts] = await Promise.all([
+  const [users, events, posts] = await Promise.all([
     searchUsers(query, 3),
     searchCategories(query, 3),
     searchPosts(query, 5),
   ])
 
-  return { users, categories, posts }
+  return { users, events, posts }
 }

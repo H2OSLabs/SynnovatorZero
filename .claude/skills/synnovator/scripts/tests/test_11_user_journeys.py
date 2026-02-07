@@ -29,13 +29,13 @@ class TestUserJourneys(TestRunner):
         """TC-JOUR-002: Anonymous visitor browses public content."""
         print("\n=== Journey 2: Browse Explore Page ===")
 
-        cats = read_content(self.data_dir, "category", filters={"status": "published"})
-        self.assert_ok("Read public categories", isinstance(cats, list))
+        cats = read_content(self.data_dir, "event", filters={"status": "published"})
+        self.assert_ok("Read public events", isinstance(cats, list))
 
-        cat = read_content(self.data_dir, "category", self.ids["cat1"])
-        self.assert_ok("Read category detail", cat["name"] == "2025 AI Hackathon")
-        rules = read_relation(self.data_dir, "category_rule", {"category_id": self.ids["cat1"]})
-        self.assert_ok("Read category rules", len(rules) > 0)
+        cat = read_content(self.data_dir, "event", self.ids["cat1"])
+        self.assert_ok("Read event detail", cat["name"] == "2025 AI Hackathon")
+        rules = read_relation(self.data_dir, "event_rule", {"event_id": self.ids["cat1"]})
+        self.assert_ok("Read event rules", len(rules) > 0)
 
         posts = read_content(self.data_dir, "post", filters={"status": "published"})
         self.assert_ok("Read published posts", isinstance(posts, list))
@@ -76,8 +76,8 @@ class TestUserJourneys(TestRunner):
         user = read_content(self.data_dir, "user", self.ids["user_alice"])
         self.assert_ok("Read user for login", user["username"] == "alice")
 
-        cats = read_content(self.data_dir, "category")
-        self.assert_ok("Read categories after login", len(cats) > 0)
+        cats = read_content(self.data_dir, "event")
+        self.assert_ok("Read events after login", len(cats) > 0)
 
     # === Journey 5: Join Group (TC-JOUR-005) ===
     def test_journey_05_join_group(self):
@@ -110,28 +110,28 @@ class TestUserJourneys(TestRunner):
     def test_journey_06_create_activity(self):
         print("\n=== Journey 6: Create Activity ===")
 
-        cat = read_content(self.data_dir, "category", self.ids["cat1"])
-        self.assert_ok("Category created", cat["name"] == "2025 AI Hackathon")
-        self.assert_ok("Category has body", bool(cat.get("_body")))
+        cat = read_content(self.data_dir, "event", self.ids["cat1"])
+        self.assert_ok("Event created", cat["name"] == "2025 AI Hackathon")
+        self.assert_ok("Event has body", bool(cat.get("_body")))
 
-        rules = read_relation(self.data_dir, "category_rule", {"category_id": self.ids["cat1"]})
-        self.assert_ok("Rule linked to category", len(rules) == 1)
+        rules = read_relation(self.data_dir, "event_rule", {"event_id": self.ids["cat1"]})
+        self.assert_ok("Rule linked to event", len(rules) == 1)
 
         rule = read_content(self.data_dir, "rule", self.ids["rule1"])
         self.assert_ok("Rule has scoring criteria", len(rule.get("scoring_criteria", [])) == 4)
-        self.assert_ok("Category published", cat["status"] == "published")
+        self.assert_ok("Event published", cat["status"] == "published")
 
     # === Journey 7: Join Activity (TC-JOUR-007) ===
     def test_journey_07_join_activity(self):
         """TC-JOUR-007: Complete team registration workflow."""
         print("\n=== Journey 7: Join Activity ===")
 
-        cat = read_content(self.data_dir, "category", self.ids["cat1"])
+        cat = read_content(self.data_dir, "event", self.ids["cat1"])
         rule = read_content(self.data_dir, "rule", self.ids["rule1"])
         self.assert_ok("Read activity + rule", cat and rule)
 
-        rel = create_relation(self.data_dir, "category_group", {
-            "category_id": self.ids["cat1"],
+        rel = create_relation(self.data_dir, "event_group", {
+            "event_id": self.ids["cat1"],
             "group_id": self.ids["grp1"]
         })
         self.assert_ok("Team registers for activity", "registered_at" not in rel or True)
@@ -145,8 +145,8 @@ class TestUserJourneys(TestRunner):
         self.ids["post_submission"] = post["id"]
         self.assert_ok("Create submission post", post["type"] == "proposal")
 
-        rel = create_relation(self.data_dir, "category_post", {
-            "category_id": self.ids["cat1"],
+        rel = create_relation(self.data_dir, "event_post", {
+            "event_id": self.ids["cat1"],
             "post_id": post["id"],
             "relation_type": "submission"
         })
@@ -154,8 +154,8 @@ class TestUserJourneys(TestRunner):
 
         self.assert_raises(
             "Reject duplicate group registration",
-            lambda: create_relation(self.data_dir, "category_group", {
-                "category_id": self.ids["cat1"],
+            lambda: create_relation(self.data_dir, "event_group", {
+                "event_id": self.ids["cat1"],
                 "group_id": self.ids["grp1"]
             }),
             "already registered"
@@ -240,8 +240,8 @@ class TestUserJourneys(TestRunner):
         """TC-JOUR-010: Complete certificate issuing flow."""
         print("\n=== Journey 10: Get Certificate ===")
 
-        update_content(self.data_dir, "category", self.ids["cat1"], {"status": "closed"}, current_user=self.ids["user_alice"])
-        cat = read_content(self.data_dir, "category", self.ids["cat1"])
+        update_content(self.data_dir, "event", self.ids["cat1"], {"status": "closed"}, current_user=self.ids["user_alice"])
+        cat = read_content(self.data_dir, "event", self.ids["cat1"])
         self.assert_ok("Close activity", cat["status"] == "closed")
 
         cert = create_content(self.data_dir, "resource", {
@@ -336,8 +336,8 @@ class TestUserJourneys(TestRunner):
         }, current_user=self.ids["user_alice"])
         del_id = post["id"]
 
-        rel1 = create_relation(self.data_dir, "category_post", {
-            "category_id": self.ids["cat1"],
+        rel1 = create_relation(self.data_dir, "event_post", {
+            "event_id": self.ids["cat1"],
             "post_id": del_id,
             "relation_type": "reference"
         })
@@ -354,13 +354,13 @@ class TestUserJourneys(TestRunner):
         p = read_content(self.data_dir, "post", del_id, current_user=self.ids["user_alice"])
         self.assert_ok("Read post before delete", p["title"] == "To Be Deleted")
 
-        rels = read_relation(self.data_dir, "category_post", {"post_id": del_id})
+        rels = read_relation(self.data_dir, "event_post", {"post_id": del_id})
         self.assert_ok("Post has relations", len(rels) > 0)
 
         result = delete_content(self.data_dir, "post", del_id, current_user=self.ids["user_alice"])
         self.assert_ok("Hard delete post", "deleted" in result)
 
-        rels_after = read_relation(self.data_dir, "category_post", {"post_id": del_id})
+        rels_after = read_relation(self.data_dir, "event_post", {"post_id": del_id})
         self.assert_ok("Relations cascade-deleted", len(rels_after) == 0)
 
         self.assert_raises(

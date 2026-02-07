@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation'
 
 const navItems = [
   { href: '/manage', label: '概览', icon: '📊' },
-  { href: '/manage/categories', label: '活动管理', icon: '🎯' },
+  { href: '/manage/events', label: '活动管理', icon: '🎯' },
 ]
 
 export default function ManageLayout({

@@ -24,7 +24,7 @@ function CreatePostForm() {
     body: "",
     type: defaultType,
     tags: [] as string[],
-    category_id: null as number | null,
+    event_id: null as number | null,
   })
   const [tagInput, setTagInput] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -54,7 +54,7 @@ function CreatePostForm() {
         type: formData.type,
         tags: formData.tags.length > 0 ? formData.tags : undefined,
         status,
-        category_id: formData.category_id,
+        event_id: formData.event_id,
       })
       toast.success(status === "published" ? "帖子发布成功" : "草稿保存成功")
       router.push(`/posts/${post.id}`)
@@ -202,7 +202,7 @@ function CreatePostForm() {
             </div>
           </div>
 
-          {/* Category Selection (for proposals) */}
+          {/* Event Selection (for proposals) */}
           {formData.type === "proposal" && (
             <div className="border-t border-nf-secondary pt-8">
               <h2 className="font-heading text-lg font-semibold text-nf-white mb-4">🎯 关联活动</h2>

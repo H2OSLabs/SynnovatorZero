@@ -82,14 +82,14 @@
 
 ### 后端开发 (2026-01-27)
 - 从零依赖底层模块开始，逐层向上开发 Synnovator 后端
-- 8 层依赖图: user/resource → rule/group/category → post/interaction → 关系 → 规则引擎 → 集成
+- 8 层依赖图: user/resource → rule/group/event → post/interaction → 关系 → 规则引擎 → 集成
 - 最终 373 tests passed
 
 ### 技术决策
 | Decision | Rationale |
 |----------|-----------|
 | 后端包名 `app/` | api-builder 模板兼容 |
-| 路由使用 `/events` | 比 `/categories` 更符合 Hackathon 语义 |
+| 路由使用 `/events` | 比 `/events` 更符合 Hackathon 语义 |
 | 布局 4 种变体 | 符合 ui-design-spec 1.2 定义 |
 | 复用已有业务组件 | LoginForm, RegisterForm 等已实现 |
 

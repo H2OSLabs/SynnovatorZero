@@ -43,19 +43,19 @@ def create_relation(data_dir, relation_type, data, current_user=None):
     _check_relation_uniqueness(data_dir, relation_type, data)
 
     # Rule enforcement hooks
-    if relation_type == "category_post":
+    if relation_type == "event_post":
         post_fp = find_record(data_dir, "post", data["post_id"])
         post_rec = load_record(post_fp) if post_fp else {}
-        _validate_category_rules(data_dir, data["category_id"], "submission", {
+        _validate_category_rules(data_dir, data["event_id"], "submission", {
             "post_id": data["post_id"],
-            "category_id": data["category_id"],
+            "event_id": data["event_id"],
             "user_id": post_rec.get("created_by"),
             "group_id": data.get("group_id"),
         })
     elif relation_type == "group_user":
-        cat_groups = read_relation(data_dir, "category_group", {"group_id": data["group_id"]})
+        cat_groups = read_relation(data_dir, "event_group", {"group_id": data["group_id"]})
         for cg in cat_groups:
-            _validate_category_rules(data_dir, cg["category_id"], "team_join", {
+            _validate_category_rules(data_dir, cg["event_id"], "team_join", {
                 "group_id": data["group_id"],
             })
 
@@ -106,9 +106,9 @@ def create_relation(data_dir, relation_type, data, current_user=None):
             if blocks:
                 raise ValueError("Cannot follow a user who has blocked you")
 
-    if relation_type == "category_category":
+    if relation_type == "event_event":
         if data["source_category_id"] == data["target_category_id"]:
-            raise ValueError("Cannot create a category_category relation with itself")
+            raise ValueError("Cannot create a event_event relation with itself")
         # Circular dependency detection for stage/prerequisite
         if data.get("relation_type") in ("stage", "prerequisite"):
             _check_circular_dependency(
@@ -116,19 +116,19 @@ def create_relation(data_dir, relation_type, data, current_user=None):
                 data["target_category_id"], data["relation_type"]
             )
 
-    # Prerequisite enforcement for category registration
-    if relation_type == "category_group":
-        prereqs = read_relation(data_dir, "category_category", {
-            "target_category_id": data["category_id"],
+    # Prerequisite enforcement for event registration
+    if relation_type == "event_group":
+        prereqs = read_relation(data_dir, "event_event", {
+            "target_category_id": data["event_id"],
             "relation_type": "prerequisite",
         })
         for prereq in prereqs:
-            prereq_fp = find_record(data_dir, "category", prereq["source_category_id"])
+            prereq_fp = find_record(data_dir, "event", prereq["source_category_id"])
             if prereq_fp:
                 prereq_rec = load_record(prereq_fp)
                 if prereq_rec.get("status") != "closed":
                     raise ValueError(
-                        f"Prerequisite category '{prereq['source_category_id']}' must be closed before registering"
+                        f"Prerequisite event '{prereq['source_category_id']}' must be closed before registering"
                     )
 
     # Enum validation for relation fields
@@ -239,15 +239,15 @@ def delete_relation(data_dir, relation_type, filters, current_user=None):
 
 def _validate_relation_refs(data_dir, relation_type, data):
     ref_map = {
-        "category_rule": [("category", "category_id"), ("rule", "rule_id")],
-        "category_post": [("category", "category_id"), ("post", "post_id")],
-        "category_group": [("category", "category_id"), ("group", "group_id")],
+        "event_rule": [("event", "event_id"), ("rule", "rule_id")],
+        "event_post": [("event", "event_id"), ("post", "post_id")],
+        "event_group": [("event", "event_id"), ("group", "group_id")],
         "post_post": [("post", "source_post_id"), ("post", "target_post_id")],
         "post_resource": [("post", "post_id"), ("resource", "resource_id")],
         "group_user": [("group", "group_id"), ("user", "user_id")],
         "target_interaction": [("interaction", "interaction_id")],
         "user_user": [("user", "source_user_id"), ("user", "target_user_id")],
-        "category_category": [("category", "source_category_id"), ("category", "target_category_id")],
+        "event_event": [("event", "source_category_id"), ("event", "target_category_id")],
     }
     for content_type, field in ref_map.get(relation_type, []):
         if field in data:
@@ -261,22 +261,22 @@ def _validate_relation_refs(data_dir, relation_type, data):
 
 
 def _check_relation_uniqueness(data_dir, relation_type, data):
-    if relation_type == "category_rule":
+    if relation_type == "event_rule":
         existing = read_relation(data_dir, relation_type, {
-            "category_id": data["category_id"], "rule_id": data["rule_id"]
+            "event_id": data["event_id"], "rule_id": data["rule_id"]
         })
         if existing:
-            raise ValueError("This rule is already linked to this category")
-    elif relation_type == "category_group":
+            raise ValueError("This rule is already linked to this event")
+    elif relation_type == "event_group":
         existing = read_relation(data_dir, relation_type, {
-            "category_id": data["category_id"], "group_id": data["group_id"]
+            "event_id": data["event_id"], "group_id": data["group_id"]
         })
         if existing:
-            raise ValueError("This group is already registered for this category")
-        # Business rule: a user can only be in one group per category
+            raise ValueError("This group is already registered for this event")
+        # Business rule: a user can only be in one group per event
         new_members = read_relation(data_dir, "group_user", {"group_id": data["group_id"]})
         accepted_user_ids = {m["user_id"] for m in new_members if m.get("status") == "accepted"}
-        other_groups = read_relation(data_dir, relation_type, {"category_id": data["category_id"]})
+        other_groups = read_relation(data_dir, relation_type, {"event_id": data["event_id"]})
         for og in other_groups:
             if og["group_id"] == data["group_id"]:
                 continue
@@ -285,7 +285,7 @@ def _check_relation_uniqueness(data_dir, relation_type, data):
                 if m.get("status") == "accepted" and m["user_id"] in accepted_user_ids:
                     raise ValueError(
                         f"User '{m['user_id']}' already belongs to group '{og['group_id']}' "
-                        f"in category '{data['category_id']}'"
+                        f"in event '{data['event_id']}'"
                     )
     elif relation_type == "group_user":
         existing = read_relation(data_dir, relation_type, {
@@ -309,13 +309,13 @@ def _check_relation_uniqueness(data_dir, relation_type, data):
         existing = read_relation(data_dir, relation_type, flt)
         if existing:
             raise ValueError("This user_user relation already exists")
-    elif relation_type == "category_category":
+    elif relation_type == "event_event":
         existing = read_relation(data_dir, relation_type, {
             "source_category_id": data["source_category_id"],
             "target_category_id": data["target_category_id"],
         })
         if existing:
-            raise ValueError("This category_category relation already exists")
+            raise ValueError("This event_event relation already exists")
 
 
 def _check_circular_dependency(data_dir, source_id, target_id, rel_type):
@@ -326,13 +326,13 @@ def _check_circular_dependency(data_dir, source_id, target_id, rel_type):
         current = stack.pop()
         if current == source_id:
             raise ValueError(
-                f"Circular dependency detected in category_category ({rel_type})"
+                f"Circular dependency detected in event_event ({rel_type})"
             )
         if current in visited:
             continue
         visited.add(current)
         # Follow outgoing edges from current
-        downstream = read_relation(data_dir, "category_category", {
+        downstream = read_relation(data_dir, "event_event", {
             "source_category_id": current,
         })
         for rel in downstream:

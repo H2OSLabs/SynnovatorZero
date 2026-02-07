@@ -10,11 +10,11 @@ from datetime import datetime, timezone
 from core import find_record, load_record
 
 
-def _get_category_rules(data_dir, category_id):
-    """Get all active rules linked to a category via category_rule relations."""
+def _get_category_rules(data_dir, event_id):
+    """Get all active rules linked to a event via event_rule relations."""
     from relations import read_relation
 
-    cat_rule_rels = read_relation(data_dir, "category_rule", {"category_id": category_id})
+    cat_rule_rels = read_relation(data_dir, "event_rule", {"event_id": event_id})
     rules = []
     for rel in cat_rule_rels:
         rule_id = rel.get("rule_id")
@@ -25,15 +25,15 @@ def _get_category_rules(data_dir, category_id):
     return rules
 
 
-def _validate_category_rules(data_dir, category_id, check_type, context):
-    """Validate all rules for a category. Raises ValueError on first failure.
+def _validate_category_rules(data_dir, event_id, check_type, context):
+    """Validate all rules for a event. Raises ValueError on first failure.
 
     check_type:
       - "submission": time window, submission count, format, min_team_size
       - "team_join": max_team_size
       - "publish": allow_public / require_review
     """
-    rules = _get_category_rules(data_dir, category_id)
+    rules = _get_category_rules(data_dir, event_id)
     if not rules:
         return
     for rule in rules:
@@ -80,9 +80,9 @@ def _validate_submission_rules(data_dir, rule, rule_name, context):
     max_sub = rule.get("max_submissions")
     if max_sub is not None:
         user_id = context.get("user_id")
-        category_id = context.get("category_id")
-        if user_id and category_id:
-            existing = read_relation(data_dir, "category_post", {"category_id": category_id})
+        event_id = context.get("event_id")
+        if user_id and event_id:
+            existing = read_relation(data_dir, "event_post", {"event_id": event_id})
             user_submissions = 0
             for rel in existing:
                 post_fp = find_record(data_dir, "post", rel.get("post_id"))
@@ -120,9 +120,9 @@ def _validate_submission_rules(data_dir, rule, rule_name, context):
         if user_id:
             group_id = context.get("group_id")
             if not group_id:
-                category_id = context.get("category_id")
+                event_id = context.get("event_id")
                 cat_groups = read_relation(
-                    data_dir, "category_group", {"category_id": category_id}
+                    data_dir, "event_group", {"event_id": event_id}
                 )
                 for cg in cat_groups:
                     members = read_relation(

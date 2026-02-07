@@ -41,7 +41,7 @@ API 规范参考：`.synnovator/openapi.yaml`
 | 卡片作者头像 | L137 | `<div className="w-[18px]...bg-[#555555]" />` | `GET /users/{id}` | `User` -> `avatar_url` |
 | 热门提案列表 | L35-50 | `const proposals = [...]` | `GET /posts?type=proposal&limit=4` | `Post` -> `title`, `content` |
 | 提案作者 | L39,47 | `prop.author`, `prop.avatarColor` | `GET /users/{id}` | `User` -> `display_name`, `avatar_url` |
-| 分类导航 tabs | L15 | `const tabs = [...]` | `GET /categories?limit=10` | `Category` -> `name` |
+| 分类导航 tabs | L15 | `const tabs = [...]` | `GET /events?limit=10` | `Event` -> `name` |
 
 ---
 
@@ -86,10 +86,10 @@ API 规范参考：`.synnovator/openapi.yaml`
 
 | Mock 数据 / UI 区域 | 行号 | 变量/元素 | API 端点 | 对应 Schema |
 |---------------------|------|----------|---------|------------|
-| 提案卡片 | L14-43 | `const proposals = [...]` | `GET /posts?type=proposal` 或 `GET /categories/{id}/posts?relation_type=submission` | `Post` -> `title` |
+| 提案卡片 | L14-43 | `const proposals = [...]` | `GET /posts?type=proposal` 或 `GET /events/{id}/posts?relation_type=submission` | `Post` -> `title` |
 | 卡片封面 | L21,28,34,41 | `prop.image` | `GET /posts/{id}/resources` | `Resource` -> `url` |
 | 作者信息 | L18-20, L25-27 | `prop.author`, `prop.avatarColor` | `GET /users/{id}` | `User` -> `display_name`, `avatar_url` |
-| 赛道筛选栏 | L100-108 | `"赛道探索"`, `"热门"`, `"最新"` | `GET /categories` | `Category[]` -> `name` |
+| 赛道筛选栏 | L100-108 | `"赛道探索"`, `"热门"`, `"最新"` | `GET /events` | `Event[]` -> `name` |
 | 导航 tabs | L12 | `const tabs = [...]` | 静态 | -- |
 
 ---
@@ -118,23 +118,23 @@ API 规范参考：`.synnovator/openapi.yaml`
 
 ---
 
-## 8. category-detail.tsx — 赛事详情
+## 8. event-detail.tsx — 赛事详情
 
-**文件**: `components/pages/category-detail.tsx`
+**文件**: `components/pages/event-detail.tsx`
 
 | Mock 数据 / UI 区域 | 行号 | 变量/元素 | API 端点 | 对应 Schema |
 |---------------------|------|----------|---------|------------|
-| 赛事封面图 | L62-64 | `<div ... bg-[var(--nf-dark-bg)]" />` | `GET /categories/{category_id}` | `Category` -> `cover_image` |
-| 赛事名称 | L66-68 | `"西建·滇水源 \| 上海..."` | `GET /categories/{category_id}` | `Category` -> `name` |
-| 奖金金额 | L73 | `"880万元"` | `GET /categories/{category_id}` | `Category` -> `content` 内解析 |
-| 日期 | L75-78 | `"2025/01/28"` 等 | `GET /categories/{category_id}` | `Category` -> `start_date`, `end_date` |
+| 赛事封面图 | L62-64 | `<div ... bg-[var(--nf-dark-bg)]" />` | `GET /events/{event_id}` | `Event` -> `cover_image` |
+| 赛事名称 | L66-68 | `"西建·滇水源 \| 上海..."` | `GET /events/{event_id}` | `Event` -> `name` |
+| 奖金金额 | L73 | `"880万元"` | `GET /events/{event_id}` | `Event` -> `content` 内解析 |
+| 日期 | L75-78 | `"2025/01/28"` 等 | `GET /events/{event_id}` | `Event` -> `start_date`, `end_date` |
 | 组织者标签 | L79-81 | `"LIGHTNING鲸"` | `GET /users/{created_by}` | `User` -> `display_name` |
-| Tab: 详情 | L98-102 | placeholder 内容区 | `GET /categories/{category_id}` | `Category` -> `content`（Markdown） |
-| Tab: 排榜 | 未实现 | -- | `GET /categories/{category_id}/posts?relation_type=submission` 按评分排序 | `Post[]` -> `average_rating` |
-| Tab: 讨论区 | 未实现 | -- | 无直接端点（API 缺口） | 建议 category 关联 post |
-| Tab: 成员 | 未实现 | -- | `GET /categories/{category_id}/groups` -> 各 group 的 members | `Group[]`, `Member[]` |
-| Tab: 赛程安排 | 未实现 | -- | `GET /categories/{category_id}/rules` | `Rule[]` -> `submission_start`, `submission_deadline` |
-| Tab: 关联活动 | 未实现 | -- | 无端点（API 缺口） | 需新增 category 关联 |
+| Tab: 详情 | L98-102 | placeholder 内容区 | `GET /events/{event_id}` | `Event` -> `content`（Markdown） |
+| Tab: 排榜 | 未实现 | -- | `GET /events/{event_id}/posts?relation_type=submission` 按评分排序 | `Post[]` -> `average_rating` |
+| Tab: 讨论区 | 未实现 | -- | 无直接端点（API 缺口） | 建议 event 关联 post |
+| Tab: 成员 | 未实现 | -- | `GET /events/{event_id}/groups` -> 各 group 的 members | `Group[]`, `Member[]` |
+| Tab: 赛程安排 | 未实现 | -- | `GET /events/{event_id}/rules` | `Rule[]` -> `submission_start`, `submission_deadline` |
+| Tab: 关联活动 | 未实现 | -- | 无端点（API 缺口） | 需新增 event 关联 |
 
 ---
 
@@ -208,7 +208,7 @@ API 规范参考：`.synnovator/openapi.yaml`
 |------|---------|------------|
 | `created_by` 过滤 | user-profile, team | `GET /posts?created_by=xxx` 添加 query param |
 | 关注/粉丝关系 | following-list, user-profile | `POST/DELETE /users/{id}/follow`, `GET /users/{id}/following`, `GET /users/{id}/followers` |
-| 搜索 | 所有页面 header | `GET /search?q=xxx&type=post\|user\|category` |
+| 搜索 | 所有页面 header | `GET /search?q=xxx&type=post\|user\|event` |
 | 通知 | 所有页面 header | `GET /notifications`, `PATCH /notifications/{id}` |
 | 收藏 | user-profile, team | `POST/DELETE /posts/{id}/favorite`, `GET /users/me/favorites` |
 | 版本历史 | proposal-detail | `GET /posts/{id}/versions` |
@@ -216,7 +216,7 @@ API 规范参考：`.synnovator/openapi.yaml`
 | 团队头像 | team | `Group` 增加 `avatar_url` 字段 |
 | 按 group 过滤帖子 | team | `GET /posts?group_id=xxx` 或 `GET /groups/{id}/posts` |
 | 文件上传 | assets | `POST /resources` 增加 `multipart/form-data` |
-| 赛事关联活动 | category-detail | `GET /categories/{id}/related` 或类似端点 |
+| 赛事关联活动 | event-detail | `GET /events/{id}/related` 或类似端点 |
 | 用户统计聚合 | user-profile, team | `GET /users/{id}/stats` 返回帖子数/关注数/粉丝数 |
 
 ---
@@ -225,12 +225,12 @@ API 规范参考：`.synnovator/openapi.yaml`
 
 | OpenAPI Schema | 前端用途 | 对应页面 |
 |---------------|---------|---------|
-| `Category` | 赛事/活动卡片 | home, proposal-list, category-detail |
+| `Event` | 赛事/活动卡片 | home, proposal-list, event-detail |
 | `Post` | 帖子/提案卡片 | home, post-list, post-detail, proposal-list, proposal-detail |
 | `Resource` | 附件/资产卡片 | assets, post-detail |
-| `Rule` | 规则展示 | category-detail |
+| `Rule` | 规则展示 | event-detail |
 | `User` | 用户头像、信息 | user-profile, following-list, team |
-| `Group` | 团队信息 | team, category-detail |
+| `Group` | 团队信息 | team, event-detail |
 | `Comment` | 评论列表 | post-detail, proposal-detail |
 | `Rating` | 评分记录 | post-detail, proposal-detail |
 | `Member` | 团队成员 | team |
@@ -241,7 +241,7 @@ API 规范参考：`.synnovator/openapi.yaml`
 
 | 枚举 | 值 | 前端 UI 对应 |
 |------|----|-------------|
-| `PostType` | `profile`, `team`, `category`, `proposal`, `certificate`, `general` | 帖子分类 tab / 筛选器 |
+| `PostType` | `profile`, `team`, `event`, `proposal`, `certificate`, `general` | 帖子分类 tab / 筛选器 |
 | `PostStatus` | `draft`, `pending_review`, `published`, `rejected` | 帖子状态 badge |
 | `CategoryType` | `competition`, `operation` | 赛事类型标签 |
 | `CategoryStatus` | `draft`, `published`, `closed` | 赛事状态 badge |

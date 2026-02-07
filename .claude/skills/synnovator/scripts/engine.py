@@ -8,7 +8,7 @@ Relations are stored as lightweight .md files in relations/ subdirectories.
 
 Directory structure:
   .synnovator/
-    category/        # .md files with YAML frontmatter + Markdown body
+    event/        # .md files with YAML frontmatter + Markdown body
     post/            # .md files with YAML frontmatter + Markdown body
     resource/        # .md files with YAML frontmatter
     rule/            # .md files with YAML frontmatter + Markdown body
@@ -16,10 +16,10 @@ Directory structure:
     group/           # .md files with YAML frontmatter
     interaction/     # .md files with YAML frontmatter
     relations/
-      category_rule/
-      category_post/
-      category_group/
-      category_category/
+      event_rule/
+      event_post/
+      event_group/
+      event_event/
       post_post/
       post_resource/
       group_user/

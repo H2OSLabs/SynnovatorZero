@@ -36,8 +36,8 @@ def _create_user(client, username="eng_user", role="organizer"):
     return resp.json()["id"]
 
 
-def _create_category(client, uid, name="Test Event"):
-    resp = client.post("/api/categories", json={
+def _create_event(client, uid, name="Test Event"):
+    resp = client.post("/api/events", json={
         "name": name,
         "description": f"Desc of {name}",
         "type": "competition",
@@ -83,14 +83,14 @@ def _create_resource(client, uid, filename="proposal.pdf"):
 
 
 def _link_rule(client, cat_id, rule_id, priority=0):
-    resp = client.post(f"/api/categories/{cat_id}/rules", json={
+    resp = client.post(f"/api/events/{cat_id}/rules", json={
         "rule_id": rule_id, "priority": priority,
     })
     assert resp.status_code == 201
 
 
 def _submit_post(client, cat_id, post_id):
-    return client.post(f"/api/categories/{cat_id}/posts", json={
+    return client.post(f"/api/events/{cat_id}/posts", json={
         "post_id": post_id, "relation_type": "submission",
     })
 
@@ -100,9 +100,9 @@ def _submit_post(client, cat_id, post_id):
 def test_time_window_start_not_reached(client):
     """TC-ENGINE-001: time_window — start in the future → rejected."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     rule_id = _create_rule(client, uid, checks=[{
-        "trigger": "create_relation(category_post)",
+        "trigger": "create_relation(event_post)",
         "phase": "pre",
         "condition": {
             "type": "time_window",
@@ -121,9 +121,9 @@ def test_time_window_start_not_reached(client):
 def test_time_window_deadline_passed(client):
     """TC-ENGINE-002: time_window — end in the past → rejected."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     rule_id = _create_rule(client, uid, checks=[{
-        "trigger": "create_relation(category_post)",
+        "trigger": "create_relation(event_post)",
         "phase": "pre",
         "condition": {
             "type": "time_window",
@@ -142,17 +142,17 @@ def test_time_window_deadline_passed(client):
 def test_count_condition_satisfied(client, db_session):
     """TC-ENGINE-003: count — group has enough members → passes."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     group_id = _create_group(client, uid)
     # Add 3 members
     for i in range(3):
         m_uid = _create_user(client, f"member{i}")
         client.post(f"/api/groups/{group_id}/members", json={"user_id": m_uid})
-    # Register group to category
-    client.post(f"/api/categories/{cat_id}/groups", json={"group_id": group_id})
+    # Register group to event
+    client.post(f"/api/events/{cat_id}/groups", json={"group_id": group_id})
     # Rule: team must have >= 2 accepted members
     rule_id = _create_rule(client, uid, checks=[{
-        "trigger": "create_relation(category_post)",
+        "trigger": "create_relation(event_post)",
         "phase": "pre",
         "condition": {
             "type": "count",
@@ -173,8 +173,8 @@ def test_count_condition_satisfied(client, db_session):
     # Should pass with 3 members
     warnings = run_pre_checks(
         db_session,
-        trigger="create_relation(category_post)",
-        category_id=cat_id,
+        trigger="create_relation(event_post)",
+        event_id=cat_id,
         context={"user_id": uid, "post_id": post_id, "group_id": group_id},
     )
     assert len(warnings) == 0
@@ -183,14 +183,14 @@ def test_count_condition_satisfied(client, db_session):
 def test_count_condition_not_satisfied(client, db_session):
     """TC-ENGINE-004: count — group has too few members → rejected."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     group_id = _create_group(client, uid)
     # Only 1 member (the creator doesn't auto-join)
     m_uid = _create_user(client, "lone_member")
     client.post(f"/api/groups/{group_id}/members", json={"user_id": m_uid})
     # Rule: team must have >= 3 accepted members
     rule_id = _create_rule(client, uid, checks=[{
-        "trigger": "create_relation(category_post)",
+        "trigger": "create_relation(event_post)",
         "phase": "pre",
         "condition": {
             "type": "count",
@@ -211,8 +211,8 @@ def test_count_condition_not_satisfied(client, db_session):
     with pytest.raises(RuleCheckError, match="Not enough team members"):
         run_pre_checks(
             db_session,
-            trigger="create_relation(category_post)",
-            category_id=cat_id,
+            trigger="create_relation(event_post)",
+            event_id=cat_id,
             context={"user_id": uid, "post_id": 1, "group_id": group_id},
         )
 
@@ -220,14 +220,14 @@ def test_count_condition_not_satisfied(client, db_session):
 def test_exists_entity_present_passes(client):
     """TC-ENGINE-005: exists — post has resources → passes."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     post_id = _create_post(client, uid)
     resource_id = _create_resource(client, uid)
     client.post(f"/api/posts/{post_id}/resources", json={
         "resource_id": resource_id, "display_type": "attachment",
     })
     rule_id = _create_rule(client, uid, checks=[{
-        "trigger": "create_relation(category_post)",
+        "trigger": "create_relation(event_post)",
         "phase": "pre",
         "condition": {
             "type": "exists",
@@ -244,10 +244,10 @@ def test_exists_entity_present_passes(client):
 def test_exists_entity_absent_rejects(client):
     """TC-ENGINE-006: exists — post has no resources → rejected."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     post_id = _create_post(client, uid)
     rule_id = _create_rule(client, uid, checks=[{
-        "trigger": "create_relation(category_post)",
+        "trigger": "create_relation(event_post)",
         "phase": "pre",
         "condition": {
             "type": "exists",
@@ -265,15 +265,15 @@ def test_exists_entity_absent_rejects(client):
 def test_exists_require_false_passes_when_absent(client):
     """TC-ENGINE-007: exists — require=false, user has no submission → passes."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     post_id = _create_post(client, uid)
     rule_id = _create_rule(client, uid, checks=[{
-        "trigger": "create_relation(category_post)",
+        "trigger": "create_relation(event_post)",
         "phase": "pre",
         "condition": {
             "type": "exists",
             "params": {
-                "entity": "category_post",
+                "entity": "event_post",
                 "scope": "user",
                 "filter": {"relation_type": "submission"},
                 "require": False,
@@ -289,19 +289,19 @@ def test_exists_require_false_passes_when_absent(client):
 
 
 def test_field_match_condition(client):
-    """TC-ENGINE-008: field_match — category status == published."""
+    """TC-ENGINE-008: field_match — event status == published."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     h = {"X-User-Id": str(uid)}
-    # Publish category
-    client.patch(f"/api/categories/{cat_id}", json={"status": "published"}, headers=h)
+    # Publish event
+    client.patch(f"/api/events/{cat_id}", json={"status": "published"}, headers=h)
     rule_id = _create_rule(client, uid, checks=[{
-        "trigger": "create_relation(category_post)",
+        "trigger": "create_relation(event_post)",
         "phase": "pre",
         "condition": {
             "type": "field_match",
             "params": {
-                "entity": "category",
+                "entity": "event",
                 "target": "$target",
                 "field": "status",
                 "op": "==",
@@ -309,7 +309,7 @@ def test_field_match_condition(client):
             },
         },
         "on_fail": "deny",
-        "message": "Category must be published",
+        "message": "Event must be published",
     }])
     _link_rule(client, cat_id, rule_id)
     post_id = _create_post(client, uid)
@@ -320,14 +320,14 @@ def test_field_match_condition(client):
 def test_resource_format_condition(client):
     """TC-ENGINE-009: resource_format — pdf and zip pass."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     post_id = _create_post(client, uid)
     r1 = _create_resource(client, uid, "proposal.pdf")
     r2 = _create_resource(client, uid, "code.zip")
     client.post(f"/api/posts/{post_id}/resources", json={"resource_id": r1, "display_type": "attachment"})
     client.post(f"/api/posts/{post_id}/resources", json={"resource_id": r2, "display_type": "attachment"})
     rule_id = _create_rule(client, uid, checks=[{
-        "trigger": "create_relation(category_post)",
+        "trigger": "create_relation(event_post)",
         "phase": "pre",
         "condition": {
             "type": "resource_format",
@@ -344,14 +344,14 @@ def test_resource_format_condition(client):
 def test_resource_required_condition(client):
     """TC-ENGINE-010: resource_required — min_count=2 pdf resources."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     post_id = _create_post(client, uid)
     r1 = _create_resource(client, uid, "doc1.pdf")
     r2 = _create_resource(client, uid, "doc2.pdf")
     client.post(f"/api/posts/{post_id}/resources", json={"resource_id": r1, "display_type": "attachment"})
     client.post(f"/api/posts/{post_id}/resources", json={"resource_id": r2, "display_type": "attachment"})
     rule_id = _create_rule(client, uid, checks=[{
-        "trigger": "create_relation(category_post)",
+        "trigger": "create_relation(event_post)",
         "phase": "pre",
         "condition": {
             "type": "resource_required",
@@ -368,7 +368,7 @@ def test_resource_required_condition(client):
 def test_aggregate_condition(client, db_session):
     """TC-ENGINE-011: aggregate — all groups have >= 2 members."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     g1 = _create_group(client, uid, "Team1")
     g2 = _create_group(client, uid, "Team2")
     # Add 2 members to each group
@@ -376,11 +376,11 @@ def test_aggregate_condition(client, db_session):
         for i in range(2):
             m = _create_user(client, f"agg_m_{g}_{i}")
             client.post(f"/api/groups/{g}/members", json={"user_id": m})
-    # Register both to category
-    client.post(f"/api/categories/{cat_id}/groups", json={"group_id": g1})
-    client.post(f"/api/categories/{cat_id}/groups", json={"group_id": g2})
+    # Register both to event
+    client.post(f"/api/events/{cat_id}/groups", json={"group_id": g1})
+    client.post(f"/api/events/{cat_id}/groups", json={"group_id": g2})
     rule_id = _create_rule(client, uid, checks=[{
-        "trigger": "create_relation(category_post)",
+        "trigger": "create_relation(event_post)",
         "phase": "pre",
         "condition": {
             "type": "aggregate",
@@ -400,8 +400,8 @@ def test_aggregate_condition(client, db_session):
     _link_rule(client, cat_id, rule_id)
     from app.services.rule_engine import run_pre_checks
     warnings = run_pre_checks(
-        db_session, trigger="create_relation(category_post)",
-        category_id=cat_id, context={"user_id": uid},
+        db_session, trigger="create_relation(event_post)",
+        event_id=cat_id, context={"user_id": uid},
     )
     assert len(warnings) == 0
 
@@ -411,7 +411,7 @@ def test_aggregate_condition(client, db_session):
 def test_fixed_field_auto_expansion(client):
     """TC-ENGINE-020: max_submissions=2 auto-expands to count check."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     rule_id = _create_rule(client, uid, max_submissions=2)
     _link_rule(client, cat_id, rule_id)
     # Submit 2 posts
@@ -429,10 +429,10 @@ def test_fixed_field_auto_expansion(client):
 def test_fixed_field_expanded_before_custom(client):
     """TC-ENGINE-021: Fixed field checks execute before custom checks."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     # Rule: max_submissions=1 (fixed) + resource_required (custom)
     rule_id = _create_rule(client, uid, max_submissions=1, checks=[{
-        "trigger": "create_relation(category_post)",
+        "trigger": "create_relation(event_post)",
         "phase": "pre",
         "condition": {
             "type": "resource_required",
@@ -467,9 +467,9 @@ def test_fixed_field_expanded_before_custom(client):
 def test_pure_checks_no_fixed_fields(client):
     """TC-ENGINE-022: Rule with only checks, no fixed fields."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     rule_id = _create_rule(client, uid, checks=[{
-        "trigger": "create_relation(category_post)",
+        "trigger": "create_relation(event_post)",
         "phase": "pre",
         "condition": {
             "type": "exists",
@@ -495,10 +495,10 @@ def test_pure_checks_no_fixed_fields(client):
 def test_multi_rule_and_logic(client):
     """TC-ENGINE-030: Two rules, both must pass (AND)."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     # Rule A: resource_required
     rule_a = _create_rule(client, uid, name="Rule A", checks=[{
-        "trigger": "create_relation(category_post)",
+        "trigger": "create_relation(event_post)",
         "phase": "pre",
         "condition": {"type": "resource_required", "params": {"min_count": 1}},
         "on_fail": "deny",
@@ -528,12 +528,12 @@ def test_multi_rule_and_logic(client):
 def test_multi_rule_mixed_fixed_and_checks(client):
     """TC-ENGINE-031: Rule A (fixed: submission_format) + Rule B (checks: resource_required)."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     # Rule A: submission_format=["pdf"] via fixed field
     rule_a = _create_rule(client, uid, name="Format Rule", submission_format=["pdf"])
     # Rule B: resource_required via checks
     rule_b = _create_rule(client, uid, name="Resource Rule", checks=[{
-        "trigger": "create_relation(category_post)",
+        "trigger": "create_relation(event_post)",
         "phase": "pre",
         "condition": {"type": "resource_required", "params": {"min_count": 1}},
         "on_fail": "deny",
@@ -554,17 +554,17 @@ def test_multi_rule_mixed_fixed_and_checks(client):
 # --- 17.4 Post-hook execution ---
 
 def test_post_hook_executes(client):
-    """TC-ENGINE-040: post phase action executes on category close."""
+    """TC-ENGINE-040: post phase action executes on event close."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     h = {"X-User-Id": str(uid)}
-    # Create rule with compute_ranking post-hook on category close
+    # Create rule with compute_ranking post-hook on event close
     rule_id = _create_rule(client, uid, checks=[{
-        "trigger": "update_content(category.status)",
+        "trigger": "update_content(event.status)",
         "phase": "post",
         "condition": {
             "type": "field_match",
-            "params": {"entity": "category", "target": "$current", "field": "status", "op": "==", "value": "closed"},
+            "params": {"entity": "event", "target": "$current", "field": "status", "op": "==", "value": "closed"},
         },
         "action": "compute_ranking",
         "action_params": {"source_field": "average_rating", "order": "desc", "output_tag_prefix": "rank_"},
@@ -587,8 +587,8 @@ def test_post_hook_executes(client):
     }, headers=h)
 
     # Transition: draft → published → closed
-    client.patch(f"/api/categories/{cat_id}", json={"status": "published"}, headers=h)
-    client.patch(f"/api/categories/{cat_id}", json={"status": "closed"}, headers=h)
+    client.patch(f"/api/events/{cat_id}", json={"status": "published"}, headers=h)
+    client.patch(f"/api/events/{cat_id}", json={"status": "closed"}, headers=h)
 
     # Verify ranking tags were applied
     post_a = client.get(f"/api/posts/{p1}", headers=h).json()
@@ -600,15 +600,15 @@ def test_post_hook_executes(client):
 def test_post_hook_condition_not_met(client):
     """TC-ENGINE-041: post-hook condition not met → action skipped."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     h = {"X-User-Id": str(uid)}
     # Rule: compute_ranking only on closed
     rule_id = _create_rule(client, uid, checks=[{
-        "trigger": "update_content(category.status)",
+        "trigger": "update_content(event.status)",
         "phase": "post",
         "condition": {
             "type": "field_match",
-            "params": {"entity": "category", "target": "$current", "field": "status", "op": "==", "value": "closed"},
+            "params": {"entity": "event", "target": "$current", "field": "status", "op": "==", "value": "closed"},
         },
         "action": "compute_ranking",
         "action_params": {"source_field": "average_rating", "order": "desc", "output_tag_prefix": "rank_"},
@@ -623,7 +623,7 @@ def test_post_hook_condition_not_met(client):
     }, headers=h)
 
     # Transition to published (NOT closed) → hook should NOT fire
-    client.patch(f"/api/categories/{cat_id}", json={"status": "published"}, headers=h)
+    client.patch(f"/api/events/{cat_id}", json={"status": "published"}, headers=h)
     post_a = client.get(f"/api/posts/{p1}", headers=h).json()
     # No ranking tags should be present
     tags = post_a.get("tags") or []
@@ -633,15 +633,15 @@ def test_post_hook_condition_not_met(client):
 def test_post_hook_failure_no_rollback(client):
     """TC-ENGINE-042: post-hook error doesn't rollback main operation."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     h = {"X-User-Id": str(uid)}
     # Rule: compute_ranking on close (no rated posts → no rankings, but shouldn't fail)
     rule_id = _create_rule(client, uid, checks=[{
-        "trigger": "update_content(category.status)",
+        "trigger": "update_content(event.status)",
         "phase": "post",
         "condition": {
             "type": "field_match",
-            "params": {"entity": "category", "target": "$current", "field": "status", "op": "==", "value": "closed"},
+            "params": {"entity": "event", "target": "$current", "field": "status", "op": "==", "value": "closed"},
         },
         "action": "compute_ranking",
         "action_params": {"source_field": "average_rating", "order": "desc"},
@@ -649,9 +649,9 @@ def test_post_hook_failure_no_rollback(client):
     }])
     _link_rule(client, cat_id, rule_id)
 
-    # Close category (no posts, no ratings)
-    client.patch(f"/api/categories/{cat_id}", json={"status": "published"}, headers=h)
-    resp = client.patch(f"/api/categories/{cat_id}", json={"status": "closed"}, headers=h)
+    # Close event (no posts, no ratings)
+    client.patch(f"/api/events/{cat_id}", json={"status": "published"}, headers=h)
+    resp = client.patch(f"/api/events/{cat_id}", json={"status": "closed"}, headers=h)
     # Main operation succeeds regardless
     assert resp.status_code == 200
     assert resp.json()["status"] == "closed"
@@ -662,9 +662,9 @@ def test_post_hook_failure_no_rollback(client):
 def test_on_fail_deny_rejects(client):
     """TC-ENGINE-050: on_fail=deny rejects the operation."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     rule_id = _create_rule(client, uid, checks=[{
-        "trigger": "create_relation(category_post)",
+        "trigger": "create_relation(event_post)",
         "phase": "pre",
         "condition": {
             "type": "time_window",
@@ -683,9 +683,9 @@ def test_on_fail_deny_rejects(client):
 def test_on_fail_warn_allows_with_warning(client):
     """TC-ENGINE-051: on_fail=warn allows operation."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     rule_id = _create_rule(client, uid, checks=[{
-        "trigger": "create_relation(category_post)",
+        "trigger": "create_relation(event_post)",
         "phase": "pre",
         "condition": {
             "type": "time_window",
@@ -706,7 +706,7 @@ def test_on_fail_warn_allows_with_warning(client):
 def test_empty_checks_no_constraint(client):
     """TC-ENGINE-060: Rule with empty checks → no constraint."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     rule_id = _create_rule(client, uid, checks=[])
     _link_rule(client, cat_id, rule_id)
     post_id = _create_post(client, uid)
@@ -715,9 +715,9 @@ def test_empty_checks_no_constraint(client):
 
 
 def test_no_rules_no_constraint(client):
-    """TC-ENGINE-061: Category with no rules → no constraint."""
+    """TC-ENGINE-061: Event with no rules → no constraint."""
     uid = _create_user(client)
-    cat_id = _create_category(client, uid)
+    cat_id = _create_event(client, uid)
     post_id = _create_post(client, uid)
     resp = _submit_post(client, cat_id, post_id)
     assert resp.status_code == 201

@@ -1,5 +1,5 @@
 """Group member (group:user) tests — covers TC-REL-GU-001, TC-REL-GU-900, TC-REL-GU-901
-TC-REL-GU-902 deferred to Phase 6 (requires category_group + rule enforcement).
+TC-REL-GU-902 deferred to Phase 6 (requires event_group + rule enforcement).
 """
 
 

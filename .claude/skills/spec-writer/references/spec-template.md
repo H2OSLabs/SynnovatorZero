@@ -52,7 +52,7 @@ Use this template as the scaffold when generating a project's SPEC.md during Sta
 - **Run all:** `[command]`
 - **Run single:** `[command for single test/file]`
 - **Coverage:** [threshold, e.g., ≥80% on src/, enforced in CI]
-- **Categories:** [unit, integration, e2e — and how to run each]
+- **Events:** [unit, integration, e2e — and how to run each]
 
 ### Test Conventions
 

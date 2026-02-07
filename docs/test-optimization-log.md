@@ -13,7 +13,7 @@
 |------|------|------|-----------|
 | 任务 A | 创建提案（post） | 待执行 | -/- |
 | 任务 B | 创建资源（resource） | 待执行 | -/- |
-| 任务 C | 列表筛选逻辑（category:post） | 待执行 | -/- |
+| 任务 C | 列表筛选逻辑（event:post） | 待执行 | -/- |
 
 ---
 
@@ -26,7 +26,7 @@
 | user_alice | user (participant) | 待创建 | 提案作者 |
 | user_bob | user (participant) | 待创建 | 队友/被邀请者 |
 | user_org_01 | user (organizer) | 待创建 | 用于活动/规则 |
-| cat_ai_hackathon_2025 | category (competition) | 待创建 | 活动 |
+| cat_ai_hackathon_2025 | event (competition) | 待创建 | 活动 |
 | rule_submission_01 | rule | 待创建 | 规则 |
 | grp_team_synnovator | group | 待创建 | 团队 |
 
@@ -104,7 +104,7 @@
 
 ---
 
-## 任务 C：列表筛选逻辑（category:post）
+## 任务 C：列表筛选逻辑（event:post）
 
 ### C1. 基础可用性
 

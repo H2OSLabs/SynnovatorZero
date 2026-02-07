@@ -230,7 +230,7 @@ make seed
            │                 │
            ▼                 │
 ┌─────────────── Layer 1: 仅依赖 user ──────────────┐
-│   rule (规则)   group (团队)   category (活动)     │
+│   rule (规则)   group (团队)   event (活动)     │
 │   ← user        ← user        ← user              │
 └──────────┬─────────┬──────────┬───────────────────┘
            │         │          │
@@ -248,14 +248,14 @@ make seed
            │
            ▼
 ┌─────────────── Layer 4: 复杂关系 ─────────────────┐
-│   category_rule       target_interaction           │
-│   category_post (含规则引擎校验)                    │
-│   category_group (含前置条件检查)                   │
+│   event_rule       target_interaction           │
+│   event_post (含规则引擎校验)                    │
+│   event_group (含前置条件检查)                   │
 └──────────┬────────────────────────────────────────┘
            │
            ▼
 ┌─────────────── Layer 5: 高级图关系 ───────────────┐
-│   category_category                                │
+│   event_event                                │
 │   (阶段/赛道/前置条件, 含环检测)                    │
 └──────────┬────────────────────────────────────────┘
            │
@@ -280,23 +280,23 @@ make seed
 | **0** | resource CRUD + 文件存储 | 无 | TC-RES-001~011, 900~901 |
 | **1** | rule CRUD + scoring_criteria | user | TC-RULE-001~011, 900~901 |
 | **1** | group CRUD + 成员角色定义 | user | TC-GRP-001~011, 900~901 |
-| **1** | category CRUD + 状态机 | user | TC-CAT-001~011, 900~902 |
+| **1** | event CRUD + 状态机 | user | TC-CAT-001~011, 900~902 |
 | **2** | post CRUD + 缓存字段 + 状态机 | user, resource | TC-POST-001~076, 900~903 |
 | **2** | interaction CRUD (点赞/评论/评分) | user | TC-IACT-001~063, 900~905 |
 | **3** | group_user 关系 + 审批流程 | group, user | TC-REL-GU-*, TC-GRP-020~025 |
 | **3** | user_user 关系 (关注/屏蔽) | user | TC-FRIEND-001~010, 900~902 |
 | **3** | post_resource 关系 | post, resource | TC-REL-PR-* |
 | **3** | post_post 关系 (引用/回复/嵌入) | post | TC-REL-PP-* |
-| **4** | category_rule 关系 | category, rule | TC-REL-CR-* |
-| **4** | target_interaction (多态绑定 + 缓存更新) | interaction, post/category/resource | TC-REL-TI-*, TC-IACT-020~025 |
-| **4** | category_post (含规则引擎校验) | category, post, rule | TC-REL-CP-*, TC-RULE-100~109, TC-ENTRY-* |
-| **4** | category_group (含前置条件) | category, group | TC-REL-CG-*, TC-PERM-020~025 |
-| **5** | category_category (阶段/赛道/前置条件 + 环检测) | category | TC-STAGE-*, TC-TRACK-*, TC-PREREQ-*, TC-CATREL-* |
+| **4** | event_rule 关系 | event, rule | TC-REL-CR-* |
+| **4** | target_interaction (多态绑定 + 缓存更新) | interaction, post/event/resource | TC-REL-TI-*, TC-IACT-020~025 |
+| **4** | event_post (含规则引擎校验) | event, post, rule | TC-REL-CP-*, TC-RULE-100~109, TC-ENTRY-* |
+| **4** | event_group (含前置条件) | event, group | TC-REL-CG-*, TC-PERM-020~025 |
+| **5** | event_event (阶段/赛道/前置条件 + 环检测) | event | TC-STAGE-*, TC-TRACK-*, TC-PREREQ-*, TC-CATREL-* |
 | **6** | 软删除 + 级联删除 | 全部内容类型和关系 | TC-DEL-001~022 |
 | **6** | 权限层 + 可见性控制 | user, 全部类型 | TC-PERM-001~025 |
-| **6** | 声明式规则引擎 | rule, category | TC-ENGINE-001~061 |
+| **6** | 声明式规则引擎 | rule, event | TC-ENGINE-001~061 |
 | **7** | 用户旅程集成测试 | 全部 | TC-JOUR-002~013 |
-| **7** | 闭幕规则 | category, rule | TC-CLOSE-001~040, 900~902 |
+| **7** | 闭幕规则 | event, rule | TC-CLOSE-001~040, 900~902 |
 | **7** | 资源转移 | resource, post | TC-TRANSFER-001~004 |
 
 ### 开发节奏
@@ -448,7 +448,7 @@ python3 .claude/skills/planning-with-files/scripts/session-catchup.py "$(pwd)"
 
 **7 种内容类型（实体）：**
 - **user**: 用户账户
-- **category**: 活动/竞赛
+- **event**: 活动/竞赛
 - **post**: 用户帖子（支持多种 type）
 - **rule**: 活动规则（含声明式规则引擎）
 - **resource**: 文件资源
@@ -456,10 +456,10 @@ python3 .claude/skills/planning-with-files/scripts/session-catchup.py "$(pwd)"
 - **interaction**: 交互记录（点赞、评论、评分）
 
 **9 种关系类型：**
-- **category_rule**: 活动-规则绑定
-- **category_post**: 活动-帖子关联（报名/提交）
-- **category_group**: 团队-活动报名
-- **category_category**: 活动间关联（阶段/赛道/前置条件）
+- **event_rule**: 活动-规则绑定
+- **event_post**: 活动-帖子关联（报名/提交）
+- **event_group**: 团队-活动报名
+- **event_event**: 活动间关联（阶段/赛道/前置条件）
 - **post_post**: 帖子间关联（引用/回复/嵌入）
 - **post_resource**: 帖子-资源关联
 - **group_user**: 成员-团队关系（含审批流程）
@@ -517,8 +517,8 @@ uv run python .claude/skills/schema-to-openapi/scripts/generate_openapi.py \
 **输出：** `.synnovator/openapi.yaml`
 
 生成的规范包括:
-- 7 种内容类型的 CRUD endpoints (`/users`, `/categories`, `/posts`, 等)
-- 9 种关系类型的嵌套 endpoints (`/categories/{id}/posts`, `/posts/{id}/comments`, 等)
+- 7 种内容类型的 CRUD endpoints (`/users`, `/events`, `/posts`, 等)
+- 9 种关系类型的嵌套 endpoints (`/events/{id}/posts`, `/posts/{id}/comments`, 等)
 - 交互 endpoints (点赞、评论、评分)
 - 用户关系 endpoints（关注/屏蔽）
 - 活动关联 endpoints（阶段/赛道/前置条件）
@@ -575,18 +575,18 @@ app/
 ├── models/               # SQLAlchemy ORM 模型
 │   ├── __init__.py
 │   ├── user.py
-│   ├── category.py
+│   ├── event.py
 │   ├── post.py
 │   └── ...
 ├── schemas/              # Pydantic 验证 schemas
 │   ├── __init__.py
 │   ├── user.py
-│   ├── category.py
+│   ├── event.py
 │   └── ...
 ├── routers/              # FastAPI 路由
 │   ├── __init__.py
 │   ├── users.py
-│   ├── categories.py
+│   ├── events.py
 │   └── ...
 ├── crud/                 # CRUD 操作
 │   ├── __init__.py
@@ -610,7 +610,7 @@ app/
 # 查看数据库表
 sqlite3 data/synnovator.db ".tables"
 
-# 预期输出: user category post rule resource group interaction ...
+# 预期输出: user event post rule resource group interaction ...
 
 # 启动开发服务器
 uv run uvicorn app.main:app --reload --port 8000
@@ -666,7 +666,7 @@ uv run pytest app/tests/test_api/test_posts_api.py -v
 | 开发顺序 | 模块 | 对应测试用例 |
 |----------|------|-------------|
 | 1 | 用户 (user) | TC-USER-001~020, TC-PERM-001~025 |
-| 2 | 活动 (category) | TC-CAT-001~020 |
+| 2 | 活动 (event) | TC-CAT-001~020 |
 | 3 | 规则 (rule) | TC-RULE-001~020, TC-ENGINE-* |
 | 4 | 团队 (group) | TC-GRP-001~020 |
 | 5 | 帖子 (post) | TC-POST-001~076 |
@@ -782,7 +782,7 @@ TC-ENTRY-001：活动报名
 | 关系类型 | 数据 | 关联测试用例 |
 |----------|------|-------------|
 | group_user | group_public_1 → user_participant_1 (owner) | TC-REL-GU-* |
-| category_rule | cat_published_1 → rule_entry_1 | TC-REL-CR-* |
+| event_rule | cat_published_1 → rule_entry_1 | TC-REL-CR-* |
 ```
 
 #### 2.5.4 更新种子脚本
@@ -895,7 +895,7 @@ if __name__ == "__main__":
 # 查看数据库中的数据
 sqlite3 data/synnovator.db << EOF
 SELECT COUNT(*) FROM users;
-SELECT COUNT(*) FROM categories;
+SELECT COUNT(*) FROM events;
 SELECT COUNT(*) FROM posts;
 EOF
 
@@ -977,16 +977,16 @@ uv run python .claude/skills/tests-kit/scripts/check_testcases.py
 | User Journey | UI 入口 | 相关页面 |
 |-------------|---------|---------|
 | J-001 用户注册 | Header → 注册按钮 | /register |
-| J-002 创建活动 | Sidebar → 创建活动 | /categories/new |
-| J-003 提交作品 | 活动详情 → 提交按钮 | /categories/[id]/submit |
+| J-002 创建活动 | Sidebar → 创建活动 | /events/new |
+| J-003 提交作品 | 活动详情 → 提交按钮 | /events/[id]/submit |
 | ... | ... | ... |
 
 **Endpoint 覆盖检查：**
 
 ```
-✅ GET /api/categories — 已实现
-✅ POST /api/categories — 已实现
-🚧 POST /api/categories/{id}/submissions — Not Implemented
+✅ GET /api/events — 已实现
+✅ POST /api/events — 已实现
+🚧 POST /api/events/{id}/submissions — Not Implemented
 🚧 GET /api/notifications — Not Implemented
 ```
 
@@ -1187,19 +1187,19 @@ API_URL=https://custom-api.example.com/api
 1. frontend/components/ui/        # 基础 UI 组件
    ├── button.tsx                  # (shadcn)
    ├── card.tsx                    # (shadcn)
-   ├── category-card.tsx           # (自定义)
+   ├── event-card.tsx           # (自定义)
    └── ...
 
 2. frontend/components/           # 业务组件
    ├── header.tsx
    ├── sidebar.tsx
-   ├── category-list.tsx
+   ├── event-list.tsx
    └── ...
 
 3. frontend/app/**/page.tsx       # 页面组件
    ├── page.tsx                    # 首页
-   ├── categories/page.tsx         # 活动列表
-   ├── categories/[id]/page.tsx    # 活动详情
+   ├── events/page.tsx         # 活动列表
+   ├── events/[id]/page.tsx    # 活动详情
    └── ...
 ```
 
@@ -1314,27 +1314,27 @@ export default defineConfig({
 import { test, expect } from '@playwright/test';
 
 // J-002: 创建活动
-test('organizer can create a category', async ({ page }) => {
+test('organizer can create a event', async ({ page }) => {
   // 设置 Mock 用户（organizer）
   await page.addInitScript(() => {
     localStorage.setItem('mockUserId', 'user_organizer');
   });
 
-  await page.goto('/categories/new');
+  await page.goto('/events/new');
   await page.fill('[name="name"]', 'Test Hackathon');
   await page.fill('[name="description"]', 'A test event');
   await page.click('button[type="submit"]');
 
-  await expect(page).toHaveURL(/\/categories\/\w+/);
+  await expect(page).toHaveURL(/\/events\/\w+/);
 });
 
 // J-003: 提交作品
-test('participant can submit to category', async ({ page }) => {
+test('participant can submit to event', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('mockUserId', 'user_participant');
   });
 
-  await page.goto('/categories/cat_1');
+  await page.goto('/events/cat_1');
   await page.click('text=提交作品');
   // ...
 });
@@ -1605,7 +1605,7 @@ make seed
 
 ### Q: 生产环境请求 `/api/*` 返回 404，但后端日志显示收到的是 `/*`？
 
-现象示例：浏览器请求 `GET /api/categories`，但后端日志却是 `GET /categories`，从而触发 404。
+现象示例：浏览器请求 `GET /api/events`，但后端日志却是 `GET /events`，从而触发 404。
 
 常见原因是 Nginx 反向代理的 `proxy_pass` 写法导致路径前缀被剥离：
 

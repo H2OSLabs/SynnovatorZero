@@ -78,7 +78,7 @@ frontend/components/
 │   ├── post-detail.tsx
 │   ├── proposal-list.tsx
 │   ├── proposal-detail.tsx
-│   ├── category-detail.tsx
+│   ├── event-detail.tsx
 │   ├── user-profile.tsx
 │   ├── team.tsx
 │   ├── assets.tsx
@@ -379,7 +379,7 @@ After composing the page component:
 | `post-detail.pen` | `post-detail.tsx` | Card, Badge, Avatar, ScrollArea |
 | `proposal-list.pen` | `proposal-list.tsx` | Card, Badge, Tabs |
 | `proposal-detail.pen` | `proposal-detail.tsx` | Card, Badge, Avatar, Tabs |
-| `category-detail.pen` | `category-detail.tsx` | Card, Badge, Tabs |
+| `event-detail.pen` | `event-detail.tsx` | Card, Badge, Tabs |
 | `user-profile.pen` | `user-profile.tsx` | Card, Avatar, Badge, Tabs |
 | `team.pen` | `team.tsx` | Card, Avatar, Badge, Tabs |
 | `assets.pen` | `assets.tsx` | Card, Badge, DropdownMenu |

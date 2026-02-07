@@ -6,8 +6,8 @@
 
 ### 数据模型
 
-- [data-types.md](./data-types.md) — 内容类型 Schema（category, post, resource, rule, user, group, interaction）、枚举值汇总、角色定义
-- [relationships.md](./relationships.md) — 关系 Schema（category:rule, category:post, category:group, category:category, post:post, post:resource, group:user, user:user, target:interaction）
+- [data-types.md](./data-types.md) — 内容类型 Schema（event, post, resource, rule, user, group, interaction）、枚举值汇总、角色定义
+- [relationships.md](./relationships.md) — 关系 Schema（event:rule, event:post, event:group, event:event, post:post, post:resource, group:user, user:user, target:interaction）
 
 ### 操作规范
 

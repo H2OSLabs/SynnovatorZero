@@ -10,7 +10,7 @@ import { UserCard } from "@/components/cards/UserCard"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getCategories, type Category } from "@/lib/api-client"
+import { getCategories, type Event } from "@/lib/api-client"
 
 const mockPosts = [
   { id: 1, title: "基于大模型的智能教育平台", type: "proposal", status: "published", tags: ["AI"], like_count: 128, comment_count: 32, created_by: { id: 1, username: "alice", display_name: "Alice" } },
@@ -29,7 +29,7 @@ const mockUsers = [
 
 export default function ExplorePage() {
   const [activeTab, setActiveTab] = useState("all")
-  const [categories, setCategories] = useState<Category[]>([])
+  const [events, setCategories] = useState<Event[]>([])
   const [isLoadingCategories, setIsLoadingCategories] = useState(true)
   const [categoriesError, setCategoriesError] = useState<string | null>(null)
 
@@ -94,7 +94,7 @@ export default function ExplorePage() {
                 <div className="text-center py-10 text-nf-muted">{categoriesError}</div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {categories.map((cat) => (
+                  {events.map((cat) => (
                     <CategoryCard
                       key={cat.id}
                       id={cat.id}
@@ -142,7 +142,7 @@ export default function ExplorePage() {
             <div className="text-center py-10 text-nf-muted">{categoriesError}</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {categories.map((cat) => (
+              {events.map((cat) => (
                 <CategoryCard
                   key={cat.id}
                   id={cat.id}

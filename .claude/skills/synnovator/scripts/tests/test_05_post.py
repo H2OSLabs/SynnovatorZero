@@ -53,7 +53,7 @@ class TestPost(TestRunner):
 
     def test_tc_post_012_create_proposal_type(self):
         """TC-POST-012: Create proposal type post."""
-        print("\n=== TC-POST-012: For Category Type ===")
+        print("\n=== TC-POST-012: For Event Type ===")
         pass
 
     def test_tc_post_013_create_certificate_type(self):

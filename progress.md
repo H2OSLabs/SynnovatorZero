@@ -28,11 +28,11 @@
   - 创建 app/database.py (SQLAlchemy engine, session, Base, get_db)
   - 创建 app/crud/base.py (CRUDBase 泛型基类)
   - 修复所有生成代码的问题:
-    - Models: 删除重复列，修复 null→None，添加缺失 JSON import，修复表名 categorys→categories
-    - Schemas: 修复非 DB 类型的错误继承层次，添加缺失 Dict import，修正 Category/Comment/Rating 的字段设计
+    - Models: 删除重复列，修复 null→None，添加缺失 JSON import，修复表名 categorys→events
+    - Schemas: 修复非 DB 类型的错误继承层次，添加缺失 Dict import，修正 Event/Comment/Rating 的字段设计
     - Routers: 修复 None 参数名，添加 Any import，修复返回类型，改 path param 类型 str→int
   - 删除 44 个不必要的 model 文件 + 26 个不必要的 schema 文件
-  - 创建 7 个 CRUD 模块 (users, resources, categories, posts, rules, groups, interactions)
+  - 创建 7 个 CRUD 模块 (users, resources, events, posts, rules, groups, interactions)
   - 更新 main.py 为正式 FastAPI 应用（8 router 挂载 + CORS + health check）
   - 更新所有 __init__.py 导出
   - 添加 pydantic[email] 依赖
@@ -124,7 +124,7 @@
 | 2026-01-27 | email-validator not installed | 1 | Added pydantic[email] dependency |
 | 2026-01-27 | uvicorn shebang wrong venv | 1 | Use `uv run python -m uvicorn` instead |
 
-### Phase 3: Layer 1 — rule, group, category CRUD
+### Phase 3: Layer 1 — rule, group, event CRUD
 - **Status:** complete
 - **Started:** 2026-01-27
 - Actions taken:
@@ -136,24 +136,24 @@
   - **Group schema**: Literal["public","private"] 枚举校验; model_config
   - **Group CRUD**: soft delete; get/get_multi 过滤已删除
   - **Group router**: require_current_user_id auth; created_by 自动设置; 成员管理 stub 保留
-  - **Category model**: created_by 改为 Integer 类型
-  - **Category schema**: Literal 枚举校验 type(competition|operation), status(draft|published|closed); VALID_STATUS_TRANSITIONS 状态机; model_config
-  - **Category CRUD**: soft delete; get/get_multi 过滤已删除
-  - **Category router**: require_current_user_id auth; created_by 自动设置; 状态机转换校验 (422 on invalid)
-  - **40 tests**: 12 rule + 12 group + 16 category, 全部通过
+  - **Event model**: created_by 改为 Integer 类型
+  - **Event schema**: Literal 枚举校验 type(competition|operation), status(draft|published|closed); VALID_STATUS_TRANSITIONS 状态机; model_config
+  - **Event CRUD**: soft delete; get/get_multi 过滤已删除
+  - **Event router**: require_current_user_id auth; created_by 自动设置; 状态机转换校验 (422 on invalid)
+  - **40 tests**: 12 rule + 12 group + 16 event, 全部通过
 - Files modified:
   - app/models/rule.py (deleted_at, created_by→Integer)
   - app/models/group.py (created_by, deleted_at, cleanup)
-  - app/models/category.py (created_by→Integer)
+  - app/models/event.py (created_by→Integer)
   - app/schemas/rule.py (rewritten: ScoringCriterion, validators)
   - app/schemas/group.py (rewritten: Literal, model_config)
-  - app/schemas/category.py (rewritten: Literal, state machine)
+  - app/schemas/event.py (rewritten: Literal, state machine)
   - app/crud/rules.py (rewritten: soft delete)
   - app/crud/groups.py (rewritten: soft delete)
-  - app/crud/categories.py (rewritten: soft delete)
+  - app/crud/events.py (rewritten: soft delete)
   - app/routers/rules.py (rewritten: auth, created_by)
   - app/routers/groups.py (rewritten: auth, created_by)
-  - app/routers/categories.py (rewritten: auth, status validation)
+  - app/routers/events.py (rewritten: auth, status validation)
   - app/tests/test_rules.py (created: 12 tests)
   - app/tests/test_groups.py (created: 12 tests)
   - app/tests/test_categories.py (created: 16 tests)
@@ -193,11 +193,11 @@
 ### Deferred to Later Phases (from Phase 3)
 | Test Case | Reason |
 |-----------|--------|
-| TC-RULE-100~109 | 规则执行校验 (需 category_post 关系, Phase 6) |
+| TC-RULE-100~109 | 规则执行校验 (需 event_post 关系, Phase 6) |
 | TC-GRP-003~008 | 团队成员审批流程 (需 group_user 关系, Phase 5) |
 | TC-GRP-901 | 非 owner/admin 修改团队权限检查 (需完整 auth, Phase 7) |
 | TC-CAT-020 cascade | 级联删除关系 (需 relationship tables, Phase 7) |
-| TC-RULE-020 cascade | 级联删除 category:rule 关系 (需 relationship tables, Phase 7) |
+| TC-RULE-020 cascade | 级联删除 event:rule 关系 (需 relationship tables, Phase 7) |
 
 ## Test Results
 | Test | Input | Expected | Actual | Status |
@@ -356,7 +356,7 @@
 ### Deferred to Later Phases (from Phase 5)
 | Test Case | Reason |
 |-----------|--------|
-| TC-REL-GU-902 | 团队已满时加入被拒绝 (需 category_group + rule enforcement, Phase 6) |
+| TC-REL-GU-902 | 团队已满时加入被拒绝 (需 event_group + rule enforcement, Phase 6) |
 | TC-FRIEND-007 | 删除用户后级联解除 user:user (需 soft delete cascade, Phase 7) |
 
 ## Test Results
@@ -365,26 +365,26 @@
 | Phase 5 pytest | `pytest app/tests/ -v` | 146 passed | 146 passed, 0 failed | PASS |
 | Phase 6 pytest | `pytest app/tests/ -v` | 186 passed | 186 passed, 0 failed | PASS |
 
-### Phase 6: Layer 4 — complex relations (category_rule, category_post, category_group, target_interaction)
+### Phase 6: Layer 4 — complex relations (event_rule, event_post, event_group, target_interaction)
 - **Status:** complete
 - **Started:** 2026-01-27
 - Actions taken:
-  - **CategoryRule**: 模型 + CRUD + 优先级排序 + 重复检查(409) + 路由端点 (list/add/update priority/remove)
-  - **CategoryPost**: 模型 + CRUD + relation_type 过滤 + max_submissions 规则引擎 + 路由端点 (list/add/remove)
-  - **CategoryGroup**: 模型 + CRUD + 重复报名检查(409) + is_user_in_category 查询 + 路由端点 (list/add/remove)
-  - **TargetInteraction**: 多态绑定模型(target_type: post|category|resource) + like 去重 + cache 更新
+  - **EventRule**: 模型 + CRUD + 优先级排序 + 重复检查(409) + 路由端点 (list/add/update priority/remove)
+  - **EventPost**: 模型 + CRUD + relation_type 过滤 + max_submissions 规则引擎 + 路由端点 (list/add/remove)
+  - **EventGroup**: 模型 + CRUD + 重复报名检查(409) + is_user_in_category 查询 + 路由端点 (list/add/remove)
+  - **TargetInteraction**: 多态绑定模型(target_type: post|event|resource) + like 去重 + cache 更新
   - **Interactions router 重写**: like/unlike(POST/DELETE) + comment(POST/GET) + rating(POST/GET) 全部通过 target_interaction 绑定
   - **缓存更新**: _update_post_cache() 自动维护 like_count, comment_count, average_rating
   - **Bug 修复**: PaginatedCommentList/RatingList → PaginatedInteractionList (旧 Comment/Rating schema 与 Interaction 模型不兼容); comment/rating POST 端点添加 response_model=schemas.Interaction; Phase 4 interaction tests 补充 X-User-Id header
-  - **40 new tests**: 7 category_rule + 10 category_post + 7 category_group + 16 target_interaction
+  - **40 new tests**: 7 event_rule + 10 event_post + 7 event_group + 16 target_interaction
 - Files created:
-  - app/models/category_rule.py (CategoryRule model)
-  - app/models/category_post.py (CategoryPost model)
-  - app/models/category_group.py (CategoryGroup model)
+  - app/models/event_rule.py (EventRule model)
+  - app/models/event_post.py (EventPost model)
+  - app/models/event_group.py (EventGroup model)
   - app/models/target_interaction.py (TargetInteraction model)
-  - app/schemas/category_rule.py (CategoryRuleResponse)
-  - app/schemas/category_post.py (CategoryPostResponse)
-  - app/schemas/category_group.py (CategoryGroupResponse)
+  - app/schemas/event_rule.py (CategoryRuleResponse)
+  - app/schemas/event_post.py (CategoryPostResponse)
+  - app/schemas/event_group.py (CategoryGroupResponse)
   - app/schemas/target_interaction.py (TargetInteractionCreate, TargetInteractionResponse)
   - app/schemas/paginatedinteractionlist.py (PaginatedInteractionList)
   - app/crud/category_rules.py (CRUDCategoryRule)
@@ -399,7 +399,7 @@
   - app/models/__init__.py (add Phase 6 models)
   - app/schemas/__init__.py (add Phase 6 schemas + PaginatedInteractionList)
   - app/crud/__init__.py (add Phase 6 CRUDs)
-  - app/routers/categories.py (wire up category_rule, category_post, category_group endpoints)
+  - app/routers/events.py (wire up event_rule, event_post, event_group endpoints)
   - app/routers/interactions.py (complete rewrite: target_interaction binding, auth, cache)
   - app/tests/test_interactions.py (fix Phase 4 tests: add X-User-Id headers)
 
@@ -407,24 +407,24 @@
 | Test Case | Scenario | Status |
 |-----------|----------|--------|
 | TC-REL-CR-001 | 将规则关联到活动 (priority) | PASS |
-| TC-REL-CR-002 | 更新 category:rule priority | PASS |
-| TC-REL-CR-003 | 删除 category:rule (规则本身保留) | PASS |
+| TC-REL-CR-002 | 更新 event:rule priority | PASS |
+| TC-REL-CR-003 | 删除 event:rule (规则本身保留) | PASS |
 | TC-REL-CR-900 | 重复关联同一规则被拒绝 (409) | PASS |
-| TC-REL-CR-boundary | 非法 category/rule ID 返回 404 | PASS |
+| TC-REL-CR-boundary | 非法 event/rule ID 返回 404 | PASS |
 | TC-REL-CP-001 | 帖子关联为 submission | PASS |
 | TC-REL-CP-002 | 帖子关联为 reference | PASS |
 | TC-REL-CP-003 | 按 relation_type=submission 筛选 | PASS |
-| TC-REL-CP-004 | 无筛选读取所有 category:post | PASS |
+| TC-REL-CP-004 | 无筛选读取所有 event:post | PASS |
 | TC-REL-CP-902 | max_submissions 超限被拒绝 (422) | PASS |
 | TC-REL-CP-ref | reference 不受 max_submissions 限制 | PASS |
-| TC-REL-CP-dup | 重复 category:post 被拒绝 (409) | PASS |
-| TC-REL-CP-remove | 删除 category:post 关系 | PASS |
-| TC-REL-CP-boundary | 非法 category/post ID 返回 404 | PASS |
+| TC-REL-CP-dup | 重复 event:post 被拒绝 (409) | PASS |
+| TC-REL-CP-remove | 删除 event:post 关系 | PASS |
+| TC-REL-CP-boundary | 非法 event/post ID 返回 404 | PASS |
 | TC-REL-CG-001 | 团队报名活动 | PASS |
 | TC-REL-CG-002 | 读取活动已报名团队列表 | PASS |
 | TC-REL-CG-003 | 团队取消报名 | PASS |
 | TC-REL-CG-900 | 重复报名被拒绝 (409) | PASS |
-| TC-REL-CG-boundary | 非法 category/group/relation ID 返回 404 | PASS |
+| TC-REL-CG-boundary | 非法 event/group/relation ID 返回 404 | PASS |
 | TC-IACT-001 | 点赞 → like_count 从 0→1 | PASS |
 | TC-IACT-002 | 重复点赞被拒绝 (409) | PASS |
 | TC-IACT-003 | 取消点赞 → like_count 回到 0 | PASS |
@@ -444,18 +444,18 @@
 |-----------|--------|
 | TC-REL-CP-900 | submission_deadline 截止后拒绝 (需完整规则引擎时间窗口, Phase 7) |
 | TC-REL-CP-901 | submission_format 格式检查 (需 resource 格式校验, Phase 7) |
-| TC-REL-CG-901 | 同一用户多团队报名拒绝 (需 member+category_group 联合查询, Phase 7) |
-| TC-REL-GU-902 | 团队已满时加入拒绝 (需 category_group + rule enforcement, Phase 7) |
+| TC-REL-CG-901 | 同一用户多团队报名拒绝 (需 member+event_group 联合查询, Phase 7) |
+| TC-REL-GU-902 | 团队已满时加入拒绝 (需 event_group + rule enforcement, Phase 7) |
 | TC-IACT-014 | 删除父评论级联删除子回复 (Phase 7) |
 | TC-IACT-050~051 | 修改评论/评分 (Phase 7) |
 | TC-IACT-060~063 | 非 post 目标互动 (Phase 7) |
 | TC-IACT-901~905 | 负向/边界用例 (Phase 7) |
 
-### Phase 7: Layer 5-6 — category_category, cascade delete, permissions, rule engine
+### Phase 7: Layer 5-6 — event_event, cascade delete, permissions, rule engine
 - **Status:** complete
 - **Started:** 2026-01-27
 - Actions taken:
-  - **category_category 关系**: 新建 CategoryCategory 模型 (source→target, stage/track/prerequisite), 环检测 BFS, CRUD + router 端点 — 14 tests
+  - **event_event 关系**: 新建 EventEvent 模型 (source→target, stage/track/prerequisite), 环检测 BFS, CRUD + router 端点 — 14 tests
   - **级联删除**: cascade_delete_category, cascade_delete_group, cascade_delete_post 服务, 多表依赖链清理 — 16 tests
   - **权限 + 可见性**: require_role("organizer","admin") 工厂, draft 帖子/活动仅 creator 可见, private group 仅成员/creator 可见 — 17 tests + 10 regression fixes
   - **声明式规则引擎**: app/services/rule_engine.py (~400 行):
@@ -463,14 +463,14 @@
     - 7 种条件评估器: time_window, count, exists, field_match, resource_format, resource_required, aggregate
     - on_fail 行为: deny(raise), warn(return), flag
     - Post-hook actions: compute_ranking, flag_disqualified, award_certificate
-    - 集成到 categories router (category_post creation, status change) 和 groups router (group_user creation)
+    - 集成到 events router (event_post creation, status change) 和 groups router (group_user creation)
     — 23 tests
-  - **Bug fixes**: SessionLocal() vs db_session fixture 隔离问题; category status update post-hook 时序 bug
+  - **Bug fixes**: SessionLocal() vs db_session fixture 隔离问题; event status update post-hook 时序 bug
   - **Total: 256 tests passing (186 + 70 new)**
 - Files created:
-  - app/models/category_category.py
-  - app/schemas/category_category.py
-  - app/crud/category_categories.py
+  - app/models/event_event.py
+  - app/schemas/event_event.py
+  - app/crud/event_events.py
   - app/services/cascade_delete.py
   - app/services/rule_engine.py
   - app/tests/test_category_categories.py (14 tests)
@@ -481,7 +481,7 @@
   - app/models/rule.py (added checks JSON column)
   - app/schemas/rule.py (CheckCondition, CheckDefinition models)
   - app/crud/category_groups.py (added get_multi_by_group)
-  - app/routers/categories.py (rule engine integration, visibility filtering)
+  - app/routers/events.py (rule engine integration, visibility filtering)
   - app/routers/groups.py (rule engine integration for group_user, visibility filtering)
   - app/deps.py (require_role factory)
   - app/tests/test_cascade_delete.py (regression fixes: X-User-Id headers)
@@ -491,21 +491,21 @@
 ### Phase 7 Test Coverage
 | Test Case | Scenario | Status |
 |-----------|----------|--------|
-| TC-STAGE-001 | category_category stage 关系创建 | PASS |
-| TC-STAGE-002 | category_category track 关系创建 | PASS |
-| TC-STAGE-003 | category_category prerequisite 关系创建 | PASS |
+| TC-STAGE-001 | event_event stage 关系创建 | PASS |
+| TC-STAGE-002 | event_event track 关系创建 | PASS |
+| TC-STAGE-003 | event_event prerequisite 关系创建 | PASS |
 | TC-STAGE-004 | 环检测拒绝循环依赖 (422) | PASS |
 | TC-STAGE-005 | 自引用拒绝 (422) | PASS |
 | TC-STAGE-006 | 重复关联拒绝 (409) | PASS |
 | TC-STAGE-007 | stage_order 排序 | PASS |
-| TC-DEL-001 | 删除 category 级联清理 rules/posts/groups/associations | PASS |
+| TC-DEL-001 | 删除 event 级联清理 rules/posts/groups/associations | PASS |
 | TC-DEL-002 | 删除 group 级联清理 members/category_groups | PASS |
 | TC-DEL-003 | 删除 post 级联清理 resources/relations/interactions/category_posts | PASS |
-| TC-PERM-001 | organizer 可创建 category | PASS |
-| TC-PERM-002 | admin 可创建 category | PASS |
-| TC-PERM-003 | participant 不能创建 category (403) | PASS |
+| TC-PERM-001 | organizer 可创建 event | PASS |
+| TC-PERM-002 | admin 可创建 event | PASS |
+| TC-PERM-003 | participant 不能创建 event (403) | PASS |
 | TC-PERM-004 | draft post 仅 creator 可见 | PASS |
-| TC-PERM-005 | draft category 仅 creator 可见 | PASS |
+| TC-PERM-005 | draft event 仅 creator 可见 | PASS |
 | TC-PERM-006 | private group 仅 creator/member 可见 | PASS |
 | TC-ENGINE-001 | time_window 条件: 在窗口内通过 | PASS |
 | TC-ENGINE-002 | time_window 条件: 窗口外拒绝 | PASS |
@@ -527,7 +527,7 @@
 - **Status:** complete
 - **Started:** 2026-01-27
 - Actions taken:
-  - **Router integration**: 添加 rule engine pre-checks 到 category status change 和 category_group 注册端点
+  - **Router integration**: 添加 rule engine pre-checks 到 event status change 和 event_group 注册端点
   - **Rule engine enhancements**:
     - `_eval_exists` 添加 `post` entity type (profile post 检查)
     - `_eval_exists` 中 `group_user` 使用 filter status 参数
@@ -546,7 +546,7 @@
   - app/tests/test_closure_rules.py (10 tests)
   - app/tests/test_resource_transfer.py (4 tests)
 - Files modified:
-  - app/routers/categories.py (rule engine pre-checks for status change + group registration)
+  - app/routers/events.py (rule engine pre-checks for status change + group registration)
   - app/services/rule_engine.py (post entity, tie handling, disqualification filtering, flag_disqualified post target)
 
 ### Phase 8 Test Coverage

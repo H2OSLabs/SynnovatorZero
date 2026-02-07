@@ -2,14 +2,14 @@
 
 > **格式约定：** 每条用例仅描述「场景」与「预期结果」，不包含测试方法和执行过程。
 
-> 活动结束规则通过 Rule 的 `checks` 字段声明，在 `update_content(category.status)` 操作点触发。pre 阶段用于关闭前校验，post 阶段用于关闭后的终审、排名和颁奖。
+> 活动结束规则通过 Rule 的 `checks` 字段声明，在 `update_content(event.status)` 操作点触发。pre 阶段用于关闭前校验，post 阶段用于关闭后的终审、排名和颁奖。
 
 ---
 
 ## 16.1 活动关闭前校验（pre phase）
 
 **TC-CLOSE-001：活动关闭前校验所有团队人数**
-活动关联了一条 Rule，其 `checks` 包含：`{ trigger: update_content(category.status), phase: pre, condition: { type: field_match, params: { entity: category, target: $current, field: status, op: "==", value: closed } }, on_fail: warn, message: "部分团队人数不足" }`。将活动 status 从 published 更新为 closed。由于 `on_fail: warn`，操作允许执行但返回警告信息。
+活动关联了一条 Rule，其 `checks` 包含：`{ trigger: update_content(event.status), phase: pre, condition: { type: field_match, params: { entity: event, target: $current, field: status, op: "==", value: closed } }, on_fail: warn, message: "部分团队人数不足" }`。将活动 status 从 published 更新为 closed。由于 `on_fail: warn`，操作允许执行但返回警告信息。
 
 **TC-CLOSE-002：活动关闭前严格校验（deny 模式）**
 活动关联了一条 Rule，其 `checks` 包含 pre phase + `on_fail: deny` 的条件：所有报名团队必须有至少一个 submission。某团队已报名但未提交任何帖子。将活动 status 更新为 closed 被拒绝，返回 "not all teams have submissions" 错误。
@@ -17,7 +17,7 @@
 ## 16.2 活动关闭后终审（post phase — flag_disqualified）
 
 **TC-CLOSE-010：活动关闭后标记不合格团队（团队人数不足）**
-活动关联了一条 Rule，其 `checks` 包含：`{ trigger: update_content(category.status), phase: post, condition: { type: field_match, params: { entity: category, target: $current, field: status, op: "==", value: closed } }, action: flag_disqualified, action_params: { target: group, tag: "team_too_small" } }`。活动下有 3 个报名团队，其中 Team C 只有 1 名成员（Rule 要求 min_team_size=2）。活动关闭后，Team C 被添加 "team_too_small" 标记，Team A 和 Team B 不受影响。
+活动关联了一条 Rule，其 `checks` 包含：`{ trigger: update_content(event.status), phase: post, condition: { type: field_match, params: { entity: event, target: $current, field: status, op: "==", value: closed } }, action: flag_disqualified, action_params: { target: group, tag: "team_too_small" } }`。活动下有 3 个报名团队，其中 Team C 只有 1 名成员（Rule 要求 min_team_size=2）。活动关闭后，Team C 被添加 "team_too_small" 标记，Team A 和 Team B 不受影响。
 
 **TC-CLOSE-011：活动关闭后标记不合格提案（缺少必要 resource）**
 类似 TC-CLOSE-010，但 `action_params: { target: post, tag: "missing_attachment" }`。活动关闭后，未关联 resource 的 submission 帖子被标记为 "missing_attachment"。
@@ -28,7 +28,7 @@
 ## 16.3 排名计算（post phase — compute_ranking）
 
 **TC-CLOSE-020：活动关闭后按 average_rating 计算排名**
-活动关联了一条 Rule，其 `checks` 包含：`{ trigger: update_content(category.status), phase: post, condition: { type: field_match, params: { entity: category, target: $current, field: status, op: "==", value: closed } }, action: compute_ranking, action_params: { source_field: average_rating, order: desc, output_tag_prefix: "rank_" } }`。活动下有 3 个 submission 帖子，average_rating 分别为 85.5、90.2、78.0。活动关闭后，帖子被分别添加 tag "rank_2"、"rank_1"、"rank_3"。
+活动关联了一条 Rule，其 `checks` 包含：`{ trigger: update_content(event.status), phase: post, condition: { type: field_match, params: { entity: event, target: $current, field: status, op: "==", value: closed } }, action: compute_ranking, action_params: { source_field: average_rating, order: desc, output_tag_prefix: "rank_" } }`。活动下有 3 个 submission 帖子，average_rating 分别为 85.5、90.2、78.0。活动关闭后，帖子被分别添加 tag "rank_2"、"rank_1"、"rank_3"。
 
 **TC-CLOSE-021：average_rating 相同时排名并列**
 活动下有 2 个 submission 帖子，average_rating 均为 85.0。活动关闭后，两个帖子均被添加 tag "rank_1"，下一个排名为 "rank_3"（跳过 rank_2）。
@@ -73,7 +73,7 @@ TC-CLOSE-030 颁发的证书帖子（type=certificate, status=published, visibil
 ## 16.6 负向/边界
 
 **TC-CLOSE-900：非 closed 状态变更不触发关闭 checks**
-活动关联了 `update_content(category.status)` trigger 的 checks。将活动从 draft 更新为 published。post-phase 的 `compute_ranking` 和 `award_certificate` 不触发（condition 中 `field_match` 要求 status=="closed" 不满足）。
+活动关联了 `update_content(event.status)` trigger 的 checks。将活动从 draft 更新为 published。post-phase 的 `compute_ranking` 和 `award_certificate` 不触发（condition 中 `field_match` 要求 status=="closed" 不满足）。
 
 **TC-CLOSE-901：活动无关联 Rule 时关闭不触发任何 check**
 活动未关联任何 Rule。将活动 status 更新为 closed。操作正常成功，无任何 check 执行。

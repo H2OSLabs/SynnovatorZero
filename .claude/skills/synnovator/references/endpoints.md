@@ -18,7 +18,7 @@ uv run python .claude/skills/synnovator/scripts/engine.py [OPTIONS] COMMAND TYPE
 ```bash
 engine.py create <type> --data '<json>' [--body 'markdown content'] [--user <user_id>]
 ```
-Types: `category`, `post`, `resource`, `rule`, `user`, `group`, `interaction`
+Types: `event`, `post`, `resource`, `rule`, `user`, `group`, `interaction`
 
 Markdown body can be passed via `--body` flag or `"_body"` key in JSON data.
 Records are stored as `.md` files with YAML frontmatter + Markdown body.
@@ -56,7 +56,7 @@ Use `_` separator or `:` separator for relation type names.
 ```bash
 engine.py create <relation_type> --data '<json>'
 ```
-Relation types: `category_rule`, `category_post`, `category_group`, `category_category`, `post_post`, `post_resource`, `group_user`, `user_user`, `target_interaction`
+Relation types: `event_rule`, `event_post`, `event_group`, `event_event`, `post_post`, `post_resource`, `group_user`, `user_user`, `target_interaction`
 
 ### READ
 ```bash
@@ -80,16 +80,16 @@ engine.py delete <relation_type> --filters '<json>'
 engine.py create user --data '{"username":"alice","email":"alice@example.com","display_name":"Alice","role":"organizer"}'
 ```
 
-### Create a category
+### Create a event
 ```bash
-engine.py --user user_alice create category --data '{"name":"AI Hackathon","description":"AI competition","type":"competition"}'
+engine.py --user user_alice create event --data '{"name":"AI Hackathon","description":"AI competition","type":"competition"}'
 ```
 
-### Create a rule and link to category
+### Create a rule and link to event
 ```bash
 engine.py --user user_alice create rule --data '{"name":"Submission Rule","description":"Rules for submissions","allow_public":true,"require_review":true,"scoring_criteria":[{"name":"Innovation","weight":30,"description":"Originality"},{"name":"Technical","weight":30,"description":"Code quality"},{"name":"Practical","weight":25,"description":"Usefulness"},{"name":"Demo","weight":15,"description":"Presentation"}]}'
 
-engine.py create category_rule --data '{"category_id":"cat_xxx","rule_id":"rule_xxx","priority":1}'
+engine.py create event_rule --data '{"event_id":"cat_xxx","rule_id":"rule_xxx","priority":1}'
 ```
 
 ### Create a group and add members
@@ -104,10 +104,10 @@ engine.py create group_user --data '{"group_id":"grp_xxx","user_id":"user_bob","
 engine.py update group_user --filters '{"group_id":"grp_xxx","user_id":"user_bob"}' --data '{"status":"accepted"}'
 ```
 
-### Create post and link to category
+### Create post and link to event
 ```bash
 engine.py --user user_alice create post --data '{"title":"My Submission","type":"proposal","tags":["AI"]}'
-engine.py create category_post --data '{"category_id":"cat_xxx","post_id":"post_xxx","relation_type":"submission"}'
+engine.py create event_post --data '{"event_id":"cat_xxx","post_id":"post_xxx","relation_type":"submission"}'
 ```
 
 ### Like a post
@@ -161,18 +161,18 @@ engine.py read user_user --filters '{"source_user_id":"user_bob","target_user_id
 ### Create activity stage chain
 ```bash
 # Stage 1 -> Stage 2 (sequential)
-engine.py create category_category --data '{"source_category_id":"cat_stage1","target_category_id":"cat_stage2","relation_type":"stage","stage_order":1}'
-engine.py create category_category --data '{"source_category_id":"cat_stage2","target_category_id":"cat_stage3","relation_type":"stage","stage_order":2}'
+engine.py create event_event --data '{"source_category_id":"cat_stage1","target_category_id":"cat_stage2","relation_type":"stage","stage_order":1}'
+engine.py create event_event --data '{"source_category_id":"cat_stage2","target_category_id":"cat_stage3","relation_type":"stage","stage_order":2}'
 ```
 
 ### Create parallel tracks
 ```bash
-engine.py create category_category --data '{"source_category_id":"cat_main","target_category_id":"cat_track_a","relation_type":"track"}'
-engine.py create category_category --data '{"source_category_id":"cat_main","target_category_id":"cat_track_b","relation_type":"track"}'
+engine.py create event_event --data '{"source_category_id":"cat_main","target_category_id":"cat_track_a","relation_type":"track"}'
+engine.py create event_event --data '{"source_category_id":"cat_main","target_category_id":"cat_track_b","relation_type":"track"}'
 ```
 
 ### Set prerequisite activity
 ```bash
 # Bounty must close before main competition registration
-engine.py create category_category --data '{"source_category_id":"cat_bounty","target_category_id":"cat_main_competition","relation_type":"prerequisite"}'
+engine.py create event_event --data '{"source_category_id":"cat_bounty","target_category_id":"cat_main_competition","relation_type":"prerequisite"}'
 ```

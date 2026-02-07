@@ -57,23 +57,23 @@ def _update_post_cache(db: Session, post_id: int):
     db.commit()
 
 
-def cascade_delete_category(db: Session, category_id: int):
-    """TC-DEL-001, TC-DEL-010: Delete category with cascade.
+def cascade_delete_event(db: Session, event_id: int):
+    """TC-DEL-001, TC-DEL-010: Delete event with cascade.
 
     Cascade chain:
-    - category_rule relations (hard delete)
-    - category_post relations (hard delete)
-    - category_group relations (hard delete)
-    - category_category relations — both source and target (hard delete)
-    - target_interaction bindings + interactions on this category (hard delete)
-    - category itself (soft delete)
+    - event_rule relations (hard delete)
+    - event_post relations (hard delete)
+    - event_group relations (hard delete)
+    - event_event relations — both source and target (hard delete)
+    - target_interaction bindings + interactions on this event (hard delete)
+    - event itself (soft delete)
     """
-    crud.category_rules.remove_all_by_category(db, category_id=category_id)
-    crud.category_posts.remove_all_by_category(db, category_id=category_id)
-    crud.category_groups.remove_all_by_category(db, category_id=category_id)
-    crud.category_categories.remove_all_by_category(db, category_id=category_id)
-    _cascade_delete_interactions_for_target(db, "category", category_id)
-    crud.categories.remove(db, id=category_id)
+    crud.event_rules.remove_all_by_category(db, event_id=event_id)
+    crud.event_posts.remove_all_by_category(db, event_id=event_id)
+    crud.event_groups.remove_all_by_category(db, event_id=event_id)
+    crud.event_events.remove_all_by_category(db, event_id=event_id)
+    _cascade_delete_interactions_for_target(db, "event", event_id)
+    crud.events.remove(db, id=event_id)
 
 
 def cascade_delete_user(db: Session, user_id: int):
@@ -115,13 +115,13 @@ def cascade_delete_post(db: Session, post_id: int):
     """TC-DEL-012: Delete post with full cascade chain.
 
     Cascade chain:
-    - category_post relations (hard delete)
+    - event_post relations (hard delete)
     - post_post relations — both source and target (hard delete)
     - post_resource relations (hard delete)
     - target_interaction bindings + interactions on this post (hard delete)
     - post itself (soft delete)
     """
-    crud.category_posts.remove_all_by_post(db, post_id=post_id)
+    crud.event_posts.remove_all_by_post(db, post_id=post_id)
     crud.post_posts.remove_all_by_post(db, post_id=post_id)
     crud.post_resources.remove_all_by_post(db, post_id=post_id)
     _cascade_delete_interactions_for_target(db, "post", post_id)
@@ -132,10 +132,10 @@ def cascade_delete_rule(db: Session, rule_id: int):
     """TC-DEL-002, TC-DEL-013: Delete rule with cascade.
 
     Cascade chain:
-    - category_rule relations (hard delete)
+    - event_rule relations (hard delete)
     - rule itself (soft delete)
     """
-    crud.category_rules.remove_all_by_rule(db, rule_id=rule_id)
+    crud.event_rules.remove_all_by_rule(db, rule_id=rule_id)
     crud.rules.remove(db, id=rule_id)
 
 
@@ -144,11 +144,11 @@ def cascade_delete_group(db: Session, group_id: int):
 
     Cascade chain:
     - member (group_user) relations (hard delete)
-    - category_group relations (hard delete)
+    - event_group relations (hard delete)
     - group itself (soft delete)
     """
     crud.members.remove_all_by_group(db, group_id=group_id)
-    crud.category_groups.remove_all_by_group(db, group_id=group_id)
+    crud.event_groups.remove_all_by_group(db, group_id=group_id)
     crud.groups.remove(db, id=group_id)
 
 

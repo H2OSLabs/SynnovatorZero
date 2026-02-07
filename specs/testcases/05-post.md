@@ -27,7 +27,7 @@
 创建一个 type=profile 的帖子（个人资料卡片）。创建成功。
 
 **TC-POST-012：创建 proposal 类型帖子**
-创建一个 type=proposal 的帖子（参赛提案）。创建成功后，可被关联到某个活动（category:post relation_type=submission）。
+创建一个 type=proposal 的帖子（参赛提案）。创建成功后，可被关联到某个活动（event:post relation_type=submission）。
 
 **TC-POST-013：创建 certificate 类型帖子**
 创建一个 type=certificate 的帖子（证书分享帖）。创建成功后，可挂载 resource（证书文件）作为附件或内联。
@@ -35,7 +35,7 @@
 ## 5.3 状态流转
 
 **TC-POST-030：帖子进入 pending_review 状态**
-创建帖子后将 status 更新为 pending_review。若帖子已关联 category 且 rule 设置了 `require_review=true`，这是正确的提交路径。更新成功。
+创建帖子后将 status 更新为 pending_review。若帖子已关联 event 且 rule 设置了 `require_review=true`，这是正确的提交路径。更新成功。
 
 **TC-POST-031：帖子被审核通过（pending_review → published）**
 将 pending_review 状态的帖子更新为 published。此操作代表审核人主动批准，即使 rule 设置 `allow_public=false`，审核通过路径也不受限。更新成功后，status 为 published。
@@ -44,7 +44,7 @@
 将 pending_review 状态的帖子更新为 rejected。更新成功后，status 为 rejected。
 
 **TC-POST-033：草稿发布（draft → published）**
-将 draft 状态的帖子更新为 published。若帖子未关联任何 category 或关联 category 的 rule 允许公开发布（`allow_public=true`），更新成功，updated_at 变更。若 rule 设置 `allow_public=false`，更新被拒绝（见 TC-RULE-106）。
+将 draft 状态的帖子更新为 published。若帖子未关联任何 event 或关联 event 的 rule 允许公开发布（`allow_public=true`），更新成功，updated_at 变更。若 rule 设置 `allow_public=false`，更新被拒绝（见 TC-RULE-106）。
 
 ## 5.4 版本管理
 
@@ -76,7 +76,7 @@
 创建帖子时指定 visibility=private。创建完成后，visibility 字段为 private，帖子仅作者和 Admin 可读取，其他用户读取该帖子返回不可见或权限错误。
 
 **TC-POST-071：private 帖子跳过 pending_review 直接发布**
-创建一个 visibility=private 的帖子，将其关联到一个 rule 设置了 require_review=true、allow_public=false 的活动（category:post）。将帖子 status 直接从 draft 更新为 published。系统允许操作（private 帖子不受 pending_review 流程约束），status 变为 published。
+创建一个 visibility=private 的帖子，将其关联到一个 rule 设置了 require_review=true、allow_public=false 的活动（event:post）。将帖子 status 直接从 draft 更新为 published。系统允许操作（private 帖子不受 pending_review 流程约束），status 变为 published。
 
 **TC-POST-072：private 已发布帖子对非作者不可见**
 一个 visibility=private、status=published 的帖子。非作者用户（包括已登录用户和访客）尝试读取该帖子。系统不返回该帖子或返回权限错误。Admin 可正常读取。

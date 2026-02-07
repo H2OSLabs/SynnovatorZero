@@ -195,7 +195,7 @@ def notify_award(
     user_id: int,
     award_name: str,
     category_name: Optional[str] = None,
-    category_id: Optional[int] = None,
+    event_id: Optional[int] = None,
 ) -> None:
     """Create a notification when a user receives an award.
 
@@ -203,14 +203,14 @@ def notify_award(
         db: Database session
         user_id: The user receiving the award
         award_name: The name of the award
-        category_name: Optional category/event name
-        category_id: Optional category/event ID for the URL
+        category_name: Optional event/event name
+        event_id: Optional event/event ID for the URL
     """
     content = f"恭喜！你获得了「{award_name}」"
     if category_name:
         content += f" (来自活动「{category_name}」)"
 
-    related_url = f"/categories/{category_id}" if category_id else None
+    related_url = f"/events/{event_id}" if event_id else None
 
     notification_crud.create(
         db,

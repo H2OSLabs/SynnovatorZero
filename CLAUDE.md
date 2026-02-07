@@ -64,7 +64,7 @@ Seven content types defined in domain model docs, implemented as SQLAlchemy ORM 
 
 | Type | Purpose |
 |------|---------|
-| `category` | Competition or operational events, linked to rules |
+| `event` | Competition or operational events, linked to rules |
 | `post` | User-submitted content with tags and custom rendering |
 | `resource` | Uploaded file attachments |
 | `rule` | Event rules created by organizers |
@@ -72,7 +72,7 @@ Seven content types defined in domain model docs, implemented as SQLAlchemy ORM 
 | `group` | Teams / permission groups |
 | `interaction` | Likes, comments, ratings on any content type |
 
-Nine relationship types (with junction tables): `category:rule`, `category:post`, `category:group`, `category:category`, `post:post`, `post:resource`, `group:user`, `user:user`, `target:interaction`.
+Nine relationship types (with junction tables): `event:rule`, `event:post`, `event:group`, `event:event`, `post:post`, `post:resource`, `group:user`, `user:user`, `target:interaction`.
 
 All content types use **soft delete** (`deleted_at` field). Cached counters (`like_count`, `comment_count`, `average_rating`) are auto-maintained on `post`.
 
@@ -81,7 +81,7 @@ All content types use **soft delete** (`deleted_at` field). Cached counters (`li
 ### Roles
 
 - **Participant (参赛者):** Browse, register, submit posts, join teams
-- **Organizer (组织者):** Create/manage categories and rules, review content
+- **Organizer (组织者):** Create/manage events and rules, review content
 - **Admin (管理员):** Platform-level user and content management
 
 ### User Journeys (docs/user-journeys.md)

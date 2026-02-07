@@ -140,15 +140,15 @@ def add_group_member(
     if existing:
         raise HTTPException(status_code=409, detail="User is already a member of this group")
     # Rule engine: pre-checks for create_relation(group_user)
-    # Find categories this group is registered to and run checks
-    cat_groups = crud.category_groups.get_multi_by_group(db, group_id=group_id)
+    # Find events this group is registered to and run checks
+    cat_groups = crud.event_groups.get_multi_by_group(db, group_id=group_id)
     for cg in cat_groups:
         from app.services.rule_engine import run_pre_checks, RuleCheckError
         try:
             run_pre_checks(
                 db,
                 trigger="create_relation(group_user)",
-                category_id=cg.category_id,
+                event_id=cg.event_id,
                 context={"user_id": body.user_id, "group_id": group_id},
             )
         except RuleCheckError as e:

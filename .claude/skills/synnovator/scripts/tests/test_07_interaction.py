@@ -82,13 +82,13 @@ class TestInteraction(TestRunner):
         pass
 
     def test_tc_iact_060_like_category(self):
-        """TC-IACT-060: Like a category (activity)."""
-        print("\n=== TC-IACT-060: Like Category ===")
+        """TC-IACT-060: Like a event (activity)."""
+        print("\n=== TC-IACT-060: Like Event ===")
         pass
 
     def test_tc_iact_061_comment_category(self):
-        """TC-IACT-061: Comment on a category."""
-        print("\n=== TC-IACT-061: Comment Category ===")
+        """TC-IACT-061: Comment on a event."""
+        print("\n=== TC-IACT-061: Comment Event ===")
         pass
 
     def test_tc_iact_062_like_resource(self):

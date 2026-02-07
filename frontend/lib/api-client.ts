@@ -176,11 +176,11 @@ export async function getFollowing(userId: number, skip = 0, limit = 20) {
   )
 }
 
-// Categories
+// Events
 export type CategoryStatus = 'draft' | 'published' | 'closed'
 export type CategoryType = 'competition' | 'operation'
 
-export interface Category {
+export interface Event {
   id: number
   name: string
   description: string
@@ -206,13 +206,13 @@ export async function getCategories(
   const params = new URLSearchParams({ skip: String(skip), limit: String(limit) })
   if (filters?.status) params.set('status', filters.status)
   if (filters?.type) params.set('type', filters.type)
-  return apiFetch<{ items: Category[]; total: number; skip: number; limit: number }>(
-    `/categories?${params.toString()}`
+  return apiFetch<{ items: Event[]; total: number; skip: number; limit: number }>(
+    `/events?${params.toString()}`
   )
 }
 
 export async function getCategory(categoryId: number) {
-  return apiFetch<Category>(`/categories/${categoryId}`)
+  return apiFetch<Event>(`/events/${categoryId}`)
 }
 
 export type PostStatus = 'draft' | 'pending_review' | 'published' | 'rejected'
@@ -253,7 +253,7 @@ export interface CreatePostData {
   tags?: string[]
   status?: PostStatus
   visibility?: PostVisibility
-  category_id?: number | null
+  event_id?: number | null
 }
 
 export async function createPost(data: CreatePostData) {

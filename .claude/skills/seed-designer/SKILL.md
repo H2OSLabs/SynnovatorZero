@@ -7,7 +7,7 @@ description: "Derive seed data requirements from test cases. Reads specs/testcas
 
 Derive seed data requirements from test case preconditions. Ensures every piece of seed data is traceable to a specific test case, and every test case has its data preconditions covered.
 
-> **Core Principle:** Seed data is not invented — it is systematically extracted from test case scenarios. If a test case says "user submits a post to a published category", then the seed data must include a user, a published category, and the associated rules.
+> **Core Principle:** Seed data is not invented — it is systematically extracted from test case scenarios. If a test case says "user submits a post to a published event", then the seed data must include a user, a published event, and the associated rules.
 
 ## When to Use
 
@@ -53,7 +53,7 @@ For each test case, identify what data must exist **before** the scenario can ex
 | Scenario Pattern | Implied Precondition |
 |-----------------|---------------------|
 | "用户在...页面" | A user exists (what role?) |
-| "已发布的活动" | A category with status=published exists |
+| "已发布的活动" | A event with status=published exists |
 | "团队 owner 在..." | A group exists with at least one owner member |
 | "用户点击帖子删除按钮" | A post exists, owned by the user |
 | "评委给参赛内容打分" | An organizer user exists, a submission post exists |
@@ -65,7 +65,7 @@ For each test case, identify what data must exist **before** the scenario can ex
 TC-XXX-NNN: [title]
   Preconditions:
     - user: [role] (identifier suggestion)
-    - category: [status] (identifier suggestion)
+    - event: [status] (identifier suggestion)
     - post: [type, status, owner] (identifier suggestion)
     - relationship: [type, between which entities]
 ```
@@ -76,7 +76,7 @@ Many test cases share the same preconditions. Merge identical data requirements.
 
 **Rules:**
 - If TC-A needs "a participant user" and TC-B needs "a participant user", they can share the same seed user
-- If TC-A needs "a published category" and TC-B needs "a draft category", these are different seed records
+- If TC-A needs "a published event" and TC-B needs "a draft event", these are different seed records
 - Group by entity type, then by distinguishing attributes (role, status, type, visibility)
 
 **Assign stable identifiers:**
@@ -87,8 +87,8 @@ Pattern: {entity}_{distinguishing_attribute}_{number}
 Examples:
   user_participant_1    (first participant user)
   user_organizer_1      (first organizer user)
-  cat_published_1       (first published category)
-  cat_draft_1           (first draft category)
+  cat_published_1       (first published event)
+  cat_draft_1           (first draft event)
   post_daily_1          (first daily post)
   group_public_1        (first public group)
 ```
@@ -99,13 +99,13 @@ For preconditions that involve relationships between entities, define the requir
 
 ```
 Example:
-  TC-ENTRY-001 needs: user enrolled in a published category
+  TC-ENTRY-001 needs: user enrolled in a published event
   → Requires:
     - user_participant_1
     - cat_published_1 (with associated rule)
     - rule_entry_1
-    - category_rule: cat_published_1 → rule_entry_1
-    - category_group: cat_published_1 → group_public_1 (team enrollment)
+    - event_rule: cat_published_1 → rule_entry_1
+    - event_group: cat_published_1 → group_public_1 (team enrollment)
     - group_user: group_public_1 → user_participant_1 (owner)
 ```
 
@@ -187,6 +187,6 @@ tests-kit (Insert) → specs/testcases/*.md
 This skill is project-agnostic:
 
 1. **Replace test case paths** — Adjust `specs/testcases/` to your project's test case location
-2. **Replace entity types** — Use your project's entity names instead of user/category/post/etc.
+2. **Replace entity types** — Use your project's entity names instead of user/event/post/etc.
 3. **Replace seed script path** — Point to your project's seed data script
 4. **Adjust extraction heuristics** — The scenario patterns in Step 2 are examples; adapt to your domain's language

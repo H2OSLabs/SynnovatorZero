@@ -208,10 +208,10 @@ def generate_openapi_spec(schema: dict, title: str = "Synnovator API", version: 
 def generate_tags() -> list:
     """Generate API tags for grouping endpoints."""
     return [
-        {"name": "categories", "description": "Activity and competition categories"},
+        {"name": "events", "description": "Activity and competition events"},
         {"name": "posts", "description": "User posts and submissions"},
         {"name": "resources", "description": "File resources and attachments"},
-        {"name": "rules", "description": "Category rules and scoring criteria"},
+        {"name": "rules", "description": "Event rules and scoring criteria"},
         {"name": "users", "description": "User management"},
         {"name": "groups", "description": "Teams and groups"},
         {"name": "interactions", "description": "Likes, comments, and ratings"},
@@ -313,8 +313,8 @@ def generate_schemas(schema: dict) -> dict:
 
     # Generate enum schemas from parsed enums
     enum_schema_map = {
-        "category.type": "CategoryType",
-        "category.status": "CategoryStatus",
+        "event.type": "CategoryType",
+        "event.status": "CategoryStatus",
         "post.type": "PostType",
         "post.status": "PostStatus",
         "user.role": "UserRole",
@@ -337,9 +337,9 @@ def generate_schemas(schema: dict) -> dict:
     # Generate content type schemas
     content_types = schema.get("content_types", {})
 
-    # Category schemas
-    if "category" in content_types:
-        schemas.update(generate_content_schemas("Category", content_types["category"],
+    # Event schemas
+    if "event" in content_types:
+        schemas.update(generate_content_schemas("Event", content_types["event"],
             create_required=["name", "description", "type"],
             response_required=["id", "name", "description", "type", "status", "created_at", "updated_at"],
             has_content=True))
@@ -393,7 +393,7 @@ def generate_schemas(schema: dict) -> dict:
     schemas.update(generate_relation_schemas())
 
     # Paginated response schemas
-    for resource in ["Category", "Post", "Resource", "Rule", "User", "Group", "Comment", "Rating", "Member"]:
+    for resource in ["Event", "Post", "Resource", "Rule", "User", "Group", "Comment", "Rating", "Member"]:
         schemas[f"Paginated{resource}List"] = {
             "type": "object",
             "required": ["items", "total", "skip", "limit"],
@@ -523,8 +523,8 @@ def build_property(field: dict, parent_name: str = "") -> dict:
 def get_enum_ref(parent_name: str, field_name: str) -> str | None:
     """Get enum schema reference name."""
     refs = {
-        ("Category", "type"): "CategoryType",
-        ("Category", "status"): "CategoryStatus",
+        ("Event", "type"): "CategoryType",
+        ("Event", "status"): "CategoryStatus",
         ("Post", "type"): "PostType",
         ("Post", "status"): "PostStatus",
         ("User", "role"): "UserRole",
@@ -700,16 +700,16 @@ def generate_paths(_schema: dict) -> dict:
     """Generate all API paths."""
     paths = {}
 
-    # Categories
-    paths["/categories"] = crud_list_create("categories", "Category")
-    paths["/categories/{category_id}"] = crud_get_update_delete("categories", "Category", "category_id")
-    paths["/categories/{category_id}/rules"] = nested_list_add("categories", "category_id", "rules", "Rule", "CategoryRuleAdd")
-    paths["/categories/{category_id}/rules/{rule_id}"] = nested_remove("categories", "category_id", "rules", "rule_id")
-    paths["/categories/{category_id}/posts"] = nested_list_add("categories", "category_id", "posts", "Post", "CategoryPostAdd", paginated=True, extra_params=[
+    # Events
+    paths["/events"] = crud_list_create("events", "Event")
+    paths["/events/{event_id}"] = crud_get_update_delete("events", "Event", "event_id")
+    paths["/events/{event_id}/rules"] = nested_list_add("events", "event_id", "rules", "Rule", "CategoryRuleAdd")
+    paths["/events/{event_id}/rules/{rule_id}"] = nested_remove("events", "event_id", "rules", "rule_id")
+    paths["/events/{event_id}/posts"] = nested_list_add("events", "event_id", "posts", "Post", "CategoryPostAdd", paginated=True, extra_params=[
         {"name": "relation_type", "in": "query", "schema": {"type": "string", "enum": ["submission", "reference"]}}
     ])
-    paths["/categories/{category_id}/groups"] = nested_list_add("categories", "category_id", "groups", "Group", "CategoryGroupAdd")
-    paths["/categories/{category_id}/resources"] = nested_list_add("categories", "category_id", "resources", "Resource", "CategoryResourceAdd", extra_params=[
+    paths["/events/{event_id}/groups"] = nested_list_add("events", "event_id", "groups", "Group", "CategoryGroupAdd")
+    paths["/events/{event_id}/resources"] = nested_list_add("events", "event_id", "resources", "Resource", "CategoryResourceAdd", extra_params=[
         {"name": "display_type", "in": "query", "schema": {"type": "string", "enum": ["banner", "attachment", "inline"]}}
     ])
 
@@ -833,7 +833,7 @@ def generate_paths(_schema: dict) -> dict:
 def singularize(word: str) -> str:
     """Convert plural to singular form."""
     irregulars = {
-        "categories": "category",
+        "events": "event",
         "resources": "resource",
     }
     if word in irregulars:

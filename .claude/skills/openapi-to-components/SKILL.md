@@ -56,7 +56,7 @@ export interface Post {
   updated_at: string;
 }
 
-export type PostType = "profile" | "team" | "category" | "proposal" | "certificate" | "general";
+export type PostType = "profile" | "team" | "event" | "proposal" | "certificate" | "general";
 export type PostStatus = "draft" | "pending_review" | "published" | "rejected";
 ```
 
@@ -138,7 +138,7 @@ export async function apiFetch<T>(
 
 Create one file per OpenAPI tag. Each function maps to one operation in the spec.
 
-File naming: `frontend/lib/api/{tag}.ts` (e.g., `posts.ts`, `categories.ts`, `users.ts`, `groups.ts`, `resources.ts`, `rules.ts`, `interactions.ts`, `admin.ts`)
+File naming: `frontend/lib/api/{tag}.ts` (e.g., `posts.ts`, `events.ts`, `users.ts`, `groups.ts`, `resources.ts`, `rules.ts`, `interactions.ts`, `admin.ts`)
 
 Pattern for each function:
 
@@ -194,7 +194,7 @@ export function Home() {
 
 // AFTER (server component with real data)
 import { listPosts } from "@/lib/api/posts";
-import { listCategories } from "@/lib/api/categories";
+import { listCategories } from "@/lib/api/events";
 
 export default async function Home() {
   const [postsData, categoriesData] = await Promise.all([
@@ -219,8 +219,8 @@ Field mapping from API response to component props:
 - `Post.like_count` -> like counter display
 - `Post.comment_count` -> comment counter display
 - `Post.content` -> markdown content area
-- `Category.name` -> tab/filter label
-- `Category.cover_image` -> banner/card image src
+- `Event.name` -> tab/filter label
+- `Event.cover_image` -> banner/card image src
 - `User.display_name` -> author name text
 - `User.avatar_url` -> Avatar image src
 - `User.bio` -> user description text
@@ -283,7 +283,7 @@ After generating all files:
 | `post-detail.tsx` | `getPost`, `getUser`, `listPostComments`, `listPostResources`, `listPostRelated` |
 | `proposal-list.tsx` | `listPosts` (type=proposal), `listCategories` |
 | `proposal-detail.tsx` | `getPost`, `getUser`, `listPostComments`, `listPostRatings`, `listPostRelated`, `listPostResources` |
-| `category-detail.tsx` | `getCategory`, `listCategoryRules`, `listCategoryPosts`, `listCategoryGroups` |
+| `event-detail.tsx` | `getCategory`, `listCategoryRules`, `listCategoryPosts`, `listCategoryGroups` |
 | `user-profile.tsx` | `getUser`, `listPosts` (filtered by user), `listResources` |
 | `team.tsx` | `getGroup`, `listGroupMembers`, `getUser` (per member) |
 | `assets.tsx` | `listResources` |
@@ -302,4 +302,4 @@ These frontend features have no matching API endpoint. Skip integration for thes
 - Group avatar
 - Posts filtered by group
 - User statistics aggregation
-- Category-to-category relationships
+- Event-to-event relationships
