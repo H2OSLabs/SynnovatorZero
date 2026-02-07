@@ -1,166 +1,122 @@
-# Task Plan: 工作流审查与修复
+# Task Plan: 后续改进任务
 
-> **目标**: 审查整个开发工作流，修复过时的 Skills 引用，确保文档与实际一致
+> **目标**: 根据工作流审查的后续建议，完成 4 项改进任务
 > **创建时间**: 2026-02-08
 > **状态**: `complete`
 
 ## 背景
 
-1. 用户修复了 19 个前端运行时错误 (d17ea88..4c8ce11)
-2. 分析发现多个根本原因来自工作流和 Skills
-3. 用户指出 `pen-to-react` 已废弃，项目中没有 .pen 文件
-4. 需要全面审查工作流，移除过时内容
+工作流审查任务已完成，发现以下需要改进的项目：
 
-## 发现的问题
-
-### 问题 1: pen-to-react 已废弃但仍被引用
-
-**现状**：
-- 项目中没有 .pen 文件
-- 设计文档已迁移到 `specs/design/figma/*.md` (Figma 导出)
-- `pen-to-react` skill 仍存在于 `.claude/skills/` 但无用
-
-**被引用的位置**：
-
-| 文件 | 引用内容 |
-|------|---------|
-| `CLAUDE.md` | Phase 7: [pen-to-react / openapi-to-components] |
-| `CLAUDE.md` | Key Skills 表格 |
-| `appendix-c-skills.md` | 可选 Skills 表格 |
-| `findings.md` | 错误分析（我之前写的） |
-
-### 问题 2: openapi-to-components 的实际使用
-
-**现状**：
-- `openapi-to-components` skill 仍存在
-- 用途：将 OpenAPI spec 连接到前端组件
-- 但目前前端组件主要手动编写或参考 Figma 设计
-
-### 问题 3: 设计资源位置不明确
-
-**现状**：
-- 设计资源在 `specs/design/figma/` (18 个文件)
-- 工作流 Phase 4 (UI 设计) 未提及 Figma 目录
-- Phase 7 提到了 Figma 参考但不够清晰
+1. specs/testcases/README.md 缺少 18-33 号文件
+2. 前端缺少 Playwright E2E 测试
+3. pen-to-react skill 目录未删除（已废弃）
+4. 11-user-journeys.md 的完整 E2E 测试未实现
 
 ## 阶段列表
 
-| Phase | 描述 | 状态 | 完成度 |
-|-------|------|------|--------|
-| Phase 1 | 分析 19 个修复提交 | `complete` | 100% |
-| Phase 2 | 更新工作流文档 (组件规范/国际化/路由) | `complete` | 100% |
-| Phase 3 | 更新 CLAUDE.md (UI 文本规则) | `complete` | 100% |
-| Phase 4 | 创建前端路由文档 | `complete` | 100% |
-| Phase 5 | 移除 pen-to-react 引用 | `complete` | 100% |
-| Phase 6 | 更新 Phase 4 (UI 设计) 文档 | `complete` | 100% |
-| Phase 7 | 清理 findings.md 中的错误引用 | `complete` | 100% |
-| Phase 8 | 验证工作流完整性 | `complete` | 100% |
-| Phase 9 | 测试用例覆盖分析 | `complete` | 100% |
-| Phase 10 | 总结与提交 | `complete` | 100% |
+| Phase | 描述 | 优先级 | 状态 | 完成度 |
+|-------|------|--------|------|--------|
+| Phase 1 | 更新 specs/testcases/README.md | 立即 | `complete` | 100% |
+| Phase 2 | 删除废弃的 pen-to-react skill | 中期 | `complete` | 100% |
+| Phase 3 | 设置 Playwright E2E 测试框架 | 短期 | `complete` | 100% |
+| Phase 4 | 实现前端集成测试用例 | 短期 | `complete` | 100% |
+| Phase 5 | 验证与提交 | - | `complete` | 100% |
 
 ---
 
-## Phase 5: 移除 pen-to-react 引用 `complete`
+## Phase 1: 更新 specs/testcases/README.md `complete`
 
-### 5.1 更新 CLAUDE.md
+**目标**: 补充 18-33 号测试用例文件到 README.md
 
-- [ ] 移除 Phase 7 中的 `[pen-to-react / openapi-to-components]`
-- [ ] 改为 `[Figma 参考 / shadcn 组件]`
-- [ ] 从 Key Skills 表格移除 `pen-to-react`
+### 1.1 检查当前 README.md 内容
 
-### 5.2 更新 appendix-c-skills.md
+- [ ] 读取 `specs/testcases/README.md`
+- [ ] 确认缺少哪些文件
 
-- [ ] 从可选 Skills 移除 `pen-to-react`
-- [ ] 添加说明：设计资源已迁移到 Figma
+### 1.2 列出所有测试用例文件
 
-### 5.3 更新 07-frontend-components.md
+- [ ] 遍历 `specs/testcases/*.md`
+- [ ] 整理完整文件列表
 
-- [ ] 确认 7.0 Figma 设计参考正确
-- [ ] 移除任何 .pen 文件引用
+### 1.3 更新 README.md
 
----
-
-## Phase 6: 更新 Phase 4 (UI 设计) 文档 `complete`
-
-- [ ] 6.1 明确设计资源位置 (`specs/design/figma/`)
-- [ ] 6.2 添加 Figma 文件索引
-- [ ] 6.3 说明设计到代码的工作流
+- [ ] 添加 18-33 号文件
+- [ ] 确保格式一致
 
 ---
 
-## Phase 7: 清理 findings.md 中的错误引用 `complete`
+## Phase 2: 删除废弃的 pen-to-react skill `complete`
 
-- [ ] 7.1 移除 pen-to-react 相关分析
-- [ ] 7.2 更正 UI 组件问题的责任归属
-- [ ] 7.3 更新建议（不再建议更新 pen-to-react）
+**目标**: 清理 `.claude/skills/pen-to-react/` 目录
 
----
+### 2.1 确认 pen-to-react 内容
 
-## Phase 8: 验证工作流完整性 `complete`
+- [ ] 列出目录结构
+- [ ] 确认无其他依赖
 
-检查清单：
+### 2.2 删除目录
 
-- [ ] 所有 skills 引用都指向实际存在的 skills
-- [ ] 所有路径引用都正确
-- [ ] 工作流图与文档一致
-- [ ] CLAUDE.md 与 development-workflow 一致
+- [ ] `rm -rf .claude/skills/pen-to-react/`
+- [ ] 验证删除成功
 
 ---
 
-## Phase 9: 测试用例覆盖分析 `complete`
+## Phase 3: 设置 Playwright E2E 测试框架 `complete`
 
-**当前测试状态**：
+**目标**: 配置 Playwright 测试环境
 
-| 测试类型 | 位置 | 状态 |
-|----------|------|------|
-| 后端 pytest | `app/tests/` | ✅ 390+ |
-| 前端 Jest | `frontend/__tests__/` | ⚠️ 9 个 |
-| E2E Playwright | 无 | ❌ 缺失 |
+**发现**: 项目已有 pytest + playwright 测试框架
 
-**specs/testcases 覆盖差距**：
-
-| 测试用例 | 实现 |
-|---------|------|
-| 01-10 (后端) | ✅ 覆盖 |
-| 11 (用户旅程) | ❌ 无 E2E |
-| 33 (前端集成) | ⚠️ 部分 |
+- [x] `e2e/` 目录已存在
+- [x] `e2e/conftest.py` 提供 browser/context/page fixtures
+- [x] `e2e/test_home.py` 首页测试示例
+- [x] `playwright>=1.58.0` 已在 pyproject.toml
+- [x] 无需额外配置
 
 ---
 
-## Phase 10: 总结与提交 `complete`
+## Phase 4: 实现前端集成测试用例 `complete`
 
-- [x] 10.1 更新 progress.md
-- [x] 10.2 提交所有更改 (17eac49)
-- [x] 10.3 推送到远程
+**目标**: 按 `specs/testcases/33-frontend-integration.md` 实现 E2E 测试
+
+### 4.1 测试用例规范 (已读取)
+
+8 个测试模块，22 个测试用例：
+- 33.1 帖子创建集成 (5 cases: TC-FEINT-001~005)
+- 33.2 团队创建集成 (3 cases: TC-FEINT-010~012)
+- 33.3 活动创建集成 (2 cases: TC-FEINT-020~021)
+- 33.4 用户认证集成 (3 cases: TC-FEINT-030~032)
+- 33.5 编辑更新集成 (2 cases: TC-FEINT-040~041)
+- 33.6 删除操作集成 (2 cases: TC-FEINT-050~051)
+- 33.7 API 客户端完整性 (2 cases: TC-FEINT-090~091)
+- 33.8 负向/边界 (3 cases: TC-FEINT-900~902)
+
+### 4.2 实现测试文件
+
+- [x] `e2e/test_post_integration.py` - 帖子创建集成 (5 tests)
+- [x] `e2e/test_group_integration.py` - 团队创建集成 (3 tests)
+- [x] `e2e/test_event_integration.py` - 活动创建集成 (2 tests)
+- [x] `e2e/test_auth_integration.py` - 用户认证集成 (3 tests)
+- [x] `e2e/test_edit_delete_integration.py` - 编辑删除集成 (4 tests)
+- [x] `e2e/test_edge_cases.py` - 边界测试 (5 tests)
+
+**总计**: 6 个测试文件，22 个测试用例
+
+### 4.3 运行测试验证
+
+- [ ] `uv run pytest e2e/ -v` (需要运行服务器)
+- [ ] 确保测试通过
 
 ---
 
-## 设计资源现状
+## Phase 5: 验证与提交 `complete`
 
-**Figma 设计目录** (`specs/design/figma/`)：
+- [x] 5.1 更新 progress.md
+- [x] 5.2 提交所有更改
+- [x] 5.3 推送到远程
 
-```
-specs/design/figma/
-├── README.md         # 设计索引
-├── assets.md         # 资源图标
-├── components.md     # 组件库 (54 个)
-├── icons.md          # 图标库 (69 个)
-├── layouts.md        # 布局模板
-└── pages/            # 页面设计 (14 个)
-    ├── asset.md
-    ├── auth.md
-    ├── camp.md
-    ├── content.md
-    ├── explore.md
-    ├── home.md
-    ├── message.md
-    ├── misc.md
-    ├── planet.md
-    ├── profile.md
-    ├── search.md
-    ├── settings.md
-    └── team.md
-```
+> **注意**: E2E 测试需要启动服务器才能运行 (`make start`)
 
 ---
 
@@ -169,3 +125,4 @@ specs/design/figma/
 | 时间 | 错误 | 尝试 | 解决方案 |
 |------|------|------|----------|
 | - | - | - | - |
+
