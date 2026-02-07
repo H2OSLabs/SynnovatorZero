@@ -19,6 +19,7 @@
 | `CREATE user` | 注册新用户 | 任何人 |
 | `CREATE group` | 创建团队/分组 | 已登录用户 |
 | `CREATE interaction` | 创建交互记录（点赞/评论/评分），需配合 `CREATE target:interaction` 关联到目标 | 已登录用户 |
+| `CREATE notification` | 创建通知（系统自动发送，如活动状态变更、团队邀请、颁奖等） | 系统, Admin |
 
 ### 创建关系
 
@@ -33,6 +34,9 @@
 | `CREATE target:interaction` | 将交互记录关联到目标对象（触发目标验证、去重校验、缓存更新） | 交互发起人（目标对象须可见） |
 | `CREATE user:user` | 关注或拉黑用户（禁止自引用，拉黑方阻止被拉黑方创建 follow） | 已登录用户 |
 | `CREATE category:category` | 创建活动间关联（赛段/赛道/前置条件，禁止自引用和循环依赖） | Category 创建者, Admin |
+| `CREATE category:resource` | 将资源关联到活动（封面图、命题文件、附件） | Category 创建者, Admin |
+| `CREATE group:post` | 将帖子关联到团队（团队提案、公告） | Group Owner/Admin, Post 作者 |
+| `CREATE group:resource` | 将资源关联到团队（团队共享资产） | Group Owner/Admin |
 
 ---
 
@@ -49,6 +53,7 @@
 | `READ user` | 读取用户信息 | 公开信息: 任何人；完整信息: 本人/Admin |
 | `READ group` | 读取分组信息及成员列表 | public: 任何人；private: 成员/Admin |
 | `READ interaction` | 读取交互记录（支持按 type 筛选） | 目标对象可见则可读 |
+| `READ notification` | 读取通知列表（支持按 type、is_read 筛选） | 本人, Admin |
 
 ### 读取关系
 
@@ -63,6 +68,9 @@
 | `READ target:interaction` | 查询目标对象的交互记录（可按 interaction.type 筛选） |
 | `READ user:user` | 查询用户的关注/粉丝/好友列表（可按 relation_type 筛选） |
 | `READ category:category` | 查询活动的赛段链、赛道列表、前置条件（可按 relation_type 筛选） |
+| `READ category:resource` | 查询活动关联的资源（封面图、命题文件等） |
+| `READ group:post` | 查询团队关联的帖子（团队提案、公告） |
+| `READ group:resource` | 查询团队共享的资源文件 |
 
 ---
 
@@ -79,6 +87,7 @@
 | `UPDATE user` | 更新用户信息 | 本人, Admin |
 | `UPDATE group` | 更新分组信息和设置 | Owner, Admin |
 | `UPDATE interaction` | 更新交互内容（如修改评论文本、修改评分） | 交互发起人本人 |
+| `UPDATE notification` | 更新通知状态（标记已读） | 本人, Admin |
 
 ### 更新关系属性
 
@@ -90,6 +99,9 @@
 | `UPDATE post:resource` | 修改展示方式或排序位置 |
 | `UPDATE group:user` | 修改成员角色（如 member→admin）或审批状态（pending→accepted/rejected） |
 | `UPDATE category:category` | 修改赛段序号或关联类型 |
+| `UPDATE category:resource` | 修改展示方式或排序位置 |
+| `UPDATE group:post` | 修改关联类型 |
+| `UPDATE group:resource` | 修改访问级别 |
 
 ### 状态机约束
 
@@ -140,13 +152,14 @@ draft → published（仅 visibility=private 帖子可跳过审核）
 
 | 操作 | 说明 | 权限 | 级联影响 |
 |------|------|------|----------|
-| `DELETE category` | 删除活动 | 创建者, Admin | **级联删除** target:interaction 关系及关联 interaction 记录；解除所有 category:rule、category:post、category:group、category:category 关系 |
+| `DELETE category` | 删除活动 | 创建者, Admin | **级联删除** target:interaction 关系及关联 interaction 记录；解除所有 category:rule、category:post、category:group、category:category、category:resource 关系 |
 | `DELETE post` | 删除帖子 | 作者, Admin | **级联删除** target:interaction 关系及关联 interaction 记录；解除所有 post:post、post:resource、category:post 关系 |
 | `DELETE resource` | 删除文件资源 | 上传者, Admin | **级联删除** target:interaction 关系及关联 interaction 记录；解除所有 post:resource 关系 |
 | `DELETE rule` | 删除规则 | 创建者, Admin | 解除所有 category:rule 关系 |
 | `DELETE user` | 删除/注销用户 | 本人, Admin | 解除所有 group:user、user:user 关系；**级联删除**该用户创建的所有 interaction 及其 target:interaction 关系，并更新受影响目标的缓存计数 |
-| `DELETE group` | 删除分组 | Owner, Admin | 解除所有 group:user、category:group 关系 |
+| `DELETE group` | 删除分组 | Owner, Admin | 解除所有 group:user、category:group、group:post、group:resource 关系 |
 | `DELETE interaction` | 删除交互记录 | 交互发起人, Admin | **级联删除** target:interaction 关系；若为父评论，递归级联删除所有子回复及其 target:interaction 关系；更新受影响目标的缓存计数 |
+| `DELETE notification` | 删除通知（仅支持批量清理已读通知） | Admin | 无级联 |
 
 ### target:interaction 级联删除策略
 
@@ -176,6 +189,9 @@ draft → published（仅 visibility=private 帖子可跳过审核）
 | `DELETE target:interaction` | 解除目标对象与交互记录的关联 |
 | `DELETE user:user` | 取消关注或解除拉黑 |
 | `DELETE category:category` | 解除活动间的赛段/赛道/前置条件关联 |
+| `DELETE category:resource` | 解除活动与资源的关联 |
+| `DELETE group:post` | 解除团队与帖子的关联 |
+| `DELETE group:resource` | 解除团队与资源的关联 |
 
 ---
 
@@ -207,6 +223,8 @@ draft → published（仅 visibility=private 帖子可跳过审核）
 | CREATE resource | Y | Y | Y |
 | CREATE rule | - | Y | Y |
 | CREATE interaction | Y | Y | Y |
+| CREATE notification | - | - | Y |
+| READ notification (own) | Y | Y | Y |
 | UPDATE (own content) | Y | Y | Y |
 | UPDATE (others' content) | - | - | Y |
 | DELETE (own content) | Y | Y | Y |
