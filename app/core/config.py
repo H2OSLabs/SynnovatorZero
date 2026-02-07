@@ -6,8 +6,9 @@ Environment variables:
 - MOCK_USER_ROLE: Default user role in mock mode (default: participant)
 - DATABASE_URL: Database connection URL (default: sqlite:///./data/synnovator.db)
 """
+import json
 from typing import Literal
-from pydantic import ConfigDict
+from pydantic import ConfigDict, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -33,7 +34,28 @@ class Settings(BaseSettings):
     api_prefix: str = "/api"
 
     # CORS
-    cors_origins: list[str] = ["http://localhost:3000"]
+    cors_origins: list[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:9080",
+        "http://127.0.0.1:9080",
+    ]
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def _parse_cors_origins(cls, v):
+        if v is None:
+            return v
+        if isinstance(v, list):
+            return v
+        if isinstance(v, str):
+            raw = v.strip()
+            if not raw:
+                return []
+            if raw.startswith("["):
+                return json.loads(raw)
+            return [item.strip() for item in raw.split(",") if item.strip()]
+        return v
 
 
 settings = Settings()

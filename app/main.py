@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.database import engine, Base, get_db
+from app.core.config import settings
 from app.routers import users, resources, events, posts, rules, groups, interactions, admin, auth, notifications, meta
 from app import models
 
@@ -23,7 +24,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
