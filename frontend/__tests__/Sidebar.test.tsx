@@ -34,5 +34,11 @@ describe("Sidebar", () => {
     const myPostsCall = LinkMock.mock.calls.find(([props]) => props.href === "/my/posts")
     expect(myPostsCall?.[0].prefetch).toBe(false)
   })
-})
 
+  it("“我的收藏”链接禁用预取，避免 Next 预取请求被中止时报错", () => {
+    render(<Sidebar collapsed={false} />)
+
+    const myFavoritesCall = LinkMock.mock.calls.find(([props]) => props.href === "/my/favorites")
+    expect(myFavoritesCall?.[0].prefetch).toBe(false)
+  })
+})

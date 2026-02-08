@@ -23,6 +23,7 @@
 | `/posts/[id]` | `app/posts/[id]/page.tsx` | 帖子详情 |
 | `/posts/[id]/edit` | `app/posts/[id]/edit/page.tsx` | 编辑帖子 |
 | `/my/posts` | `app/my/posts/page.tsx` | 我的帖子 |
+| `/my/favorites` | `app/my/favorites/page.tsx` | 我的收藏 |
 
 **`/posts` 查询参数**
 

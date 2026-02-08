@@ -54,7 +54,7 @@ const myNavItems: NavItem[] = [
   { label: "关注", icon: <UserPlus className="h-5 w-5" />, href: "/my/following", requireAuth: true },
 ]
 
-const noPrefetchHrefs = new Set<string>(["/my/posts"])
+const noPrefetchHrefs = new Set<string>(["/my/posts", "/my/favorites"])
 
 export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
   const pathname = usePathname() ?? ""
