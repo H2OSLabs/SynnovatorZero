@@ -91,6 +91,37 @@ class CRUDTargetInteraction:
             Interaction.deleted_at.is_(None),
         ).count()
 
+    def get_likes_by_user(
+        self, db: Session, *, user_id: int, target_type: Optional[str] = None,
+        skip: int = 0, limit: int = 100,
+    ) -> List[TargetInteraction]:
+        """Get all likes by a user, optionally filtered by target type."""
+        q = db.query(TargetInteraction).join(
+            Interaction, TargetInteraction.interaction_id == Interaction.id,
+        ).filter(
+            Interaction.type == "like",
+            Interaction.created_by == user_id,
+            Interaction.deleted_at.is_(None),
+        )
+        if target_type:
+            q = q.filter(TargetInteraction.target_type == target_type)
+        return q.order_by(Interaction.created_at.desc()).offset(skip).limit(limit).all()
+
+    def count_likes_by_user(
+        self, db: Session, *, user_id: int, target_type: Optional[str] = None,
+    ) -> int:
+        """Count all likes by a user."""
+        q = db.query(TargetInteraction).join(
+            Interaction, TargetInteraction.interaction_id == Interaction.id,
+        ).filter(
+            Interaction.type == "like",
+            Interaction.created_by == user_id,
+            Interaction.deleted_at.is_(None),
+        )
+        if target_type:
+            q = q.filter(TargetInteraction.target_type == target_type)
+        return q.count()
+
 
     def get_all_by_target(
         self, db: Session, *, target_type: str, target_id: int,

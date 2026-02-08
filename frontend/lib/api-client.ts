@@ -220,6 +220,12 @@ export async function getFollowing(userId: number, skip = 0, limit = 20) {
   )
 }
 
+export async function getUserLikes(userId: number, skip = 0, limit = 100) {
+  return apiFetch<{ items: Post[]; total: number; skip: number; limit: number }>(
+    `/users/${userId}/likes?skip=${skip}&limit=${limit}`
+  )
+}
+
 // Events
 export type CategoryStatus = 'draft' | 'published' | 'closed'
 export type CategoryType = 'competition' | 'operation'

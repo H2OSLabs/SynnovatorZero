@@ -6,7 +6,7 @@ import { Heart, Loader2 } from "lucide-react"
 import { PageLayout } from "@/components/layout/PageLayout"
 import { PostCard } from "@/components/cards/PostCard"
 import { Button } from "@/components/ui/button"
-import { type Post, type User } from "@/lib/api-client"
+import { getUserLikes, getUser, type Post, type User } from "@/lib/api-client"
 import { useAuth } from "@/contexts/AuthContext"
 
 interface PostWithAuthor extends Post {
@@ -24,10 +24,24 @@ export default function MyFavoritesPage() {
     const fetchFavorites = async () => {
       setIsLoading(true)
       try {
-        // Note: Backend doesn't have a dedicated "my likes" endpoint yet
-        // For now, we'll show a placeholder message
-        // In production, this would call: GET /users/{id}/likes or similar
-        setPosts([])
+        // Get posts that user has liked
+        const resp = await getUserLikes(user.user_id)
+
+        // Fetch author details for each post
+        const postsWithAuthors: PostWithAuthor[] = []
+        for (const post of resp.items) {
+          let author: User | undefined
+          if (post.created_by) {
+            try {
+              author = await getUser(post.created_by)
+            } catch {
+              // Author not found
+            }
+          }
+          postsWithAuthors.push({ ...post, author })
+        }
+
+        setPosts(postsWithAuthors)
       } catch {
         setPosts([])
       } finally {

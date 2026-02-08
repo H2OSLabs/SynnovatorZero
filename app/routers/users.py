@@ -220,3 +220,40 @@ def check_friendship(
 ):
     """Check if two users are mutual friends."""
     return {"is_friend": crud.user_users.is_mutual_follow(db, user_a=user_id, user_b=other_id)}
+
+
+@router.get("/users/{user_id}/likes", response_model=schemas.PaginatedPostList, tags=["users"])
+def list_user_likes(
+    user_id: int,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(require_current_user_id),
+):
+    """List posts that user has liked (favorites). Only accessible by the user themselves."""
+    if current_user_id != user_id:
+        # Check if current user is admin
+        current_user = crud.users.get(db, id=current_user_id)
+        if not current_user or current_user.role != "admin":
+            raise HTTPException(status_code=403, detail="Can only view your own likes")
+
+    user = crud.users.get(db, id=user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Get all likes by user for posts
+    likes = crud.target_interactions.get_likes_by_user(
+        db, user_id=user_id, target_type="post", skip=skip, limit=limit
+    )
+    total = crud.target_interactions.count_likes_by_user(
+        db, user_id=user_id, target_type="post"
+    )
+
+    # Fetch post details for each liked post
+    posts = []
+    for like in likes:
+        post = crud.posts.get(db, id=like.target_id)
+        if post:
+            posts.append(post)
+
+    return {"items": posts, "total": total, "skip": skip, "limit": limit}
