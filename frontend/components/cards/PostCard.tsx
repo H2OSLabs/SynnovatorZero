@@ -60,7 +60,7 @@ export function PostCard({
     : null
 
   return (
-    <Link href={`/posts/${id}`}>
+    <Link href={`/posts/${id}`} prefetch={false}>
       <Card className={cn("bg-nf-secondary border-none hover:bg-nf-secondary/80 transition-colors cursor-pointer", className)}>
         <CardHeader className="p-4 pb-2">
           <h3 className="font-heading font-semibold text-nf-white line-clamp-2">

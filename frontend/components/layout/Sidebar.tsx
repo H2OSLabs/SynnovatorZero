@@ -63,11 +63,11 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
 
     if (item.requireAuth && !user) return null
 
-    // 认证页面禁用 prefetch，避免预取请求被中止时报错
+    // 开发模式下禁用 prefetch，避免多个链接同时触发按需编译导致 ERR_ABORTED
     const linkContent = (
       <Link
         href={item.href}
-        prefetch={!item.requireAuth}
+        prefetch={false}
         className={cn(
           "flex items-center gap-3 h-11 px-3 rounded-lg transition-colors",
           collapsed ? "justify-center" : "justify-start",

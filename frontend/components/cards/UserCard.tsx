@@ -48,7 +48,7 @@ export function UserCard({
   }
 
   return (
-    <Link href={`/users/${id}`}>
+    <Link href={`/users/${id}`} prefetch={false}>
       <Card className={cn("bg-nf-secondary border-none hover:bg-nf-secondary/80 transition-colors cursor-pointer", className)}>
         <CardHeader className="p-4 pb-2">
           <div className="flex items-center gap-3">

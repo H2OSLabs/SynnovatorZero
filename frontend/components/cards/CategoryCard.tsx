@@ -55,7 +55,7 @@ export function CategoryCard({
   }
 
   return (
-    <Link href={`/events/${id}`}>
+    <Link href={`/events/${id}`} prefetch={false}>
       <Card className={cn("bg-nf-secondary border-none hover:bg-nf-secondary/80 transition-colors cursor-pointer overflow-hidden", className)}>
         {/* Cover Image */}
         <div className="relative aspect-video bg-nf-dark">

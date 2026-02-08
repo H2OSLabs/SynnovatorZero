@@ -72,13 +72,13 @@ export function Header({ onMenuClick, showMenuButton = false }: HeaderProps) {
         <div className="flex items-center gap-2">
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-1">
-            <Link href="/explore">
+            <Link href="/explore" prefetch={false}>
               <Button variant="ghost" className="text-nf-light-gray hover:text-nf-white">
                 <Compass className="h-4 w-4 mr-2" />
                 探索
               </Button>
             </Link>
-            <Link href="/events">
+            <Link href="/events" prefetch={false}>
               <Button variant="ghost" className="text-nf-light-gray hover:text-nf-white">
                 <Calendar className="h-4 w-4 mr-2" />
                 活动
@@ -86,7 +86,7 @@ export function Header({ onMenuClick, showMenuButton = false }: HeaderProps) {
             </Link>
             {/* Manage link for organizers/admins */}
             {(isOrganizer || isAdmin) && (
-              <Link href="/manage">
+              <Link href="/manage" prefetch={false}>
                 <Button variant="ghost" className="text-nf-lime hover:text-nf-lime/80">
                   <Settings className="h-4 w-4 mr-2" />
                   管理
