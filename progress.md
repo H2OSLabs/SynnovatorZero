@@ -1,5 +1,61 @@
 # Progress Log
 
+## 2026-02-08: Header 修复 + Figma Skills 研究
+
+### 完成内容
+
+**Phase 1: 分析用户 commit 7d54b32** ✅
+- 用户实现了帖子筛选功能（`q` 搜索 + `tags` 筛选）
+- 采用 URL 驱动的筛选模式（`useSearchParams` + `router.replace()`）
+- 这是 Next.js App Router 的最佳实践
+
+**Phase 2: 修复 Header 登录状态 bug** ✅
+- 问题：Header 未处理 `isLoading` 状态，导致已登录用户刷新时短暂看到登录/注册按钮
+- 修复：添加 `isLoading` 检查，loading 时显示骨架占位符
+
+```tsx
+{isLoading ? (<skeleton />) : user ? (<logged-in UI />) : (<login buttons />)}
+```
+
+**Phase 3: 根因分析** ✅
+- 问题归类：实现问题 + 测试用例缺失
+- 责任阶段：Phase 7 (前端组件) + Phase 8 (E2E 测试)
+
+**Phase 4: Figma Skills 研究** ✅
+从 `feat/prototype-v1` 分支发现四个 Figma 相关 skills：
+
+| Skill | 功能 |
+|-------|------|
+| `figma-resource-extractor` | Figma → `specs/design/figma/` |
+| `ui-spec-generator` | Design + TestCases → `pages.yaml` |
+| `ux-spec-generator` | pages.yaml → `specs/ux/` |
+| `frontend-prototype-builder` | All specs → React pages |
+
+**集成可行性**：
+- Figma 资源已提取（69 icons, 54 components, 104 pages）
+- 需要配置 Figma MCP（需 access token）
+- 可作为 Phase 4-7 的自动化补充
+
+### 修改的文件
+
+| 文件 | 修改内容 |
+|------|----------|
+| `frontend/components/layout/Header.tsx` | 添加 isLoading 处理 |
+| `task_plan.md` | 更新任务计划 |
+| `findings.md` | 详细分析报告 |
+| `progress.md` | 本次进度记录 |
+
+### 后续建议
+
+| 优先级 | 任务 |
+|--------|------|
+| 高 | 配置 Figma MCP（需要 access token） |
+| 高 | 复制 Figma skills 到当前分支 |
+| 中 | 生成 `specs/design/pages.yaml` |
+| 低 | 更新 `docs/development-workflow.md` |
+
+---
+
 ## 2026-02-08: 工作流审查与修复
 
 ### 完成内容
@@ -220,3 +276,38 @@ uv run pytest e2e/ -v
 # 只运行用户旅程测试
 uv run pytest e2e/test_journey_*.py -v
 ```
+
+---
+
+## 2026-02-08: 修复 tests-kit 测试分层缺陷
+
+### 问题分析
+
+用户提出问题："是不是同时也需要修改 /tests-kit 因为之前的 test cases 都是这个 skill 生成的，是不是这个 skill 有些不合理的地方。"
+
+**发现的问题：**
+
+1. **缺少测试分层策略**：testcase-format.md 只定义了 TC ID 格式，没有说明四层测试架构
+2. **11 vs 18-33 定位模糊**：桥接层和场景层的区分未明确
+3. **缺少 E2E 实现映射**：Guard 模式没有连接到 e2e/ 目录的 pytest 实现
+
+### 修复内容
+
+**修改文件 1: `.claude/skills/tests-kit/references/testcase-format.md`**
+- 添加 "Test Layering Strategy" 章节
+- 定义四层测试架构（基础层、桥接层、高级层、场景层）
+- 添加层级选择指南
+- 添加 E2E 实现映射表
+
+**修改文件 2: `.claude/skills/tests-kit/SKILL.md`**
+- Guard 模式添加 E2E 实现文件 → TC 前缀映射
+- Insert 模式添加层级选择指导
+
+### 修复后的测试分层
+
+| Layer | Files | Purpose | Implementation |
+|-------|-------|---------|----------------|
+| 基础层 | 01-10 | CRUD 和约束 | `app/tests/` |
+| 桥接层 | 11 | 完整业务流程 | `e2e/test_journey_*.py` |
+| 高级层 | 12-17 | 规则引擎等 | `app/tests/` |
+| 场景层 | 18-33 | 细粒度 E2E | `e2e/test_*_integration.py` |

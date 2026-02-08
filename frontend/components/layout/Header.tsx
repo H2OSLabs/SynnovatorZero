@@ -24,7 +24,7 @@ interface HeaderProps {
 
 export function Header({ onMenuClick, showMenuButton = false }: HeaderProps) {
   const [searchOpen, setSearchOpen] = useState(false)
-  const { user, logout, isOrganizer, isAdmin } = useAuth()
+  const { user, logout, isOrganizer, isAdmin, isLoading } = useAuth()
 
   const handleLogout = async () => {
     await logout()
@@ -95,7 +95,13 @@ export function Header({ onMenuClick, showMenuButton = false }: HeaderProps) {
             )}
           </nav>
 
-          {user ? (
+          {/* Auth-dependent UI: show skeleton during loading to prevent flash */}
+          {isLoading ? (
+            // Skeleton placeholder while checking auth state
+            <div className="flex items-center gap-2">
+              <div className="h-9 w-9 rounded-full bg-nf-secondary animate-pulse" />
+            </div>
+          ) : user ? (
             <>
               {/* Search Icon (Mobile) */}
               <Button
