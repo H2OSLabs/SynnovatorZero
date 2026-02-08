@@ -251,22 +251,63 @@ const commentsWithUsers = await Promise.all(
 | `/login` | `app/login/page.tsx` |
 | `/register` | `app/register/page.tsx` |
 
+**"我的"系列路由**（筛选当前用户数据）：
+
+| 路由 | 页面文件 | 功能 |
+|------|---------|------|
+| `/my/posts` | `app/my/posts/page.tsx` | 当前用户的帖子 |
+| `/my/groups` | `app/my/groups/page.tsx` | 当前用户的团队 |
+| `/my/events` | `app/my/events/page.tsx` | 当前用户参与的活动 |
+| `/my/favorites` | `app/my/favorites/page.tsx` | 当前用户的收藏 |
+| `/my/following` | `app/my/following/page.tsx` | 当前用户的关注 |
+
 **常见错误路由**：
 
 | ❌ 错误 | ✅ 正确 | 说明 |
 |--------|--------|------|
-| `/my/posts` | `/posts` | 不存在 `/my/` 前缀 |
-| `/my/groups` | `/groups` | 不存在 `/my/` 前缀 |
 | `/profile/{id}` | `/users/{id}` | 使用 `/users/` 不是 `/profile/` |
 | `/proposals/{id}` | `/posts/{id}` | 提案也是帖子，统一使用 `/posts/` |
 
 **验证路由链接：**
 ```bash
 # 检查是否有不存在的路由引用
-grep -rn "href=\"/my/" frontend/ --include="*.tsx"
 grep -rn "href=\"/profile/" frontend/ --include="*.tsx"
 grep -rn "href=\"/proposals/" frontend/ --include="*.tsx"
 ```
+
+## 7.9 路由完整性验证 ⭐
+
+> 确保所有导航链接都指向实际存在的页面。
+
+**验证脚本**：
+```bash
+# 1. 提取所有导航中的 href
+grep -rh 'href="/' frontend/components/layout/*.tsx 2>/dev/null | \
+  grep -oE 'href="[^"]*"' | \
+  sed 's/href="//;s/"$//' | \
+  grep -v '\[' | \
+  sort -u > /tmp/nav-routes.txt
+
+# 2. 提取所有存在的页面路由
+find frontend/app -name "page.tsx" 2>/dev/null | \
+  sed 's|frontend/app||;s|/page.tsx||' | \
+  sed 's|\[.*\]|*|g' | \
+  sort -u > /tmp/existing-routes.txt
+
+# 3. 对比差异
+echo "=== 导航中引用但不存在的路由 ==="
+while read route; do
+  # Skip dynamic routes
+  if [[ "$route" == *"*"* ]]; then continue; fi
+  if ! grep -q "^${route}$" /tmp/existing-routes.txt 2>/dev/null; then
+    echo "Missing: $route"
+  fi
+done < /tmp/nav-routes.txt
+```
+
+**如果发现差异**：
+- 创建缺失的页面，或
+- 移除导航中的无效链接
 
 ## 下一步
 
