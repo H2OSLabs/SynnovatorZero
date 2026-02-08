@@ -84,13 +84,14 @@ class TestJourneyAnonymousBrowsing:
         # Wait for event list to load
         page.wait_for_timeout(2000)
 
-        # Check for published event (if visible on explore page)
-        events_section = page.locator('[data-testid="events-list"], .events-list, section:has-text("活动")')
-        if events_section.count() > 0:
-            # Should see published event title somewhere
-            page_content = page.content()
-            # Just verify the page loads without error
-            assert "error" not in page_content.lower() or "500" not in page_content
+        # Verify page loaded successfully by checking for expected content
+        # Look for "探索" header or events section
+        page_text = page.inner_text("body")
+        assert "探索" in page_text or "活动" in page_text, "Explore page should show content"
+
+        # Verify no server error page
+        assert "This page could not be found" not in page_text
+        assert "Internal Server Error" not in page_text
 
     def test_anonymous_can_browse_published_posts(self, page: Page):
         """Anonymous user can see published posts."""
