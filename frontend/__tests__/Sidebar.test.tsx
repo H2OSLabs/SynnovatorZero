@@ -23,22 +23,35 @@ jest.mock("@/contexts/AuthContext", () => ({
   }),
 }))
 
+// 需要认证的页面路径
+const authRequiredPaths = [
+  "/notifications",
+  "/my/events",
+  "/my/posts",
+  "/my/groups",
+  "/my/favorites",
+  "/my/following",
+]
+
+// 公开页面路径
+const publicPaths = ["/", "/explore", "/events", "/camps", "/posts", "/groups"]
+
 describe("Sidebar", () => {
   beforeEach(() => {
     LinkMock.mockClear()
   })
 
-  it("“我的帖子”链接禁用预取，避免 Next 预取请求被中止时报错", () => {
+  it.each(authRequiredPaths)("认证页面 %s 禁用预取", (path) => {
     render(<Sidebar collapsed={false} />)
 
-    const myPostsCall = LinkMock.mock.calls.find(([props]) => props.href === "/my/posts")
-    expect(myPostsCall?.[0].prefetch).toBe(false)
+    const call = LinkMock.mock.calls.find(([props]) => props.href === path)
+    expect(call?.[0].prefetch).toBe(false)
   })
 
-  it("“我的收藏”链接禁用预取，避免 Next 预取请求被中止时报错", () => {
+  it.each(publicPaths)("公开页面 %s 启用预取", (path) => {
     render(<Sidebar collapsed={false} />)
 
-    const myFavoritesCall = LinkMock.mock.calls.find(([props]) => props.href === "/my/favorites")
-    expect(myFavoritesCall?.[0].prefetch).toBe(false)
+    const call = LinkMock.mock.calls.find(([props]) => props.href === path)
+    expect(call?.[0].prefetch).toBe(true)
   })
 })

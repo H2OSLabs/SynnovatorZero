@@ -54,8 +54,6 @@ const myNavItems: NavItem[] = [
   { label: "关注", icon: <UserPlus className="h-5 w-5" />, href: "/my/following", requireAuth: true },
 ]
 
-const noPrefetchHrefs = new Set<string>(["/my/posts", "/my/favorites"])
-
 export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
   const pathname = usePathname() ?? ""
   const { user } = useAuth()
@@ -65,10 +63,11 @@ export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
 
     if (item.requireAuth && !user) return null
 
+    // 认证页面禁用 prefetch，避免预取请求被中止时报错
     const linkContent = (
       <Link
         href={item.href}
-        prefetch={!noPrefetchHrefs.has(item.href)}
+        prefetch={!item.requireAuth}
         className={cn(
           "flex items-center gap-3 h-11 px-3 rounded-lg transition-colors",
           collapsed ? "justify-center" : "justify-start",
