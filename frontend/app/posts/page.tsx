@@ -1,28 +1,91 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Search, SlidersHorizontal, Plus } from "lucide-react"
 import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
 import { PageLayout } from "@/components/layout/PageLayout"
 import { PostCard } from "@/components/cards/PostCard"
+import { PostsFilterDialog } from "@/components/post/PostsFilterDialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getPosts, getUser, type Post } from "@/lib/api-client"
+import { getPosts, getUser, type Post, type PostStatus } from "@/lib/api-client"
 
 export default function PostsPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const paramsKey = searchParams.toString()
+
   const [activeTab, setActiveTab] = useState("all")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [filterOpen, setFilterOpen] = useState(false)
   const [posts, setPosts] = useState<Post[]>([])
   const [usersById, setUsersById] = useState<Record<number, { id: number; username: string; display_name?: string; avatar_url?: string }>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const applied = useMemo(() => {
+    const q = searchParams.get("q") ?? ""
+    const type = searchParams.get("type") ?? undefined
+    const status = (searchParams.get("status") ?? undefined) as PostStatus | undefined
+    const tagsText = searchParams.get("tags") ?? ""
+    const tags = tagsText
+      ? tagsText
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : []
+    return { q, type, status, tags }
+  }, [paramsKey, searchParams])
+
+  useEffect(() => {
+    setSearchQuery(applied.q)
+    if (!applied.type) {
+      setActiveTab("all")
+      return
+    }
+    if (applied.type === "proposal") setActiveTab("proposals")
+    else if (applied.type === "team") setActiveTab("teams")
+    else if (applied.type === "general") setActiveTab("general")
+    else setActiveTab("all")
+  }, [applied.q, applied.type])
+
+  function updateParams(patch: { q?: string | null; type?: string | null; status?: PostStatus | null; tags?: string[] | null }) {
+    const next = new URLSearchParams(searchParams.toString())
+
+    if (patch.q !== undefined) {
+      if (!patch.q) next.delete("q")
+      else next.set("q", patch.q)
+    }
+    if (patch.type !== undefined) {
+      if (!patch.type) next.delete("type")
+      else next.set("type", patch.type)
+    }
+    if (patch.status !== undefined) {
+      if (!patch.status) next.delete("status")
+      else next.set("status", patch.status)
+    }
+    if (patch.tags !== undefined) {
+      if (!patch.tags?.length) next.delete("tags")
+      else next.set("tags", patch.tags.join(","))
+    }
+
+    const qs = next.toString()
+    router.replace(qs ? `/posts?${qs}` : "/posts")
+  }
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true)
       setError(null)
       try {
-        const resp = await getPosts(0, 100)
+        const resp = await getPosts(0, 100, {
+          type: applied.type,
+          status: applied.status,
+          tags: applied.tags.length ? applied.tags : undefined,
+          q: applied.q.trim() ? applied.q.trim() : undefined,
+        })
         setPosts(resp.items)
 
         const authorIds = Array.from(
@@ -57,18 +120,52 @@ export default function PostsPage() {
       }
     }
     fetchData()
-  }, [])
+  }, [applied.q, applied.status, applied.tags, applied.type])
 
-  const filteredPosts = posts.filter((post) => {
-    if (activeTab === "all") return true
-    if (activeTab === "proposals") return post.type === "proposal"
-    if (activeTab === "teams") return post.type === "team"
-    if (activeTab === "general") return post.type === "general"
-    return true
-  })
+  const filteredPosts = useMemo(() => {
+    const q = applied.q.trim().toLowerCase()
+    const requiredTags = applied.tags.map((t) => t.toLowerCase())
+
+    return posts.filter((post) => {
+      if (activeTab === "proposals" && post.type !== "proposal") return false
+      if (activeTab === "teams" && post.type !== "team") return false
+      if (activeTab === "general" && post.type !== "general") return false
+
+      if (q) {
+        const inTitle = post.title?.toLowerCase().includes(q)
+        const inContent = (post.content ?? "").toLowerCase().includes(q)
+        const inTags = (post.tags ?? []).some((t) => (t ?? "").toLowerCase().includes(q))
+        if (!inTitle && !inContent && !inTags) return false
+      }
+
+      if (requiredTags.length) {
+        const postTags = (post.tags ?? []).map((t) => (t ?? "").toLowerCase())
+        const matched = requiredTags.some((t) => postTags.includes(t))
+        if (!matched) return false
+      }
+
+      return true
+    })
+  }, [activeTab, applied.q, applied.tags, posts])
 
   return (
     <PageLayout variant="compact">
+      <PostsFilterDialog
+        open={filterOpen}
+        onOpenChange={setFilterOpen}
+        value={{ type: applied.type, status: applied.status, tags: applied.tags }}
+        onApply={(next) => {
+          updateParams({
+            type: next.type ?? null,
+            status: next.status ?? null,
+            tags: next.tags ?? null,
+          })
+        }}
+        onReset={() => {
+          updateParams({ type: null, status: null, tags: null })
+        }}
+      />
+
       {/* Page Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -90,16 +187,34 @@ export default function PostsPage() {
           <Input
             placeholder="搜索帖子..."
             className="pl-10 bg-nf-surface border-nf-secondary"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key !== "Enter") return
+              updateParams({ q: searchQuery.trim() || null })
+            }}
+            onBlur={() => {
+              updateParams({ q: searchQuery.trim() || null })
+            }}
           />
         </div>
-        <Button variant="outline" className="border-nf-secondary">
+        <Button variant="outline" className="border-nf-secondary" onClick={() => setFilterOpen(true)}>
           <SlidersHorizontal className="h-4 w-4 mr-2" />
           筛选
         </Button>
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs
+        value={activeTab}
+        onValueChange={(nextTab) => {
+          setActiveTab(nextTab)
+          if (nextTab === "proposals") updateParams({ type: "proposal" })
+          else if (nextTab === "teams") updateParams({ type: "team" })
+          else if (nextTab === "general") updateParams({ type: "general" })
+          else updateParams({ type: null })
+        }}
+      >
         <TabsList className="bg-nf-surface border-nf-secondary mb-6">
           <TabsTrigger value="all">全部</TabsTrigger>
           <TabsTrigger value="proposals">💡 提案</TabsTrigger>

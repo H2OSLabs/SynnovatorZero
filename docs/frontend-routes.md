@@ -23,6 +23,15 @@
 | `/posts/[id]` | `app/posts/[id]/page.tsx` | 帖子详情 |
 | `/posts/[id]/edit` | `app/posts/[id]/edit/page.tsx` | 编辑帖子 |
 
+**`/posts` 查询参数**
+
+| 参数 | 示例 | 说明 |
+|------|------|------|
+| `q` | `/posts?q=llm` | 关键词搜索（标题/内容/标签） |
+| `type` | `/posts?type=proposal` | 类型筛选（`proposal`/`team`/`general`） |
+| `status` | `/posts?status=published` | 状态筛选（`draft`/`pending_review`/`published`/`rejected`） |
+| `tags` | `/posts?tags=AI,Web3` | 标签筛选（逗号分隔，匹配任一标签） |
+
 ### 活动 (Events)
 
 | 路由 | 页面文件 | 描述 |

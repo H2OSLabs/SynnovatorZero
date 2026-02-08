@@ -29,11 +29,12 @@ def list_posts(
     limit: int = Query(100, ge=1, le=1000),
     type: Optional[str] = Query(None),
     post_status: Optional[str] = Query(None, alias="status"),
+    q: Optional[str] = Query(None),
     tags: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user_id: Optional[int] = Depends(get_current_user_id),
 ):
-    from sqlalchemy import or_
+    from sqlalchemy import or_, func, text
     query = db.query(crud.posts.model).filter(
         crud.posts.model.deleted_at.is_(None),
     )
@@ -75,6 +76,31 @@ def list_posts(
                 crud.posts.model.created_by == current_user_id,
             )
         )
+
+    if q is not None and q.strip():
+        q_norm = q.strip().lower()
+        like = f"%{q_norm}%"
+        query = query.filter(
+            or_(
+                func.lower(crud.posts.model.title).like(like),
+                func.lower(func.coalesce(crud.posts.model.content, "")).like(like),
+            )
+        )
+
+    if tags is not None and tags.strip():
+        tag_list = [t.strip() for t in tags.split(",") if t.strip()]
+        if tag_list:
+            placeholders = []
+            bind = {}
+            for i, t in enumerate(tag_list):
+                key = f"tag_{i}"
+                placeholders.append(f":{key}")
+                bind[key] = t.lower()
+            exists_sql = (
+                "EXISTS (SELECT 1 FROM json_each(posts.tags) "
+                f"WHERE lower(json_each.value) IN ({', '.join(placeholders)}))"
+            )
+            query = query.filter(text(exists_sql).bindparams(**bind))
     total = query.count()
     items = query.offset(skip).limit(limit).all()
     items_out = [_post_to_dict(p) for p in items]

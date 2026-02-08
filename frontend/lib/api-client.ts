@@ -279,10 +279,16 @@ export interface Post {
   deleted_at?: string | null
 }
 
-export async function getPosts(skip = 0, limit = 20, filters?: { type?: string; status?: PostStatus }) {
+export async function getPosts(
+  skip = 0,
+  limit = 20,
+  filters?: { type?: string; status?: PostStatus; tags?: string[]; q?: string }
+) {
   const params = new URLSearchParams({ skip: String(skip), limit: String(limit) })
   if (filters?.type) params.set('type', filters.type)
   if (filters?.status) params.set('status', filters.status)
+  if (filters?.q) params.set('q', filters.q)
+  if (filters?.tags?.length) params.set('tags', filters.tags.join(','))
   return apiFetch<{ items: Post[]; total: number; skip: number; limit: number }>(`/posts?${params.toString()}`)
 }
 
