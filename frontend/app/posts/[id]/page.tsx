@@ -18,6 +18,7 @@ import {
   addPostComment,
   likePost,
   unlikePost,
+  checkPostLiked,
   deletePost,
   Post,
   Interaction,
@@ -96,6 +97,14 @@ export default function PostDetailPage() {
         // Fetch resources
         const resourcesData = await getPostResources(id)
         setResources(resourcesData)
+
+        // Check like status
+        try {
+          const isLiked = await checkPostLiked(id)
+          setLiked(isLiked)
+        } catch {
+          // Ignore - user might not be logged in
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load post")
       } finally {

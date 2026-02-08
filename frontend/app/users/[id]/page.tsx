@@ -6,23 +6,27 @@ import { useEffect, useState } from "react"
 import { MessageCircle, Loader2 } from "lucide-react"
 import { PageLayout } from "@/components/layout/PageLayout"
 import { Panel, PanelSection, PanelCard } from "@/components/layout/Panel"
+import { PostCard } from "@/components/cards/PostCard"
+import { UserFollowButton } from "@/components/user/UserFollowButton"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getUser, type User } from "@/lib/api-client"
+import { getUser, getPosts, type User, type Post } from "@/lib/api-client"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function UserProfilePage() {
   const params = useParams()
+  const { user: currentUser } = useAuth()
   const idParam = params?.id
   const rawId = Array.isArray(idParam) ? idParam[0] : idParam
   const id = typeof rawId === "string" ? Number(rawId) : Number.NaN
 
   const [user, setUser] = useState<User | null>(null)
+  const [userPosts, setUserPosts] = useState<Post[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const [isFollowing, setIsFollowing] = useState(false)
   const [followerCount, setFollowerCount] = useState(0)
   const [followingCount, setFollowingCount] = useState(0)
 
@@ -33,30 +37,32 @@ export default function UserProfilePage() {
       return
     }
 
-    const fetchUser = async () => {
+    const fetchData = async () => {
       setIsLoading(true)
       setError(null)
       try {
-        const userData = await getUser(id)
+        const [userData, postsResp] = await Promise.all([
+          getUser(id),
+          getPosts(0, 100, { created_by: id }),
+        ])
         setUser(userData)
+        setUserPosts(postsResp.items)
         setFollowerCount(userData.follower_count || 0)
         setFollowingCount(userData.following_count || 0)
       } catch (e) {
         setError(e instanceof Error ? e.message : "加载用户失败")
         setUser(null)
+        setUserPosts([])
       } finally {
         setIsLoading(false)
       }
     }
 
-    fetchUser()
+    fetchData()
   }, [id])
 
-  const handleFollow = async () => {
-    // For demo purposes, we'll just toggle the state
-    // In a real app, you'd get the current user's ID from auth context
-    setIsFollowing(!isFollowing)
-    setFollowerCount((c) => (isFollowing ? c - 1 : c + 1))
+  const handleFollowChange = (isFollowing: boolean) => {
+    setFollowerCount((c) => (isFollowing ? c + 1 : c - 1))
   }
 
   if (isLoading) {
@@ -86,13 +92,14 @@ export default function UserProfilePage() {
     <Panel title="用户操作">
       <PanelSection>
         <div className="space-y-3">
-          <Button
-            className={isFollowing ? "w-full border-nf-secondary" : "w-full bg-nf-lime text-nf-near-black hover:bg-nf-lime/90"}
-            variant={isFollowing ? "outline" : "default"}
-            onClick={handleFollow}
-          >
-            {isFollowing ? "已关注" : "关注"}
-          </Button>
+          {currentUser && currentUser.user_id !== id && (
+            <UserFollowButton
+              currentUserId={currentUser.user_id}
+              targetUserId={id}
+              onFollowChange={handleFollowChange}
+              className="w-full"
+            />
+          )}
           <Button variant="outline" className="w-full border-nf-secondary">
             <MessageCircle className="h-4 w-4 mr-2" />
             私信
@@ -203,9 +210,28 @@ export default function UserProfilePage() {
         </TabsContent>
 
         <TabsContent value="posts">
-          <div className="text-center py-16">
-            <p className="text-nf-muted">用户帖子将在这里展示</p>
-          </div>
+          {userPosts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {userPosts.map((post) => (
+                <PostCard
+                  key={post.id}
+                  id={post.id}
+                  title={post.title}
+                  body={post.content ?? undefined}
+                  type={post.type}
+                  status={post.status}
+                  tags={post.tags ?? []}
+                  created_at={post.created_at ?? undefined}
+                  like_count={post.like_count ?? 0}
+                  comment_count={post.comment_count ?? 0}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <p className="text-nf-muted">暂无帖子</p>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </PageLayout>

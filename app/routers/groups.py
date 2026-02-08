@@ -203,3 +203,25 @@ def remove_group_member(
         raise HTTPException(status_code=404, detail="Member not found")
     crud.members.remove_by_group_and_user(db, group_id=group_id, user_id=user_id)
     return None
+
+
+@router.get("/my/groups", response_model=schemas.PaginatedGroupList, tags=["groups"])
+def list_my_groups(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    status: Optional[str] = Query(None, description="Filter by membership status"),
+    db: Session = Depends(get_db),
+    user_id: int = Depends(require_current_user_id),
+):
+    """List groups the current user is a member of."""
+    memberships = crud.members.get_multi_by_user(db, user_id=user_id, status=status, skip=skip, limit=limit)
+    total = crud.members.count_by_user(db, user_id=user_id, status=status)
+
+    # Fetch the actual group objects
+    groups = []
+    for m in memberships:
+        group = crud.groups.get(db, id=m.group_id)
+        if group:
+            groups.append(group)
+
+    return {"items": groups, "total": total, "skip": skip, "limit": limit}

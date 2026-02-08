@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useMemo, useState } from "react"
 import { Search, SlidersHorizontal, Plus } from "lucide-react"
 import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
 import { PageLayout } from "@/components/layout/PageLayout"
 import { CategoryCard } from "@/components/cards/CategoryCard"
 import { Button } from "@/components/ui/button"
@@ -10,11 +11,31 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getCategories, type Event } from "@/lib/api-client"
 
-export default function EventsPage() {
+function EventsContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
   const [activeTab, setActiveTab] = useState("all")
+  const [searchQuery, setSearchQuery] = useState("")
   const [events, setCategories] = useState<Event[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Initialize search query from URL
+  useEffect(() => {
+    const q = searchParams?.get("q") ?? ""
+    setSearchQuery(q)
+  }, [searchParams])
+
+  function updateParams(patch: { q?: string | null }) {
+    const next = new URLSearchParams(searchParams?.toString() ?? "")
+    if (patch.q !== undefined) {
+      if (!patch.q) next.delete("q")
+      else next.set("q", patch.q)
+    }
+    const qs = next.toString()
+    router.replace(qs ? `/events?${qs}` : "/events")
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,7 +62,17 @@ export default function EventsPage() {
     fetchData()
   }, [activeTab])
 
-  const filteredCategories = events
+  // Client-side search filtering
+  const filteredCategories = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return events
+    return events.filter((cat) => {
+      const inName = cat.name?.toLowerCase().includes(q)
+      const inDesc = cat.description?.toLowerCase().includes(q)
+      const inTags = (cat.tags ?? []).some((t) => t?.toLowerCase().includes(q))
+      return inName || inDesc || inTags
+    })
+  }, [events, searchQuery])
 
   return (
     <PageLayout variant="compact">
@@ -66,6 +97,15 @@ export default function EventsPage() {
           <Input
             placeholder="搜索活动..."
             className="pl-10 bg-nf-surface border-nf-secondary"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key !== "Enter") return
+              updateParams({ q: searchQuery.trim() || null })
+            }}
+            onBlur={() => {
+              updateParams({ q: searchQuery.trim() || null })
+            }}
           />
         </div>
         <Button variant="outline" className="border-nf-secondary">
@@ -118,5 +158,13 @@ export default function EventsPage() {
         </TabsContent>
       </Tabs>
     </PageLayout>
+  )
+}
+
+export default function EventsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-nf-dark flex items-center justify-center text-nf-muted">加载中...</div>}>
+      <EventsContent />
+    </Suspense>
   )
 }

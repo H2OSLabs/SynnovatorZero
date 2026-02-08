@@ -1,122 +1,152 @@
-# Findings: 前端开发工作流双分支设计
+# Findings: 前端问题诊断
 
-> **更新时间**: 2026-02-08
+> 更新时间: 2026-02-08
+> 来源: 双分支工作流验证 + 详细代码检查
 
-## 1. AI UI 生成工具研究
+## 问题清单
 
-### 工具对比
+### 高优先级问题 (需立即修复)
 
-| 工具 | 文本输入 | API/MCP | pages.yaml 输出 | 成本 |
-|------|---------|---------|-----------------|------|
-| **v0.dev** | ✅ 自然语言 | REST API | ❌ 需转换 | $20+/月 |
-| **shadcn MCP** | ✅ 对话式 | MCP (已配置) | ❌ 直接安装组件 | 免费 |
-| **Magic UI MCP** | ✅ 自然语言 | MCP | ❌ React 组件 | 免费 |
-| **Penpot** | ⚠️ 部分 | API + MCP (实验) | ❌ .penpot 格式 | 免费 |
-| **Pixso** | ⚠️ 有限 | MCP (仅客户端) | ❌ HTML/图片 | 付费 |
-| **Galileo AI** | ✅ 文本/图片 | ❌ 无公开 API | ❌ Figma 导出 | 订阅 |
-| **Claude + shadcn** | ✅ 用户旅程 | 原生 | ✅ 可直接生成 | 已订阅 |
+| # | 问题 | 文件 | 行号 | 说明 |
+|---|------|------|------|------|
+| 1 | 点赞状态未持久化 | `frontend/app/posts/[id]/page.tsx` | 52-53 | `liked` 初始化为 `false`，未从 API 获取 |
+| 2 | 活动报名按钮未连接 | `frontend/app/events/[id]/page.tsx` | 250-253 | 无 onClick 处理器 |
+| 3 | 活动搜索未实现 | `frontend/app/events/page.tsx` | 64-69 | 搜索输入无状态绑定 |
+| 4 | 团队搜索未实现 | `frontend/app/groups/page.tsx` | 98-101 | 同上 |
+| 5 | 用户帖子标签未实现 | `frontend/app/users/[id]/page.tsx` | 205-209 | 显示占位符而非真实帖子 |
+| 6 | 关注按钮是 Mock | `frontend/app/users/[id]/page.tsx` | 55-60 | 未调用 API，仅本地状态 |
+| 7 | API 缺少活动报名端点 | `frontend/lib/api-client.ts` | - | 无 joinEvent/leaveEvent 函数 |
 
-### 推荐方案
+### 中优先级问题
 
-**Claude + shadcn/ui 混合方法**
+| # | 问题 | 文件 | 说明 |
+|---|------|------|------|
+| 8 | 无独立交互组件 | `frontend/components/` | LikeButton/CommentSection 内联在页面中 |
+| 9 | 团队成员数缺失 | `frontend/app/events/[id]/page.tsx` | GroupCard 未传递 member_count |
 
-优势：
-1. **零额外成本** - 使用现有 Claude 订阅
-2. **无缝集成** - 与现有 skills 和 MCP 兼容
-3. **自定义输出** - 直接生成 `pages.yaml`
-4. **主题合规** - 使用 Neon Forge 设计系统
-5. **领域感知** - 使用项目上下文（CLAUDE.md、领域模型）
+## 问题详情
 
----
+### 1. 点赞状态未持久化
 
-## 2. ai-ui-generator Skill 设计
-
-### 架构
-
-```
-输入:
-├── docs/user-journeys/*.md (用户旅程)
-├── specs/testcases/*.md (测试用例)
-├── specs/ui/*.pen (可选设计规格)
-└── Design system tokens (Neon Forge)
-
-处理:
-├── 1. 解析用户旅程为页面需求
-├── 2. 映射操作到 UI 模式
-├── 3. 使用 shadcn MCP 匹配组件
-├── 4. 应用 Neon Forge 主题
-└── 5. 生成结构化规格
-
-输出:
-├── specs/design/pages.yaml
-├── specs/ux/ (交互规格)
-└── 组件安装命令
+**当前代码 (L52-53):**
+```typescript
+const [liked, setLiked] = useState(false)  // 始终初始化为 false
+const [likeCount, setLikeCount] = useState(0)
 ```
 
-### 核心 References
+**问题**: 用户刷新页面后，即使之前已点赞，按钮仍显示未点赞状态。
 
-需要创建以下参考文档：
-
-| 文件 | 用途 |
-|------|------|
-| `component-catalog.md` | shadcn/ui 可用组件清单 |
-| `layout-patterns.md` | 常见页面布局模式 |
-| `interaction-patterns.md` | 交互模式库 |
-| `neon-forge-tokens.md` | 设计系统 token 映射 |
-
----
-
-## 3. 双分支工作流设计
-
-### 检测逻辑
-
-```python
-def detect_design_source():
-    # 检查 Figma 资源
-    if exists("specs/design/figma/README.md"):
-        return "figma"
-    if has_figma_url_in_config():
-        return "figma"
-
-    # 无 Figma，使用 AI 生成
-    return "ai-generated"
+**修复方案**: 在 useEffect 中调用 API 检查点赞状态：
+```typescript
+useEffect(() => {
+  async function checkLikeStatus() {
+    const status = await checkPostLiked(id)
+    setLiked(status.liked)
+  }
+  checkLikeStatus()
+}, [id])
 ```
 
-### 分支 A: 有 Figma
+### 2. 活动报名按钮未连接
 
-```
-figma-resource-extractor
-    ↓ specs/design/figma/
-ui-spec-generator
-    ↓ specs/design/pages.yaml
-ux-spec-generator
-    ↓ specs/ux/
-frontend-prototype-builder
-    ↓ React pages
+**当前代码 (L250-253):**
+```typescript
+<Button className="...">
+  <UserPlus className="h-4 w-4 mr-2" />
+  Join Event
+</Button>
 ```
 
-### 分支 B: 无 Figma
+**问题**: 按钮无任何交互，点击无反应。
 
+**修复方案**:
+1. 添加 API 函数 `joinEvent(eventId)`
+2. 添加状态 `const [isParticipant, setIsParticipant] = useState(false)`
+3. 添加 `onClick={handleJoinEvent}` 处理器
+
+### 3 & 4. 搜索功能未实现
+
+**参考实现 (posts/page.tsx L187-199):**
+```typescript
+<Input
+  placeholder="搜索帖子..."
+  value={searchQuery}
+  onChange={(e) => setSearchQuery(e.target.value)}
+  onKeyDown={(e) => {
+    if (e.key !== "Enter") return
+    updateParams({ q: searchQuery.trim() || null })
+  }}
+/>
 ```
-ai-ui-generator
-    ↓ 从 User Journey 生成
-    ├── specs/design/pages.yaml
-    └── specs/ux/
-frontend-prototype-builder
-    ↓ React pages
+
+**修复**: 将此模式复制到 events/page.tsx 和 groups/page.tsx
+
+### 5. 用户帖子标签未实现
+
+**当前代码 (L205-209):**
+```typescript
+<TabsContent value="posts">
+  <div className="text-center py-16">
+    <p className="text-nf-muted">用户帖子将在这里展示</p>
+  </div>
+</TabsContent>
 ```
 
----
+**修复**: 获取用户的帖子并显示：
+```typescript
+const [userPosts, setUserPosts] = useState<Post[]>([])
+// 在 useEffect 中
+const posts = await getPosts(0, 100, { created_by: id })
+setUserPosts(posts.items)
+```
 
-## 4. 已完成事项
+### 6. 关注按钮是 Mock
 
-- [x] 复制 Figma skills 到当前分支
-- [x] 研究 AI UI 生成工具
-- [x] 确定推荐方案 (Claude + shadcn/ui)
+**当前代码 (L55-60):**
+```typescript
+const handleFollow = async () => {
+  // For demo purposes, we'll just toggle the state
+  setIsFollowing(!isFollowing)
+  setFollowerCount((c) => (isFollowing ? c - 1 : c + 1))
+}
+```
 
-## 5. 待完成事项
+**问题**: 注释明确说 "For demo purposes"，未调用后端 API。
 
-- [ ] 创建 ai-ui-generator skill
-- [ ] 创建参考文档 (component-catalog, patterns)
-- [ ] 更新工作流文档（双分支）
-- [ ] 集成测试
+**修复**: 使用现有的 `UserFollowButton` 组件替代内联实现。
+
+### 7. API 缺少活动报名端点
+
+**需添加到 api-client.ts:**
+```typescript
+export async function joinEvent(eventId: number) {
+  return apiFetch(`/events/${eventId}/join`, { method: 'POST' })
+}
+
+export async function leaveEvent(eventId: number) {
+  return apiFetch(`/events/${eventId}/join`, { method: 'DELETE' })
+}
+
+export async function checkEventParticipation(eventId: number): Promise<boolean> {
+  const res = await apiFetch(`/events/${eventId}/participation`)
+  return res.is_participant
+}
+```
+
+## 根因分析
+
+| 问题类型 | 追溯阶段 | 根因 |
+|---------|---------|------|
+| 点赞状态 | Phase 7 (组件开发) | 状态初始化未考虑持久化 |
+| 活动报名 | Phase 6 (API 客户端) | 缺少 API 端点绑定 |
+| 搜索功能 | Phase 7 (组件开发) | 部分实现，未复制到所有页面 |
+| 用户帖子 | Phase 7 (组件开发) | 占位符未替换为真实实现 |
+| 关注按钮 | Phase 7 (组件开发) | 未使用已有的组件 |
+
+## 修复优先级
+
+1. **搜索功能** - 简单复制粘贴，快速见效
+2. **关注按钮** - 使用现有组件，低风险
+3. **点赞状态** - 添加 API 调用
+4. **用户帖子** - 添加数据获取逻辑
+5. **活动报名** - 需要后端 API 确认

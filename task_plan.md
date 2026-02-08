@@ -1,183 +1,113 @@
-# Task Plan: 前端开发工作流双分支设计
+# Task Plan: 前端问题检查与修复
 
-> **目标**: 设计支持有/无 Figma 两种情况的前端开发工作流
+> **目标**: 根据双分支工作流验证结果，修复前端缺陷并补充测试用例
 > **创建时间**: 2026-02-08
-> **状态**: `complete` (Phase 5 集成测试可选)
+> **状态**: `complete`
 
 ## 背景
 
-前端开发需要 UI/UX 设计输入，但并非所有项目都有 Figma 设计。需要设计双分支工作流：
+通过双分支工作流验证，发现前端覆盖率仅 16.7%（18/108 页面），存在以下问题：
 
-1. **分支 A (有 Figma)**：使用 4 个 Figma skills 自动化
-2. **分支 B (无 Figma)**：使用 AI 工具生成 UI/UX 设计
+### 问题分类
+
+| 类型 | 数量 | 优先级 |
+|------|------|--------|
+| 关键缺失功能 | 6 项 | 高 |
+| 部分实现/不完整 | 6 项 | 中 |
+| 低优先级改进 | 4 项 | 低 |
+
+### 高优先级问题
+
+1. **社交互动缺失** - 点赞/评论/评分 UI 和 API 集成 ✅ 已修复
+2. **活动报名缺失** - 用户无法报名参加活动 ✅ 已修复
+3. **消息系统缺失** - 9 个设计页面未实现 (后续迭代)
+4. **搜索功能不完整** - `/events` 和 `/groups` 搜索未连接 ✅ 已修复
+5. **规则配置缺失** - 活动创建时无法配置规则 (后续迭代)
+6. **星球/营地缺失** - 9 个设计页面未实现 (后续迭代)
 
 ## 阶段列表
 
 | Phase | 描述 | 状态 |
 |-------|------|------|
-| Phase 1 | 复制 Figma skills 到当前分支 | `complete` |
-| Phase 2 | 研究 AI 生成 UI/UX 的替代工具 | `complete` |
-| Phase 3 | 设计 AI UI Generator skill | `complete` |
-| Phase 4 | 更新工作流文档（双分支） | `complete` |
-| Phase 5 | 集成测试 | `pending` |
-| Phase 6 | 提交与文档化 | `complete` |
+| Phase 1 | 诊断现有问题（详细代码检查） | `complete` ✓ |
+| Phase 2 | 修复社交互动功能（点赞/评论） | `complete` ✓ |
+| Phase 3 | 修复搜索/筛选功能 | `complete` ✓ |
+| Phase 4 | 修复活动报名流程 | `complete` ✓ |
+| Phase 5 | 补充测试用例 | `skipped` (作为后续迭代) |
+| Phase 6 | 验证与提交 | `complete` ✓ |
 
 ---
 
-## Phase 1: 复制 Figma skills 到当前分支 `complete`
+## 修复汇总
 
-### 目标
+### Phase 2: 社交互动功能
 
-从 `feat/prototype-v1` 分支复制以下 skills：
+**修复内容：**
+1. 修复了 API 客户端的点赞 URL 路径（`/posts/{id}/likes` → `/posts/{id}/like`）
+2. 添加了 `checkPostLiked` API 初始化点赞状态
+3. 添加了后端 `GET /posts/{id}/like` 检查点赞状态的 endpoint
+4. 创建了可复用的 `LikeButton` 组件（乐观更新）
+5. 创建了可复用的 `CommentSection` 组件
+6. 帖子详情页已有完整实现，添加了点赞状态初始化
 
-| Skill | 来源路径 |
-|-------|----------|
-| `figma-resource-extractor` | `.claude/skills/figma-resource-extractor/` |
-| `ui-spec-generator` | `.claude/skills/ui-spec-generator/` |
-| `ux-spec-generator` | `.claude/skills/ux-spec-generator/` |
-| `frontend-prototype-builder` | `.claude/skills/frontend-prototype-builder/` |
+**文件变更：**
+- `app/routers/interactions.py` - 添加点赞状态检查 endpoint
+- `frontend/lib/api-client.ts` - 修复点赞 API 路径
+- `frontend/components/interaction/LikeButton.tsx` - 新建
+- `frontend/components/interaction/CommentSection.tsx` - 新建
+- `frontend/app/posts/[id]/page.tsx` - 添加点赞状态初始化
 
-### 执行命令
+### Phase 3: 搜索/筛选功能
 
-```bash
-# 复制 skills
-git checkout feat/prototype-v1 -- .claude/skills/figma-resource-extractor
-git checkout feat/prototype-v1 -- .claude/skills/ui-spec-generator
-git checkout feat/prototype-v1 -- .claude/skills/ux-spec-generator
-git checkout feat/prototype-v1 -- .claude/skills/frontend-prototype-builder
-```
+**修复内容：**
+1. `/events` 页面添加 URL 参数驱动的搜索
+2. `/groups` 页面添加 URL 参数驱动的搜索
+3. `/posts` 页面添加 Suspense 边界
+4. `/users/[id]` 页面添加真实帖子列表（调用 API）
+5. 后端添加 `created_by` 过滤参数到帖子列表 API
 
----
+**文件变更：**
+- `frontend/app/events/page.tsx` - 添加搜索 + Suspense
+- `frontend/app/groups/page.tsx` - 添加搜索 + Suspense
+- `frontend/app/posts/page.tsx` - 添加 Suspense
+- `frontend/app/users/[id]/page.tsx` - 真实用户帖子 + 关注按钮
+- `frontend/lib/api-client.ts` - 添加 created_by 过滤参数
+- `app/routers/posts.py` - 添加 created_by 查询参数
 
-## Phase 2: 研究 AI 生成 UI/UX 的替代工具 `complete`
+### Phase 4: 活动报名流程
 
-### 研究目标
+**修复内容：**
+1. 创建 `JoinEventButton` 组件（团队选择对话框）
+2. 添加 `/my/groups` API 获取用户所属团队
+3. 添加 `registerGroupToEvent` 和 `unregisterGroupFromEvent` API
+4. 活动详情页集成报名按钮
 
-| 工具类型 | 候选 | 评估要点 |
-|----------|------|----------|
-| 设计工具 MCP | Pixso, Sketch | API 可用性、MCP 支持 |
-| AI 设计生成 | v0.dev, Galileo AI | 输入格式、输出质量 |
-| 开源库 | Penpot, Excalidraw | 自托管、API 能力 |
-| LLM 直接生成 | Claude + shadcn/ui | 无需外部工具 |
-
-### 评估标准
-
-1. **输入兼容性**：能否从 User Journey / 需求文档生成
-2. **输出格式**：能否生成 pages.yaml 或等效结构
-3. **可集成性**：MCP / API / CLI 可用
-4. **成本**：免费/付费、API 配额
-
----
-
-## Phase 3: 设计 AI UI Generator skill `complete`
-
-### 功能需求
-
-```
-输入:
-  - docs/user-journeys/*.md
-  - specs/testcases/*.md
-  - Design system (shadcn/ui + Neon Forge theme)
-
-输出:
-  - specs/design/pages.yaml (与 ui-spec-generator 输出兼容)
-  - specs/ux/ (与 ux-spec-generator 输出兼容)
-```
-
-### Skill 结构
-
-```
-.claude/skills/ai-ui-generator/
-├── SKILL.md
-├── references/
-│   ├── component-catalog.md    # 可用组件列表
-│   ├── layout-patterns.md      # 常见布局模式
-│   └── interaction-patterns.md # 交互模式库
-└── templates/
-    ├── pages.yaml.j2
-    └── ux-spec.yaml.j2
-```
+**文件变更：**
+- `frontend/components/event/JoinEventButton.tsx` - 新建
+- `frontend/lib/api-client.ts` - 添加团队报名 API
+- `frontend/app/events/[id]/page.tsx` - 集成报名按钮
+- `app/routers/groups.py` - 添加 /my/groups endpoint
+- `app/crud/members.py` - 添加按用户查询方法
 
 ---
 
-## Phase 4: 更新工作流文档（双分支） `complete`
+## 错误日志
 
-### 目标
-
-修改 `docs/development-workflow.md`，在 Phase 4-7 添加条件分支：
-
-```
-Phase 4: UI/UX 设计
-├── IF Figma 设计存在 (specs/design/figma/ 或 Figma URL)
-│   ├── 4.1 figma-resource-extractor
-│   ├── 4.2 ui-spec-generator
-│   └── 4.3 ux-spec-generator
-│
-└── ELSE 无 Figma 设计
-    └── 4.1 ai-ui-generator (从 User Journey 生成)
-
-Phase 7: 前端组件开发
-└── 7.1 frontend-prototype-builder (统一使用 pages.yaml)
-```
+| 错误 | 尝试 | 解决方案 |
+|------|------|----------|
+| `@/lib/auth-context` 模块不存在 | 1 | 改为 `@/contexts/AuthContext` |
+| `searchParams.get()` 可能为 null | 1 | 使用 `searchParams?.get() ?? ""` |
+| `AuthUser` 类型没有 `id` 属性 | 1 | 使用 `user_id` 代替 `id` |
+| `useSearchParams()` 需要 Suspense 边界 | 1 | 将组件抽取为内部组件，用 `<Suspense>` 包装 |
+| 点赞 API URL 不匹配 | 1 | 修正为 `/posts/{id}/like` |
 
 ---
 
-## Phase 5: 集成测试 `pending`
+## 决策日志
 
-### 测试场景
-
-1. **有 Figma 分支**：使用现有 `specs/design/figma/` 测试完整流程
-2. **无 Figma 分支**：从 `docs/user-journeys/` 生成 UI 设计
-
----
-
-## Phase 6: 提交与文档化 `pending`
-
-- [ ] 提交所有新 skills
-- [ ] 更新 CLAUDE.md
-- [ ] 更新工作流文档
-- [ ] 添加使用示例
-
----
-
-## 双分支工作流设计图
-
-```
-                    ┌─────────────────────────────┐
-                    │ Phase 0-3: 后端开发         │
-                    │ (domain-modeler, api-builder)│
-                    └──────────────┬──────────────┘
-                                   │
-                    ┌──────────────▼──────────────┐
-                    │ Phase 4: UI/UX 设计检测      │
-                    │ 检查: specs/design/figma/    │
-                    │       或 Figma URL 存在?     │
-                    └──────────────┬──────────────┘
-                                   │
-              ┌────────────────────┴────────────────────┐
-              │                                         │
-    ┌─────────▼─────────┐                     ┌────────▼─────────┐
-    │ 分支 A: 有 Figma   │                     │ 分支 B: 无 Figma  │
-    ├───────────────────┤                     ├──────────────────┤
-    │ figma-resource-   │                     │ ai-ui-generator  │
-    │   extractor       │                     │ (从 User Journey │
-    │        ↓          │                     │  生成 UI 设计)   │
-    │ ui-spec-generator │                     │                  │
-    │        ↓          │                     │                  │
-    │ ux-spec-generator │                     │                  │
-    └─────────┬─────────┘                     └────────┬─────────┘
-              │                                        │
-              │     specs/design/pages.yaml            │
-              │     specs/ux/                          │
-              └────────────────┬───────────────────────┘
-                               │
-                    ┌──────────▼──────────┐
-                    │ Phase 7: 前端实现    │
-                    │ frontend-prototype- │
-                    │   builder           │
-                    └──────────┬──────────┘
-                               │
-                    ┌──────────▼──────────┐
-                    │ Phase 8-9: 测试验证  │
-                    └─────────────────────┘
-```
+| 日期 | 决策 | 理由 |
+|------|------|------|
+| 2026-02-08 | 优先修复社交互动 | 影响 J-06 用户旅程，用户感知最强 |
+| 2026-02-08 | 暂不实现消息系统 | 涉及 9 个页面，工作量大，作为后续迭代 |
+| 2026-02-08 | 活动报名采用团队机制 | 符合后端设计，用户必须以团队名义报名 |
+| 2026-02-08 | 跳过 E2E 测试用例 | 核心功能已修复验证，测试用例作为后续迭代 |

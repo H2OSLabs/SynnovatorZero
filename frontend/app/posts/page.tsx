@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { Suspense, useEffect, useMemo, useState } from "react"
 import { Search, SlidersHorizontal, Plus } from "lucide-react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -12,10 +12,10 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getPosts, getUser, type Post, type PostStatus } from "@/lib/api-client"
 
-export default function PostsPage() {
+function PostsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const paramsKey = searchParams.toString()
+  const paramsKey = searchParams?.toString() ?? ""
 
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
@@ -26,10 +26,10 @@ export default function PostsPage() {
   const [error, setError] = useState<string | null>(null)
 
   const applied = useMemo(() => {
-    const q = searchParams.get("q") ?? ""
-    const type = searchParams.get("type") ?? undefined
-    const status = (searchParams.get("status") ?? undefined) as PostStatus | undefined
-    const tagsText = searchParams.get("tags") ?? ""
+    const q = searchParams?.get("q") ?? ""
+    const type = searchParams?.get("type") ?? undefined
+    const status = (searchParams?.get("status") ?? undefined) as PostStatus | undefined
+    const tagsText = searchParams?.get("tags") ?? ""
     const tags = tagsText
       ? tagsText
           .split(",")
@@ -52,7 +52,7 @@ export default function PostsPage() {
   }, [applied.q, applied.type])
 
   function updateParams(patch: { q?: string | null; type?: string | null; status?: PostStatus | null; tags?: string[] | null }) {
-    const next = new URLSearchParams(searchParams.toString())
+    const next = new URLSearchParams(searchParams?.toString() ?? "")
 
     if (patch.q !== undefined) {
       if (!patch.q) next.delete("q")
@@ -257,5 +257,13 @@ export default function PostsPage() {
         </TabsContent>
       </Tabs>
     </PageLayout>
+  )
+}
+
+export default function PostsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-nf-dark flex items-center justify-center text-nf-muted">加载中...</div>}>
+      <PostsContent />
+    </Suspense>
   )
 }

@@ -282,13 +282,14 @@ export interface Post {
 export async function getPosts(
   skip = 0,
   limit = 20,
-  filters?: { type?: string; status?: PostStatus; tags?: string[]; q?: string }
+  filters?: { type?: string; status?: PostStatus; tags?: string[]; q?: string; created_by?: number }
 ) {
   const params = new URLSearchParams({ skip: String(skip), limit: String(limit) })
   if (filters?.type) params.set('type', filters.type)
   if (filters?.status) params.set('status', filters.status)
   if (filters?.q) params.set('q', filters.q)
   if (filters?.tags?.length) params.set('tags', filters.tags.join(','))
+  if (filters?.created_by) params.set('created_by', String(filters.created_by))
   return apiFetch<{ items: Post[]; total: number; skip: number; limit: number }>(`/posts?${params.toString()}`)
 }
 
@@ -391,6 +392,12 @@ export async function deleteGroup(groupId: number) {
   })
 }
 
+export async function getMyGroups(skip = 0, limit = 100, status?: string) {
+  const params = new URLSearchParams({ skip: String(skip), limit: String(limit) })
+  if (status) params.set('status', status)
+  return apiFetch<{ items: Group[]; total: number; skip: number; limit: number }>(`/my/groups?${params.toString()}`)
+}
+
 export async function getGroupMembers(
   groupId: number,
   skip = 0,
@@ -469,22 +476,21 @@ export async function addPostComment(postId: number, value: string, parentId?: n
 }
 
 export async function likePost(postId: number) {
-  return apiFetch<Interaction>(`/posts/${postId}/likes`, {
+  return apiFetch<{ post_id: number; liked: boolean }>(`/posts/${postId}/like`, {
     method: 'POST',
-    body: JSON.stringify({ type: 'like' }),
   })
 }
 
 export async function unlikePost(postId: number) {
-  return apiFetch<void>(`/posts/${postId}/likes`, {
+  return apiFetch<void>(`/posts/${postId}/like`, {
     method: 'DELETE',
   })
 }
 
 export async function checkPostLiked(postId: number): Promise<boolean> {
   try {
-    await apiFetch<{ liked: boolean }>(`/posts/${postId}/likes/check`)
-    return true
+    const result = await apiFetch<{ post_id: number; liked: boolean }>(`/posts/${postId}/like`)
+    return result.liked
   } catch {
     return false
   }
@@ -558,6 +564,19 @@ export async function getEventPosts(eventId: number) {
 
 export async function getEventGroups(eventId: number) {
   return apiFetch<EventGroup[]>(`/events/${eventId}/groups`)
+}
+
+export async function registerGroupToEvent(eventId: number, groupId: number) {
+  return apiFetch<EventGroup>(`/events/${eventId}/groups`, {
+    method: 'POST',
+    body: JSON.stringify({ group_id: groupId }),
+  })
+}
+
+export async function unregisterGroupFromEvent(eventId: number, groupId: number) {
+  return apiFetch<void>(`/events/${eventId}/groups/${groupId}`, {
+    method: 'DELETE',
+  })
 }
 
 // Rules

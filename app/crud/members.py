@@ -32,6 +32,21 @@ class CRUDMember:
             q = q.filter(Member.status == status)
         return q.count()
 
+    def get_multi_by_user(
+        self, db: Session, *, user_id: int, status: Optional[str] = None,
+        skip: int = 0, limit: int = 100,
+    ) -> List[Member]:
+        q = db.query(Member).filter(Member.user_id == user_id)
+        if status:
+            q = q.filter(Member.status == status)
+        return q.offset(skip).limit(limit).all()
+
+    def count_by_user(self, db: Session, *, user_id: int, status: Optional[str] = None) -> int:
+        q = db.query(Member).filter(Member.user_id == user_id)
+        if status:
+            q = q.filter(Member.status == status)
+        return q.count()
+
     def create(
         self, db: Session, *, group_id: int, user_id: int,
         role: str = "member", status: str = "pending",

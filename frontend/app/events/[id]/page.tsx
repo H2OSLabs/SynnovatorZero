@@ -3,8 +3,9 @@
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
-import { ArrowLeft, Calendar, FileText, UserPlus, Loader2 } from "lucide-react"
+import { ArrowLeft, Calendar, FileText, Loader2 } from "lucide-react"
 import { PageLayout } from "@/components/layout/PageLayout"
+import { JoinEventButton } from "@/components/event/JoinEventButton"
 import { Panel, PanelSection, PanelCard } from "@/components/layout/Panel"
 import { PostCard } from "@/components/cards/PostCard"
 import { GroupCard } from "@/components/cards/GroupCard"
@@ -247,10 +248,14 @@ export default function EventDetailPage() {
         </PanelSection>
       )}
 
-      <Button className="w-full bg-nf-lime text-nf-near-black hover:bg-nf-lime/90">
-        <UserPlus className="h-4 w-4 mr-2" />
-        Join Event
-      </Button>
+      <JoinEventButton
+        eventId={eventId}
+        onJoined={() => {
+          // Refresh groups count
+          window.location.reload()
+        }}
+        className="w-full"
+      />
     </Panel>
   )
 

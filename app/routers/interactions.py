@@ -57,6 +57,20 @@ def _update_post_cache(db: Session, post_id: int):
 
 # --- Like endpoints ---
 
+@router.get("/posts/{post_id}/like", tags=["interactions"])
+def check_post_like_status(
+    post_id: int,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(require_current_user_id),
+):
+    """Check if the current user has liked the post."""
+    post = crud.posts.get(db, id=post_id)
+    if post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+    liked = crud.target_interactions.has_like_by_user(db, target_type="post", target_id=post_id, user_id=user_id)
+    return {"post_id": post_id, "liked": liked}
+
+
 @router.post("/posts/{post_id}/like", status_code=status.HTTP_201_CREATED, tags=["interactions"])
 def like_post(
     post_id: int,

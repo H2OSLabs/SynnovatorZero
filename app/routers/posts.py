@@ -31,6 +31,7 @@ def list_posts(
     post_status: Optional[str] = Query(None, alias="status"),
     q: Optional[str] = Query(None),
     tags: Optional[str] = Query(None),
+    created_by: Optional[int] = Query(None, description="Filter by author ID"),
     db: Session = Depends(get_db),
     current_user_id: Optional[int] = Depends(get_current_user_id),
 ):
@@ -38,6 +39,8 @@ def list_posts(
     query = db.query(crud.posts.model).filter(
         crud.posts.model.deleted_at.is_(None),
     )
+    if created_by is not None:
+        query = query.filter(crud.posts.model.created_by == created_by)
     if type is not None:
         if type not in POST_TYPES:
             raise HTTPException(status_code=422, detail=f"Invalid type: {type}")
