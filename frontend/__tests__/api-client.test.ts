@@ -272,16 +272,15 @@ describe('api-client', () => {
     })
 
     test('likePost sends POST request', async () => {
-      const mockLike = { id: 1, type: 'like', created_by: 1 }
+      const mockLike = { post_id: 1, liked: true }
       mockFetch.mockReturnValueOnce(mockJsonResponse(mockLike))
 
       const result = await apiClient.likePost(1)
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:8000/posts/1/likes',
+        'http://localhost:8000/posts/1/like',
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify({ type: 'like' }),
         })
       )
       expect(result).toEqual(mockLike)
@@ -299,7 +298,7 @@ describe('api-client', () => {
       await apiClient.unlikePost(1)
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:8000/posts/1/likes',
+        'http://localhost:8000/posts/1/like',
         expect.objectContaining({
           method: 'DELETE',
         })

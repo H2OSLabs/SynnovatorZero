@@ -22,6 +22,7 @@
 | `/posts/create` | `app/posts/create/page.tsx` | 创建帖子 |
 | `/posts/[id]` | `app/posts/[id]/page.tsx` | 帖子详情 |
 | `/posts/[id]/edit` | `app/posts/[id]/edit/page.tsx` | 编辑帖子 |
+| `/my/posts` | `app/my/posts/page.tsx` | 我的帖子 |
 
 **`/posts` 查询参数**
 
@@ -69,7 +70,6 @@
 
 | ❌ 错误路由 | ✅ 正确路由 | 说明 |
 |------------|-----------|------|
-| `/my/posts` | `/posts` | 不存在 `/my/` 前缀 |
 | `/my/groups` | `/groups` | 不存在 `/my/` 前缀 |
 | `/my/events` | `/events` | 不存在 `/my/` 前缀 |
 | `/profile` | `/users/[id]` | 使用 `/users/{userId}` |
