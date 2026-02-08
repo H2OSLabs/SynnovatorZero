@@ -88,7 +88,71 @@ npx playwright test user-journeys
 npx playwright show-report
 ```
 
-## 8.4 测试用例映射
+## 8.4 使用 Playwright Trace 调试
+
+当 E2E 测试失败时，Trace 功能可以帮助快速定位问题。
+
+### 启用 Trace
+
+```bash
+# 仅在测试失败时保存 trace
+uv run pytest e2e/ -v --e2e-trace
+
+# 所有测试都保存 trace（用于调试通过的测试）
+uv run pytest e2e/ -v --e2e-trace-all
+```
+
+### 查看 Trace
+
+```bash
+# 打开 Trace Viewer（可视化界面）
+npx playwright show-trace /tmp/e2e_traces/<test_name>.zip
+```
+
+Trace Viewer 提供：
+- **时间线视图**：每个操作的截图和 DOM 快照
+- **网络面板**：所有 HTTP 请求/响应
+- **控制台日志**：console.log/error/warn
+- **源代码定位**：点击操作跳转到测试代码
+
+### 在测试中使用 traced_page
+
+```python
+from conftest import print_console_logs, assert_no_console_errors
+
+def test_something(traced_page):
+    """使用 traced_page fixture 自动捕获调试信息"""
+    traced_page.goto("http://localhost:3000/explore")
+    traced_page.wait_for_load_state("networkidle")
+
+    # 访问捕获的日志
+    print(traced_page.console_logs)    # 所有 console 输出
+    print(traced_page.console_errors)  # console.error
+    print(traced_page.network_errors)  # 失败的网络请求
+
+    # 辅助函数
+    print_console_logs(traced_page)       # 打印格式化日志
+    assert_no_console_errors(traced_page) # 断言无 JS 错误
+```
+
+### Trace 文件内容
+
+| 内容 | 说明 |
+|------|------|
+| 📸 Screenshots | 每个操作前后的截图 |
+| 🌐 Network | 所有 HTTP 请求/响应（含 payload） |
+| 📝 Console | 浏览器控制台日志 |
+| 🔍 DOM Snapshots | 页面 DOM 快照（可检查元素） |
+| 📍 Source Maps | 源代码映射，点击可定位 |
+
+### 最佳实践
+
+1. **CI 中始终启用 `--e2e-trace`**：失败时自动保存 trace
+2. **本地调试用 `--e2e-trace-all`**：即使通过也保存，方便分析
+3. **使用 `traced_page` fixture**：自动捕获 console 和 network 错误
+4. **检查 network_errors**：API 调用失败会记录在这里
+
+## 8.5 测试用例映射
 
 | 用户旅程 | 测试用例 | 测试文件 |
 |---------|---------|---------|

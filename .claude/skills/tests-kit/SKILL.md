@@ -102,6 +102,52 @@ Run this workflow when the user wants to add new test scenarios.
    uv run python .claude/skills/tests-kit/scripts/check_testcases.py
    ```
 
+## Running E2E Tests
+
+```bash
+# 运行所有用户旅程 E2E 测试
+uv run pytest e2e/ -v -k "journey"
+
+# 运行特定测试
+uv run pytest e2e/test_journey_post_creation.py -v
+```
+
+## 调试 E2E 测试失败
+
+当 E2E 测试失败时，使用 **Playwright Trace** 进行可视化调试：
+
+```bash
+# 启用 trace（失败时自动保存）
+uv run pytest e2e/ -v --e2e-trace
+
+# 所有测试都保存 trace（用于分析通过的测试）
+uv run pytest e2e/ -v --e2e-trace-all
+
+# 查看 trace 文件（可视化界面）
+npx playwright show-trace /tmp/e2e_traces/<test_name>.zip
+```
+
+**Trace Viewer 提供：**
+- 📸 时间线视图：每个操作的截图
+- 🌐 网络面板：HTTP 请求/响应
+- 📝 控制台日志：console.log/error
+- 🔍 DOM 快照：可检查页面元素
+
+**在测试中使用 traced_page fixture：**
+
+```python
+def test_something(traced_page):
+    traced_page.goto("http://localhost:3000/explore")
+
+    # 访问捕获的日志
+    print(traced_page.console_errors)  # JS 错误
+    print(traced_page.network_errors)  # 网络错误
+
+    # 辅助函数
+    from conftest import print_console_logs
+    print_console_logs(traced_page)
+```
+
 ## Resources
 
 ### scripts/
