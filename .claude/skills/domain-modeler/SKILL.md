@@ -161,6 +161,32 @@ For each entity, define the full CRUD matrix with permissions.
 - [ ] Every relationship has create/delete operations defined
 - [ ] Permission matrix covers all 3+ roles
 - [ ] Special operations (status transitions, bulk ops) are documented
+- [ ] **Symmetry check:** CREATE/DELETE operations have corresponding LIST operations (see below)
+
+#### Symmetry Check
+
+For every CREATE/DELETE operation pair, verify a corresponding LIST operation exists:
+
+```
+Rule: If user can CREATE item X and DELETE item X,
+      then user should be able to LIST their own X items.
+
+Example - Missing symmetry detected:
+  ✓ CREATE interaction (type: like)  → 点赞
+  ✓ DELETE interaction (type: like)  → 取消点赞
+  ✗ READ interaction (type: like, created_by: current_user)  → 查看点赞列表 ← MISSING!
+
+Fix: Add "查看点赞列表" to user journeys if the asymmetry is detected.
+```
+
+**Symmetry check matrix template:**
+
+| Operation Pair | LIST Operation | Status |
+|---------------|----------------|--------|
+| like/unlike post | List my liked posts | ✓/✗ |
+| follow/unfollow user | List my following | ✓/✗ |
+| join/leave group | List my groups | ✓/✗ |
+| create/delete post | List my posts | ✓/✗ |
 
 ### Step 6: Review and Validate
 

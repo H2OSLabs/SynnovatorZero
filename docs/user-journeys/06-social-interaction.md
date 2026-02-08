@@ -11,6 +11,7 @@
 | 点赞帖子 | 对喜欢的帖子点赞 | `CREATE interaction`（type: like, target_type: post） |
 | 取消点赞 | 取消之前的点赞 | `DELETE interaction`（type: like） |
 | 查看点赞数 | 查看帖子的点赞统计 | `READ post`（like_count 缓存字段） |
+| 查看点赞列表 | 查看自己点赞的所有内容 | `READ interaction`（type: like, created_by: current_user） |
 
 ## 6.2 评论
 
