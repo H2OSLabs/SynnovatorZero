@@ -21,6 +21,7 @@ Run this workflow **before committing any change** to synnovator skill scripts, 
 
 2. **Identify affected test cases** based on the change:
    - Read [references/testcase-index.md](references/testcase-index.md) to find TC IDs related to the changed module
+   - Read [references/testcase-format.md](references/testcase-format.md) for test layering strategy
    - Map changes to affected TC prefixes:
      - `content.py` / endpoint scripts → `TC-USER`, `TC-CAT`, `TC-RULE`, `TC-GRP`, `TC-POST`, `TC-RES`, `TC-IACT`
      - `relations.py` → `TC-REL-*`
@@ -36,6 +37,15 @@ Run this workflow **before committing any change** to synnovator skill scripts, 
      - **frontend/app/**/edit/page.tsx** → `TC-FEINT-040~041` (编辑集成)
      - **specs/seed-data-requirements.md** → 种子数据映射的测试用例 (需检查覆盖度)
      - **scripts/seed_dev_data.py** → 种子数据脚本变更需验证前置条件覆盖
+   - Map E2E implementation files to TC prefixes:
+     - **e2e/test_journey_anonymous.py** → `TC-JOUR-002`, `TC-BROWSE-*`
+     - **e2e/test_journey_team_join.py** → `TC-JOUR-005`, `TC-GRP-004~007`
+     - **e2e/test_journey_team_registration.py** → `TC-JOUR-007`, `TC-REL-CG-*`
+     - **e2e/test_journey_post_creation.py** → `TC-JOUR-009`, `TC-POST-*`, `TC-CREATE-*`
+     - **e2e/test_journey_certificate.py** → `TC-JOUR-010`, `TC-CLOSE-030~032`
+     - **e2e/test_journey_post_edit.py** → `TC-JOUR-011-*`, `TC-REL-PP-*`
+     - **e2e/test_journey_post_delete.py** → `TC-JOUR-012`, `TC-DEL-012`
+     - **e2e/test_journey_community.py** → `TC-JOUR-013`, `TC-IACT-*`, `TC-SOCIAL-*`
 
 3. **Read the affected test case files** in `specs/testcases/` and verify each scenario still holds given the proposed change.
 
@@ -69,6 +79,14 @@ Run this workflow when the user wants to add new test scenarios.
    - Wait for user approval before proceeding
 
 5. **Determine placement** — Read [references/testcase-format.md](references/testcase-format.md) for conventions:
+   - **First, choose the correct layer** based on test scope:
+     - 基础层 (01-10): 单个实体 CRUD/约束测试
+     - 桥接层 (11): 完整业务流程（多步骤、跨实体）
+     - 高级层 (12-17): 规则引擎、转移等高级功能
+     - 场景层 (18-33): 细粒度端到端场景
+   - **Avoid duplication** between layer 11 and 18-33:
+     - 11 覆盖**完整流程**（1-2 个 TC 验证整条链路）
+     - 18-33 覆盖**场景变体**（多个 TC 验证正向/负向/边界）
    - Identify the correct file (by module) or decide if a new file is needed
    - Pick the next available TC ID number within the appropriate range
    - Place positive cases in 001-099 (or 100-199 for feature-specific), negative in 900-999

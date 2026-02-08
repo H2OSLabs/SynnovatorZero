@@ -31,7 +31,9 @@ def list_posts(
     post_status: Optional[str] = Query(None, alias="status"),
     tags: Optional[str] = Query(None),
     db: Session = Depends(get_db),
+    current_user_id: Optional[int] = Depends(get_current_user_id),
 ):
+    from sqlalchemy import or_
     query = db.query(crud.posts.model).filter(
         crud.posts.model.deleted_at.is_(None),
     )
@@ -43,6 +45,36 @@ def list_posts(
         if post_status not in POST_STATUSES:
             raise HTTPException(status_code=422, detail=f"Invalid status: {post_status}")
         query = query.filter(crud.posts.model.status == post_status)
+    else:
+        # For anonymous users or when no status filter, hide draft posts
+        # Draft posts only visible to their creator
+        if current_user_id is None:
+            query = query.filter(crud.posts.model.status != "draft")
+        else:
+            # Show non-draft posts + draft posts created by current user
+            query = query.filter(
+                or_(
+                    crud.posts.model.status != "draft",
+                    crud.posts.model.created_by == current_user_id,
+                )
+            )
+    # Also filter private posts (visibility)
+    if current_user_id is None:
+        query = query.filter(
+            or_(
+                crud.posts.model.visibility.is_(None),
+                crud.posts.model.visibility == "public",
+            )
+        )
+    else:
+        # Show public posts + private posts created by current user
+        query = query.filter(
+            or_(
+                crud.posts.model.visibility.is_(None),
+                crud.posts.model.visibility == "public",
+                crud.posts.model.created_by == current_user_id,
+            )
+        )
     total = query.count()
     items = query.offset(skip).limit(limit).all()
     items_out = [_post_to_dict(p) for p in items]

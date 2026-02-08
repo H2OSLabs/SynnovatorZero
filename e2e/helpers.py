@@ -50,16 +50,20 @@ class APIClient:
         })
         if resp.status_code == 200:
             data = resp.json()
+            user_id = data.get("user_id", data.get("id", ""))
             self.current_user = TestUser(
-                id=data.get("user_id", data.get("id", "")),
+                id=str(user_id),
                 username=username,
                 email=data.get("email", ""),
                 role=data.get("role", "participant"),
                 password=password,
             )
-            # Store auth header if token is returned
+            # Store auth header: use X-User-Id for mock auth, Authorization for real auth
             if "token" in data:
                 self.session.headers["Authorization"] = f"Bearer {data['token']}"
+            else:
+                # Mock auth mode - use X-User-Id header
+                self.session.headers["X-User-Id"] = str(user_id)
             return data
         return {"error": resp.text, "status": resp.status_code}
 
@@ -67,6 +71,7 @@ class APIClient:
         """Logout current user."""
         self.current_user = None
         self.session.headers.pop("Authorization", None)
+        self.session.headers.pop("X-User-Id", None)
 
     # ==================== Users ====================
 
@@ -89,18 +94,30 @@ class APIClient:
     def list_users(self, **params) -> List[Dict]:
         """List users with optional filters."""
         resp = self.session.get(f"{self.base_url}/users", params=params)
-        return resp.json() if resp.status_code == 200 else []
+        if resp.status_code == 200:
+            data = resp.json()
+            return data.get("items", data) if isinstance(data, dict) else data
+        return []
 
     # ==================== Events ====================
 
-    def create_event(self, title: str, description: str = "", **kwargs) -> Dict:
-        """Create an event."""
+    def create_event(self, name: str, description: str = "", event_type: str = "competition", **kwargs) -> Dict:
+        """Create an event.
+
+        Args:
+            name: Event name (required)
+            description: Event description
+            event_type: "competition" or "operation" (default: "competition")
+        """
         data = {
-            "title": title,
+            "name": name,
             "description": description,
-            "status": kwargs.get("status", "published"),
+            "type": event_type,
+            "status": kwargs.get("status", "draft"),
             **kwargs,
         }
+        # Remove duplicate keys from kwargs
+        data.pop("event_type", None)
         resp = self.session.post(f"{self.base_url}/events", json=data)
         return resp.json() if resp.status_code == 201 else {"error": resp.text, "status": resp.status_code}
 
@@ -112,7 +129,11 @@ class APIClient:
     def list_events(self, **params) -> List[Dict]:
         """List events with optional filters."""
         resp = self.session.get(f"{self.base_url}/events", params=params)
-        return resp.json() if resp.status_code == 200 else []
+        if resp.status_code == 200:
+            data = resp.json()
+            # Handle paginated response with 'items' key
+            return data.get("items", data) if isinstance(data, dict) else data
+        return []
 
     def close_event(self, event_id: str) -> Dict:
         """Close an event."""
@@ -141,7 +162,11 @@ class APIClient:
     def list_posts(self, **params) -> List[Dict]:
         """List posts with optional filters."""
         resp = self.session.get(f"{self.base_url}/posts", params=params)
-        return resp.json() if resp.status_code == 200 else []
+        if resp.status_code == 200:
+            data = resp.json()
+            # Handle paginated response with 'items' key
+            return data.get("items", data) if isinstance(data, dict) else data
+        return []
 
     def update_post(self, post_id: str, **data) -> Dict:
         """Update a post."""
@@ -174,7 +199,10 @@ class APIClient:
     def list_groups(self, **params) -> List[Dict]:
         """List groups."""
         resp = self.session.get(f"{self.base_url}/groups", params=params)
-        return resp.json() if resp.status_code == 200 else []
+        if resp.status_code == 200:
+            data = resp.json()
+            return data.get("items", data) if isinstance(data, dict) else data
+        return []
 
     def delete_group(self, group_id: str) -> bool:
         """Delete a group."""
@@ -202,7 +230,10 @@ class APIClient:
     def list_group_members(self, group_id: str) -> List[Dict]:
         """List group members."""
         resp = self.session.get(f"{self.base_url}/groups/{group_id}/members")
-        return resp.json() if resp.status_code == 200 else []
+        if resp.status_code == 200:
+            data = resp.json()
+            return data.get("items", data) if isinstance(data, dict) else data
+        return []
 
     # ==================== Interactions ====================
 
@@ -213,21 +244,27 @@ class APIClient:
 
     def comment_post(self, post_id: str, content: str) -> Dict:
         """Comment on a post."""
-        resp = self.session.post(f"{self.base_url}/posts/{post_id}/comments", json={"content": content})
+        resp = self.session.post(f"{self.base_url}/posts/{post_id}/comments", json={
+            "type": "comment",
+            "value": content,
+        })
         return resp.json() if resp.status_code in (200, 201) else {"error": resp.text, "status": resp.status_code}
 
     def rate_post(self, post_id: str, score: float, dimension: str = "overall") -> Dict:
         """Rate a post."""
         resp = self.session.post(f"{self.base_url}/posts/{post_id}/ratings", json={
-            "score": score,
-            "dimension": dimension,
+            "type": "rating",
+            "value": {dimension: score},
         })
         return resp.json() if resp.status_code in (200, 201) else {"error": resp.text, "status": resp.status_code}
 
     def list_post_interactions(self, post_id: str) -> List[Dict]:
         """List interactions on a post."""
         resp = self.session.get(f"{self.base_url}/posts/{post_id}/interactions")
-        return resp.json() if resp.status_code == 200 else []
+        if resp.status_code == 200:
+            data = resp.json()
+            return data.get("items", data) if isinstance(data, dict) else data
+        return []
 
     # ==================== Resources ====================
 
@@ -282,29 +319,45 @@ class APIClient:
 
 # ==================== Test Data Management ====================
 
+def _get_or_create_user(api: APIClient, username: str, email: str, role: str, password: str) -> Optional[Dict]:
+    """Get existing user or create new one."""
+    # Try to create first
+    result = api.create_user(username, email, role, password)
+    if "id" in result:
+        return result
+
+    # If creation failed (likely duplicate), try to find existing user
+    users = api.list_users()
+    for user in users:
+        if user.get("username") == username:
+            return user
+
+    return None
+
+
 def setup_test_users(api: APIClient) -> Dict[str, TestUser]:
-    """Create standard test users."""
+    """Create or retrieve standard test users."""
     users = {}
 
     # Alice - Team owner / Organizer
-    alice = api.create_user("alice_test", "alice@test.example.com", "organizer", "alicepass123")
-    if "id" in alice:
-        users["alice"] = TestUser(alice["id"], "alice_test", "alice@test.example.com", "organizer", "alicepass123")
+    alice = _get_or_create_user(api, "alice_test", "alice@test.example.com", "organizer", "alicepass123")
+    if alice and "id" in alice:
+        users["alice"] = TestUser(str(alice["id"]), "alice_test", "alice@test.example.com", "organizer", "alicepass123")
 
     # Bob - Team member / Participant
-    bob = api.create_user("bob_test", "bob@test.example.com", "participant", "bobpass123")
-    if "id" in bob:
-        users["bob"] = TestUser(bob["id"], "bob_test", "bob@test.example.com", "participant", "bobpass123")
+    bob = _get_or_create_user(api, "bob_test", "bob@test.example.com", "participant", "bobpass123")
+    if bob and "id" in bob:
+        users["bob"] = TestUser(str(bob["id"]), "bob_test", "bob@test.example.com", "participant", "bobpass123")
 
     # Carol - Applicant
-    carol = api.create_user("carol_test", "carol@test.example.com", "participant", "carolpass123")
-    if "id" in carol:
-        users["carol"] = TestUser(carol["id"], "carol_test", "carol@test.example.com", "participant", "carolpass123")
+    carol = _get_or_create_user(api, "carol_test", "carol@test.example.com", "participant", "carolpass123")
+    if carol and "id" in carol:
+        users["carol"] = TestUser(str(carol["id"]), "carol_test", "carol@test.example.com", "participant", "carolpass123")
 
     # Dave - Community member
-    dave = api.create_user("dave_test", "dave@test.example.com", "participant", "davepass123")
-    if "id" in dave:
-        users["dave"] = TestUser(dave["id"], "dave_test", "dave@test.example.com", "participant", "davepass123")
+    dave = _get_or_create_user(api, "dave_test", "dave@test.example.com", "participant", "davepass123")
+    if dave and "id" in dave:
+        users["dave"] = TestUser(str(dave["id"]), "dave_test", "dave@test.example.com", "participant", "davepass123")
 
     return users
 

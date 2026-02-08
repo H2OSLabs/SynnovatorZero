@@ -43,6 +43,13 @@ def create_group(
     db.add(db_obj)
     db.commit()
     db.refresh(db_obj)
+
+    # Auto-add creator as owner member
+    crud.members.create(
+        db, group_id=db_obj.id, user_id=user_id,
+        role="owner", status="accepted",
+    )
+
     return db_obj
 
 

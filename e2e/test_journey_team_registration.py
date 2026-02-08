@@ -67,8 +67,9 @@ class TestJourneyTeamRegistration:
         self.api.login(self.users["alice"].username, self.users["alice"].password)
         members = self.api.list_group_members(self.team["id"])
 
-        alice_member = next((m for m in members if m.get("user_id") == self.users["alice"].id), None)
-        assert alice_member is not None
+        alice_id = int(self.users["alice"].id)
+        alice_member = next((m for m in members if m.get("user_id") == alice_id), None)
+        assert alice_member is not None, f"Alice (id={alice_id}) not in members: {members}"
         assert alice_member.get("role") in ("owner", "admin") or alice_member.get("status") == "owner"
 
     def test_bob_joins_and_gets_approved(self):
@@ -79,9 +80,10 @@ class TestJourneyTeamRegistration:
         self.api.login(self.users["alice"].username, self.users["alice"].password)
         members = self.api.list_group_members(self.team["id"])
 
-        bob_member = next((m for m in members if m.get("user_id") == self.users["bob"].id), None)
+        bob_id = int(self.users["bob"].id)
+        bob_member = next((m for m in members if m.get("user_id") == bob_id), None)
         # Bob should be in members list
-        assert bob_member is not None or len(members) >= 2
+        assert bob_member is not None or len(members) >= 2, f"Bob (id={bob_id}) not in members: {members}"
 
     def test_team_registers_for_event(self):
         """Team registers for event (creates event:group relation)."""
@@ -144,12 +146,12 @@ class TestJourneyTeamRegistration:
         self.api.login(self.users["alice"].username, self.users["alice"].password)
         members = self.api.list_group_members(self.team["id"])
 
-        # Should have at least 2 members
-        assert len(members) >= 1  # At minimum, owner Alice
+        # Should have at least 1 member (owner Alice)
+        assert len(members) >= 1, f"Expected at least 1 member, got {len(members)}"
 
-        # Find Alice and Bob
-        usernames = [m.get("username", m.get("user", {}).get("username", "")) for m in members]
+        # Find Alice (compare as integers)
+        alice_id = int(self.users["alice"].id)
         user_ids = [m.get("user_id") for m in members]
 
-        alice_found = self.users["alice"].id in user_ids or self.users["alice"].username in str(members)
-        assert alice_found, "Alice should be in member list"
+        alice_found = alice_id in user_ids
+        assert alice_found, f"Alice (id={alice_id}) not in member ids: {user_ids}"

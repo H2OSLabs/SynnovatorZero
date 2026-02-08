@@ -167,6 +167,9 @@ class TestJourneyAnonymousBrowsing:
 
     def test_anonymous_cannot_access_create_pages(self, page: Page):
         """Anonymous user is blocked from content creation pages."""
+        from conftest import skip_if_no_frontend
+        skip_if_no_frontend()
+
         # Try to access post creation
         page.goto(f"{FRONTEND_URL}/posts/create")
         page.wait_for_timeout(2000)

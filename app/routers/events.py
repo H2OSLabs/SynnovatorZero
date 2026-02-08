@@ -18,6 +18,7 @@ def list_categories(
     status: Optional[str] = Query(None),
     type: Optional[str] = Query(None),
     db: Session = Depends(get_db),
+    current_user_id: Optional[int] = Depends(get_current_user_id),
 ):
     query = db.query(crud.events.model).filter(
         crud.events.model.deleted_at.is_(None),
@@ -26,6 +27,20 @@ def list_categories(
         if status not in CATEGORY_STATUSES:
             raise HTTPException(status_code=422, detail=f"Invalid status: {status}")
         query = query.filter(crud.events.model.status == status)
+    else:
+        # For anonymous users or when no status filter, hide draft events
+        # Draft events only visible to their creator
+        if current_user_id is None:
+            query = query.filter(crud.events.model.status != "draft")
+        else:
+            # Show non-draft events + draft events created by current user
+            from sqlalchemy import or_
+            query = query.filter(
+                or_(
+                    crud.events.model.status != "draft",
+                    crud.events.model.created_by == current_user_id,
+                )
+            )
     if type is not None:
         if type not in CATEGORY_TYPES:
             raise HTTPException(status_code=422, detail=f"Invalid type: {type}")

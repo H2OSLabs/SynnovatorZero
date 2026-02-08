@@ -1,5 +1,48 @@
 # Test Case Format Conventions
 
+## Test Layering Strategy
+
+项目采用**分层测试策略**，每层有不同的抽象级别和用途：
+
+| Layer | Files | Purpose | Abstraction | Implementation |
+|-------|-------|---------|-------------|----------------|
+| **基础层** | 01-10 | CRUD 和约束验证 | 单个实体/操作 | `app/tests/` pytest |
+| **桥接层** | 11 | 用户旅程集成测试 | **完整业务流程** | `e2e/test_journey_*.py` |
+| **高级层** | 12-17 | 高级功能测试 | 规则引擎、转移等 | `app/tests/` pytest |
+| **场景层** | 18-33 | 细粒度端到端场景 | 按 User Journey 细分 | `e2e/test_*_integration.py` |
+
+### 层级选择指南
+
+**何时使用 11-user-journeys.md（桥接层）：**
+- 测试涵盖**多步骤、跨实体**的完整业务流程
+- 例如：团队创建 → 成员加入 → 报名活动 → 提交作品
+- TC 数量少（每旅程 1-2 个），但覆盖完整链路
+
+**何时使用 18-33（场景层）：**
+- 测试单个 User Journey 中的**具体场景变体**
+- 例如：TC-TEAM-020 搜索并邀请成员 vs TC-TEAM-022 被邀请成员拒绝邀请
+- TC 数量多，覆盖正向/负向/边界条件
+
+**两层关系：**
+```
+11-user-journeys.md        18-33 细分文件
+   TC-JOUR-005       ←→    22-team-management.md (TC-TEAM-*)
+   (完整团队加入流程)         (团队管理各场景)
+
+   TC-JOUR-013       ←→    25-social-interaction.md (TC-SOCIAL-*)
+   (完整社区互动流程)         (社区互动各场景)
+```
+
+### E2E 实现映射
+
+| 规范文件 | 实现文件 |
+|---------|---------|
+| `specs/testcases/11-user-journeys.md` | `e2e/test_journey_*.py` (8 文件) |
+| `specs/testcases/18-*.md` ~ `specs/testcases/33-*.md` | `e2e/test_*_integration.py` |
+| `specs/testcases/01-*.md` ~ `specs/testcases/10-*.md` | `app/tests/` pytest |
+
+---
+
 ## File Naming
 
 Files are numbered sequentially: `NN-module-name.md` (e.g., `01-user.md`, `08-relations.md`).

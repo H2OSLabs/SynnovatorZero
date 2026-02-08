@@ -11,6 +11,7 @@ Usage:
         --timeout 60 \
         -- uv run pytest e2e/ -v
 """
+import socket
 import pytest
 from playwright.sync_api import sync_playwright, Browser, Page, BrowserContext, Error as PlaywrightError
 
@@ -19,6 +20,33 @@ from playwright.sync_api import sync_playwright, Browser, Page, BrowserContext, 
 BACKEND_URL = "http://localhost:8000"
 FRONTEND_URL = "http://localhost:3000"
 API_URL = f"{BACKEND_URL}/api"
+
+
+def _is_port_open(host: str, port: int, timeout: float = 1.0) -> bool:
+    """Check if a port is open."""
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except (socket.timeout, ConnectionRefusedError, OSError):
+        return False
+
+
+# Cache frontend availability for session
+_frontend_available = None
+
+
+def is_frontend_available() -> bool:
+    """Check if frontend server is available (cached for session)."""
+    global _frontend_available
+    if _frontend_available is None:
+        _frontend_available = _is_port_open("localhost", 3000)
+    return _frontend_available
+
+
+def skip_if_no_frontend():
+    """Skip test if frontend is not available."""
+    if not is_frontend_available():
+        pytest.skip("Frontend server not running (port 3000)")
 
 
 @pytest.fixture(scope="session")
@@ -87,7 +115,12 @@ def create_test_user(page: Page, username: str, email: str = None, role: str = "
 
 
 def wait_for_app_load(page: Page, url: str, timeout: int = 30000):
-    """Navigate to URL and wait for app to be fully loaded."""
+    """Navigate to URL and wait for app to be fully loaded.
+
+    Skips test if frontend server is not running.
+    """
+    if FRONTEND_URL in url:
+        skip_if_no_frontend()
     page.goto(url)
     page.wait_for_load_state("networkidle", timeout=timeout)
 

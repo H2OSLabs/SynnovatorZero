@@ -132,8 +132,9 @@ class TestJourneyPostEdit:
 
             # Verify copy's author is Bob
             copy = bob_api.get_post(copy_post["id"])
-            assert copy.get("created_by") == self.users["bob"].id or \
-                   copy.get("author", {}).get("id") == self.users["bob"].id
+            bob_id = int(self.users["bob"].id)
+            assert copy.get("created_by") == bob_id or \
+                   copy.get("author", {}).get("id") == bob_id
 
     def test_version_relation_queryable(self):
         """Post-post version relations can be queried."""
