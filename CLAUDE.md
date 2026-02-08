@@ -118,10 +118,12 @@ Phase 1:   API 设计 (OpenAPI)   [schema-to-openapi]
 Phase 2:   后端代码生成          [api-builder]
 Phase 2.5: 种子数据设计          [seed-designer]
 Phase 3:   种子数据注入          make resetdb && make seed
-Phase 4:   UI 设计文档生成
+Phase 4:   UI/UX 设计 (双分支)
+           ├─ 分支 A (有 Figma): [figma-resource-extractor → ui-spec-generator → ux-spec-generator]
+           └─ 分支 B (无 Figma): [ai-ui-generator]
 Phase 5:   前端样式框架配置      shadcn/ui + Neon Forge
 Phase 6:   前端 API 客户端生成   [api-builder --generate-client]
-Phase 7:   前端组件开发          [Figma 参考 + shadcn 组件]
+Phase 7:   前端组件开发          [frontend-prototype-builder + shadcn 组件]
 Phase 8:   E2E 测试             Playwright
 Phase 9:   最终集成验证          [tests-kit Guard]
 ```
@@ -137,6 +139,23 @@ Phase 9:   最终集成验证          [tests-kit Guard]
 | **tests-kit** | Guard mode (verify test cases) + Insert mode (add test cases) |
 | **openapi-to-components** | Wire frontend components to backend API |
 | **planning-with-files** | File-based planning (task_plan.md, findings.md, progress.md) for context persistence |
+
+### UI/UX Design Skills (Phase 4 双分支)
+
+**分支 A (有 Figma 设计):**
+
+| Skill | Purpose |
+|-------|---------|
+| **figma-resource-extractor** | Extract Figma design resources → `specs/design/figma/` |
+| **ui-spec-generator** | Generate UI specs from Figma + testcases → `specs/design/pages.yaml` |
+| **ux-spec-generator** | Generate UX interaction specs → `specs/ux/` |
+| **frontend-prototype-builder** | Build frontend from pages.yaml + UX specs |
+
+**分支 B (无 Figma 设计):**
+
+| Skill | Purpose |
+|-------|---------|
+| **ai-ui-generator** | Generate UI/UX specs from user-journeys + testcases using Claude + shadcn/ui |
 
 ## Conventions
 

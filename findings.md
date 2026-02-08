@@ -1,187 +1,122 @@
-# Findings: Header 修复 + Figma Skills 集成分析
+# Findings: 前端开发工作流双分支设计
 
 > **更新时间**: 2026-02-08
 
-## 1. Header 登录状态 Bug 分析
+## 1. AI UI 生成工具研究
 
-### 问题现象
+### 工具对比
 
-Header 组件在已登录用户刷新页面时，短暂显示登录/注册按钮后才切换为用户头像。
+| 工具 | 文本输入 | API/MCP | pages.yaml 输出 | 成本 |
+|------|---------|---------|-----------------|------|
+| **v0.dev** | ✅ 自然语言 | REST API | ❌ 需转换 | $20+/月 |
+| **shadcn MCP** | ✅ 对话式 | MCP (已配置) | ❌ 直接安装组件 | 免费 |
+| **Magic UI MCP** | ✅ 自然语言 | MCP | ❌ React 组件 | 免费 |
+| **Penpot** | ⚠️ 部分 | API + MCP (实验) | ❌ .penpot 格式 | 免费 |
+| **Pixso** | ⚠️ 有限 | MCP (仅客户端) | ❌ HTML/图片 | 付费 |
+| **Galileo AI** | ✅ 文本/图片 | ❌ 无公开 API | ❌ Figma 导出 | 订阅 |
+| **Claude + shadcn** | ✅ 用户旅程 | 原生 | ✅ 可直接生成 | 已订阅 |
 
-### 根本原因
+### 推荐方案
 
-Header 组件未处理 AuthContext 的 `isLoading` 状态：
+**Claude + shadcn/ui 混合方法**
 
-```tsx
-// Before: 仅检查 user
-{user ? (/* logged in UI */) : (/* login/register buttons */)}
-
-// After: 同时检查 isLoading
-{isLoading ? (/* skeleton */) : user ? (/* logged in */) : (/* login/register */)}
-```
-
-### 根因归类
-
-| 类型 | 判定 |
-|------|------|
-| 测试用例缺失 | ✅ 无 TC 覆盖 Header 登录状态切换 |
-| 用户旅程缺失 | ❌ J-001/J-002 已覆盖登录流程 |
-| 实现问题 | ✅ 未处理 loading 状态 |
-
-### 责任归属
-
-| 阶段 | 问题 |
-|------|------|
-| Phase 7 (前端组件开发) | Header 组件未处理 loading 状态 |
-| Phase 8 (E2E 测试) | 缺少 Header 状态切换测试 |
+优势：
+1. **零额外成本** - 使用现有 Claude 订阅
+2. **无缝集成** - 与现有 skills 和 MCP 兼容
+3. **自定义输出** - 直接生成 `pages.yaml`
+4. **主题合规** - 使用 Neon Forge 设计系统
+5. **领域感知** - 使用项目上下文（CLAUDE.md、领域模型）
 
 ---
 
-## 2. 用户 commit 7d54b32 分析
+## 2. ai-ui-generator Skill 设计
 
-### URL 驱动筛选模式
+### 架构
 
-用户实现了正确的 Next.js App Router 筛选模式：
+```
+输入:
+├── docs/user-journeys/*.md (用户旅程)
+├── specs/testcases/*.md (测试用例)
+├── specs/ui/*.pen (可选设计规格)
+└── Design system tokens (Neon Forge)
 
-```tsx
-// 状态从 URL 派生
-const applied = useMemo(() => {
-  const q = searchParams.get("q") ?? ""
-  const type = searchParams.get("type") ?? undefined
-  // ...
-}, [paramsKey, searchParams])
+处理:
+├── 1. 解析用户旅程为页面需求
+├── 2. 映射操作到 UI 模式
+├── 3. 使用 shadcn MCP 匹配组件
+├── 4. 应用 Neon Forge 主题
+└── 5. 生成结构化规格
 
-// UI 操作更新 URL
-function updateParams(patch: {...}) {
-  const next = new URLSearchParams(searchParams.toString())
-  if (patch.q !== undefined) {...}
-  router.replace(qs ? `/posts?${qs}` : "/posts")
-}
+输出:
+├── specs/design/pages.yaml
+├── specs/ux/ (交互规格)
+└── 组件安装命令
 ```
 
-这是 Next.js App Router 的最佳实践：
-- 筛选结果可书签和分享
-- 浏览器前进/后退正确工作
-- 服务端渲染正确
+### 核心 References
+
+需要创建以下参考文档：
+
+| 文件 | 用途 |
+|------|------|
+| `component-catalog.md` | shadcn/ui 可用组件清单 |
+| `layout-patterns.md` | 常见页面布局模式 |
+| `interaction-patterns.md` | 交互模式库 |
+| `neon-forge-tokens.md` | 设计系统 token 映射 |
 
 ---
 
-## 3. Figma Skills 分析
+## 3. 双分支工作流设计
 
-### 可用 Skills
+### 检测逻辑
 
-从 `feat/prototype-v1` 分支发现四个 Figma 相关 skills：
+```python
+def detect_design_source():
+    # 检查 Figma 资源
+    if exists("specs/design/figma/README.md"):
+        return "figma"
+    if has_figma_url_in_config():
+        return "figma"
 
-| Skill | 功能 | 输入 | 输出 |
-|-------|------|------|------|
-| `figma-resource-extractor` | 提取 Figma 设计资源 | Figma URL | `specs/design/figma/` |
-| `ui-spec-generator` | 生成 UI 规格文件 | 设计资源 + 测试用例 | `specs/design/pages.yaml` |
-| `ux-spec-generator` | 生成 UX 交互规格 | pages.yaml + 设计 | `specs/ux/` |
-| `frontend-prototype-builder` | 构建可部署原型 | 所有上游输出 | React 页面组件 |
+    # 无 Figma，使用 AI 生成
+    return "ai-generated"
+```
 
-### Skills 工作流程
+### 分支 A: 有 Figma
 
 ```
-Figma Design
-    ↓
 figma-resource-extractor
-    ↓
-specs/design/figma/
-    ↓
-ui-spec-generator  ←── specs/testcases/*.md
-    ↓
-specs/design/pages.yaml
-    ↓
+    ↓ specs/design/figma/
+ui-spec-generator
+    ↓ specs/design/pages.yaml
 ux-spec-generator
-    ↓
-specs/ux/ (交互规格)
-    ↓
+    ↓ specs/ux/
 frontend-prototype-builder
-    ↓
-frontend/app/  +  frontend/components/pages/
+    ↓ React pages
 ```
 
-### 当前状态
-
-| 资源 | 状态 | 说明 |
-|------|------|------|
-| `specs/design/figma/` | ✅ 已存在 | 69 icons, 54 components, 104 pages |
-| `specs/design/pages.yaml` | ❌ 不存在 | 需要运行 ui-spec-generator |
-| `specs/ux/` | ❌ 不存在 | 需要运行 ux-spec-generator |
-| Figma MCP | ❌ 未配置 | `.claude/mcp.json` 缺少 Figma 服务 |
-
-### 依赖分析
-
-| Skill | 依赖 | 当前状态 |
-|-------|------|----------|
-| figma-resource-extractor | Figma MCP | ⚠️ MCP 未配置 |
-| ui-spec-generator | Figma MCP, Pencil MCP | ⚠️ MCP 未配置 |
-| ux-spec-generator | pages.yaml | ❌ 需先生成 |
-| frontend-prototype-builder | pages.yaml, ux specs | ❌ 需先生成 |
-
-### MCP 配置需求
-
-要使用 Figma skills，需要在 `.claude/mcp.json` 添加：
-
-```json
-{
-  "mcpServers": {
-    "figma": {
-      "command": "npx",
-      "args": ["-y", "figma-mcp"],
-      "env": {
-        "FIGMA_ACCESS_TOKEN": "${FIGMA_ACCESS_TOKEN}"
-      }
-    }
-  }
-}
-```
-
-### 集成可行性评估
-
-| 因素 | 评估 | 说明 |
-|------|------|------|
-| Figma 资源 | ✅ 就绪 | 已提取到 specs/design/figma/ |
-| Figma MCP | ⚠️ 需配置 | 需要 Figma access token |
-| Pencil MCP | ❌ 无 .pen 文件 | 项目已迁移到 Figma |
-| 工作流整合 | ✅ 可行 | 可作为 Phase 4-7 的自动化 |
-
----
-
-## 4. 工作流集成建议
-
-### 短期（无 MCP 配置）
-
-现有 Figma 资源已提取，可以：
-1. 手动参考 `specs/design/figma/` 的设计文档
-2. 根据测试用例手动创建 `pages.yaml`
-3. 使用 `frontend-prototype-builder` 的模板生成页面
-
-### 中期（配置 Figma MCP）
-
-1. 配置 Figma MCP（需要 access token）
-2. 将四个 skills 复制到当前分支
-3. 更新 `docs/development-workflow.md` 添加设计自动化阶段
-
-### 长期（完整集成）
-
-修改开发工作流：
+### 分支 B: 无 Figma
 
 ```
-Phase 4: UI 设计 → 使用 Figma skills 自动化
-  4.1 figma-resource-extractor
-  4.2 ui-spec-generator
-  4.3 ux-spec-generator
-
-Phase 7: 前端组件开发 → 使用 frontend-prototype-builder
+ai-ui-generator
+    ↓ 从 User Journey 生成
+    ├── specs/design/pages.yaml
+    └── specs/ux/
+frontend-prototype-builder
+    ↓ React pages
 ```
 
 ---
+
+## 4. 已完成事项
+
+- [x] 复制 Figma skills 到当前分支
+- [x] 研究 AI UI 生成工具
+- [x] 确定推荐方案 (Claude + shadcn/ui)
 
 ## 5. 待完成事项
 
-- [x] 修复 Header isLoading 处理
-- [ ] 配置 Figma MCP（需要用户提供 token）
-- [ ] 复制 Figma skills 到当前分支
-- [ ] 生成 specs/design/pages.yaml
-- [ ] 更新开发工作流文档
+- [ ] 创建 ai-ui-generator skill
+- [ ] 创建参考文档 (component-catalog, patterns)
+- [ ] 更新工作流文档（双分支）
+- [ ] 集成测试

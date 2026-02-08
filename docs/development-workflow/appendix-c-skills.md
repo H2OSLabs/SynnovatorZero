@@ -11,6 +11,27 @@
 | **seed-designer** | 从 testcases 提取种子数据需求 | 阶段 2.5 |
 | **tests-kit** | 测试用例管理：Guard 验证 / Insert 添加 | 贯穿全流程 |
 
+## UI/UX 设计 Skills（阶段 4）
+
+根据项目是否有 Figma 设计，选择对应分支的 skills：
+
+### 分支 A: 有 Figma 设计
+
+| Skill | 用途 | 输入 → 输出 |
+|-------|------|-------------|
+| **figma-resource-extractor** | 提取 Figma 设计资源 | Figma URL → `specs/design/figma/*.md` |
+| **ui-spec-generator** | 生成 UI 规范 | Figma + testcases → `specs/design/pages.yaml` |
+| **ux-spec-generator** | 生成 UX 交互规范 | pages.yaml → `specs/ux/` |
+| **frontend-prototype-builder** | 构建前端原型 | pages.yaml + ux specs → 前端组件 |
+
+### 分支 B: 无 Figma 设计
+
+| Skill | 用途 | 输入 → 输出 |
+|-------|------|-------------|
+| **ai-ui-generator** | 从 User Journey 生成 UI/UX 设计 | user-journeys + testcases → `specs/design/pages.yaml` + `specs/ux/` |
+
+> **分支选择逻辑**: 检查 `specs/design/figma/` 目录是否存在，或项目是否有 Figma 设计链接。
+
 ## 可选 Skills（特定场景）
 
 | Skill | 用途 | 使用场景 |
@@ -27,6 +48,7 @@
 | 工具 | 用途 | 说明 |
 |------|------|------|
 | **shadcn MCP 插件** | 检查 shadcn 组件是否可用 | 前端开发时优先使用 |
+| **Figma MCP 插件** | 连接 Figma API | 需要配置 Figma Access Token |
 | **Playwright** | E2E 端到端测试 | 阶段 8 |
 
 ## Skill 使用示例
@@ -91,6 +113,21 @@ uv run python .claude/skills/schema-to-openapi/scripts/generate_openapi.py \
 uv run python .claude/skills/seed-designer/scripts/extract_requirements.py
 ```
 
+### figma-resource-extractor (分支 A)
+
+```bash
+# 调用 skill，提供 Figma URL
+# 输出到 specs/design/figma/
+```
+
+### ai-ui-generator (分支 B)
+
+```bash
+# 调用 skill
+# 读取: docs/user-journeys/*.md, specs/testcases/*.md
+# 输出: specs/design/pages.yaml, specs/ux/
+```
+
 ## 文件结构
 
 ```
@@ -111,5 +148,56 @@ uv run python .claude/skills/seed-designer/scripts/extract_requirements.py
 │   └── scripts/
 ├── tests-kit/
 │   └── scripts/
-└── ...
+├── figma-resource-extractor/    # 分支 A
+│   └── SKILL.md
+├── ui-spec-generator/           # 分支 A
+│   └── SKILL.md
+├── ux-spec-generator/           # 分支 A
+│   └── SKILL.md
+├── frontend-prototype-builder/  # 分支 A
+│   └── SKILL.md
+└── ai-ui-generator/             # 分支 B
+    ├── SKILL.md
+    └── references/
+        ├── component-catalog.md
+        ├── layout-patterns.md
+        ├── interaction-patterns.md
+        └── neon-forge-tokens.md
+```
+
+## 双分支工作流图
+
+```
+阶段 0-3: 后端开发 (domain-modeler, api-builder, seed-designer)
+                    ↓
+┌───────────────────────────────────────────────────────┐
+│ 阶段 4: UI/UX 设计检测                                  │
+│ 检查: specs/design/figma/ 或 Figma URL 存在?           │
+└───────────────────────────┬───────────────────────────┘
+                            │
+         ┌──────────────────┴──────────────────┐
+         ↓                                     ↓
+┌────────────────────┐              ┌────────────────────┐
+│ 分支 A: 有 Figma    │              │ 分支 B: 无 Figma    │
+│                    │              │                    │
+│ figma-resource-    │              │ ai-ui-generator    │
+│   extractor        │              │                    │
+│       ↓            │              └─────────┬──────────┘
+│ ui-spec-generator  │                        │
+│       ↓            │                        │
+│ ux-spec-generator  │                        │
+└─────────┬──────────┘                        │
+          │                                   │
+          └───────────────┬───────────────────┘
+                          │
+                specs/design/pages.yaml
+                specs/ux/
+                          │
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│ 阶段 7: 前端组件开发                                      │
+│ frontend-prototype-builder (统一使用 pages.yaml)         │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+阶段 8-9: E2E 测试、集成验证
 ```

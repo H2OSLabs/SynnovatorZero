@@ -311,3 +311,89 @@ uv run pytest e2e/test_journey_*.py -v
 | 桥接层 | 11 | 完整业务流程 | `e2e/test_journey_*.py` |
 | 高级层 | 12-17 | 规则引擎等 | `app/tests/` |
 | 场景层 | 18-33 | 细粒度 E2E | `e2e/test_*_integration.py` |
+
+---
+
+## 2026-02-08: 前端开发工作流双分支设计
+
+### 完成内容
+
+**目标**: 设计支持有/无 Figma 两种情况的前端开发工作流
+
+**Phase 1: 复制 Figma skills 到当前分支** ✅
+- 从 `feat/prototype-v1` 分支复制 4 个 Figma skills：
+  - `figma-resource-extractor`
+  - `ui-spec-generator`
+  - `ux-spec-generator`
+  - `frontend-prototype-builder`
+
+**Phase 2: 研究 AI 生成 UI/UX 的替代工具** ✅
+- 评估：v0.dev, shadcn MCP, Magic UI, Penpot, Pixso, Galileo AI, Lovable
+- 结论：推荐 **Claude + shadcn/ui** 混合方案
+  - 零额外成本，原生集成
+  - 可输出自定义 pages.yaml 格式
+
+**Phase 3: 设计 AI UI Generator skill** ✅
+- 创建 `.claude/skills/ai-ui-generator/`
+- 编写 SKILL.md 完整工作流
+- 创建参考文档：
+  - `references/component-catalog.md` - shadcn/ui 组件清单
+  - `references/layout-patterns.md` - 常见布局模式
+  - `references/interaction-patterns.md` - 交互模式库
+  - `references/neon-forge-tokens.md` - Neon Forge 设计 Token
+
+**Phase 4: 更新工作流文档（双分支）** ✅
+- 更新 `docs/development-workflow/05-ui-design.md` 添加双分支逻辑
+- 更新 `docs/development-workflow/appendix-c-skills.md` 添加新 skills
+- 更新 `docs/development-workflow/README.md` 工作流图
+- 更新 `CLAUDE.md` Phase 4 和 Key Skills 部分
+
+### 双分支工作流设计
+
+```
+阶段 4: UI/UX 设计检测
+        │
+        ├── specs/design/figma/ 或 Figma URL 存在？
+        │
+        ├─ YES → 分支 A (有 Figma)
+        │         ├── figma-resource-extractor
+        │         ├── ui-spec-generator
+        │         └── ux-spec-generator
+        │
+        └─ NO  → 分支 B (无 Figma)
+                  └── ai-ui-generator
+                       (从 User Journey 生成)
+
+统一输出:
+  - specs/design/pages.yaml
+  - specs/ux/
+```
+
+### 修改的文件
+
+| 文件 | 修改内容 |
+|------|---------|
+| `docs/development-workflow/05-ui-design.md` | 重写，添加双分支工作流 |
+| `docs/development-workflow/appendix-c-skills.md` | 添加 UI/UX 设计 Skills 分类 |
+| `docs/development-workflow/README.md` | 更新 Phase 4 工作流图 |
+| `CLAUDE.md` | 更新 Phase 4 描述和 Key Skills |
+| `task_plan.md` | 标记 Phase 1-4 完成 |
+| `progress.md` | 添加本次进度记录 |
+
+### 新增文件
+
+| 文件 | 用途 |
+|------|------|
+| `.claude/skills/ai-ui-generator/SKILL.md` | AI UI 生成 skill 主文件 |
+| `.claude/skills/ai-ui-generator/references/component-catalog.md` | shadcn/ui 组件清单 |
+| `.claude/skills/ai-ui-generator/references/layout-patterns.md` | 常见布局模式 |
+| `.claude/skills/ai-ui-generator/references/interaction-patterns.md` | 交互模式库 |
+| `.claude/skills/ai-ui-generator/references/neon-forge-tokens.md` | Neon Forge 设计 Token |
+
+### 后续任务
+
+| 优先级 | 任务 | 状态 |
+|-------|------|------|
+| 待定 | Phase 5: 集成测试（两个分支） | `pending` |
+| 待定 | Phase 6: 提交与文档化 | `pending` |
+| 需用户 | 配置 Figma MCP（需要 Figma Access Token） | `pending` |
