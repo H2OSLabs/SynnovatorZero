@@ -240,7 +240,7 @@ export async function checkEventParticipation(eventId: number): Promise<boolean>
 **验证脚本**：
 \`\`\`bash
 # 1. 提取所有导航中的 href
-grep -rh "href=\"/" frontend/components/layout/*.tsx | \
+grep -rh 'href="/' frontend/components/layout/*.tsx | \
   grep -oE 'href="[^"]*"' | \
   sed 's/href="//;s/"$//' | \
   sort -u > /tmp/nav-routes.txt
@@ -302,3 +302,118 @@ comm -23 /tmp/nav-routes.txt /tmp/existing-routes.txt
 2. 在 UI 设计阶段明确识别"筛选视图"需求
 3. 修正工作流文档中的错误标记
 4. 增强 tests-kit 的 UI 覆盖检查
+
+---
+
+# Findings: 收藏功能缺失根因分析 (2026-02-08)
+
+> **分析目标**: 为什么"查看我的收藏列表"功能缺失
+
+---
+
+## 1. 根因定位
+
+### 1.1 文档链追溯
+
+| 阶段 | 文档 | 是否覆盖 | 证据 |
+|------|------|----------|------|
+| **用户旅程** | `06-social-interaction.md` | ❌ **缺失** | 只有"点赞/取消点赞/查看点赞数"，无"查看点赞列表" |
+| **测试用例** | `25-social-interaction.md` | ❌ **缺失** | 只有点赞操作测试，无列表查询测试 |
+| **API 设计** | OpenAPI spec | ❌ **缺失** | 无 `/users/{id}/likes` 端点 |
+| **前端实现** | `/my/favorites` | ❌ **占位符** | 页面存在但无功能 |
+
+### 1.2 对比分析：点赞 vs 关注
+
+**关注功能（完整）**:
+```markdown
+# 06-social-interaction.md 第 44-45 行
+| 取消关注 | 取消对内容的关注 | DELETE interaction（type: follow） |
+| 查看关注列表 | 查看自己关注的所有内容 | READ interaction（type: follow, created_by） |
+                ^^^^^^^^^^^^^^^^
+```
+
+**点赞功能（不完整）**:
+```markdown
+# 06-social-interaction.md 第 11-13 行
+| 点赞帖子 | 对喜欢的帖子点赞 | CREATE interaction |
+| 取消点赞 | 取消之前的点赞 | DELETE interaction |
+| 查看点赞数 | 查看帖子的点赞统计 | READ post（like_count） |
+# ❌ 缺少: 查看点赞列表 | 查看自己点赞的所有内容 | READ interaction（type: like, created_by）
+```
+
+---
+
+## 2. 根因结论
+
+**根因在阶段 0.5（领域建模/用户旅程）**，不是实现阶段的问题。
+
+| 层级 | 问题 |
+|------|------|
+| **L1: 用户旅程** | 6.1 点赞章节缺少"查看点赞列表"用户旅程 |
+| **L2: 测试用例** | 因 L1 缺失，未生成对应测试用例 |
+| **L3: API 设计** | 因 L2 缺失，OpenAPI spec 未定义端点 |
+| **L4: 实现** | 因 L3 缺失，后端无 API，前端无数据来源 |
+
+---
+
+## 3. 与 `/my/*` 页面问题对比
+
+| 问题 | 根因阶段 | 根因类型 |
+|------|----------|----------|
+| `/my/posts` 等缺失 | 阶段 7（前端组件开发） | 工作流文档错误标记 |
+| 收藏列表功能缺失 | **阶段 0.5（用户旅程）** | **需求文档遗漏** |
+
+**关键区别**：
+- `/my/*` 页面：用户旅程有描述，但工作流阶段处理错误
+- 收藏列表：**用户旅程本身就没有描述这个需求**
+
+---
+
+## 4. 改进建议
+
+### 4.1 补充用户旅程文档
+
+在 `docs/user-journeys/06-social-interaction.md` 第 13 行后添加：
+
+```markdown
+| 查看点赞列表 | 查看自己点赞的所有内容 | `READ interaction`（type: like, created_by: current_user） |
+```
+
+### 4.2 补充测试用例
+
+在 `specs/testcases/25-social-interaction.md` 添加：
+
+```markdown
+**TC-SOCIAL-006：查看点赞列表**
+用户查看自己点赞的所有帖子，系统返回按时间倒序的帖子列表。
+
+**TC-SOCIAL-007：点赞列表分页**
+用户点赞超过 100 个帖子时，系统支持分页查询。
+```
+
+### 4.3 Skill 改进：domain-modeler
+
+在 `domain-modeler` skill 中添加**对称性检查**：
+
+```yaml
+checks:
+  - type: symmetry_check
+    description: "对于 CREATE/DELETE 操作，检查是否有对应的 LIST 操作"
+    example: |
+      如果存在:
+        - CREATE interaction（type: like）
+        - DELETE interaction（type: like）
+      则应该存在:
+        - READ interaction（type: like, created_by: current_user）→ 查看我的点赞列表
+```
+
+---
+
+## 5. 总结
+
+| 问题类型 | 根因阶段 | 修复方式 |
+|----------|----------|----------|
+| `/my/*` 页面缺失 | 阶段 7 工作流 | 修正文档 + 添加验证步骤 |
+| 收藏列表功能缺失 | **阶段 0.5 用户旅程** | **补充需求文档 + 添加对称性检查** |
+
+**核心教训**：需求文档的完整性直接影响后续所有阶段。domain-modeler 应增加"操作对称性检查"，确保 CREATE/DELETE 操作都有对应的 LIST 操作。
