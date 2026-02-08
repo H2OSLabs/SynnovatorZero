@@ -6,6 +6,24 @@
 
 ---
 
+## 测试账户快速参考
+
+> **登录凭据**：所有测试账户的密码 = 用户名
+
+| 用户名 | 密码 | 角色 | 邮箱 | 说明 |
+|--------|------|------|------|------|
+| `techcorp` | techcorp | organizer | techcorp@example.com | 活动组织者，创建活动/规则 |
+| `alice` | alice | participant | alice@example.com | 主要参赛者，多个团队 owner/member |
+| `bob` | bob | participant | bob@example.com | 参赛者，"AI 实验室"owner |
+| `carol` | carol | participant | carol@example.com | 参赛者，"Web3 先锋"owner |
+| `dave` | dave | participant | dave@example.com | 参赛者，"设计创意组"owner |
+| `eve` | eve | participant | eve@example.com | 参赛者，"全栈开发团"owner |
+| `frank` | frank | participant | frank@example.com | 参赛者，"数据科学家"owner |
+
+**注入种子数据**：`make resetdb && make seed`
+
+---
+
 ## 用户数据
 
 | 标识 | 角色 | 用途 | 关联测试用例 |
