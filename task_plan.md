@@ -2,7 +2,7 @@
 
 > **目标**: 设计支持有/无 Figma 两种情况的前端开发工作流
 > **创建时间**: 2026-02-08
-> **状态**: `in_progress`
+> **状态**: `complete` (Phase 5 集成测试可选)
 
 ## 背景
 
@@ -20,7 +20,7 @@
 | Phase 3 | 设计 AI UI Generator skill | `complete` |
 | Phase 4 | 更新工作流文档（双分支） | `complete` |
 | Phase 5 | 集成测试 | `pending` |
-| Phase 6 | 提交与文档化 | `pending` |
+| Phase 6 | 提交与文档化 | `complete` |
 
 ---
 
