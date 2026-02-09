@@ -37,7 +37,7 @@ make frontend  # Next.js on http://localhost:3000
 │   │   ├── ui/             # shadcn/ui base components
 │   │   ├── auth/           # LoginForm, RegisterForm
 │   │   ├── user/           # UserFollowButton, FollowersList, FollowingList
-│   │   ├── category/       # CategoryStageView, CategoryTrackView
+│   │   ├── event/       # CategoryStageView, CategoryTrackView
 │   │   └── notification/   # NotificationDropdown
 │   └── lib/                # API client & types
 ├── alembic/                # Database migrations
@@ -54,7 +54,7 @@ make frontend  # Next.js on http://localhost:3000
 |----------|-----------|
 | Users | `GET/POST /api/users`, `GET/PATCH/DELETE /api/users/{id}` |
 | Posts | `GET/POST /api/posts`, `GET/PATCH/DELETE /api/posts/{id}` |
-| Categories | `GET/POST /api/categories`, `GET/PATCH/DELETE /api/categories/{id}` |
+| Events | `GET/POST /api/events`, `GET/PATCH/DELETE /api/events/{id}` |
 | Groups | `GET/POST /api/groups`, `GET/PATCH/DELETE /api/groups/{id}` |
 | Resources | `GET/POST /api/resources`, `GET/PATCH/DELETE /api/resources/{id}` |
 | Rules | `GET/POST /api/rules`, `GET/PATCH/DELETE /api/rules/{id}` |
@@ -159,8 +159,6 @@ The frontend uses the **Neon Forge** theme:
 - Background: Near Black `#181818`
 - Card: Dark Gray `#222222`
 - Text: White `#FFFFFF` / Light Gray `#DCDCDC` / Muted `#8E8E8E`
-
-View component demos at http://localhost:3000/demo
 
 ## License
 

@@ -16,18 +16,17 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Lightbulb,
+  Bell,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface SidebarProps {
   collapsed?: boolean
   onToggle?: () => void
-  user?: {
-    id: number
-    username: string
-  } | null
 }
 
 interface NavItem {
@@ -40,12 +39,14 @@ interface NavItem {
 const mainNavItems: NavItem[] = [
   { label: "首页", icon: <Home className="h-5 w-5" />, href: "/" },
   { label: "探索", icon: <Compass className="h-5 w-5" />, href: "/explore" },
-  { label: "活动", icon: <Calendar className="h-5 w-5" />, href: "/events" },
+  { label: "星球", icon: <Calendar className="h-5 w-5" />, href: "/events" },
+  { label: "营地", icon: <Lightbulb className="h-5 w-5" />, href: "/camps" },
   { label: "帖子", icon: <FileText className="h-5 w-5" />, href: "/posts" },
   { label: "团队", icon: <Users className="h-5 w-5" />, href: "/groups" },
 ]
 
 const myNavItems: NavItem[] = [
+  { label: "通知", icon: <Bell className="h-5 w-5" />, href: "/notifications", requireAuth: true },
   { label: "我参与的活动", icon: <Pin className="h-5 w-5" />, href: "/my/events", requireAuth: true },
   { label: "我的帖子", icon: <Edit3 className="h-5 w-5" />, href: "/my/posts", requireAuth: true },
   { label: "我的团队", icon: <User className="h-5 w-5" />, href: "/my/groups", requireAuth: true },
@@ -53,17 +54,20 @@ const myNavItems: NavItem[] = [
   { label: "关注", icon: <UserPlus className="h-5 w-5" />, href: "/my/following", requireAuth: true },
 ]
 
-export function Sidebar({ collapsed = false, onToggle, user }: SidebarProps) {
-  const pathname = usePathname()
+export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
+  const pathname = usePathname() ?? ""
+  const { user } = useAuth()
 
   const NavLink = ({ item }: { item: NavItem }) => {
     const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
 
     if (item.requireAuth && !user) return null
 
+    // 开发模式下禁用 prefetch，避免多个链接同时触发按需编译导致 ERR_ABORTED
     const linkContent = (
       <Link
         href={item.href}
+        prefetch={false}
         className={cn(
           "flex items-center gap-3 h-11 px-3 rounded-lg transition-colors",
           collapsed ? "justify-center" : "justify-start",

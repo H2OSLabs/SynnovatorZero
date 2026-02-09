@@ -31,37 +31,37 @@ except ImportError:
 
 # === Constants ===
 
-CONTENT_TYPES = ["category", "post", "resource", "rule", "user", "group", "interaction"]
+CONTENT_TYPES = ["event", "post", "resource", "rule", "user", "group", "interaction"]
 
 RELATION_TYPES = [
-    "category_rule", "category_post", "category_group", "category_category",
+    "event_rule", "event_post", "event_group", "event_event",
     "post_post", "post_resource", "group_user", "user_user", "target_interaction"
 ]
 
 # Content types that support Markdown body
-BODY_TYPES = ["category", "post", "rule"]
+BODY_TYPES = ["event", "post", "rule"]
 
 ENUMS = {
-    "category.type": ["competition", "operation"],
-    "category.status": ["draft", "published", "closed"],
-    "post.type": ["profile", "team", "category", "for_category", "certificate", "general"],
+    "event.type": ["competition", "operation"],
+    "event.status": ["draft", "published", "closed"],
+    "post.type": ["profile", "team", "event", "proposal", "certificate", "general"],
     "post.status": ["draft", "pending_review", "published", "rejected"],
     "post.visibility": ["public", "private"],
     "user.role": ["participant", "organizer", "admin"],
     "group.visibility": ["public", "private"],
     "interaction.type": ["like", "comment", "rating"],
-    "category_post.relation_type": ["submission", "reference"],
-    "category_category.relation_type": ["stage", "track", "prerequisite"],
+    "event_post.relation_type": ["submission", "reference"],
+    "event_event.relation_type": ["stage", "track", "prerequisite"],
     "post_post.relation_type": ["reference", "reply", "embed"],
     "post_resource.display_type": ["attachment", "inline"],
     "group_user.role": ["owner", "admin", "member"],
     "group_user.status": ["pending", "accepted", "rejected"],
     "user_user.relation_type": ["follow", "block"],
-    "target_interaction.target_type": ["post", "category", "resource"],
+    "target_interaction.target_type": ["post", "event", "resource"],
 }
 
 REQUIRED_FIELDS = {
-    "category": ["name", "description", "type"],
+    "event": ["name", "description", "type"],
     "post": ["title"],
     "resource": ["filename"],
     "rule": ["name", "description"],
@@ -71,10 +71,10 @@ REQUIRED_FIELDS = {
 }
 
 RELATION_KEYS = {
-    "category_rule": ["category_id", "rule_id"],
-    "category_post": ["category_id", "post_id"],
-    "category_group": ["category_id", "group_id"],
-    "category_category": ["source_category_id", "target_category_id"],
+    "event_rule": ["event_id", "rule_id"],
+    "event_post": ["event_id", "post_id"],
+    "event_group": ["event_id", "group_id"],
+    "event_event": ["source_category_id", "target_category_id"],
     "post_post": ["source_post_id", "target_post_id"],
     "post_resource": ["post_id", "resource_id"],
     "group_user": ["group_id", "user_id"],
@@ -83,13 +83,13 @@ RELATION_KEYS = {
 }
 
 PREFIX_MAP = {
-    "category": "cat", "post": "post", "resource": "res",
+    "event": "cat", "post": "post", "resource": "res",
     "rule": "rule", "user": "user", "group": "grp", "interaction": "iact"
 }
 
 # RBAC: which roles can CREATE each content type (None = any authenticated user)
 CREATE_PERMISSIONS = {
-    "category": ("organizer", "admin"),
+    "event": ("organizer", "admin"),
     "post": None,
     "resource": None,
     "rule": ("organizer", "admin"),
@@ -101,7 +101,7 @@ CREATE_PERMISSIONS = {
 # State machine: allowed transitions (current_status -> [allowed_next_statuses])
 # Transitions are strictly one-directional. No reverse transitions allowed.
 VALID_TRANSITIONS = {
-    "category.status": {
+    "event.status": {
         "draft": ["published"],
         "published": ["closed"],
         "closed": [],  # terminal state; to modify, create a new version reset to draft

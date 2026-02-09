@@ -3,18 +3,20 @@
 import { useState, Suspense } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { X, Upload, Plus } from "lucide-react"
+import { X, Upload, Plus, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Header } from "@/components/layout/Header"
 import { DEFAULT_POST_TYPE, isPostType, POST_TYPE_OPTIONS } from "@/lib/post-type"
+import { createPost, type PostStatus } from "@/lib/api-client"
 
 function CreatePostForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const typeParam = searchParams.get("type") || ""
+  const typeParam = searchParams?.get("type") || ""
   const defaultType = isPostType(typeParam) ? typeParam : DEFAULT_POST_TYPE
 
   const [formData, setFormData] = useState({
@@ -22,9 +24,10 @@ function CreatePostForm() {
     body: "",
     type: defaultType,
     tags: [] as string[],
-    category_id: null as number | null,
+    event_id: null as number | null,
   })
   const [tagInput, setTagInput] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleAddTag = () => {
     if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
@@ -37,15 +40,34 @@ function CreatePostForm() {
     setFormData({ ...formData, tags: formData.tags.filter((t) => t !== tag) })
   }
 
-  const handleSubmit = (status: "draft" | "published") => {
-    // TODO: API call
-    console.log({ ...formData, status })
-    router.push("/posts")
+  const handleSubmit = async (status: PostStatus) => {
+    if (!formData.title.trim()) {
+      toast.error("请输入帖子标题")
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const post = await createPost({
+        title: formData.title,
+        content: formData.body,
+        type: formData.type,
+        tags: formData.tags.length > 0 ? formData.tags : undefined,
+        status,
+        event_id: formData.event_id,
+      })
+      toast.success(status === "published" ? "帖子发布成功" : "草稿保存成功")
+      router.push(`/posts/${post.id}`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "发布失败，请重试")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
     <div className="min-h-screen bg-nf-dark">
-      <Header user={{ id: 1, username: "test", role: "participant" }} />
+      <Header />
 
       {/* Top Bar */}
       <div className="fixed top-[60px] left-0 right-0 h-14 bg-nf-surface border-b border-nf-secondary z-40">
@@ -61,15 +83,31 @@ function CreatePostForm() {
               size="sm"
               className="border-nf-secondary"
               onClick={() => handleSubmit("draft")}
+              disabled={isSubmitting}
             >
-              保存草稿
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  保存中...
+                </>
+              ) : (
+                "保存草稿"
+              )}
             </Button>
             <Button
               size="sm"
               className="bg-nf-lime text-nf-near-black hover:bg-nf-lime/90"
               onClick={() => handleSubmit("published")}
+              disabled={isSubmitting}
             >
-              发布
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  发布中...
+                </>
+              ) : (
+                "发布"
+              )}
             </Button>
           </div>
         </div>
@@ -164,8 +202,8 @@ function CreatePostForm() {
             </div>
           </div>
 
-          {/* Category Selection (for proposals) */}
-          {formData.type === "for_category" && (
+          {/* Event Selection (for proposals) */}
+          {formData.type === "proposal" && (
             <div className="border-t border-nf-secondary pt-8">
               <h2 className="font-heading text-lg font-semibold text-nf-white mb-4">🎯 关联活动</h2>
               <Button variant="outline" className="border-nf-secondary w-full text-left justify-start">

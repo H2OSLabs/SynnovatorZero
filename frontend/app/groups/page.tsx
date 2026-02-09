@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useMemo, useState } from "react"
 import { Search, SlidersHorizontal, Plus } from "lucide-react"
 import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
 import { PageLayout } from "@/components/layout/PageLayout"
 import { GroupCard } from "@/components/cards/GroupCard"
 import { Button } from "@/components/ui/button"
@@ -10,12 +11,32 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getGroups, getGroupMembers, getUser, type Group } from "@/lib/api-client"
 
-export default function GroupsPage() {
+function GroupsContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
   const [activeTab, setActiveTab] = useState("all")
+  const [searchQuery, setSearchQuery] = useState("")
   const [groups, setGroups] = useState<Group[]>([])
   const [groupMeta, setGroupMeta] = useState<Record<number, { member_count: number; members: Array<{ id: number; username: string; display_name?: string; avatar_url?: string }> }>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Initialize search query from URL
+  useEffect(() => {
+    const q = searchParams?.get("q") ?? ""
+    setSearchQuery(q)
+  }, [searchParams])
+
+  function updateParams(patch: { q?: string | null }) {
+    const next = new URLSearchParams(searchParams?.toString() ?? "")
+    if (patch.q !== undefined) {
+      if (!patch.q) next.delete("q")
+      else next.set("q", patch.q)
+    }
+    const qs = next.toString()
+    router.replace(qs ? `/groups?${qs}` : "/groups")
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,7 +54,12 @@ export default function GroupsPage() {
                 membersResp.items.map(async (m) => {
                   try {
                     const u = await getUser(m.user_id)
-                    return { id: u.id, username: u.username, display_name: u.display_name, avatar_url: u.avatar_url }
+                    return {
+                      id: u.id,
+                      username: u.username,
+                      display_name: u.display_name ?? undefined,
+                      avatar_url: u.avatar_url ?? undefined,
+                    }
                   } catch {
                     return { id: m.user_id, username: `user_${m.user_id}` }
                   }
@@ -63,15 +89,27 @@ export default function GroupsPage() {
     fetchData()
   }, [])
 
-  const filteredGroups = groups.filter((group) => {
-    if (activeTab === "all") return true
-    if (activeTab === "public") return group.visibility === "public"
-    if (activeTab === "private") return group.visibility === "private"
-    return true
-  })
+  // Client-side search and visibility filtering
+  const filteredGroups = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    return groups.filter((group) => {
+      // Visibility filter
+      if (activeTab === "public" && group.visibility !== "public") return false
+      if (activeTab === "private" && group.visibility !== "private") return false
+
+      // Search filter
+      if (q) {
+        const inName = group.name?.toLowerCase().includes(q)
+        const inDesc = group.description?.toLowerCase().includes(q)
+        if (!inName && !inDesc) return false
+      }
+
+      return true
+    })
+  }, [groups, activeTab, searchQuery])
 
   return (
-    <PageLayout variant="compact" user={null}>
+    <PageLayout variant="compact">
       {/* Page Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -93,6 +131,15 @@ export default function GroupsPage() {
           <Input
             placeholder="搜索团队..."
             className="pl-10 bg-nf-surface border-nf-secondary"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key !== "Enter") return
+              updateParams({ q: searchQuery.trim() || null })
+            }}
+            onBlur={() => {
+              updateParams({ q: searchQuery.trim() || null })
+            }}
           />
         </div>
         <Button variant="outline" className="border-nf-secondary">
@@ -140,5 +187,13 @@ export default function GroupsPage() {
         </TabsContent>
       </Tabs>
     </PageLayout>
+  )
+}
+
+export default function GroupsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-nf-dark flex items-center justify-center text-nf-muted">加载中...</div>}>
+      <GroupsContent />
+    </Suspense>
   )
 }

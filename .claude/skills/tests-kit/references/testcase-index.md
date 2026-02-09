@@ -19,7 +19,7 @@
 | TC-USER-902 | 非本人/非 Admin 修改用户信息被拒绝 |
 | TC-USER-903 | 缺少必填字段 email |
 
-## 02-category.md (Category)
+## 02-event.md (Event)
 
 | TC ID | Description |
 |-------|-------------|
@@ -43,15 +43,15 @@
 | TC-RULE-010 | 修改规则配置字段 |
 | TC-RULE-011 | 修改 scoring_criteria 权重 |
 | TC-RULE-020 | 删除规则及级联 |
-| TC-RULE-100 | 提交截止后创建 category_post 被拒绝 |
-| TC-RULE-101 | 提交未开始时创建 category_post 被拒绝 |
-| TC-RULE-102 | 超出 max_submissions 后创建 category_post 被拒绝 |
-| TC-RULE-103 | 提交格式不符时创建 category_post 被拒绝 |
-| TC-RULE-104 | 团队人数不足时创建 category_post 被拒绝 |
+| TC-RULE-100 | 提交截止后创建 event_post 被拒绝 |
+| TC-RULE-101 | 提交未开始时创建 event_post 被拒绝 |
+| TC-RULE-102 | 超出 max_submissions 后创建 event_post 被拒绝 |
+| TC-RULE-103 | 提交格式不符时创建 event_post 被拒绝 |
+| TC-RULE-104 | 团队人数不足时创建 event_post 被拒绝 |
 | TC-RULE-105 | 团队已满时创建 group_user 被拒绝 |
 | TC-RULE-106 | allow_public=false 时直接发布被拒绝 |
 | TC-RULE-107 | allow_public=false 时 pending_review 状态被允许 |
-| TC-RULE-108 | 无 rule 关联时 category_post 正常创建 |
+| TC-RULE-108 | 无 rule 关联时 event_post 正常创建 |
 | TC-RULE-109 | 多条 rule 全部满足才允许（AND 逻辑） |
 | TC-RULE-900 | participant 创建规则被拒绝 |
 | TC-RULE-901 | scoring_criteria 权重总和不等于 100 |
@@ -85,7 +85,7 @@
 | TC-POST-004 | 按 type 筛选帖子 |
 | TC-POST-010 | 创建 team 类型帖子 |
 | TC-POST-011 | 创建 profile 类型帖子 |
-| TC-POST-012 | 创建 for_category 类型帖子 |
+| TC-POST-012 | 创建 proposal 类型帖子 |
 | TC-POST-013 | 创建 certificate 类型帖子 |
 | TC-POST-030 | 帖子进入 pending_review 状态 |
 | TC-POST-031 | 帖子被审核通过 |
@@ -144,8 +144,8 @@
 | TC-IACT-021 | 多个评分的均值计算 |
 | TC-IACT-050 | 修改评论文本 |
 | TC-IACT-051 | 修改评分重新打分 |
-| TC-IACT-060 | 对 category 点赞 |
-| TC-IACT-061 | 对 category 发表评论 |
+| TC-IACT-060 | 对 event 点赞 |
+| TC-IACT-061 | 对 event 发表评论 |
 | TC-IACT-062 | 对 resource 点赞 |
 | TC-IACT-063 | 对 resource 发表评论 |
 | TC-IACT-900 | 非法 interaction type 被拒绝 |
@@ -160,16 +160,16 @@
 | TC ID | Description |
 |-------|-------------|
 | TC-REL-CR-001 | 将规则关联到活动 |
-| TC-REL-CR-002 | 更新 category:rule priority |
-| TC-REL-CR-003 | 删除 category:rule 关系 |
+| TC-REL-CR-002 | 更新 event:rule priority |
+| TC-REL-CR-003 | 删除 event:rule 关系 |
 | TC-REL-CR-900 | 重复关联同一规则到同一活动被拒绝 |
 | TC-REL-CP-001 | 将帖子关联为活动的 submission |
 | TC-REL-CP-002 | 将帖子关联为活动的 reference |
 | TC-REL-CP-003 | 按 relation_type 筛选活动帖子 |
-| TC-REL-CP-004 | 不带筛选读取所有 category:post |
-| TC-REL-CP-900 | 规则截止后提交 category_post 被拒绝 |
-| TC-REL-CP-901 | 格式不符时提交 category_post 被拒绝 |
-| TC-REL-CP-902 | 超出 max_submissions 时提交 category_post 被拒绝 |
+| TC-REL-CP-004 | 不带筛选读取所有 event:post |
+| TC-REL-CP-900 | 规则截止后提交 event_post 被拒绝 |
+| TC-REL-CP-901 | 格式不符时提交 event_post 被拒绝 |
+| TC-REL-CP-902 | 超出 max_submissions 时提交 event_post 被拒绝 |
 | TC-REL-CG-001 | 团队报名活动 |
 | TC-REL-CG-002 | 读取活动已报名团队列表 |
 | TC-REL-CG-003 | 团队取消报名 |
@@ -196,16 +196,16 @@
 
 | TC ID | Description |
 |-------|-------------|
-| TC-DEL-001 | 删除 category |
+| TC-DEL-001 | 删除 event |
 | TC-DEL-002 | 删除 rule |
 | TC-DEL-003 | 删除 user |
 | TC-DEL-004 | 删除 group |
 | TC-DEL-005 | 删除 interaction |
-| TC-DEL-010 | 删除 category → 关联 interaction 级联硬删除 |
+| TC-DEL-010 | 删除 event → 关联 interaction 级联硬删除 |
 | TC-DEL-011 | 删除 user → interaction + group:user 级联处理 |
 | TC-DEL-012 | 删除 post → 完整级联链 |
-| TC-DEL-013 | 删除 rule → 级联 category:rule |
-| TC-DEL-014 | 删除 group → 级联 category:group |
+| TC-DEL-013 | 删除 rule → 级联 event:rule |
+| TC-DEL-014 | 删除 group → 级联 event:group |
 | TC-DEL-015 | 删除父评论 → 级联删除所有子评论 |
 | TC-DEL-020 | 读取已删除记录返回 not found |
 | TC-DEL-021 | 已删除记录不可恢复 |
@@ -215,9 +215,9 @@
 
 | TC ID | Description |
 |-------|-------------|
-| TC-PERM-001 | participant 创建 category 被拒绝 |
+| TC-PERM-001 | participant 创建 event 被拒绝 |
 | TC-PERM-002 | participant 创建 rule 被拒绝 |
-| TC-PERM-003 | participant 更新 category 被拒绝 |
+| TC-PERM-003 | participant 更新 event 被拒绝 |
 | TC-PERM-012 | 非本人修改用户信息被拒绝 |
 | TC-PERM-013 | 非 Owner 修改团队信息被拒绝 |
 | TC-PERM-014 | 非本人修改评论被拒绝 |
@@ -266,7 +266,7 @@
 | TC-FRIEND-901 | 重复关注被拒绝 |
 | TC-FRIEND-902 | 非法 relation_type 被拒绝 |
 
-## 14-category-association.md (Category Association)
+## 14-event-association.md (Event Association)
 
 | TC ID | Description |
 |-------|-------------|
@@ -440,7 +440,7 @@
 | TC-NOTIF-900 | 访问不存在的通知返回错误 |
 | TC-NOTIF-901 | 非本人通知不可操作 |
 
-## 21-category-management.md (Category Management)
+## 21-event-management.md (Event Management)
 
 | TC ID | Description |
 |-------|-------------|
@@ -714,3 +714,32 @@
 | TC-ASSETCOPY-901 | 自己资产无法申请复制 |
 | TC-ASSETCOPY-902 | 已删除资产无法申请复制 |
 | TC-ASSETCOPY-903 | 非团队成员无法申请团队提案内资产 |
+
+## 33-frontend-integration.md (Frontend Integration) ⭐ 新增
+
+> 验证前端表单与后端 API 的集成链路
+
+| TC ID | Description |
+|-------|-------------|
+| TC-FEINT-001 | 前端创建日常帖子调用后端 API |
+| TC-FEINT-002 | 前端保存帖子草稿调用后端 API |
+| TC-FEINT-003 | 前端创建提案调用后端 API |
+| TC-FEINT-004 | 前端创建帖子失败显示错误 |
+| TC-FEINT-005 | 前端创建帖子时 API 返回错误 |
+| TC-FEINT-010 | 前端创建团队调用后端 API |
+| TC-FEINT-011 | 前端创建团队失败显示错误 |
+| TC-FEINT-012 | 前端创建私有团队调用后端 API |
+| TC-FEINT-020 | 前端创建活动调用后端 API |
+| TC-FEINT-021 | 非组织者无法访问活动创建页 |
+| TC-FEINT-030 | 前端登录调用后端 API |
+| TC-FEINT-031 | 前端注册调用后端 API |
+| TC-FEINT-032 | 前端登录失败显示错误 |
+| TC-FEINT-040 | 前端编辑帖子调用后端 API |
+| TC-FEINT-041 | 前端编辑团队信息调用后端 API |
+| TC-FEINT-050 | 前端删除帖子调用后端 API |
+| TC-FEINT-051 | 前端删除团队调用后端 API |
+| TC-FEINT-090 | api-client.ts 包含所有 CRUD 方法 |
+| TC-FEINT-091 | 前端创建页面无 TODO 遗留 |
+| TC-FEINT-900 | 未登录用户创建帖子被拦截 |
+| TC-FEINT-901 | API 客户端网络错误处理 |
+| TC-FEINT-902 | 重复提交防护 |

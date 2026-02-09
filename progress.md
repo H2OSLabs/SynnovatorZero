@@ -1,608 +1,399 @@
 # Progress Log
 
-## Session: 2026-01-27
+## 2026-02-08: Header 修复 + Figma Skills 研究
 
-### Phase 0: 工作流文档更新与规划
-- **Status:** complete
-- **Started:** 2026-01-27
-- Actions taken:
-  - 更新 docs/development-workflow.md:
-    - schema-to-openapi 数据源扩展（synnovator skill + docs/ + specs/）
-    - 集成 planning-with-files skill（Phase 0.3 初始化 + 全流程贯穿）
-    - 集成 tests-kit skill（每阶段增量测试检查点）
-    - 添加 8 层底层到上层依赖图开发顺序
-  - 修复测试用例数量 267→246
-  - 创建 task_plan.md / findings.md / progress.md 规划文件
-- Files created/modified:
-  - docs/development-workflow.md (modified)
-  - task_plan.md (created)
-  - findings.md (created)
-  - progress.md (created)
+### 完成内容
 
-### Phase 1: 后端脚手架生成
-- **Status:** complete
-- **Started:** 2026-01-27
-- Actions taken:
-  - 运行 api-builder CLI 从 openapi.yaml 生成 54 models, 54 schemas, 8 routers
-  - 修复 api-builder 模板 bug: enum.values → enum['values'], path_params guard
-  - 创建 app/database.py (SQLAlchemy engine, session, Base, get_db)
-  - 创建 app/crud/base.py (CRUDBase 泛型基类)
-  - 修复所有生成代码的问题:
-    - Models: 删除重复列，修复 null→None，添加缺失 JSON import，修复表名 categorys→categories
-    - Schemas: 修复非 DB 类型的错误继承层次，添加缺失 Dict import，修正 Category/Comment/Rating 的字段设计
-    - Routers: 修复 None 参数名，添加 Any import，修复返回类型，改 path param 类型 str→int
-  - 删除 44 个不必要的 model 文件 + 26 个不必要的 schema 文件
-  - 创建 7 个 CRUD 模块 (users, resources, categories, posts, rules, groups, interactions)
-  - 更新 main.py 为正式 FastAPI 应用（8 router 挂载 + CORS + health check）
-  - 更新所有 __init__.py 导出
-  - 添加 pydantic[email] 依赖
-  - 修复 Makefile uvicorn 启动命令
-  - 验证通过: 服务启动成功，28 paths, 45 schemas, CRUD 测试通过
-- Files created/modified:
-  - app/main.py (rewritten)
-  - app/database.py (created)
-  - app/models/*.py (9 models fixed, 44 deleted)
-  - app/models/__init__.py (rewritten)
-  - app/schemas/*.py (29 schemas fixed, 26 deleted)
-  - app/schemas/__init__.py (rewritten)
-  - app/crud/*.py (7 CRUD modules created)
-  - app/crud/__init__.py (rewritten)
-  - app/routers/*.py (8 routers rewritten)
-  - Makefile (fixed uvicorn command)
-  - pyproject.toml (added pydantic[email])
+**Phase 1: 分析用户 commit 7d54b32** ✅
+- 用户实现了帖子筛选功能（`q` 搜索 + `tags` 筛选）
+- 采用 URL 驱动的筛选模式（`useSearchParams` + `router.replace()`）
+- 这是 Next.js App Router 的最佳实践
 
-### Phase 2: Layer 0 — user + resource CRUD
-- **Status:** complete
-- **Started:** 2026-01-27
-- Actions taken:
-  - **User model**: 添加 unique 约束 (username, email), deleted_at 软删除字段, role 默认值 "participant"
-  - **Resource model**: 添加 created_by 字段, deleted_at 软删除字段
-  - **User schema**: Literal 类型验证 role (participant|organizer|admin), 默认值 "participant", model_config 替代 class Config
-  - **Resource schema**: 添加 created_by, deleted_at 字段, ResourceUpdate 限制为 display_name/description
-  - **User CRUD**: 添加 get_by_username, get_by_email 查询方法; 软删除 (remove 设 deleted_at); get/get_multi 自动过滤已删除
-  - **Resource CRUD**: 软删除; get/get_multi 自动过滤已删除
-  - **User router**: 创建时校验 username/email 唯一性 (409), 更新时校验唯一性
-  - **Resource router**: 创建需 X-User-Id header (401), 添加 PATCH 更新端点
-  - **deps.py**: get_current_user_id + require_current_user_id 依赖
-  - **25 pytest tests**: 16 user + 9 resource, 覆盖 TC-USER-001~903, TC-RES-001~901
-- Files created/modified:
-  - app/models/user.py (enhanced: unique, deleted_at, role default)
-  - app/models/resource.py (enhanced: created_by, deleted_at)
-  - app/schemas/user.py (enhanced: Literal role, model_config)
-  - app/schemas/resource.py (enhanced: created_by, model_config)
-  - app/crud/users.py (rewritten: soft delete, uniqueness queries)
-  - app/crud/resources.py (rewritten: soft delete)
-  - app/routers/users.py (rewritten: uniqueness checks)
-  - app/routers/resources.py (rewritten: auth, update endpoint)
-  - app/deps.py (created: auth dependencies)
-  - app/tests/__init__.py (created)
-  - app/tests/conftest.py (created: in-memory SQLite test DB)
-  - app/tests/test_users.py (created: 16 tests)
-  - app/tests/test_resources.py (created: 9 tests)
+**Phase 2: 修复 Header 登录状态 bug** ✅
+- 问题：Header 未处理 `isLoading` 状态，导致已登录用户刷新时短暂看到登录/注册按钮
+- 修复：添加 `isLoading` 检查，loading 时显示骨架占位符
 
-## Test Results
-| Test | Input | Expected | Actual | Status |
-|------|-------|----------|--------|--------|
-| App import | `from app.main import app` | No errors | 61 routes | PASS |
-| Health endpoint | GET /health | 200 | 200 {"status":"ok"} | PASS |
-| OpenAPI spec | GET /openapi.json | Valid spec | 28 paths, 45 schemas | PASS |
-| Phase 2 pytest | `pytest app/tests/ -v` | 25 passed | 25 passed, 0 failed | PASS |
+```tsx
+{isLoading ? (<skeleton />) : user ? (<logged-in UI />) : (<login buttons />)}
+```
 
-### Phase 2 Test Coverage
-| Test Case | Scenario | Status |
-|-----------|----------|--------|
-| TC-USER-001 | 创建 participant 用户 | PASS |
-| TC-USER-002 | 创建 organizer 用户 | PASS |
-| TC-USER-003 | 创建 admin 用户 | PASS |
-| TC-USER-004 | 读取已创建的用户 | PASS |
-| TC-USER-010 | 用户修改个人信息 | PASS |
-| TC-USER-011 | Admin 修改用户角色 | PASS |
-| TC-USER-020 | 删除用户 (soft delete) | PASS |
-| TC-USER-900 | 重复 username 被拒绝 | PASS |
-| TC-USER-901 | 重复 email 被拒绝 | PASS |
-| TC-USER-903 | 缺少必填字段 email | PASS |
-| TC-RES-001 | 最小字段创建资源 | PASS |
-| TC-RES-002 | 带完整元信息创建资源 | PASS |
-| TC-RES-030 | 更新资源元信息 | PASS |
-| TC-RES-031 | 删除资源 (soft delete) | PASS |
-| TC-RES-900 | 缺少 filename 被拒绝 | PASS |
-| TC-RES-901 | 未登录用户创建资源被拒绝 | PASS |
+**Phase 3: 根因分析** ✅
+- 问题归类：实现问题 + 测试用例缺失
+- 责任阶段：Phase 7 (前端组件) + Phase 8 (E2E 测试)
 
-### Deferred to Later Phases
-| Test Case | Reason |
-|-----------|--------|
-| TC-USER-902 | 权限控制 (需完整 auth 中间件，Phase 7) |
-| TC-RES-040~045 | Resource 可见性继承 (需 post:resource 关系，Phase 5) |
-| TC-RES-902 | post:resource 关系引用校验 (Phase 5) |
-| TC-RES-903 | display_type 枚举 (Phase 5) |
+**Phase 4: Figma Skills 研究** ✅
+从 `feat/prototype-v1` 分支发现四个 Figma 相关 skills：
 
-## Error Log
-| Timestamp | Error | Attempt | Resolution |
-|-----------|-------|---------|------------|
-| 2026-01-27 | Jinja2 enum.values TypeError | 1 | Changed to enum['values'] in 3 templates |
-| 2026-01-27 | path_params[0] UndefinedError | 1 | Added guard in router.py.j2 |
-| 2026-01-27 | email-validator not installed | 1 | Added pydantic[email] dependency |
-| 2026-01-27 | uvicorn shebang wrong venv | 1 | Use `uv run python -m uvicorn` instead |
+| Skill | 功能 |
+|-------|------|
+| `figma-resource-extractor` | Figma → `specs/design/figma/` |
+| `ui-spec-generator` | Design + TestCases → `pages.yaml` |
+| `ux-spec-generator` | pages.yaml → `specs/ux/` |
+| `frontend-prototype-builder` | All specs → React pages |
 
-### Phase 3: Layer 1 — rule, group, category CRUD
-- **Status:** complete
-- **Started:** 2026-01-27
-- Actions taken:
-  - **Rule model**: 添加 deleted_at 软删除; created_by 改为 Integer 类型
-  - **Rule schema**: ScoringCriterion 子模型; model_validator 校验 scoring_criteria weights 和=100; model_config
-  - **Rule CRUD**: soft delete; get/get_multi 过滤已删除
-  - **Rule router**: require_current_user_id auth; created_by 自动设置
-  - **Group model**: 添加 created_by Integer; deleted_at 软删除; visibility 默认 "public"
-  - **Group schema**: Literal["public","private"] 枚举校验; model_config
-  - **Group CRUD**: soft delete; get/get_multi 过滤已删除
-  - **Group router**: require_current_user_id auth; created_by 自动设置; 成员管理 stub 保留
-  - **Category model**: created_by 改为 Integer 类型
-  - **Category schema**: Literal 枚举校验 type(competition|operation), status(draft|published|closed); VALID_STATUS_TRANSITIONS 状态机; model_config
-  - **Category CRUD**: soft delete; get/get_multi 过滤已删除
-  - **Category router**: require_current_user_id auth; created_by 自动设置; 状态机转换校验 (422 on invalid)
-  - **40 tests**: 12 rule + 12 group + 16 category, 全部通过
-- Files modified:
-  - app/models/rule.py (deleted_at, created_by→Integer)
-  - app/models/group.py (created_by, deleted_at, cleanup)
-  - app/models/category.py (created_by→Integer)
-  - app/schemas/rule.py (rewritten: ScoringCriterion, validators)
-  - app/schemas/group.py (rewritten: Literal, model_config)
-  - app/schemas/category.py (rewritten: Literal, state machine)
-  - app/crud/rules.py (rewritten: soft delete)
-  - app/crud/groups.py (rewritten: soft delete)
-  - app/crud/categories.py (rewritten: soft delete)
-  - app/routers/rules.py (rewritten: auth, created_by)
-  - app/routers/groups.py (rewritten: auth, created_by)
-  - app/routers/categories.py (rewritten: auth, status validation)
-  - app/tests/test_rules.py (created: 12 tests)
-  - app/tests/test_groups.py (created: 12 tests)
-  - app/tests/test_categories.py (created: 16 tests)
+**集成可行性**：
+- Figma 资源已提取（69 icons, 54 components, 104 pages）
+- 需要配置 Figma MCP（需 access token）
+- 可作为 Phase 4-7 的自动化补充
 
-### Phase 3 Test Coverage
-| Test Case | Scenario | Status |
-|-----------|----------|--------|
-| TC-RULE-001 | 创建完整 scoring_criteria 规则 | PASS |
-| TC-RULE-002 | 创建 select-only 规则 | PASS |
-| TC-RULE-003 | 读取规则含 scoring_criteria | PASS |
-| TC-RULE-010 | 修改规则配置 (allow_public, max_submissions, max_team_size) | PASS |
-| TC-RULE-011 | 修改 scoring_criteria 权重 [30,30,25,15]→[25,25,25,25] | PASS |
-| TC-RULE-020 | 删除规则 (soft delete) | PASS |
-| TC-RULE-900 | 未认证用户无法创建规则 | PASS |
-| TC-RULE-901 | scoring_criteria weights 和≠100 被拒绝 | PASS |
-| TC-GRP-001 | 创建公开团队需审批 | PASS |
-| TC-GRP-002 | 创建私有团队无需审批 | PASS |
-| TC-GRP-010 | 更新团队描述和 max_members | PASS |
-| TC-GRP-011 | 修改 require_approval (true→false) | PASS |
-| TC-GRP-012 | 修改 visibility (public→private) | PASS |
-| TC-GRP-020 | 删除团队 (soft delete) | PASS |
-| TC-GRP-900 | 无效 visibility 枚举被拒绝 | PASS |
-| TC-GRP-901 | 未认证用户无法创建团队 | PASS |
-| TC-CAT-001 | 创建 competition 活动 | PASS |
-| TC-CAT-002 | 创建 operation 活动 | PASS |
-| TC-CAT-003 | 读取活动完整字段 | PASS |
-| TC-CAT-010 | 状态机 draft→published→closed | PASS |
-| TC-CAT-010 | 反向转换被拒绝 (published→draft) | PASS |
-| TC-CAT-010 | closed 为终态 | PASS |
-| TC-CAT-010 | draft 不能跳过 published 直接到 closed | PASS |
-| TC-CAT-011 | 修改名称和描述 | PASS |
-| TC-CAT-020 | 删除活动 (soft delete) | PASS |
-| TC-CAT-900 | 无效 type 枚举被拒绝 | PASS |
-| TC-CAT-901 | 无效 status 枚举被拒绝 | PASS |
-| TC-CAT-902 | 未认证用户无法创建活动 | PASS |
+### 修改的文件
 
-### Deferred to Later Phases (from Phase 3)
-| Test Case | Reason |
-|-----------|--------|
-| TC-RULE-100~109 | 规则执行校验 (需 category_post 关系, Phase 6) |
-| TC-GRP-003~008 | 团队成员审批流程 (需 group_user 关系, Phase 5) |
-| TC-GRP-901 | 非 owner/admin 修改团队权限检查 (需完整 auth, Phase 7) |
-| TC-CAT-020 cascade | 级联删除关系 (需 relationship tables, Phase 7) |
-| TC-RULE-020 cascade | 级联删除 category:rule 关系 (需 relationship tables, Phase 7) |
+| 文件 | 修改内容 |
+|------|----------|
+| `frontend/components/layout/Header.tsx` | 添加 isLoading 处理 |
+| `task_plan.md` | 更新任务计划 |
+| `findings.md` | 详细分析报告 |
+| `progress.md` | 本次进度记录 |
 
-## Test Results
-| Test | Input | Expected | Actual | Status |
-|------|-------|----------|--------|--------|
-| App import | `from app.main import app` | No errors | 61 routes | PASS |
-| Health endpoint | GET /health | 200 | 200 {"status":"ok"} | PASS |
-| OpenAPI spec | GET /openapi.json | Valid spec | 28 paths, 45 schemas | PASS |
-| Phase 2 pytest | `pytest app/tests/ -v` | 25 passed | 25 passed, 0 failed | PASS |
-| Phase 3 pytest | `pytest app/tests/ -v` | 65 passed | 65 passed, 0 failed | PASS |
+### 后续建议
 
-### Phase 4: Layer 2 — post, interaction CRUD
-- **Status:** complete
-- **Started:** 2026-01-27
-- Actions taken:
-  - **Post model**: 添加 visibility 列, created_by→Integer, like_count/comment_count/average_rating 缓存字段
-  - **Post schema**: Literal 类型校验 type(6 种), status(4 种), visibility(public|private); VALID_POST_STATUS_TRANSITIONS 状态机
-  - **Post CRUD**: soft delete; get/get_multi 过滤已删除
-  - **Post router**: require_current_user_id auth; created_by 自动设置; 状态机转换校验
-  - **Interaction model**: 新建统一模型 (type: like|comment|rating, value: JSON, parent_id, created_by, deleted_at)
-  - **Interaction schema**: 新建 Literal["like","comment","rating"] 类型校验
-  - **Interaction CRUD**: 新建 CRUDInteraction with soft delete; 保留 legacy Comment/Rating CRUD
-  - **38 tests**: 27 post + 11 interaction, 全部通过
-- Files modified/created:
-  - app/models/post.py (enhanced: visibility, created_by→Integer, cache fields)
-  - app/models/interaction.py (created: unified Interaction model)
-  - app/models/__init__.py (updated: add Interaction)
-  - app/schemas/post.py (rewritten: Literal, state machine, cache fields)
-  - app/schemas/interaction.py (created: Literal type validation)
-  - app/schemas/__init__.py (updated: add Interaction schemas)
-  - app/crud/posts.py (rewritten: soft delete)
-  - app/crud/interactions.py (rewritten: CRUDInteraction + legacy)
-  - app/crud/__init__.py (updated: add interactions)
-  - app/routers/posts.py (rewritten: auth, status validation)
-  - app/tests/test_posts.py (created: 27 tests)
-  - app/tests/test_interactions.py (created: 11 tests)
-
-### Phase 4 Test Coverage
-| Test Case | Scenario | Status |
-|-----------|----------|--------|
-| TC-POST-001 | 最小字段创建帖子 | PASS |
-| TC-POST-002 | 创建时直接发布 | PASS |
-| TC-POST-003 | 创建帖子带标签 | PASS |
-| TC-POST-010~013 | 不同类型帖子 (team, profile, for_category, certificate) | PASS |
-| TC-POST-030 | draft→pending_review | PASS |
-| TC-POST-031 | pending_review→published | PASS |
-| TC-POST-032 | pending_review→rejected | PASS |
-| TC-POST-033 | rejected→draft (resubmit) | PASS |
-| TC-POST-033b | published 为终态 | PASS |
-| TC-POST-060 | 更新标题和内容 | PASS |
-| TC-POST-070 | 创建 visibility=private 帖子 | PASS |
-| TC-POST-071 | private 帖子跳过 pending_review | PASS |
-| TC-POST-073 | public→private | PASS |
-| TC-POST-074 | private→public | PASS |
-| TC-POST-076 | 默认 visibility=public | PASS |
-| TC-POST-080 | 删除帖子 (soft delete) | PASS |
-| TC-POST-900 | 缺少 title 被拒绝 | PASS |
-| TC-POST-901 | 无效 type/status 枚举被拒绝 | PASS |
-| TC-POST-902 | 未认证用户无法创建帖子 | PASS |
-| TC-POST-903 | 无效 visibility 枚举被拒绝 | PASS |
-| TC-IACT-model | 创建 like/comment/rating/nested 互动 (DB 直接) | PASS |
-| TC-IACT-soft-delete | 互动软删除 | PASS |
-| TC-IACT-900 | 无效 interaction type 被拒绝 | PASS |
-| TC-IACT-valid | 所有合法类型被接受 | PASS |
-| TC-IACT-endpoint | like/comments/ratings 端点 stub | PASS |
-
-### Deferred to Later Phases (from Phase 4)
-| Test Case | Reason |
-|-----------|--------|
-| TC-POST-040~050 | post_resource/post_post 关系 (Phase 5: Layer 3) |
-| TC-IACT-001~063 | target:interaction 绑定 + 缓存更新 (Phase 6: Layer 4) |
-| TC-IACT-020~025 | like 去重 + 缓存字段维护 (Phase 6: Layer 4) |
-
-## Test Results
-| Test | Input | Expected | Actual | Status |
-|------|-------|----------|--------|--------|
-| Phase 4 pytest | `pytest app/tests/ -v` | 102 passed | 102 passed, 0 failed | PASS |
-
-### Phase 5: Layer 3 — simple relations (group_user, user_user, post_resource, post_post)
-- **Status:** complete
-- **Started:** 2026-01-27
-- Actions taken:
-  - **Member model**: 添加 UniqueConstraint(group_id, user_id); role/status 默认值
-  - **Member schema**: Literal 类型校验 role(owner|admin|member), status(pending|accepted|rejected)
-  - **Member CRUD**: 按 group 查询/计数, 按 group+user 唯一查询, 状态更新(joined_at auto-set), 物理删除
-  - **Groups router**: 完整实现 member 端点 (list/add/update/remove), 审批流程(require_approval→pending/accepted), 重复检查(409)
-  - **UserUser model**: 新建 user:user 关系表 (source_user_id, target_user_id, relation_type) + 唯一约束
-  - **UserUser schema**: Literal["follow","block"] 校验
-  - **UserUser CRUD**: follow/block 查询, 好友判定(mutual follow + no block), 级联删除
-  - **Users router**: 新增 follow/unfollow/block/unblock + following/followers/is-friend 端点; self-follow/block 拒绝; blocked→cannot follow
-  - **PostResource model**: 新建 post:resource 关系表 + 唯一约束
-  - **PostResource CRUD**: 按 post 查询(position排序), 创建/更新/删除
-  - **PostPost model**: 新建 post:post 关系表 + 唯一约束
-  - **PostPost CRUD**: 按 source 查询(可过滤 relation_type), 创建/更新/删除
-  - **Posts router**: 完整实现 resources + related 端点 (list/add/update/remove), 去重检查, 外键存在性校验
-  - **PostResourceAdd/PostRelationAdd schema**: Literal 枚举校验 (display_type, relation_type)
-  - **44 tests**: 13 group_member + 14 user_follow + 9 post_resource + 8 post_relation, 全部通过
-- Files created:
-  - app/models/user_user.py (UserUser model)
-  - app/models/post_resource.py (PostResource model)
-  - app/models/post_post.py (PostPost model)
-  - app/schemas/user_user.py (UserUserCreate, UserUserResponse)
-  - app/schemas/post_resource.py (PostResourceResponse)
-  - app/schemas/post_post.py (PostPostResponse)
-  - app/crud/members.py (CRUDMember)
-  - app/crud/user_users.py (CRUDUserUser)
-  - app/crud/post_resources.py (CRUDPostResource)
-  - app/crud/post_posts.py (CRUDPostPost)
-  - app/tests/test_group_members.py (13 tests)
-  - app/tests/test_user_follow.py (14 tests)
-  - app/tests/test_post_resources.py (9 tests)
-  - app/tests/test_post_relations.py (8 tests)
-- Files modified:
-  - app/models/member.py (UniqueConstraint, defaults)
-  - app/models/__init__.py (add UserUser, PostResource, PostPost)
-  - app/schemas/member.py (Literal role/status)
-  - app/schemas/memberadd.py (Literal role)
-  - app/schemas/postresourceadd.py (Literal display_type)
-  - app/schemas/postrelationadd.py (Literal relation_type)
-  - app/schemas/__init__.py (add new schemas)
-  - app/crud/__init__.py (add new CRUDs)
-  - app/routers/groups.py (wire up member endpoints)
-  - app/routers/users.py (add follow/block endpoints)
-  - app/routers/posts.py (wire up resource + related endpoints)
-
-### Phase 5 Test Coverage
-| Test Case | Scenario | Status |
-|-----------|----------|--------|
-| TC-REL-GU-add | 添加成员 (require_approval=true→pending, false→accepted) | PASS |
-| TC-REL-GU-owner | 添加 owner 角色成员 | PASS |
-| TC-REL-GU-900 | 重复加入被拒绝 (409) | PASS |
-| TC-REL-GU-901 | 非法 role 枚举被拒绝 (422) | PASS |
-| TC-REL-GU-001 | 移出团队成员 + 验证列表为空 | PASS |
-| TC-REL-GU-list | 列表成员 + 按状态过滤 | PASS |
-| TC-REL-GU-approve | 审批通过 (joined_at auto-set) | PASS |
-| TC-REL-GU-reject | 审批拒绝 | PASS |
-| TC-FRIEND-001 | 用户 A 关注用户 B + 关注列表 | PASS |
-| TC-FRIEND-002 | 互相关注→好友 | PASS |
-| TC-FRIEND-003 | 单向关注≠好友 | PASS |
-| TC-FRIEND-004 | 取消关注→解除好友 | PASS |
-| TC-FRIEND-005 | 拉黑后不构成好友 | PASS |
-| TC-FRIEND-006 | 被拉黑用户无法关注 (403) | PASS |
-| TC-FRIEND-900 | 自己关注自己被拒绝 (422) | PASS |
-| TC-FRIEND-901 | 重复关注被拒绝 (409) | PASS |
-| TC-FRIEND-902 | 非法 relation_type 被拒绝 (schema) | PASS |
-| TC-REL-PR-001 | 资源作为 attachment 挂到帖子 | PASS |
-| TC-REL-PR-002 | 资源作为 inline 挂到帖子 | PASS |
-| TC-REL-PR-003 | 多资源 position 排序 | PASS |
-| TC-REL-PR-004 | 更新 display_type | PASS |
-| TC-REL-PR-005 | 删除关系（资源本身仍存在） | PASS |
-| TC-REL-PP-001 | 创建 embed 关系 | PASS |
-| TC-REL-PP-002 | 创建 reference 关系 | PASS |
-| TC-REL-PP-003 | 创建 reply 关系 | PASS |
-| TC-REL-PP-004 | 更新关系类型和 position | PASS |
-| TC-REL-PP-005 | 删除 post:post 关系 | PASS |
-
-### Deferred to Later Phases (from Phase 5)
-| Test Case | Reason |
-|-----------|--------|
-| TC-REL-GU-902 | 团队已满时加入被拒绝 (需 category_group + rule enforcement, Phase 6) |
-| TC-FRIEND-007 | 删除用户后级联解除 user:user (需 soft delete cascade, Phase 7) |
-
-## Test Results
-| Test | Input | Expected | Actual | Status |
-|------|-------|----------|--------|--------|
-| Phase 5 pytest | `pytest app/tests/ -v` | 146 passed | 146 passed, 0 failed | PASS |
-| Phase 6 pytest | `pytest app/tests/ -v` | 186 passed | 186 passed, 0 failed | PASS |
-
-### Phase 6: Layer 4 — complex relations (category_rule, category_post, category_group, target_interaction)
-- **Status:** complete
-- **Started:** 2026-01-27
-- Actions taken:
-  - **CategoryRule**: 模型 + CRUD + 优先级排序 + 重复检查(409) + 路由端点 (list/add/update priority/remove)
-  - **CategoryPost**: 模型 + CRUD + relation_type 过滤 + max_submissions 规则引擎 + 路由端点 (list/add/remove)
-  - **CategoryGroup**: 模型 + CRUD + 重复报名检查(409) + is_user_in_category 查询 + 路由端点 (list/add/remove)
-  - **TargetInteraction**: 多态绑定模型(target_type: post|category|resource) + like 去重 + cache 更新
-  - **Interactions router 重写**: like/unlike(POST/DELETE) + comment(POST/GET) + rating(POST/GET) 全部通过 target_interaction 绑定
-  - **缓存更新**: _update_post_cache() 自动维护 like_count, comment_count, average_rating
-  - **Bug 修复**: PaginatedCommentList/RatingList → PaginatedInteractionList (旧 Comment/Rating schema 与 Interaction 模型不兼容); comment/rating POST 端点添加 response_model=schemas.Interaction; Phase 4 interaction tests 补充 X-User-Id header
-  - **40 new tests**: 7 category_rule + 10 category_post + 7 category_group + 16 target_interaction
-- Files created:
-  - app/models/category_rule.py (CategoryRule model)
-  - app/models/category_post.py (CategoryPost model)
-  - app/models/category_group.py (CategoryGroup model)
-  - app/models/target_interaction.py (TargetInteraction model)
-  - app/schemas/category_rule.py (CategoryRuleResponse)
-  - app/schemas/category_post.py (CategoryPostResponse)
-  - app/schemas/category_group.py (CategoryGroupResponse)
-  - app/schemas/target_interaction.py (TargetInteractionCreate, TargetInteractionResponse)
-  - app/schemas/paginatedinteractionlist.py (PaginatedInteractionList)
-  - app/crud/category_rules.py (CRUDCategoryRule)
-  - app/crud/category_posts.py (CRUDCategoryPost)
-  - app/crud/category_groups.py (CRUDCategoryGroup)
-  - app/crud/target_interactions.py (CRUDTargetInteraction)
-  - app/tests/test_category_rules.py (7 tests)
-  - app/tests/test_category_posts.py (10 tests)
-  - app/tests/test_category_groups.py (7 tests)
-  - app/tests/test_target_interactions.py (16 tests)
-- Files modified:
-  - app/models/__init__.py (add Phase 6 models)
-  - app/schemas/__init__.py (add Phase 6 schemas + PaginatedInteractionList)
-  - app/crud/__init__.py (add Phase 6 CRUDs)
-  - app/routers/categories.py (wire up category_rule, category_post, category_group endpoints)
-  - app/routers/interactions.py (complete rewrite: target_interaction binding, auth, cache)
-  - app/tests/test_interactions.py (fix Phase 4 tests: add X-User-Id headers)
-
-### Phase 6 Test Coverage
-| Test Case | Scenario | Status |
-|-----------|----------|--------|
-| TC-REL-CR-001 | 将规则关联到活动 (priority) | PASS |
-| TC-REL-CR-002 | 更新 category:rule priority | PASS |
-| TC-REL-CR-003 | 删除 category:rule (规则本身保留) | PASS |
-| TC-REL-CR-900 | 重复关联同一规则被拒绝 (409) | PASS |
-| TC-REL-CR-boundary | 非法 category/rule ID 返回 404 | PASS |
-| TC-REL-CP-001 | 帖子关联为 submission | PASS |
-| TC-REL-CP-002 | 帖子关联为 reference | PASS |
-| TC-REL-CP-003 | 按 relation_type=submission 筛选 | PASS |
-| TC-REL-CP-004 | 无筛选读取所有 category:post | PASS |
-| TC-REL-CP-902 | max_submissions 超限被拒绝 (422) | PASS |
-| TC-REL-CP-ref | reference 不受 max_submissions 限制 | PASS |
-| TC-REL-CP-dup | 重复 category:post 被拒绝 (409) | PASS |
-| TC-REL-CP-remove | 删除 category:post 关系 | PASS |
-| TC-REL-CP-boundary | 非法 category/post ID 返回 404 | PASS |
-| TC-REL-CG-001 | 团队报名活动 | PASS |
-| TC-REL-CG-002 | 读取活动已报名团队列表 | PASS |
-| TC-REL-CG-003 | 团队取消报名 | PASS |
-| TC-REL-CG-900 | 重复报名被拒绝 (409) | PASS |
-| TC-REL-CG-boundary | 非法 category/group/relation ID 返回 404 | PASS |
-| TC-IACT-001 | 点赞 → like_count 从 0→1 | PASS |
-| TC-IACT-002 | 重复点赞被拒绝 (409) | PASS |
-| TC-IACT-003 | 取消点赞 → like_count 回到 0 | PASS |
-| TC-IACT-multiple | 多用户点赞/取消点赞计数正确 | PASS |
-| TC-IACT-010 | 创建顶层评论 → comment_count +1 | PASS |
-| TC-IACT-011 | 嵌套回复 (parent_id) | PASS |
-| TC-IACT-013 | comment_count 包含所有层级 | PASS |
-| TC-IACT-list-comments | 评论列表分页 | PASS |
-| TC-IACT-020 | 创建评分 → average_rating 计算 | PASS |
-| TC-IACT-021 | 多评分均值计算 | PASS |
-| TC-IACT-list-ratings | 评分列表分页 | PASS |
-| TC-IACT-auth | like/comment/rating 无 auth 返回 401 | PASS |
-| TC-IACT-deleted | 已删除帖子点赞返回 404 | PASS |
-
-### Deferred to Later Phases (from Phase 6)
-| Test Case | Reason |
-|-----------|--------|
-| TC-REL-CP-900 | submission_deadline 截止后拒绝 (需完整规则引擎时间窗口, Phase 7) |
-| TC-REL-CP-901 | submission_format 格式检查 (需 resource 格式校验, Phase 7) |
-| TC-REL-CG-901 | 同一用户多团队报名拒绝 (需 member+category_group 联合查询, Phase 7) |
-| TC-REL-GU-902 | 团队已满时加入拒绝 (需 category_group + rule enforcement, Phase 7) |
-| TC-IACT-014 | 删除父评论级联删除子回复 (Phase 7) |
-| TC-IACT-050~051 | 修改评论/评分 (Phase 7) |
-| TC-IACT-060~063 | 非 post 目标互动 (Phase 7) |
-| TC-IACT-901~905 | 负向/边界用例 (Phase 7) |
-
-### Phase 7: Layer 5-6 — category_category, cascade delete, permissions, rule engine
-- **Status:** complete
-- **Started:** 2026-01-27
-- Actions taken:
-  - **category_category 关系**: 新建 CategoryCategory 模型 (source→target, stage/track/prerequisite), 环检测 BFS, CRUD + router 端点 — 14 tests
-  - **级联删除**: cascade_delete_category, cascade_delete_group, cascade_delete_post 服务, 多表依赖链清理 — 16 tests
-  - **权限 + 可见性**: require_role("organizer","admin") 工厂, draft 帖子/活动仅 creator 可见, private group 仅成员/creator 可见 — 17 tests + 10 regression fixes
-  - **声明式规则引擎**: app/services/rule_engine.py (~400 行):
-    - 固定字段展开 (max_submissions, submission_start/deadline, submission_format, min/max_team_size → checks)
-    - 7 种条件评估器: time_window, count, exists, field_match, resource_format, resource_required, aggregate
-    - on_fail 行为: deny(raise), warn(return), flag
-    - Post-hook actions: compute_ranking, flag_disqualified, award_certificate
-    - 集成到 categories router (category_post creation, status change) 和 groups router (group_user creation)
-    — 23 tests
-  - **Bug fixes**: SessionLocal() vs db_session fixture 隔离问题; category status update post-hook 时序 bug
-  - **Total: 256 tests passing (186 + 70 new)**
-- Files created:
-  - app/models/category_category.py
-  - app/schemas/category_category.py
-  - app/crud/category_categories.py
-  - app/services/cascade_delete.py
-  - app/services/rule_engine.py
-  - app/tests/test_category_categories.py (14 tests)
-  - app/tests/test_cascade_delete.py (16 tests)
-  - app/tests/test_permissions.py (17 tests)
-  - app/tests/test_rule_engine.py (23 tests)
-- Files modified:
-  - app/models/rule.py (added checks JSON column)
-  - app/schemas/rule.py (CheckCondition, CheckDefinition models)
-  - app/crud/category_groups.py (added get_multi_by_group)
-  - app/routers/categories.py (rule engine integration, visibility filtering)
-  - app/routers/groups.py (rule engine integration for group_user, visibility filtering)
-  - app/deps.py (require_role factory)
-  - app/tests/test_cascade_delete.py (regression fixes: X-User-Id headers)
-  - app/tests/test_category_posts.py (regression fixes: X-User-Id headers)
-  - app/tests/test_target_interactions.py (fix uid→u1 variable)
-
-### Phase 7 Test Coverage
-| Test Case | Scenario | Status |
-|-----------|----------|--------|
-| TC-STAGE-001 | category_category stage 关系创建 | PASS |
-| TC-STAGE-002 | category_category track 关系创建 | PASS |
-| TC-STAGE-003 | category_category prerequisite 关系创建 | PASS |
-| TC-STAGE-004 | 环检测拒绝循环依赖 (422) | PASS |
-| TC-STAGE-005 | 自引用拒绝 (422) | PASS |
-| TC-STAGE-006 | 重复关联拒绝 (409) | PASS |
-| TC-STAGE-007 | stage_order 排序 | PASS |
-| TC-DEL-001 | 删除 category 级联清理 rules/posts/groups/associations | PASS |
-| TC-DEL-002 | 删除 group 级联清理 members/category_groups | PASS |
-| TC-DEL-003 | 删除 post 级联清理 resources/relations/interactions/category_posts | PASS |
-| TC-PERM-001 | organizer 可创建 category | PASS |
-| TC-PERM-002 | admin 可创建 category | PASS |
-| TC-PERM-003 | participant 不能创建 category (403) | PASS |
-| TC-PERM-004 | draft post 仅 creator 可见 | PASS |
-| TC-PERM-005 | draft category 仅 creator 可见 | PASS |
-| TC-PERM-006 | private group 仅 creator/member 可见 | PASS |
-| TC-ENGINE-001 | time_window 条件: 在窗口内通过 | PASS |
-| TC-ENGINE-002 | time_window 条件: 窗口外拒绝 | PASS |
-| TC-ENGINE-003 | count 条件: 未达上限通过 | PASS |
-| TC-ENGINE-004 | count 条件: 达到上限拒绝 | PASS |
-| TC-ENGINE-010 | exists 条件通过 | PASS |
-| TC-ENGINE-011 | exists 条件失败 | PASS |
-| TC-ENGINE-020 | fixed field expansion (max_submissions→count check) | PASS |
-| TC-ENGINE-030 | post-hook compute_ranking 执行 | PASS |
-| TC-ENGINE-040 | on_fail=warn 返回警告不阻断 | PASS |
-| TC-ENGINE-050 | 多规则 AND 逻辑 | PASS |
-
-## Test Results
-| Test | Input | Expected | Actual | Status |
-|------|-------|----------|--------|--------|
-| Phase 7 pytest | `pytest app/tests/ -v` | 256 passed | 256 passed, 0 failed | PASS |
-
-### Phase 8: Layer 7 — 集成验证
-- **Status:** complete
-- **Started:** 2026-01-27
-- Actions taken:
-  - **Router integration**: 添加 rule engine pre-checks 到 category status change 和 category_group 注册端点
-  - **Rule engine enhancements**:
-    - `_eval_exists` 添加 `post` entity type (profile post 检查)
-    - `_eval_exists` 中 `group_user` 使用 filter status 参数
-    - `_action_compute_ranking` 添加 tie handling (同分同名次，跳排)
-    - `_action_compute_ranking` 排除被取消资格的帖子 (disqualification tags)
-    - `_action_flag_disqualified` 添加 `target: post` 支持 (missing_attachment 检查)
-  - **4 个测试文件**:
-    - test_user_journeys.py: 9 tests (TC-JOUR-002, 005, 007, 009, 010, 011-1, 011-2, 012, 013)
-    - test_entry_rules.py: 14 tests (TC-ENTRY-001~031, 900~902)
-    - test_closure_rules.py: 10 tests (TC-CLOSE-001~040, 900~902)
-    - test_resource_transfer.py: 4 tests (TC-TRANSFER-001~004)
-  - **Total: 293 tests passing (256 + 37 new)**
-- Files created:
-  - app/tests/test_user_journeys.py (9 tests)
-  - app/tests/test_entry_rules.py (14 tests)
-  - app/tests/test_closure_rules.py (10 tests)
-  - app/tests/test_resource_transfer.py (4 tests)
-- Files modified:
-  - app/routers/categories.py (rule engine pre-checks for status change + group registration)
-  - app/services/rule_engine.py (post entity, tie handling, disqualification filtering, flag_disqualified post target)
-
-### Phase 8 Test Coverage
-| Test Case | Scenario | Status |
-|-----------|----------|--------|
-| TC-JOUR-002 | 匿名浏览: published vs draft 可见性 | PASS |
-| TC-JOUR-005 | 团队加入审批流程 | PASS |
-| TC-JOUR-007 | 团队注册活动完整流程 | PASS |
-| TC-JOUR-009 | 创建日常和比赛帖子 | PASS |
-| TC-JOUR-010 | 证书颁发流程 | PASS |
-| TC-JOUR-011-1 | 编辑自己的帖子版本管理 | PASS |
-| TC-JOUR-011-2 | 编辑他人帖子(copy+provenance) | PASS |
-| TC-JOUR-012 | 删除帖子完整级联 | PASS |
-| TC-JOUR-013 | 社区互动: 点赞/评论/评分/取消 | PASS |
-| TC-ENTRY-001 | 加入团队前不能报名 | PASS |
-| TC-ENTRY-002 | 团队未注册不能提交 | PASS |
-| TC-ENTRY-003 | 需要 profile post | PASS |
-| TC-ENTRY-004 | 所有条件满足通过 | PASS |
-| TC-ENTRY-010 | 资源最低数量检查 | PASS |
-| TC-ENTRY-011 | 资源格式不符拒绝 | PASS |
-| TC-ENTRY-012 | 资源格式符合通过 | PASS |
-| TC-ENTRY-020 | 每人一次提交限制 | PASS |
-| TC-ENTRY-022 | 不同活动互不影响 | PASS |
-| TC-ENTRY-030 | 固定+自定义 checks AND 逻辑 | PASS |
-| TC-ENTRY-031 | 固定+自定义 checks 全部满足 | PASS |
-| TC-ENTRY-900 | 未知 condition type 被跳过 | PASS |
-| TC-ENTRY-901 | 不匹配 trigger 被跳过 | PASS |
-| TC-ENTRY-902 | 无 condition 的 check 被跳过 | PASS |
-| TC-CLOSE-001 | pre-phase warn 允许关闭 | PASS |
-| TC-CLOSE-002 | pre-phase deny 阻止关闭 | PASS |
-| TC-CLOSE-010 | flag_disqualified: team_too_small | PASS |
-| TC-CLOSE-020 | compute_ranking: 按 average_rating 排名 | PASS |
-| TC-CLOSE-022 | 未评分帖子不参与排名 | PASS |
-| TC-CLOSE-030 | award_certificate: 颁发证书帖子 | PASS |
-| TC-CLOSE-040 | 完整闭幕流程: flag+rank+award | PASS |
-| TC-CLOSE-900 | 非 closed 状态不触发 post hooks | PASS |
-| TC-CLOSE-901 | 无规则的活动正常关闭 | PASS |
-| TC-CLOSE-902 | post-hook 失败不回滚主操作 | PASS |
-| TC-TRANSFER-001 | 证书资源从组织者到参赛者 | PASS |
-| TC-TRANSFER-002 | 同用户帖子间资源转移 | PASS |
-| TC-TRANSFER-003 | 资源多帖子共享 | PASS |
-| TC-TRANSFER-004 | 带 provenance 的资源转移 | PASS |
-
-## Test Results
-| Test | Input | Expected | Actual | Status |
-|------|-------|----------|--------|--------|
-| Phase 8 pytest | `pytest app/tests/ -v` | 293 passed | 293 passed, 0 failed | PASS |
-
-## 5-Question Reboot Check
-| Question | Answer |
-|----------|--------|
-| Where am I? | ALL 8 PHASES COMPLETE |
-| Where am I going? | DONE — all phases completed |
-| What's the goal? | 从零依赖底层开始，逐层开发 Synnovator 后端，所有 phase 完成输出 COMPLETE |
-| What have I learned? | 8 层依赖图开发: 零依赖→基础→内容→简单关系→复杂关系→高级功能→跨切面→集成验证; 293 tests covering 7 content types, 9 relationship types, auth, rule engine, cascade delete, E2E flows |
-| What have I done? | Phase 0-8 全部完成 (293 tests passing, 0 failures) |
+| 优先级 | 任务 |
+|--------|------|
+| 高 | 配置 Figma MCP（需要 access token） |
+| 高 | 复制 Figma skills 到当前分支 |
+| 中 | 生成 `specs/design/pages.yaml` |
+| 低 | 更新 `docs/development-workflow.md` |
 
 ---
-*All phases complete.*
+
+## 2026-02-08: 工作流审查与修复
+
+### 完成内容
+
+**Phase 1: 分析 19 个修复提交** ✅
+- 分类为 7 类问题
+- 详细分析记录到 `findings.md`
+
+**Phase 2: 更新工作流文档** ✅
+- `07-frontend-components.md`: 添加组件规范、国际化、路由验证
+- `06-frontend-setup.md`: 添加 Next.js 配置检查清单
+
+**Phase 3: 更新 CLAUDE.md** ✅
+- 添加 "前端 UI 文本使用中文" 规则
+- 添加 "前端路由验证" 要求
+
+**Phase 4: 创建前端路由文档** ✅
+- 创建 `docs/frontend-routes.md`
+- 记录所有 18 个前端路由
+- 列出常见错误路由映射
+
+**Phase 5: 移除 pen-to-react 引用** ✅
+- CLAUDE.md: 移除 Phase 7 中的 pen-to-react
+- CLAUDE.md: 从 Key Skills 表格移除 pen-to-react
+- appendix-c-skills.md: 移除 pen-to-react，添加废弃说明
+
+**Phase 6: 更新 Phase 4 (UI 设计) 文档** ✅
+- 05-ui-design.md: 添加 Figma 设计资源说明
+- 添加页面设计索引
+
+**Phase 7: 清理 findings.md** ✅
+- 移除 pen-to-react 相关分析
+- 更新责任归属
+- 添加工作流审查发现
+
+**Phase 8: 验证工作流完整性** ✅
+- 确认所有 skills 引用正确
+- 确认路径引用正确
+
+### 修改的文件
+
+| 文件 | 修改类型 |
+|------|---------|
+| `docs/development-workflow/05-ui-design.md` | 添加 Figma 设计资源说明 |
+| `docs/development-workflow/06-frontend-setup.md` | 添加 Next.js 配置检查清单 |
+| `docs/development-workflow/07-frontend-components.md` | 添加组件规范、国际化、路由验证 |
+| `docs/development-workflow/appendix-c-skills.md` | 移除 pen-to-react |
+| `CLAUDE.md` | 更新 Phase 7、移除 pen-to-react、添加规则 |
+| `docs/frontend-routes.md` | 新建，前端路由映射表 |
+| `findings.md` | 更新，详细根因分析 |
+| `task_plan.md` | 更新，任务计划 |
+
+### 工作流审查结论
+
+**已废弃的 Skills**:
+- `pen-to-react` - 项目中没有 .pen 文件，设计资源已迁移到 Figma
+
+**设计资源位置**:
+- Figma 设计文档: `specs/design/figma/` (18 个文件)
+- 包括 54 个组件、69 个图标、14 个页面设计
+
+**测试用例差距**:
+- 后端测试 (01-10): ✅ 390+ pytest
+- 用户旅程测试 (11): ❌ 无 E2E 实现
+- 前端集成测试 (33): ⚠️ 9 个 Jest，需补充 Playwright
+
+**Phase 9: 测试用例覆盖分析** ✅
+- 分析 User Journeys → Testcases 映射
+- 发现 14/14 (100%) 用户旅程已有对应测试用例
+- 测试用例分布: 33 个文件覆盖所有场景
+- specs/testcases/README.md 缺少 18-33 号文件的列表（待更新）
+
+**Phase 10: 总结与提交** ✅
+- 更新 task_plan.md 标记所有阶段完成
+- 更新 progress.md 添加最终总结
+- 提交: `17eac49 docs: 工作流审查与修复 - 移除废弃 pen-to-react 引用`
+
+### 后续建议
+
+| 优先级 | 任务 | 说明 |
+|-------|------|------|
+| **立即** | 更新 specs/testcases/README.md | 补充 18-33 号文件列表 |
+| **短期** | 补充 Playwright E2E 测试 | 按 `specs/testcases/33-frontend-integration.md` |
+| **中期** | 删除废弃 Skill | `.claude/skills/pen-to-react/` 目录 |
+| **长期** | 完整 E2E 覆盖 | 实现 `specs/testcases/11-user-journeys.md` |
+
+### 测试用例映射总结
+
+| User Journey | 测试用例 | 状态 |
+|-------------|---------|------|
+| 用户注册登录 (J001-002) | 01-06, 12 | ✅ |
+| 帖子生命周期 (J003-005) | 07-09, 14-17 | ✅ |
+| 活动管理 (J006-009) | 10, 18-21 | ✅ |
+| 团队协作 (J010-012) | 22-26 | ✅ |
+| 社区互动 (J013-014) | 27-32 | ✅ |
+| 前端集成 | 33 | ⚠️ 需 Playwright |
+
+### 本次审查结论
+
+**问题根因**: 开发工作流 (Phase 5-7) 对 Next.js App Router + shadcn/ui 的配置不够完整
+
+**已修复的工作流缺陷**:
+1. ✅ shadcn/ui 组件 forwardRef 规范
+2. ✅ 前端路由验证机制
+3. ✅ SSR API 调用配置说明
+4. ✅ Next.js pages 目录配置
+5. ✅ UI 文本国际化规则
+6. ✅ 废弃 pen-to-react 引用清理
+7. ✅ Figma 设计资源索引
+
+---
+
+## 2026-02-08: 后续改进任务
+
+### 完成内容
+
+**Phase 1: 更新 specs/testcases/README.md** ✅
+- 补充 18-33 号测试用例文件
+- 新增"用户旅程场景"和"前端集成"分类
+
+**Phase 2: 删除废弃的 pen-to-react skill** ✅
+- 删除 `.claude/skills/pen-to-react/` 目录
+- 项目中已无 .pen 文件相关依赖
+
+**Phase 3: 验证 Playwright E2E 框架** ✅
+- 确认 `e2e/` 目录已存在
+- 确认 pytest + playwright 已配置
+- 无需额外安装
+
+**Phase 4: 实现前端集成测试用例** ✅
+- 创建 6 个测试文件，共 22 个测试用例
+- 覆盖 specs/testcases/33-frontend-integration.md 所有场景
+
+### 新增文件
+
+| 文件 | 用途 | 测试数 |
+|------|------|--------|
+| `e2e/test_post_integration.py` | 帖子创建集成 | 5 |
+| `e2e/test_group_integration.py` | 团队创建集成 | 3 |
+| `e2e/test_event_integration.py` | 活动创建集成 | 2 |
+| `e2e/test_auth_integration.py` | 用户认证集成 | 3 |
+| `e2e/test_edit_delete_integration.py` | 编辑删除集成 | 4 |
+| `e2e/test_edge_cases.py` | 边界测试 | 5 |
+
+### 修改文件
+
+| 文件 | 修改内容 |
+|------|---------|
+| `specs/testcases/README.md` | 添加 18-33 号文件 |
+| `.claude/skills/pen-to-react/` | 删除整个目录 |
+
+### 后续任务
+
+| 优先级 | 任务 | 状态 |
+|-------|------|------|
+| ✅ 立即 | 更新 specs/testcases/README.md | 完成 |
+| ✅ 短期 | 补充 Playwright E2E 测试 | 完成 |
+| ✅ 中期 | 删除废弃 Skill | 完成 |
+| ✅ 长期 | 实现 11-user-journeys.md 完整 E2E | 完成 |
+
+---
+
+## 2026-02-08: 完整 E2E 用户旅程测试
+
+### 完成内容
+
+实现了 `specs/testcases/11-user-journeys.md` 定义的 8 个核心用户旅程的 E2E 测试。
+
+### 新增文件
+
+| 文件 | 用例 | 测试场景 |
+|------|------|---------|
+| `e2e/helpers.py` | - | API 客户端和测试工具 |
+| `e2e/test_journey_anonymous.py` | TC-JOUR-002 | 匿名浏览公开内容 (10 tests) |
+| `e2e/test_journey_team_join.py` | TC-JOUR-005 | 团队加入审批流程 (7 tests) |
+| `e2e/test_journey_team_registration.py` | TC-JOUR-007 | 团队报名活动 (6 tests) |
+| `e2e/test_journey_post_creation.py` | TC-JOUR-009 | 发送帖子 (8 tests) |
+| `e2e/test_journey_certificate.py` | TC-JOUR-010 | 证书颁发 (6 tests) |
+| `e2e/test_journey_post_edit.py` | TC-JOUR-011 | 编辑帖子 (7 tests) |
+| `e2e/test_journey_post_delete.py` | TC-JOUR-012 | 删除帖子级联 (6 tests) |
+| `e2e/test_journey_community.py` | TC-JOUR-013 | 社区互动 (8 tests) |
+
+### 测试架构说明
+
+```
+测试分层策略:
+┌─────────────────────────────────────────────────┐
+│ 基础层 (01-10): 单元/CRUD 测试 (pytest)          │
+├─────────────────────────────────────────────────┤
+│ 桥接层 (11): 用户旅程集成测试 ← 本次实现         │
+│   test_journey_*.py (8 个旅程，58+ 测试)        │
+├─────────────────────────────────────────────────┤
+│ 高级层 (12-17): 功能测试                        │
+├─────────────────────────────────────────────────┤
+│ 场景层 (18-33): 细粒度端到端场景                 │
+│   test_*_integration.py (22 测试)              │
+└─────────────────────────────────────────────────┘
+```
+
+### 与现有测试的关系
+
+| 现有测试 | 新增测试 | 关系 |
+|---------|---------|------|
+| test_home.py | test_journey_anonymous.py | 扩展 |
+| test_post_integration.py | test_journey_post_*.py | 互补 |
+| test_group_integration.py | test_journey_team_*.py | 互补 |
+| test_auth_integration.py | - | 保留 |
+
+### 运行测试
+
+```bash
+# 启动服务器
+make start
+
+# 运行所有 E2E 测试
+uv run pytest e2e/ -v
+
+# 只运行用户旅程测试
+uv run pytest e2e/test_journey_*.py -v
+```
+
+---
+
+## 2026-02-08: 修复 tests-kit 测试分层缺陷
+
+### 问题分析
+
+用户提出问题："是不是同时也需要修改 /tests-kit 因为之前的 test cases 都是这个 skill 生成的，是不是这个 skill 有些不合理的地方。"
+
+**发现的问题：**
+
+1. **缺少测试分层策略**：testcase-format.md 只定义了 TC ID 格式，没有说明四层测试架构
+2. **11 vs 18-33 定位模糊**：桥接层和场景层的区分未明确
+3. **缺少 E2E 实现映射**：Guard 模式没有连接到 e2e/ 目录的 pytest 实现
+
+### 修复内容
+
+**修改文件 1: `.claude/skills/tests-kit/references/testcase-format.md`**
+- 添加 "Test Layering Strategy" 章节
+- 定义四层测试架构（基础层、桥接层、高级层、场景层）
+- 添加层级选择指南
+- 添加 E2E 实现映射表
+
+**修改文件 2: `.claude/skills/tests-kit/SKILL.md`**
+- Guard 模式添加 E2E 实现文件 → TC 前缀映射
+- Insert 模式添加层级选择指导
+
+### 修复后的测试分层
+
+| Layer | Files | Purpose | Implementation |
+|-------|-------|---------|----------------|
+| 基础层 | 01-10 | CRUD 和约束 | `app/tests/` |
+| 桥接层 | 11 | 完整业务流程 | `e2e/test_journey_*.py` |
+| 高级层 | 12-17 | 规则引擎等 | `app/tests/` |
+| 场景层 | 18-33 | 细粒度 E2E | `e2e/test_*_integration.py` |
+
+---
+
+## 2026-02-08: 前端开发工作流双分支设计
+
+### 完成内容
+
+**目标**: 设计支持有/无 Figma 两种情况的前端开发工作流
+
+**Phase 1: 复制 Figma skills 到当前分支** ✅
+- 从 `feat/prototype-v1` 分支复制 4 个 Figma skills：
+  - `figma-resource-extractor`
+  - `ui-spec-generator`
+  - `ux-spec-generator`
+  - `frontend-prototype-builder`
+
+**Phase 2: 研究 AI 生成 UI/UX 的替代工具** ✅
+- 评估：v0.dev, shadcn MCP, Magic UI, Penpot, Pixso, Galileo AI, Lovable
+- 结论：推荐 **Claude + shadcn/ui** 混合方案
+  - 零额外成本，原生集成
+  - 可输出自定义 pages.yaml 格式
+
+**Phase 3: 设计 AI UI Generator skill** ✅
+- 创建 `.claude/skills/ai-ui-generator/`
+- 编写 SKILL.md 完整工作流
+- 创建参考文档：
+  - `references/component-catalog.md` - shadcn/ui 组件清单
+  - `references/layout-patterns.md` - 常见布局模式
+  - `references/interaction-patterns.md` - 交互模式库
+  - `references/neon-forge-tokens.md` - Neon Forge 设计 Token
+
+**Phase 4: 更新工作流文档（双分支）** ✅
+- 更新 `docs/development-workflow/05-ui-design.md` 添加双分支逻辑
+- 更新 `docs/development-workflow/appendix-c-skills.md` 添加新 skills
+- 更新 `docs/development-workflow/README.md` 工作流图
+- 更新 `CLAUDE.md` Phase 4 和 Key Skills 部分
+
+### 双分支工作流设计
+
+```
+阶段 4: UI/UX 设计检测
+        │
+        ├── specs/design/figma/ 或 Figma URL 存在？
+        │
+        ├─ YES → 分支 A (有 Figma)
+        │         ├── figma-resource-extractor
+        │         ├── ui-spec-generator
+        │         └── ux-spec-generator
+        │
+        └─ NO  → 分支 B (无 Figma)
+                  └── ai-ui-generator
+                       (从 User Journey 生成)
+
+统一输出:
+  - specs/design/pages.yaml
+  - specs/ux/
+```
+
+### 修改的文件
+
+| 文件 | 修改内容 |
+|------|---------|
+| `docs/development-workflow/05-ui-design.md` | 重写，添加双分支工作流 |
+| `docs/development-workflow/appendix-c-skills.md` | 添加 UI/UX 设计 Skills 分类 |
+| `docs/development-workflow/README.md` | 更新 Phase 4 工作流图 |
+| `CLAUDE.md` | 更新 Phase 4 描述和 Key Skills |
+| `task_plan.md` | 标记 Phase 1-4 完成 |
+| `progress.md` | 添加本次进度记录 |
+
+### 新增文件
+
+| 文件 | 用途 |
+|------|------|
+| `.claude/skills/ai-ui-generator/SKILL.md` | AI UI 生成 skill 主文件 |
+| `.claude/skills/ai-ui-generator/references/component-catalog.md` | shadcn/ui 组件清单 |
+| `.claude/skills/ai-ui-generator/references/layout-patterns.md` | 常见布局模式 |
+| `.claude/skills/ai-ui-generator/references/interaction-patterns.md` | 交互模式库 |
+| `.claude/skills/ai-ui-generator/references/neon-forge-tokens.md` | Neon Forge 设计 Token |
+
+### 后续任务
+
+| 优先级 | 任务 | 状态 |
+|-------|------|------|
+| 待定 | Phase 5: 集成测试（两个分支） | `pending` |
+| 待定 | Phase 6: 提交与文档化 | `pending` |
+| 需用户 | 配置 Figma MCP（需要 Figma Access Token） | `pending` |

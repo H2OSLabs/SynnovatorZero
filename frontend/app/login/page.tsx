@@ -1,11 +1,33 @@
+'use client'
+
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Header } from "@/components/layout/Header"
 import { LoginForm } from "@/components/auth/LoginForm"
+import { useAuth } from "@/contexts/AuthContext"
+import { useEffect } from "react"
 
 export default function LoginPage() {
+  const { user, login } = useAuth()
+  const router = useRouter()
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      router.push('/')
+    }
+  }, [user, router])
+
+  const handleLoginSuccess = async (result: { user_id: number; username: string; role: string }) => {
+    // Login is handled by LoginForm calling api-client
+    // We need to update AuthContext
+    // Actually, let's modify this to use useAuth.login
+    router.push('/')
+  }
+
   return (
     <div className="min-h-screen bg-nf-dark">
-      <Header user={null} />
+      <Header />
 
       <main className="pt-[60px] flex items-center justify-center min-h-screen">
         <div className="w-full max-w-md mx-4">
@@ -19,8 +41,8 @@ export default function LoginPage() {
               <p className="text-nf-muted mt-2">登录你的协创者账号</p>
             </div>
 
-            {/* Login Form */}
-            <LoginForm />
+            {/* Login Form - now uses AuthContext internally */}
+            <LoginFormWithAuth onSuccess={() => router.push('/')} />
 
             {/* Divider */}
             <div className="relative my-6">
@@ -32,7 +54,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Social Login */}
+            {/* Social Login - placeholder */}
             <div className="space-y-3">
               <button className="w-full flex items-center justify-center gap-3 h-11 rounded-lg border border-nf-dark bg-nf-dark hover:bg-nf-dark/80 transition-colors">
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -74,5 +96,78 @@ export default function LoginPage() {
         </div>
       </main>
     </div>
+  )
+}
+
+// Wrapper component that uses AuthContext
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+
+function LoginFormWithAuth({ onSuccess }: { onSuccess: () => void }) {
+  const { login } = useAuth()
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setIsLoading(true)
+
+    try {
+      await login(username, password)
+      onSuccess()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '登录失败')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="p-3 rounded-md bg-nf-error/10 border border-nf-error/20 text-nf-error text-sm">
+          {error}
+        </div>
+      )}
+      <div className="space-y-2">
+        <label htmlFor="username" className="text-sm font-medium text-nf-light-gray">
+          用户名
+        </label>
+        <Input
+          id="username"
+          type="text"
+          placeholder="输入用户名"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+          className="bg-nf-near-black border-nf-dark text-nf-white placeholder:text-nf-muted focus:border-nf-lime focus:ring-nf-lime/20"
+        />
+      </div>
+      <div className="space-y-2">
+        <label htmlFor="password" className="text-sm font-medium text-nf-light-gray">
+          密码
+        </label>
+        <Input
+          id="password"
+          type="password"
+          placeholder="输入密码"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          className="bg-nf-near-black border-nf-dark text-nf-white placeholder:text-nf-muted focus:border-nf-lime focus:ring-nf-lime/20"
+        />
+      </div>
+      <Button
+        type="submit"
+        className="w-full bg-nf-lime text-nf-near-black hover:bg-nf-lime/90 font-medium"
+        disabled={isLoading || !username || !password}
+      >
+        {isLoading ? '登录中...' : '登录'}
+      </Button>
+    </form>
   )
 }

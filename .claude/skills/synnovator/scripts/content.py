@@ -145,7 +145,7 @@ def delete_content(data_dir, content_type, record_id, current_user=None):
 
 def _is_visible(content_type, rec, current_user, user_role):
     """Check if a record is visible to current_user. Skip resource indirect visibility."""
-    if content_type not in ("post", "category", "group"):
+    if content_type not in ("post", "event", "group"):
         return True
     if user_role == "admin":
         return True
@@ -156,7 +156,7 @@ def _is_visible(content_type, rec, current_user, user_role):
             return False
         if rec.get("status") not in ("published",):
             return False
-    elif content_type == "category":
+    elif content_type == "event":
         if rec.get("status") not in ("published", "closed"):
             return False
     elif content_type == "group":

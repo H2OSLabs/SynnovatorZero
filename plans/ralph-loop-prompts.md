@@ -10,9 +10,8 @@
 2. 创建 frontend/lib/search-api.ts - 实现搜索 API 调用函数
 3. 创建 frontend/components/home/PlatformStats.tsx - 显示平台统计数据（用户数/活动数/作品数），使用 Card 组件展示
 4. 在 backend 添加 GET /stats 端点返回平台统计数据
-5. 更新 frontend/app/demo/page.tsx 添加新组件的演示
-6. 执行 make start 启动服务，验证组件正常渲染
-7. 更新 plans/api-completion-progress.md 标记 Phase 12 完成
+5. 执行 make start 启动服务，验证组件正常渲染
+6. 更新 plans/api-completion-progress.md 标记 Phase 12 完成
 
 完成上述任务后输出<promise>COMPLETE</promise>." --completion-promise "COMPLETE" --max-iterations 30
 ```
@@ -48,7 +47,6 @@
 - 创建 frontend/lib/search-api.ts 实现搜索 API 调用函数
 - 创建 frontend/components/home/PlatformStats.tsx 平台统计组件，显示用户数/活动数/作品数
 - 在 @app/routers 添加 GET /api/stats 端点返回平台统计数据
-- 更新 frontend/app/demo/page.tsx 添加新组件的演示区域
 
 **任务 2: Phase 13 - Admin Batch Operations**
 在 @app 后端实现管理员批量操作功能：

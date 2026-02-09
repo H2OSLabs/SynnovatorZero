@@ -65,7 +65,7 @@ def main():
     input_path = Path(args.input)
 
     print(f"🚀 database-schema-designer - erd_generator.py")
-    print(f"   Category: database")
+    print(f"   Event: database")
     print(f"   Plugin: database-schema-designer")
     print(f"   Input: {input_path}")
 

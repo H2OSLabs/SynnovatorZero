@@ -1,5 +1,6 @@
 """posts API 路由"""
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy import inspect as sa_inspect
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -10,6 +11,17 @@ from app.schemas.post import POST_STATUSES, POST_TYPES, VALID_POST_STATUS_TRANSI
 
 router = APIRouter()
 
+def _normalize_post_type(value: Optional[str]) -> str:
+    if value in POST_TYPES:
+        return value
+    return "general"
+
+
+def _post_to_dict(post) -> dict:
+    data = {attr.key: getattr(post, attr.key) for attr in sa_inspect(post).mapper.column_attrs}
+    data["type"] = _normalize_post_type(data.get("type"))
+    return data
+
 
 @router.get("/posts", response_model=schemas.PaginatedPostList, tags=["posts"])
 def list_posts(
@@ -17,12 +29,18 @@ def list_posts(
     limit: int = Query(100, ge=1, le=1000),
     type: Optional[str] = Query(None),
     post_status: Optional[str] = Query(None, alias="status"),
+    q: Optional[str] = Query(None),
     tags: Optional[str] = Query(None),
+    created_by: Optional[int] = Query(None, description="Filter by author ID"),
     db: Session = Depends(get_db),
+    current_user_id: Optional[int] = Depends(get_current_user_id),
 ):
+    from sqlalchemy import or_, func, text
     query = db.query(crud.posts.model).filter(
         crud.posts.model.deleted_at.is_(None),
     )
+    if created_by is not None:
+        query = query.filter(crud.posts.model.created_by == created_by)
     if type is not None:
         if type not in POST_TYPES:
             raise HTTPException(status_code=422, detail=f"Invalid type: {type}")
@@ -31,9 +49,65 @@ def list_posts(
         if post_status not in POST_STATUSES:
             raise HTTPException(status_code=422, detail=f"Invalid status: {post_status}")
         query = query.filter(crud.posts.model.status == post_status)
+    else:
+        # For anonymous users or when no status filter, hide draft posts
+        # Draft posts only visible to their creator
+        if current_user_id is None:
+            query = query.filter(crud.posts.model.status != "draft")
+        else:
+            # Show non-draft posts + draft posts created by current user
+            query = query.filter(
+                or_(
+                    crud.posts.model.status != "draft",
+                    crud.posts.model.created_by == current_user_id,
+                )
+            )
+    # Also filter private posts (visibility)
+    if current_user_id is None:
+        query = query.filter(
+            or_(
+                crud.posts.model.visibility.is_(None),
+                crud.posts.model.visibility == "public",
+            )
+        )
+    else:
+        # Show public posts + private posts created by current user
+        query = query.filter(
+            or_(
+                crud.posts.model.visibility.is_(None),
+                crud.posts.model.visibility == "public",
+                crud.posts.model.created_by == current_user_id,
+            )
+        )
+
+    if q is not None and q.strip():
+        q_norm = q.strip().lower()
+        like = f"%{q_norm}%"
+        query = query.filter(
+            or_(
+                func.lower(crud.posts.model.title).like(like),
+                func.lower(func.coalesce(crud.posts.model.content, "")).like(like),
+            )
+        )
+
+    if tags is not None and tags.strip():
+        tag_list = [t.strip() for t in tags.split(",") if t.strip()]
+        if tag_list:
+            placeholders = []
+            bind = {}
+            for i, t in enumerate(tag_list):
+                key = f"tag_{i}"
+                placeholders.append(f":{key}")
+                bind[key] = t.lower()
+            exists_sql = (
+                "EXISTS (SELECT 1 FROM json_each(posts.tags) "
+                f"WHERE lower(json_each.value) IN ({', '.join(placeholders)}))"
+            )
+            query = query.filter(text(exists_sql).bindparams(**bind))
     total = query.count()
     items = query.offset(skip).limit(limit).all()
-    return {"items": items, "total": total, "skip": skip, "limit": limit}
+    items_out = [_post_to_dict(p) for p in items]
+    return {"items": items_out, "total": total, "skip": skip, "limit": limit}
 
 
 @router.post("/posts", response_model=schemas.Post, status_code=status.HTTP_201_CREATED, tags=["posts"])
@@ -49,7 +123,7 @@ def create_post(
     db.add(db_obj)
     db.commit()
     db.refresh(db_obj)
-    return db_obj
+    return _post_to_dict(db_obj)
 
 
 @router.get("/posts/{post_id}", response_model=schemas.Post, tags=["posts"])
@@ -67,7 +141,7 @@ def get_post(
     # Visibility: private posts only visible to author
     if item.visibility == "private" and item.created_by != current_user_id:
         raise HTTPException(status_code=404, detail="Post not found")
-    return item
+    return _post_to_dict(item)
 
 
 @router.patch("/posts/{post_id}", response_model=schemas.Post, tags=["posts"])
@@ -98,7 +172,8 @@ def update_post(
                        f"Allowed: {current_status} → {', '.join(allowed) if allowed else '(none, terminal state)'}",
             )
 
-    return crud.posts.update(db, db_obj=item, obj_in=post_in)
+    updated = crud.posts.update(db, db_obj=item, obj_in=post_in)
+    return _post_to_dict(updated)
 
 
 @router.delete("/posts/{post_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["posts"])

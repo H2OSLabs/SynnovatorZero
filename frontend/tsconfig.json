@@ -18,13 +18,17 @@
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ]
     },
     "plugins": [
       {
         "name": "next"
       }
-    ]
+    ],
+    "target": "ES2017",
+    "strictNullChecks": true
   },
   "include": [
     "next-env.d.ts",
@@ -40,6 +44,7 @@
     "**/*.test.tsx",
     "**/*.spec.ts",
     "**/*.spec.tsx",
+    "__mocks__",
     "__tests__"
   ]
 }

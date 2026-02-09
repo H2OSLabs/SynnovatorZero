@@ -132,8 +132,8 @@ def create_base_users(data_dir, ids):
 
 
 def create_base_category_and_rule(data_dir, ids):
-    """Create the standard AI Hackathon category and submission rule, linked via category_rule."""
-    cat = create_content(data_dir, "category", {
+    """Create the standard AI Hackathon event and submission rule, linked via event_rule."""
+    cat = create_content(data_dir, "event", {
         "id": "cat_hackathon_2025", "name": "2025 AI Hackathon",
         "description": "Global AI innovation competition",
         "type": "competition", "status": "published",
@@ -161,8 +161,8 @@ def create_base_category_and_rule(data_dir, ids):
     }, current_user=ids["user_alice"])
     ids["rule1"] = rule["id"]
 
-    create_relation(data_dir, "category_rule", {
-        "category_id": cat["id"], "rule_id": rule["id"], "priority": 1
+    create_relation(data_dir, "event_rule", {
+        "event_id": cat["id"], "rule_id": rule["id"], "priority": 1
     })
 
 
@@ -200,7 +200,7 @@ def create_base_posts(data_dir, ids):
 
 
 def create_full_baseline(data_dir, ids):
-    """Create the complete baseline: users + category + rule + group + posts."""
+    """Create the complete baseline: users + event + rule + group + posts."""
     create_base_users(data_dir, ids)
     create_base_category_and_rule(data_dir, ids)
     create_base_group(data_dir, ids)
@@ -208,9 +208,9 @@ def create_full_baseline(data_dir, ids):
 
 
 def create_submission_scenario(data_dir, ids):
-    """Extend baseline with a submission post linked to the category.
+    """Extend baseline with a submission post linked to the event.
     Requires create_full_baseline() to have been called first.
-    Also registers the group for the category and adds carol to the group.
+    Also registers the group for the event and adds carol to the group.
     """
     # Carol joins group
     rel = create_relation(data_dir, "group_user", {
@@ -221,22 +221,22 @@ def create_submission_scenario(data_dir, ids):
         {"status": "accepted"}
     )
 
-    # Register group for category
-    create_relation(data_dir, "category_group", {
-        "category_id": ids["cat1"], "group_id": ids["grp1"]
+    # Register group for event
+    create_relation(data_dir, "event_group", {
+        "event_id": ids["cat1"], "group_id": ids["grp1"]
     })
 
     # Create submission post
     post = create_content(data_dir, "post", {
         "title": "AI Code Review Copilot",
-        "type": "for_category",
+        "type": "proposal",
         "tags": ["AI", "Developer Tools"],
         "_body": "## Project\nCodeReview Copilot is an AI-powered code review tool."
     }, current_user=ids["user_alice"])
     ids["post_submission"] = post["id"]
 
-    # Link to category
-    create_relation(data_dir, "category_post", {
-        "category_id": ids["cat1"], "post_id": post["id"],
+    # Link to event
+    create_relation(data_dir, "event_post", {
+        "event_id": ids["cat1"], "post_id": post["id"],
         "relation_type": "submission"
     })

@@ -6,17 +6,18 @@ import sqlite3
 from sqlalchemy.orm import Session
 
 from app.database import Base, SessionLocal, engine, DATA_DIR
-from app.models.category import Category
+from app.models.event import Event
 from app.models.group import Group
 from app.models.member import Member
 from app.models.post import Post
 from app.models.user import User
+from app.schemas.enums import PostType
 
 
 def _has_category_tags_column(db_path: str) -> bool:
     conn = sqlite3.connect(db_path)
     try:
-        rows = conn.execute("PRAGMA table_info(categories);").fetchall()
+        rows = conn.execute("PRAGMA table_info(events);").fetchall()
         cols = {r[1] for r in rows}
         return "tags" in cols
     finally:
@@ -34,42 +35,49 @@ def _seed_users(db: Session) -> dict[str, int]:
             "email": "techcorp@example.com",
             "display_name": "TechCorp",
             "role": "organizer",
+            "password": "techcorp",  # 密码 = 用户名
         },
         {
             "username": "alice",
             "email": "alice@example.com",
             "display_name": "Alice",
             "role": "participant",
+            "password": "alice",
         },
         {
             "username": "bob",
             "email": "bob@example.com",
             "display_name": "Bob",
             "role": "participant",
+            "password": "bob",
         },
         {
             "username": "carol",
             "email": "carol@example.com",
             "display_name": "Carol",
             "role": "participant",
+            "password": "carol",
         },
         {
             "username": "dave",
             "email": "dave@example.com",
             "display_name": "Dave",
             "role": "participant",
+            "password": "dave",
         },
         {
             "username": "eve",
             "email": "eve@example.com",
             "display_name": "Eve",
             "role": "participant",
+            "password": "eve",
         },
         {
             "username": "frank",
             "email": "frank@example.com",
             "display_name": "Frank",
             "role": "participant",
+            "password": "frank",
         },
     ]
 
@@ -88,7 +96,7 @@ def _seed_users(db: Session) -> dict[str, int]:
 
 
 def _seed_categories(db: Session, creator_user_id: int) -> None:
-    categories = [
+    events = [
         {
             "name": "AI 创新挑战赛 2024",
             "description": "探索人工智能的无限可能，用 AI 改变世界",
@@ -151,22 +159,33 @@ def _seed_categories(db: Session, creator_user_id: int) -> None:
         },
     ]
 
-    existing_names = {n for (n,) in db.query(Category.name).filter(Category.deleted_at.is_(None)).all()}
+    existing_names = {n for (n,) in db.query(Event.name).filter(Event.deleted_at.is_(None)).all()}
     inserted = 0
-    for c in categories:
+    for c in events:
         if c["name"] in existing_names:
             continue
-        db.add(Category(**c, created_by=creator_user_id))
+        db.add(Event(**c, created_by=creator_user_id))
         inserted += 1
     db.commit()
-    print(f"Seeded categories: +{inserted}")
+    print(f"Seeded events: +{inserted}")
 
 
 def _seed_posts(db: Session, author_user_ids: dict[str, int]) -> None:
+    allowed_post_types = {t.value for t in PostType}
+
+    normalized = (
+        db.query(Post)
+        .filter(Post.deleted_at.is_(None), ~Post.type.in_(allowed_post_types))
+        .update({"type": PostType.general.value}, synchronize_session=False)
+    )
+    if normalized:
+        db.commit()
+        print(f"Normalized legacy posts with unknown type: {normalized} → {PostType.general.value}")
+
     posts = [
         {
             "title": "基于大模型的智能教育平台",
-            "type": "for_category",
+            "type": "proposal",
             "status": "published",
             "visibility": "public",
             "tags": ["AI", "Education", "LLM"],
@@ -177,7 +196,7 @@ def _seed_posts(db: Session, author_user_ids: dict[str, int]) -> None:
         },
         {
             "title": "去中心化身份认证系统",
-            "type": "for_category",
+            "type": "proposal",
             "status": "published",
             "visibility": "public",
             "tags": ["Web3", "DID", "Privacy"],
@@ -235,6 +254,8 @@ def _seed_posts(db: Session, author_user_ids: dict[str, int]) -> None:
     existing_titles = {t for (t,) in db.query(Post.title).filter(Post.deleted_at.is_(None)).all()}
     inserted = 0
     for p in posts:
+        if p["type"] not in allowed_post_types:
+            raise ValueError(f"Invalid post.type in seed data: {p['type']}")
         if p["title"] in existing_titles:
             continue
         db.add(Post(**p))
@@ -350,7 +371,7 @@ def main() -> None:
     db_path = str(DATA_DIR / "synnovator.db")
     if not _has_category_tags_column(db_path):
         raise SystemExit(
-            "当前数据库缺少 categories.tags 字段。请先运行 `make resetdb` 删除旧库后再执行 seed。"
+            "当前数据库缺少 events.tags 字段。请先运行 `make resetdb` 删除旧库后再执行 seed。"
         )
 
     with SessionLocal() as db:

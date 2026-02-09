@@ -1,6 +1,6 @@
 import { getEnv } from './env'
 
-export type PostType = 'profile' | 'team' | 'category' | 'for_category' | 'certificate' | 'general'
+export type PostType = 'profile' | 'team' | 'event' | 'proposal' | 'certificate' | 'general'
 
 export type PostTypeOption = {
   value: PostType
@@ -13,10 +13,10 @@ export const DEFAULT_POST_TYPE: PostType = 'general'
 
 export const POST_TYPE_OPTIONS: PostTypeOption[] = [
   { value: 'general', icon: '📝', label: '日常', desc: '分享日常想法' },
-  { value: 'for_category', icon: '💡', label: '提案', desc: '参赛作品' },
+  { value: 'proposal', icon: '💡', label: '提案', desc: '创意提案' },
   { value: 'team', icon: '👥', label: '团队', desc: '找队友' },
   { value: 'profile', icon: '👤', label: '个人', desc: '个人简介' },
-  { value: 'category', icon: '🏷️', label: '活动', desc: '活动相关内容' },
+  { value: 'event', icon: '🏷️', label: '活动', desc: '活动相关内容' },
   { value: 'certificate', icon: '🏆', label: '证书', desc: '获奖/证书展示' },
 ]
 

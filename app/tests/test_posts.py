@@ -74,10 +74,10 @@ def test_create_profile_post(client):
     assert post["type"] == "profile"
 
 
-def test_create_for_category_post(client):
+def test_create_proposal_post(client):
     uid = _create_user(client)
-    post = _create_post(client, uid, type="for_category", title="My Submission")
-    assert post["type"] == "for_category"
+    post = _create_post(client, uid, type="proposal", title="My Submission")
+    assert post["type"] == "proposal"
 
 
 def test_create_certificate_post(client):
@@ -256,9 +256,22 @@ def test_list_posts(client):
     uid = _create_user(client)
     _create_post(client, uid, title="P1")
     _create_post(client, uid, title="P2")
-    resp = client.get("/api/posts")
+    resp = client.get("/api/posts", headers={"X-User-Id": str(uid)})
     assert resp.status_code == 200
     assert resp.json()["total"] == 2
+
+
+def test_list_posts_legacy_unknown_type_falls_back_to_general(client, db_session):
+    uid = _create_user(client)
+    from app.models.post import Post as PostModel
+    db_session.add(PostModel(title="Legacy", type="for_category", status="published", visibility="public", created_by=uid))
+    db_session.commit()
+
+    resp = client.get("/api/posts?status=published")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] == 1
+    assert data["items"][0]["type"] == "general"
 
 
 def test_list_posts_filter_by_status(client):
@@ -276,11 +289,43 @@ def test_list_posts_filter_by_type(client):
     uid = _create_user(client)
     _create_post(client, uid, title="Team1", type="team")
     _create_post(client, uid, title="General1", type="general")
-    resp = client.get("/api/posts?type=team")
+    resp = client.get("/api/posts?type=team", headers={"X-User-Id": str(uid)})
     assert resp.status_code == 200
     data = resp.json()
     assert data["total"] == 1
     assert data["items"][0]["type"] == "team"
+
+
+def test_list_posts_filter_by_tags(client):
+    uid = _create_user(client)
+    _create_post(client, uid, title="AI Post", status="published", tags=["ai", "demo"])
+    _create_post(client, uid, title="Web3 Post", status="published", tags=["web3"])
+    _create_post(client, uid, title="No Tag Post", status="published", tags=[])
+
+    resp = client.get("/api/posts?tags=ai")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] == 1
+    assert data["items"][0]["title"] == "AI Post"
+
+    resp2 = client.get("/api/posts?tags=AI,web3")
+    assert resp2.status_code == 200
+    data2 = resp2.json()
+    titles = {p["title"] for p in data2["items"]}
+    assert titles == {"AI Post", "Web3 Post"}
+
+
+def test_list_posts_filter_by_q(client):
+    uid = _create_user(client)
+    _create_post(client, uid, title="Build a LLM Agent", status="published", content="hello world", tags=["ai"])
+    _create_post(client, uid, title="Random Post", status="published", content="deep dive into web3", tags=["web3"])
+    _create_post(client, uid, title="Draft Not Visible", status="draft", content="llm", tags=["ai"])
+
+    resp = client.get("/api/posts?q=llm")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] == 1
+    assert data["items"][0]["title"] == "Build a LLM Agent"
 
 
 def test_list_posts_filter_invalid_value_rejected(client):

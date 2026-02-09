@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.database import engine, Base, get_db
-from app.routers import users, resources, categories, posts, rules, groups, interactions, admin, auth, notifications, meta
+from app.core.config import settings
+from app.routers import users, resources, events, posts, rules, groups, interactions, admin, auth, notifications, meta
 from app import models
 
 # Import all models so Base.metadata knows about them
@@ -23,7 +24,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -42,8 +43,8 @@ def get_stats(db: Session = Depends(get_db)):
         models.User.deleted_at.is_(None)
     ).scalar() or 0
 
-    category_count = db.query(func.count(models.Category.id)).filter(
-        models.Category.deleted_at.is_(None)
+    category_count = db.query(func.count(models.Event.id)).filter(
+        models.Event.deleted_at.is_(None)
     ).scalar() or 0
 
     post_count = db.query(func.count(models.Post.id)).filter(
@@ -61,7 +62,7 @@ def get_stats(db: Session = Depends(get_db)):
 app.include_router(users.router, prefix="/api", tags=["users"])
 app.include_router(resources.router, prefix="/api", tags=["resources"])
 app.include_router(meta.router, prefix="/api", tags=["meta"])
-app.include_router(categories.router, prefix="/api", tags=["categories"])
+app.include_router(events.router, prefix="/api", tags=["events"])
 app.include_router(posts.router, prefix="/api", tags=["posts"])
 app.include_router(rules.router, prefix="/api", tags=["rules"])
 app.include_router(groups.router, prefix="/api", tags=["groups"])

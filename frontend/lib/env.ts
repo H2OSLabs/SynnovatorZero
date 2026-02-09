@@ -17,11 +17,32 @@ const defaults: EnvConfig = {
   API_URL: '/api',
 }
 
+function isAbsoluteUrl(url: string): boolean {
+  return /^https?:\/\//i.test(url)
+}
+
+function resolveServerApiUrl(configured: string): string {
+  if (isAbsoluteUrl(configured)) return configured
+  if (process.env.INTERNAL_API_URL) return process.env.INTERNAL_API_URL
+
+  const origin = process.env.SITE_ORIGIN || process.env.NEXT_PUBLIC_SITE_ORIGIN
+  if (origin) return `${origin}${configured}`
+
+  return `http://localhost:8000${configured}`
+}
+
 /**
  * Get server-side environment config
  * Only call this in server components or API routes
  */
 export function getServerEnv(): EnvConfig {
+  const configured = process.env.API_URL || defaults.API_URL
+  return {
+    API_URL: resolveServerApiUrl(configured),
+  }
+}
+
+export function getPublicServerEnv(): EnvConfig {
   return {
     API_URL: process.env.API_URL || defaults.API_URL,
   }

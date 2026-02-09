@@ -43,6 +43,13 @@ def create_group(
     db.add(db_obj)
     db.commit()
     db.refresh(db_obj)
+
+    # Auto-add creator as owner member
+    crud.members.create(
+        db, group_id=db_obj.id, user_id=user_id,
+        role="owner", status="accepted",
+    )
+
     return db_obj
 
 
@@ -140,15 +147,15 @@ def add_group_member(
     if existing:
         raise HTTPException(status_code=409, detail="User is already a member of this group")
     # Rule engine: pre-checks for create_relation(group_user)
-    # Find categories this group is registered to and run checks
-    cat_groups = crud.category_groups.get_multi_by_group(db, group_id=group_id)
+    # Find events this group is registered to and run checks
+    cat_groups = crud.event_groups.get_multi_by_group(db, group_id=group_id)
     for cg in cat_groups:
         from app.services.rule_engine import run_pre_checks, RuleCheckError
         try:
             run_pre_checks(
                 db,
                 trigger="create_relation(group_user)",
-                category_id=cg.category_id,
+                event_id=cg.event_id,
                 context={"user_id": body.user_id, "group_id": group_id},
             )
         except RuleCheckError as e:
@@ -196,3 +203,25 @@ def remove_group_member(
         raise HTTPException(status_code=404, detail="Member not found")
     crud.members.remove_by_group_and_user(db, group_id=group_id, user_id=user_id)
     return None
+
+
+@router.get("/my/groups", response_model=schemas.PaginatedGroupList, tags=["groups"])
+def list_my_groups(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    status: Optional[str] = Query(None, description="Filter by membership status"),
+    db: Session = Depends(get_db),
+    user_id: int = Depends(require_current_user_id),
+):
+    """List groups the current user is a member of."""
+    memberships = crud.members.get_multi_by_user(db, user_id=user_id, status=status, skip=skip, limit=limit)
+    total = crud.members.count_by_user(db, user_id=user_id, status=status)
+
+    # Fetch the actual group objects
+    groups = []
+    for m in memberships:
+        group = crud.groups.get(db, id=m.group_id)
+        if group:
+            groups.append(group)
+
+    return {"items": groups, "total": total, "skip": skip, "limit": limit}

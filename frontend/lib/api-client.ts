@@ -6,31 +6,104 @@ import { getEnv } from './env'
 
 // Lazy getter to ensure window.__ENV__ is available when called
 const getApiBase = () => getEnv().API_URL
+const STORAGE_KEY = 'synnovator_user'
 
 interface ApiOptions extends RequestInit {
   userId?: number
+  skipAuth?: boolean  // Skip auto-attaching user_id from localStorage
+}
+
+function formatApiErrorMessage(status: number, detail?: string): string {
+  const raw = typeof detail === 'string' ? detail.trim() : ''
+
+  const detailMap: Record<string, string> = {
+    'Unknown error': '未知错误',
+    'Not Found': '资源不存在',
+    'User not found': '用户不存在',
+    'Not authenticated': '未登录或登录已过期',
+    'Invalid credentials': '用户名或密码错误',
+    'Validation error': '参数校验失败',
+  }
+
+  if (raw && detailMap[raw]) return detailMap[raw]
+
+  if (status === 400) return raw || `请求参数错误（HTTP ${status}）`
+  if (status === 401) return raw || '未登录或登录已过期'
+  if (status === 403) return raw || '没有权限执行该操作'
+  if (status === 404) return raw || '资源不存在'
+  if (status === 409) return raw || '资源冲突，请刷新后重试'
+  if (status === 422) return raw || '参数校验失败'
+  if (status >= 500) return raw || `服务器错误（HTTP ${status}）`
+
+  return raw || `请求失败（HTTP ${status}）`
+}
+
+function isAbortError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  return 'name' in error && (error as { name?: unknown }).name === 'AbortError'
+}
+
+/**
+ * Get current user_id from localStorage
+ */
+function getStoredUserId(): number | null {
+  if (typeof window === 'undefined') return null
+  const stored = localStorage.getItem(STORAGE_KEY)
+  if (!stored) return null
+  try {
+    const user = JSON.parse(stored)
+    return user.user_id || null
+  } catch {
+    return null
+  }
 }
 
 async function apiFetch<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
-  const { userId, headers: customHeaders, ...rest } = options
+  const { userId, skipAuth, headers: customHeaders, signal: providedSignal, ...rest } = options
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...customHeaders,
   }
 
-  if (userId) {
-    (headers as Record<string, string>)['X-User-Id'] = String(userId)
+  // Use provided userId, or auto-attach from localStorage
+  const effectiveUserId = userId ?? (skipAuth ? null : getStoredUserId())
+  if (effectiveUserId) {
+    (headers as Record<string, string>)['X-User-Id'] = String(effectiveUserId)
   }
 
-  const response = await fetch(`${getApiBase()}${endpoint}`, {
-    ...rest,
-    headers,
-  })
+  const timeoutMs = typeof window === 'undefined' ? 3000 : 15000
+  const controller = providedSignal ? null : new AbortController()
+  const signal = providedSignal ?? controller?.signal
+  const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null
+
+  let response: Response
+  try {
+    response = await fetch(`${getApiBase()}${endpoint}`, {
+      ...rest,
+      headers,
+      signal,
+    }).finally(() => {
+      if (timeoutId) clearTimeout(timeoutId)
+    })
+  } catch (e) {
+    if (isAbortError(e)) {
+      throw new Error('请求超时，请稍后重试')
+    }
+    throw new Error('网络异常，请检查网络后重试')
+  }
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Unknown error' }))
-    throw new Error(error.detail || `HTTP ${response.status}`)
+    let detail: string | undefined
+    try {
+      const data = await response.clone().json()
+      if (data && typeof data === 'object' && 'detail' in data && typeof (data as { detail?: unknown }).detail === 'string') {
+        detail = (data as { detail: string }).detail
+      }
+    } catch {}
+
+    const message = formatApiErrorMessage(response.status, detail)
+    throw new Error(message)
   }
 
   // Handle 204 No Content
@@ -56,6 +129,19 @@ export async function logout(userId: number) {
   })
 }
 
+export async function register(data: {
+  username: string
+  email: string
+  password: string
+  role: 'participant' | 'organizer'
+}) {
+  return apiFetch<{ user_id: number; username: string; role: string }>('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    skipAuth: true,
+  })
+}
+
 // Users
 export async function createUser(data: {
   username: string
@@ -71,17 +157,7 @@ export async function createUser(data: {
 }
 
 export async function getUser(userId: number) {
-  return apiFetch<{
-    id: number
-    username: string
-    email: string
-    role: string
-    display_name?: string
-    avatar_url?: string
-    bio?: string
-    follower_count: number
-    following_count: number
-  }>(`/users/${userId}`)
+  return apiFetch<User>(`/users/${userId}`)
 }
 
 export interface User {
@@ -144,11 +220,17 @@ export async function getFollowing(userId: number, skip = 0, limit = 20) {
   )
 }
 
-// Categories
+export async function getUserLikes(userId: number, skip = 0, limit = 100) {
+  return apiFetch<{ items: Post[]; total: number; skip: number; limit: number }>(
+    `/users/${userId}/likes?skip=${skip}&limit=${limit}`
+  )
+}
+
+// Events
 export type CategoryStatus = 'draft' | 'published' | 'closed'
 export type CategoryType = 'competition' | 'operation'
 
-export interface Category {
+export interface Event {
   id: number
   name: string
   description: string
@@ -174,13 +256,13 @@ export async function getCategories(
   const params = new URLSearchParams({ skip: String(skip), limit: String(limit) })
   if (filters?.status) params.set('status', filters.status)
   if (filters?.type) params.set('type', filters.type)
-  return apiFetch<{ items: Category[]; total: number; skip: number; limit: number }>(
-    `/categories?${params.toString()}`
+  return apiFetch<{ items: Event[]; total: number; skip: number; limit: number }>(
+    `/events?${params.toString()}`
   )
 }
 
 export async function getCategory(categoryId: number) {
-  return apiFetch<Category>(`/categories/${categoryId}`)
+  return apiFetch<Event>(`/events/${categoryId}`)
 }
 
 export type PostStatus = 'draft' | 'pending_review' | 'published' | 'rejected'
@@ -203,15 +285,52 @@ export interface Post {
   deleted_at?: string | null
 }
 
-export async function getPosts(skip = 0, limit = 20, filters?: { type?: string; status?: PostStatus }) {
+export async function getPosts(
+  skip = 0,
+  limit = 20,
+  filters?: { type?: string; status?: PostStatus; tags?: string[]; q?: string; created_by?: number }
+) {
   const params = new URLSearchParams({ skip: String(skip), limit: String(limit) })
   if (filters?.type) params.set('type', filters.type)
   if (filters?.status) params.set('status', filters.status)
+  if (filters?.q) params.set('q', filters.q)
+  if (filters?.tags?.length) params.set('tags', filters.tags.join(','))
+  if (filters?.created_by) params.set('created_by', String(filters.created_by))
   return apiFetch<{ items: Post[]; total: number; skip: number; limit: number }>(`/posts?${params.toString()}`)
 }
 
 export async function getPost(postId: number) {
   return apiFetch<Post>(`/posts/${postId}`)
+}
+
+export interface CreatePostData {
+  title: string
+  content?: string
+  type?: string
+  tags?: string[]
+  status?: PostStatus
+  visibility?: PostVisibility
+  event_id?: number | null
+}
+
+export async function createPost(data: CreatePostData) {
+  return apiFetch<Post>('/posts', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function updatePost(postId: number, data: Partial<CreatePostData>) {
+  return apiFetch<Post>(`/posts/${postId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deletePost(postId: number) {
+  return apiFetch<void>(`/posts/${postId}`, {
+    method: 'DELETE',
+  })
 }
 
 export type GroupVisibility = 'public' | 'private'
@@ -249,6 +368,40 @@ export async function getGroups(skip = 0, limit = 20, filters?: { visibility?: G
 
 export async function getGroup(groupId: number) {
   return apiFetch<Group>(`/groups/${groupId}`)
+}
+
+export interface CreateGroupData {
+  name: string
+  description?: string
+  visibility?: GroupVisibility
+  max_members?: number
+  require_approval?: boolean
+}
+
+export async function createGroup(data: CreateGroupData) {
+  return apiFetch<Group>('/groups', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function updateGroup(groupId: number, data: Partial<CreateGroupData>) {
+  return apiFetch<Group>(`/groups/${groupId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deleteGroup(groupId: number) {
+  return apiFetch<void>(`/groups/${groupId}`, {
+    method: 'DELETE',
+  })
+}
+
+export async function getMyGroups(skip = 0, limit = 100, status?: string) {
+  const params = new URLSearchParams({ skip: String(skip), limit: String(limit) })
+  if (status) params.set('status', status)
+  return apiFetch<{ items: Group[]; total: number; skip: number; limit: number }>(`/my/groups?${params.toString()}`)
 }
 
 export async function getGroupMembers(
@@ -301,4 +454,148 @@ export async function markAllNotificationsAsRead(userId: number) {
     method: 'POST',
     userId,
   })
+}
+
+// Interactions (Comments, Likes, Ratings)
+export interface Interaction {
+  id: number
+  type: 'like' | 'comment' | 'rating'
+  value?: string | { score: number } | null
+  parent_id?: number | null
+  created_by?: number | null
+  created_at: string
+  updated_at?: string | null
+  deleted_at?: string | null
+}
+
+export async function getPostComments(postId: number, skip = 0, limit = 100) {
+  return apiFetch<{ items: Interaction[]; total: number; skip: number; limit: number }>(
+    `/posts/${postId}/comments?skip=${skip}&limit=${limit}`
+  )
+}
+
+export async function addPostComment(postId: number, value: string, parentId?: number) {
+  return apiFetch<Interaction>(`/posts/${postId}/comments`, {
+    method: 'POST',
+    body: JSON.stringify({ type: 'comment', value, parent_id: parentId }),
+  })
+}
+
+export async function likePost(postId: number) {
+  return apiFetch<{ post_id: number; liked: boolean }>(`/posts/${postId}/like`, {
+    method: 'POST',
+  })
+}
+
+export async function unlikePost(postId: number) {
+  return apiFetch<void>(`/posts/${postId}/like`, {
+    method: 'DELETE',
+  })
+}
+
+export async function checkPostLiked(postId: number): Promise<boolean> {
+  try {
+    const result = await apiFetch<{ post_id: number; liked: boolean }>(`/posts/${postId}/like`)
+    return result.liked
+  } catch {
+    return false
+  }
+}
+
+// Post Resources
+export interface PostResource {
+  id: number
+  post_id: number
+  resource_id: number
+  display_type: 'attachment' | 'inline'
+  position?: number | null
+  created_at: string
+}
+
+export interface Resource {
+  id: number
+  filename: string
+  display_name?: string | null
+  file_type?: string | null
+  file_size?: number | null
+  url?: string | null
+  created_by?: number | null
+  created_at: string
+}
+
+export async function getPostResources(postId: number) {
+  return apiFetch<PostResource[]>(`/posts/${postId}/resources`)
+}
+
+export async function getResource(resourceId: number) {
+  return apiFetch<Resource>(`/resources/${resourceId}`)
+}
+
+// Event-related APIs
+export interface EventRule {
+  id: number
+  event_id: number
+  rule_id: number
+  priority: number
+  position?: number | null
+  created_at: string
+}
+
+export interface EventPost {
+  id: number
+  event_id: number
+  post_id: number
+  submission_type: string
+  status: string
+  position?: number | null
+  created_at: string
+}
+
+export interface EventGroup {
+  id: number
+  event_id: number
+  group_id: number
+  status: string
+  position?: number | null
+  created_at: string
+}
+
+export async function getEventRules(eventId: number) {
+  return apiFetch<EventRule[]>(`/events/${eventId}/rules`)
+}
+
+export async function getEventPosts(eventId: number) {
+  return apiFetch<EventPost[]>(`/events/${eventId}/posts`)
+}
+
+export async function getEventGroups(eventId: number) {
+  return apiFetch<EventGroup[]>(`/events/${eventId}/groups`)
+}
+
+export async function registerGroupToEvent(eventId: number, groupId: number) {
+  return apiFetch<EventGroup>(`/events/${eventId}/groups`, {
+    method: 'POST',
+    body: JSON.stringify({ group_id: groupId }),
+  })
+}
+
+export async function unregisterGroupFromEvent(eventId: number, groupId: number) {
+  return apiFetch<void>(`/events/${eventId}/groups/${groupId}`, {
+    method: 'DELETE',
+  })
+}
+
+// Rules
+export interface Rule {
+  id: number
+  name: string
+  description?: string | null
+  type: string
+  config?: Record<string, unknown> | null
+  created_by?: number | null
+  created_at: string
+}
+
+export async function getRule(ruleId: number) {
+  return apiFetch<Rule>(`/rules/${ruleId}`)
 }

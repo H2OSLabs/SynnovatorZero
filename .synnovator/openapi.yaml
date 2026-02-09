@@ -14,14 +14,14 @@ servers:
 - url: https://api.synnovator.com
   description: Production server
 tags:
-- name: categories
-  description: Activity and competition categories
+- name: events
+  description: Activity and competition events
 - name: posts
   description: User posts and submissions
 - name: resources
   description: File resources and attachments
 - name: rules
-  description: Category rules and scoring criteria
+  description: Event rules and scoring criteria
 - name: users
   description: User management
 - name: groups
@@ -30,85 +30,28 @@ tags:
   description: Likes, comments, and ratings
 - name: admin
   description: Admin batch operations
-- name: auth
-  description: Authentication and authorization
-- name: notifications
-  description: User notifications
 paths:
-  /auth/login:
-    post:
-      summary: User login
-      operationId: login
-      tags:
-      - auth
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LoginRequest'
-      responses:
-        '200':
-          description: Login successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LoginResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-  /auth/logout:
-    post:
-      summary: User logout
-      operationId: logout
-      tags:
-      - auth
-      security:
-      - bearerAuth: []
-      responses:
-        '204':
-          description: Logged out successfully
-  /auth/refresh:
-    post:
-      summary: Refresh access token
-      operationId: refresh_token
-      tags:
-      - auth
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RefreshRequest'
-      responses:
-        '200':
-          description: Token refreshed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LoginResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-  /categories:
+  /events:
     get:
-      summary: List categories
+      summary: List events
       operationId: list_categories
       tags:
-      - categories
+      - events
       parameters:
       - $ref: '#/components/parameters/SkipParam'
       - $ref: '#/components/parameters/LimitParam'
       responses:
         '200':
-          description: List of categories
+          description: List of events
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedCategoryList'
     post:
-      summary: Create category
+      summary: Create event
       operationId: create_category
       tags:
-      - categories
+      - events
       requestBody:
         required: true
         content:
@@ -117,41 +60,41 @@ paths:
               $ref: '#/components/schemas/CategoryCreate'
       responses:
         '201':
-          description: Category created
+          description: Event created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Category'
+                $ref: '#/components/schemas/Event'
         '422':
           $ref: '#/components/responses/ValidationError'
-  /categories/{category_id}:
+  /events/{event_id}:
     get:
-      summary: Get category
+      summary: Get event
       operationId: get_category
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
           type: string
       responses:
         '200':
-          description: Category details
+          description: Event details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Category'
+                $ref: '#/components/schemas/Event'
         '404':
           $ref: '#/components/responses/NotFound'
     patch:
-      summary: Update category
+      summary: Update event
       operationId: update_category
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -164,20 +107,20 @@ paths:
               $ref: '#/components/schemas/CategoryUpdate'
       responses:
         '200':
-          description: Category updated
+          description: Event updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Category'
+                $ref: '#/components/schemas/Event'
         '404':
           $ref: '#/components/responses/NotFound'
     delete:
-      summary: Delete category
+      summary: Delete event
       operationId: delete_category
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -187,14 +130,14 @@ paths:
           description: Deleted
         '404':
           $ref: '#/components/responses/NotFound'
-  /categories/{category_id}/rules:
+  /events/{event_id}/rules:
     get:
-      summary: List category rules
+      summary: List event rules
       operationId: list_category_rules
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -209,12 +152,12 @@ paths:
                 items:
                   $ref: '#/components/schemas/Rule'
     post:
-      summary: Add rule to category
+      summary: Add rule to event
       operationId: add_category_rule
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -230,14 +173,14 @@ paths:
           description: Added
         '404':
           $ref: '#/components/responses/NotFound'
-  /categories/{category_id}/rules/{rule_id}:
+  /events/{event_id}/rules/{rule_id}:
     delete:
-      summary: Remove rule from category
+      summary: Remove rule from event
       operationId: remove_category_rule
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -252,14 +195,14 @@ paths:
           description: Removed
         '404':
           $ref: '#/components/responses/NotFound'
-  /categories/{category_id}/posts:
+  /events/{event_id}/posts:
     get:
-      summary: List category posts
+      summary: List event posts
       operationId: list_category_posts
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -281,12 +224,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedPostList'
     post:
-      summary: Add post to category
+      summary: Add post to event
       operationId: add_category_post
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -302,14 +245,14 @@ paths:
           description: Added
         '404':
           $ref: '#/components/responses/NotFound'
-  /categories/{category_id}/groups:
+  /events/{event_id}/groups:
     get:
-      summary: List category groups
+      summary: List event groups
       operationId: list_category_groups
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -324,12 +267,12 @@ paths:
                 items:
                   $ref: '#/components/schemas/Group'
     post:
-      summary: Add group to category
+      summary: Add group to event
       operationId: add_category_group
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -345,39 +288,42 @@ paths:
           description: Added
         '404':
           $ref: '#/components/responses/NotFound'
-  /categories/{category_id}/categories:
+  /events/{event_id}/resources:
     get:
-      summary: List category associations
-      operationId: list_category_associations
+      summary: List event resources
+      operationId: list_category_resources
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
           type: string
-      - name: relation_type
+      - name: display_type
         in: query
         schema:
           type: string
-          enum: [stage, track, prerequisite]
+          enum:
+          - banner
+          - attachment
+          - inline
       responses:
         '200':
-          description: List of associated categories
+          description: List of resources
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/CategoryAssociation'
+                  $ref: '#/components/schemas/Resource'
     post:
-      summary: Create category association
-      operationId: create_category_association
+      summary: Add resource to event
+      operationId: add_category_resource
       tags:
-      - categories
+      - events
       parameters:
-      - name: category_id
+      - name: event_id
         in: path
         required: true
         schema:
@@ -387,38 +333,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CategoryAssociationCreate'
+              $ref: '#/components/schemas/CategoryResourceAdd'
       responses:
         '201':
-          description: Association created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CategoryAssociation'
-        '400':
-          description: Invalid association (circular dependency, self-reference)
-        '409':
-          description: Association already exists
-  /categories/{category_id}/categories/{target_category_id}:
-    delete:
-      summary: Delete category association
-      operationId: delete_category_association
-      tags:
-      - categories
-      parameters:
-      - name: category_id
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: target_category_id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '204':
-          description: Association deleted
+          description: Added
         '404':
           $ref: '#/components/responses/NotFound'
   /posts:
@@ -1106,81 +1024,6 @@ paths:
           description: Deleted
         '404':
           $ref: '#/components/responses/NotFound'
-  /users/{user_id}/follow:
-    post:
-      summary: Follow user
-      operationId: follow_user
-      tags:
-      - users
-      parameters:
-      - name: user_id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '201':
-          description: Followed
-        '409':
-          description: Already following
-    delete:
-      summary: Unfollow user
-      operationId: unfollow_user
-      tags:
-      - users
-      parameters:
-      - name: user_id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '204':
-          description: Unfollowed
-        '404':
-          $ref: '#/components/responses/NotFound'
-  /users/{user_id}/followers:
-    get:
-      summary: List user followers
-      operationId: list_user_followers
-      tags:
-      - users
-      parameters:
-      - name: user_id
-        in: path
-        required: true
-        schema:
-          type: string
-      - $ref: '#/components/parameters/SkipParam'
-      - $ref: '#/components/parameters/LimitParam'
-      responses:
-        '200':
-          description: List of followers
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedUserList'
-  /users/{user_id}/following:
-    get:
-      summary: List users that this user follows
-      operationId: list_user_following
-      tags:
-      - users
-      parameters:
-      - name: user_id
-        in: path
-        required: true
-        schema:
-          type: string
-      - $ref: '#/components/parameters/SkipParam'
-      - $ref: '#/components/parameters/LimitParam'
-      responses:
-        '200':
-          description: List of users being followed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedUserList'
   /groups:
     get:
       summary: List groups
@@ -1380,15 +1223,125 @@ paths:
       responses:
         '204':
           description: Member removed
+  /groups/{group_id}/posts:
+    get:
+      summary: List group posts
+      operationId: list_group_posts
+      tags:
+      - groups
+      parameters:
+      - name: group_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: relation_type
+        in: query
+        schema:
+          type: string
+          enum:
+          - team_submission
+          - announcement
+          - reference
+      responses:
+        '200':
+          description: List of posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+    post:
+      summary: Add post to group
+      operationId: add_group_post
+      tags:
+      - groups
+      parameters:
+      - name: group_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupPostAdd'
+      responses:
+        '201':
+          description: Added
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /groups/{group_id}/resources:
+    get:
+      summary: List group resources
+      operationId: list_group_resources
+      tags:
+      - groups
+      parameters:
+      - name: group_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: access_level
+        in: query
+        schema:
+          type: string
+          enum:
+          - read_only
+          - read_write
+      responses:
+        '200':
+          description: List of resources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Resource'
+    post:
+      summary: Add resource to group
+      operationId: add_group_resource
+      tags:
+      - groups
+      parameters:
+      - name: group_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupResourceAdd'
+      responses:
+        '201':
+          description: Added
+        '404':
+          $ref: '#/components/responses/NotFound'
   /notifications:
     get:
-      summary: List notifications for current user
+      summary: List notifications
       operationId: list_notifications
       tags:
       - notifications
       parameters:
       - $ref: '#/components/parameters/SkipParam'
       - $ref: '#/components/parameters/LimitParam'
+      - name: type
+        in: query
+        schema:
+          type: string
+          enum:
+          - system
+          - activity
+          - team
+          - social
       - name: is_read
         in: query
         schema:
@@ -1401,8 +1354,26 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedNotificationList'
   /notifications/{notification_id}:
+    get:
+      summary: Get notification
+      operationId: get_notification
+      tags:
+      - notifications
+      parameters:
+      - name: notification_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Notification details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
     patch:
-      summary: Update notification (mark as read)
+      summary: Mark notification as read
       operationId: update_notification
       tags:
       - notifications
@@ -1425,8 +1396,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Notification'
-        '404':
-          $ref: '#/components/responses/NotFound'
   /notifications/read-all:
     post:
       summary: Mark all notifications as read
@@ -1434,8 +1403,15 @@ paths:
       tags:
       - notifications
       responses:
-        '204':
-          description: All notifications marked as read
+        '200':
+          description: Marked count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  marked_count:
+                    type: integer
   /admin/posts:
     delete:
       summary: Batch delete posts
@@ -1544,21 +1520,21 @@ components:
       enum:
       - competition
       - operation
-      description: Category type
+      description: Event type
     CategoryStatus:
       type: string
       enum:
       - draft
       - published
       - closed
-      description: Category status
+      description: Event status
     PostType:
       type: string
       enum:
       - profile
       - team
-      - category
-      - for_category
+      - event
+      - proposal
       - certificate
       - general
       description: Post type
@@ -1654,7 +1630,7 @@ components:
         content:
           type: string
           description: Markdown content body
-    Category:
+    Event:
       type: object
       required:
       - id
@@ -1811,144 +1787,6 @@ components:
         url:
           type: string
           format: uri
-    RuleCreate:
-      type: object
-      required:
-      - name
-      - description
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-        allow_public:
-          type: boolean
-          default: false
-        require_review:
-          type: boolean
-          default: false
-        reviewers:
-          type: array
-          items: &id002
-            type: string
-        submission_start:
-          type: string
-          format: date-time
-        submission_deadline:
-          type: string
-          format: date-time
-        submission_format:
-          type: array
-          items: &id003
-            type: string
-        max_submissions:
-          type: integer
-        min_team_size:
-          type: integer
-        max_team_size:
-          type: integer
-        scoring_criteria:
-          type: array
-          items: &id004
-            type: object
-        content:
-          type: string
-          description: Markdown content body
-    RuleUpdate:
-      type: object
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-        allow_public:
-          type: boolean
-          default: false
-        require_review:
-          type: boolean
-          default: false
-        reviewers:
-          type: array
-          items: *id002
-        submission_start:
-          type: string
-          format: date-time
-        submission_deadline:
-          type: string
-          format: date-time
-        submission_format:
-          type: array
-          items: *id003
-        max_submissions:
-          type: integer
-        min_team_size:
-          type: integer
-        max_team_size:
-          type: integer
-        scoring_criteria:
-          type: array
-          items: *id004
-        content:
-          type: string
-          description: Markdown content body
-    Rule:
-      type: object
-      required:
-      - id
-      - name
-      - description
-      - created_at
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-        allow_public:
-          type: boolean
-          default: false
-        require_review:
-          type: boolean
-          default: false
-        reviewers:
-          type: array
-          items: *id002
-        submission_start:
-          type: string
-          format: date-time
-        submission_deadline:
-          type: string
-          format: date-time
-        submission_format:
-          type: array
-          items: *id003
-        max_submissions:
-          type: integer
-        min_team_size:
-          type: integer
-        max_team_size:
-          type: integer
-        scoring_criteria:
-          type: array
-          items: *id004
-        content:
-          type: string
-          description: Markdown content body
-    ScoringCriterion:
-      type: object
-      required:
-      - name
-      - weight
-      properties:
-        name:
-          type: string
-          example: Innovation
-        weight:
-          type: integer
-          minimum: 0
-          maximum: 100
-          example: 30
-        description:
-          type: string
     UserCreate:
       type: object
       required:
@@ -2245,7 +2083,7 @@ components:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/Category'
+            $ref: '#/components/schemas/Event'
         total:
           type: integer
           description: Total number of records
@@ -2462,152 +2300,6 @@ components:
           type: object
           additionalProperties:
             type: string
-    LoginRequest:
-      type: object
-      required:
-      - email
-      - password
-      properties:
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-          format: password
-          minLength: 8
-    LoginResponse:
-      type: object
-      required:
-      - access_token
-      - token_type
-      - user
-      properties:
-        access_token:
-          type: string
-        refresh_token:
-          type: string
-        token_type:
-          type: string
-          default: bearer
-        expires_in:
-          type: integer
-          description: Token expiration time in seconds
-        user:
-          $ref: '#/components/schemas/User'
-    RefreshRequest:
-      type: object
-      required:
-      - refresh_token
-      properties:
-        refresh_token:
-          type: string
-    CategoryAssociationType:
-      type: string
-      enum: [stage, track, prerequisite]
-      description: |
-        - stage: Sequential stages (赛段), requires stage_order
-        - track: Parallel tracks (赛道)
-        - prerequisite: Prerequisite activity (前置条件)
-    CategoryAssociationCreate:
-      type: object
-      required:
-      - target_category_id
-      - relation_type
-      properties:
-        target_category_id:
-          type: string
-        relation_type:
-          $ref: '#/components/schemas/CategoryAssociationType'
-        stage_order:
-          type: integer
-          description: Required for stage type, defines sequence order
-    CategoryAssociation:
-      type: object
-      required:
-      - source_category_id
-      - target_category_id
-      - relation_type
-      - created_at
-      properties:
-        source_category_id:
-          type: string
-        target_category_id:
-          type: string
-        target_category:
-          $ref: '#/components/schemas/Category'
-        relation_type:
-          $ref: '#/components/schemas/CategoryAssociationType'
-        stage_order:
-          type: integer
-          description: Order for stage type associations
-        created_at:
-          type: string
-          format: date-time
-    NotificationType:
-      type: string
-      enum: [award, comment, team_request, follow, mention, system]
-      description: |
-        - award: Competition award notification
-        - comment: Comment on your post
-        - team_request: Team join request
-        - follow: Someone followed you
-        - mention: Mentioned in a post/comment
-        - system: System notification
-    Notification:
-      type: object
-      required:
-      - id
-      - type
-      - content
-      - is_read
-      - created_at
-      properties:
-        id:
-          type: string
-        type:
-          $ref: '#/components/schemas/NotificationType'
-        title:
-          type: string
-        content:
-          type: string
-        is_read:
-          type: boolean
-          default: false
-        related_url:
-          type: string
-          description: URL to the related content
-        actor:
-          $ref: '#/components/schemas/User'
-          description: The user who triggered the notification
-        created_at:
-          type: string
-          format: date-time
-    NotificationUpdate:
-      type: object
-      properties:
-        is_read:
-          type: boolean
-    PaginatedNotificationList:
-      type: object
-      required:
-      - items
-      - total
-      - skip
-      - limit
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Notification'
-        total:
-          type: integer
-        skip:
-          type: integer
-        limit:
-          type: integer
-        unread_count:
-          type: integer
-          description: Total count of unread notifications
   parameters:
     SkipParam:
       name: skip

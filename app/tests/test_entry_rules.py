@@ -1,16 +1,16 @@
 """Entry rule enforcement tests — covers TC-ENTRY-001 through TC-ENTRY-902.
 
 Tests the declarative rule engine's ability to enforce entry-gate conditions
-when creating category_post, category_group, and group_user relations.
+when creating event_post, event_group, and group_user relations.
 
 Trigger points tested:
-- create_relation(category_group): group registration to a category
-- create_relation(category_post): post submission to a category
-- create_relation(group_user): adding a member to a group (indirectly via category rules)
+- create_relation(event_group): group registration to a event
+- create_relation(event_post): post submission to a event
+- create_relation(group_user): adding a member to a group (indirectly via event rules)
 
 Condition types exercised:
-- exists (group_user, category_group, post_resource)
-- count (category_post scope=user)
+- exists (group_user, event_group, post_resource)
+- count (event_post scope=user)
 - resource_required (min_count, formats)
 - resource_format (formats)
 
@@ -31,16 +31,16 @@ def _create_user(client, username, role="participant"):
     return resp.json()["id"]
 
 
-def _create_category(client, uid, name="Entry Test Category"):
+def _create_event(client, uid, name="Entry Test Event"):
     resp = client.post(
-        "/api/categories",
+        "/api/events",
         json={"name": name, "description": "test", "type": "competition"},
         headers={"X-User-Id": str(uid)},
     )
     cat_id = resp.json()["id"]
     # Publish so it is usable
     client.patch(
-        f"/api/categories/{cat_id}",
+        f"/api/events/{cat_id}",
         json={"status": "published"},
         headers={"X-User-Id": str(uid)},
     )
@@ -64,7 +64,7 @@ def _create_rule(client, uid, checks=None, **fields):
 
 def _link_rule(client, cat_id, rule_id):
     resp = client.post(
-        f"/api/categories/{cat_id}/rules",
+        f"/api/events/{cat_id}/rules",
         json={"rule_id": rule_id, "priority": 0},
     )
     assert resp.status_code == 201
@@ -87,7 +87,7 @@ def _add_member(client, gid, uid, role="member"):
     return resp
 
 
-def _create_post(client, uid, title="Entry Submission", post_type="for_category"):
+def _create_post(client, uid, title="Entry Submission", post_type="proposal"):
     resp = client.post(
         "/api/posts",
         json={"title": title, "type": post_type, "status": "draft"},
@@ -119,26 +119,26 @@ def _link_resource_to_post(client, post_id, resource_id):
 
 def _submit_post_to_category(client, cat_id, post_id):
     return client.post(
-        f"/api/categories/{cat_id}/posts",
+        f"/api/events/{cat_id}/posts",
         json={"post_id": post_id, "relation_type": "submission"},
     )
 
 
 def _register_group_to_category(client, cat_id, group_id):
     return client.post(
-        f"/api/categories/{cat_id}/groups",
+        f"/api/events/{cat_id}/groups",
         json={"group_id": group_id},
     )
 
 
 # ---------------------------------------------------------------------------
-# TC-ENTRY-001: Must join a group before registering for a category
-# Trigger: create_relation(category_group)
+# TC-ENTRY-001: Must join a group before registering for a event
+# Trigger: create_relation(event_group)
 # Condition: exists(group_user, scope=user, filter={status:accepted}, require=true)
 # Expected: denied (422) because the group creator has no accepted membership
 # ---------------------------------------------------------------------------
 def test_entry_001_must_join_group_before_registration(client):
-    """TC-ENTRY-001: create_relation(category_group) -- user not in any group -> deny"""
+    """TC-ENTRY-001: create_relation(event_group) -- user not in any group -> deny"""
     organizer = _create_user(client, "org001", role="organizer")
     user = _create_user(client, "user001", role="participant")
 
@@ -147,7 +147,7 @@ def test_entry_001_must_join_group_before_registration(client):
         organizer,
         checks=[
             {
-                "trigger": "create_relation(category_group)",
+                "trigger": "create_relation(event_group)",
                 "phase": "pre",
                 "condition": {
                     "type": "exists",
@@ -164,13 +164,13 @@ def test_entry_001_must_join_group_before_registration(client):
         ],
     )
 
-    cat_id = _create_category(client, organizer)
+    cat_id = _create_event(client, organizer)
     _link_rule(client, cat_id, rule_id)
 
     # User creates a group but is NOT added as an accepted member
     group_id = _create_group(client, user, name="Team001")
 
-    # Attempt to register group for category -- should be rejected
+    # Attempt to register group for event -- should be rejected
     resp = _register_group_to_category(client, cat_id, group_id)
     assert resp.status_code == 422, (
         f"Expected 422 deny, got {resp.status_code}: {resp.json()}"
@@ -180,13 +180,13 @@ def test_entry_001_must_join_group_before_registration(client):
 
 # ---------------------------------------------------------------------------
 # TC-ENTRY-002: Must have team registered before submission
-# Trigger: create_relation(category_post)
-# Condition: exists(category_group, scope=user_group) -- user's group must be
-#            registered to the category
-# Expected: denied (422) because user's group is not registered to the category
+# Trigger: create_relation(event_post)
+# Condition: exists(event_group, scope=user_group) -- user's group must be
+#            registered to the event
+# Expected: denied (422) because user's group is not registered to the event
 # ---------------------------------------------------------------------------
 def test_entry_002_must_have_team_registered_before_submission(client):
-    """TC-ENTRY-002: create_relation(category_post) -- user's group not registered -> deny"""
+    """TC-ENTRY-002: create_relation(event_post) -- user's group not registered -> deny"""
     organizer = _create_user(client, "org002", role="organizer")
     user = _create_user(client, "user002", role="participant")
 
@@ -195,26 +195,26 @@ def test_entry_002_must_have_team_registered_before_submission(client):
         organizer,
         checks=[
             {
-                "trigger": "create_relation(category_post)",
+                "trigger": "create_relation(event_post)",
                 "phase": "pre",
                 "condition": {
                     "type": "exists",
                     "params": {
-                        "entity": "category_group",
+                        "entity": "event_group",
                         "scope": "user_group",
                         "require": True,
                     },
                 },
                 "on_fail": "deny",
-                "message": "Your team must be registered for this category",
+                "message": "Your team must be registered for this event",
             }
         ],
     )
 
-    cat_id = _create_category(client, organizer)
+    cat_id = _create_event(client, organizer)
     _link_rule(client, cat_id, rule_id)
 
-    # User creates a group and joins it, but does NOT register group to category
+    # User creates a group and joins it, but does NOT register group to event
     group_id = _create_group(client, user, name="Team002")
     _add_member(client, group_id, user)
 
@@ -229,18 +229,18 @@ def test_entry_002_must_have_team_registered_before_submission(client):
 
 # ---------------------------------------------------------------------------
 # TC-ENTRY-003: Must have a published profile post to register a group
-# Trigger: create_relation(category_group)
-# Condition: exists(category_post, filter={relation_type:submission}) for user
-#            (proxy: user must have submitted at least one post to *any* category)
+# Trigger: create_relation(event_group)
+# Condition: exists(event_post, filter={relation_type:submission}) for user
+#            (proxy: user must have submitted at least one post to *any* event)
 #
-# NOTE: The exists(category_post) evaluator in the rule engine checks category-
-# scoped posts; here we require a profile-type post in the category. Since the
-# rule engine's exists(category_post) looks for user's posts in the target
-# category, we use that with relation_type=submission.
-# Expected: denied (422) because user has no published post in the category
+# NOTE: The exists(event_post) evaluator in the rule engine checks event-
+# scoped posts; here we require a profile-type post in the event. Since the
+# rule engine's exists(event_post) looks for user's posts in the target
+# event, we use that with relation_type=submission.
+# Expected: denied (422) because user has no published post in the event
 # ---------------------------------------------------------------------------
 def test_entry_003_must_have_profile_post(client):
-    """TC-ENTRY-003: create_relation(category_group) -- user has no published profile post -> deny"""
+    """TC-ENTRY-003: create_relation(event_group) -- user has no published profile post -> deny"""
     organizer = _create_user(client, "org003", role="organizer")
     user = _create_user(client, "user003", role="participant")
 
@@ -249,12 +249,12 @@ def test_entry_003_must_have_profile_post(client):
         organizer,
         checks=[
             {
-                "trigger": "create_relation(category_group)",
+                "trigger": "create_relation(event_group)",
                 "phase": "pre",
                 "condition": {
                     "type": "exists",
                     "params": {
-                        "entity": "category_post",
+                        "entity": "event_post",
                         "scope": "user",
                         "filter": {"relation_type": "submission"},
                         "require": True,
@@ -266,10 +266,10 @@ def test_entry_003_must_have_profile_post(client):
         ],
     )
 
-    cat_id = _create_category(client, organizer)
+    cat_id = _create_event(client, organizer)
     _link_rule(client, cat_id, rule_id)
 
-    # User creates a group but has no post submitted to the category
+    # User creates a group but has no post submitted to the event
     group_id = _create_group(client, user, name="Team003")
 
     resp = _register_group_to_category(client, cat_id, group_id)
@@ -281,9 +281,9 @@ def test_entry_003_must_have_profile_post(client):
 
 # ---------------------------------------------------------------------------
 # TC-ENTRY-004: Same as 003 but user satisfies the condition
-# Trigger: create_relation(category_group)
-# Condition: exists(category_post, filter={relation_type:submission}) -- satisfied
-# Expected: allow (201) because user has already submitted a post to the category
+# Trigger: create_relation(event_group)
+# Condition: exists(event_post, filter={relation_type:submission}) -- satisfied
+# Expected: allow (201) because user has already submitted a post to the event
 # ---------------------------------------------------------------------------
 def test_entry_004_conditions_satisfied(client):
     """TC-ENTRY-004: Same as 003 but user has a submitted post -> allow"""
@@ -295,12 +295,12 @@ def test_entry_004_conditions_satisfied(client):
         organizer,
         checks=[
             {
-                "trigger": "create_relation(category_group)",
+                "trigger": "create_relation(event_group)",
                 "phase": "pre",
                 "condition": {
                     "type": "exists",
                     "params": {
-                        "entity": "category_post",
+                        "entity": "event_post",
                         "scope": "user",
                         "filter": {"relation_type": "submission"},
                         "require": True,
@@ -312,17 +312,17 @@ def test_entry_004_conditions_satisfied(client):
         ],
     )
 
-    cat_id = _create_category(client, organizer)
+    cat_id = _create_event(client, organizer)
     # Link rule AFTER we submit the post, so the first submission isn't blocked
     # by a different rule. We first submit, then link the rule, then register group.
-    # Actually, the rule only fires on category_group creation, so we can link it now.
+    # Actually, the rule only fires on event_group creation, so we can link it now.
     _link_rule(client, cat_id, rule_id)
 
-    # User creates and submits a post to the category (no rule blocks category_post here)
+    # User creates and submits a post to the event (no rule blocks event_post here)
     post_id = _create_post(client, user, title="Profile Post")
     submit_resp = _submit_post_to_category(client, cat_id, post_id)
     assert submit_resp.status_code == 201, (
-        f"Post submission should succeed (no category_post rule): {submit_resp.json()}"
+        f"Post submission should succeed (no event_post rule): {submit_resp.json()}"
     )
 
     # Now user creates a group and registers it -- should pass
@@ -335,12 +335,12 @@ def test_entry_004_conditions_satisfied(client):
 
 # ---------------------------------------------------------------------------
 # TC-ENTRY-010: Resource required -- post has no resources
-# Trigger: create_relation(category_post)
+# Trigger: create_relation(event_post)
 # Condition: resource_required(min_count=1)
 # Expected: denied (422) because post has zero resources
 # ---------------------------------------------------------------------------
 def test_entry_010_resource_required_min_count(client):
-    """TC-ENTRY-010: create_relation(category_post) -- post has no resources -> deny"""
+    """TC-ENTRY-010: create_relation(event_post) -- post has no resources -> deny"""
     organizer = _create_user(client, "org010", role="organizer")
     user = _create_user(client, "user010", role="participant")
 
@@ -349,7 +349,7 @@ def test_entry_010_resource_required_min_count(client):
         organizer,
         checks=[
             {
-                "trigger": "create_relation(category_post)",
+                "trigger": "create_relation(event_post)",
                 "phase": "pre",
                 "condition": {
                     "type": "resource_required",
@@ -361,7 +361,7 @@ def test_entry_010_resource_required_min_count(client):
         ],
     )
 
-    cat_id = _create_category(client, organizer)
+    cat_id = _create_event(client, organizer)
     _link_rule(client, cat_id, rule_id)
 
     # Post with no resources
@@ -375,12 +375,12 @@ def test_entry_010_resource_required_min_count(client):
 
 # ---------------------------------------------------------------------------
 # TC-ENTRY-011: Resource format -- post has .pptx but rule requires PDF
-# Trigger: create_relation(category_post)
+# Trigger: create_relation(event_post)
 # Condition: resource_format(formats=["pdf"])
 # Expected: denied (422) because .pptx is not in the allowed format list
 # ---------------------------------------------------------------------------
 def test_entry_011_resource_required_format(client):
-    """TC-ENTRY-011: create_relation(category_post) -- post has .pptx but rule requires PDF -> deny"""
+    """TC-ENTRY-011: create_relation(event_post) -- post has .pptx but rule requires PDF -> deny"""
     organizer = _create_user(client, "org011", role="organizer")
     user = _create_user(client, "user011", role="participant")
 
@@ -389,7 +389,7 @@ def test_entry_011_resource_required_format(client):
         organizer,
         checks=[
             {
-                "trigger": "create_relation(category_post)",
+                "trigger": "create_relation(event_post)",
                 "phase": "pre",
                 "condition": {
                     "type": "resource_format",
@@ -401,7 +401,7 @@ def test_entry_011_resource_required_format(client):
         ],
     )
 
-    cat_id = _create_category(client, organizer)
+    cat_id = _create_event(client, organizer)
     _link_rule(client, cat_id, rule_id)
 
     post_id = _create_post(client, user)
@@ -417,7 +417,7 @@ def test_entry_011_resource_required_format(client):
 
 # ---------------------------------------------------------------------------
 # TC-ENTRY-012: Resource format satisfied -- post has .pdf and rule requires PDF
-# Trigger: create_relation(category_post)
+# Trigger: create_relation(event_post)
 # Condition: resource_format(formats=["pdf"])
 # Expected: allow (201)
 # ---------------------------------------------------------------------------
@@ -431,7 +431,7 @@ def test_entry_012_resource_format_satisfied(client):
         organizer,
         checks=[
             {
-                "trigger": "create_relation(category_post)",
+                "trigger": "create_relation(event_post)",
                 "phase": "pre",
                 "condition": {
                     "type": "resource_format",
@@ -443,7 +443,7 @@ def test_entry_012_resource_format_satisfied(client):
         ],
     )
 
-    cat_id = _create_category(client, organizer)
+    cat_id = _create_event(client, organizer)
     _link_rule(client, cat_id, rule_id)
 
     post_id = _create_post(client, user)
@@ -458,12 +458,12 @@ def test_entry_012_resource_format_satisfied(client):
 
 # ---------------------------------------------------------------------------
 # TC-ENTRY-020: One submission per user (max_submissions=1 via fixed field)
-# Trigger: create_relation(category_post)
-# Condition: expanded from max_submissions=1 -> count(category_post, scope=user, op="<", value=1)
+# Trigger: create_relation(event_post)
+# Condition: expanded from max_submissions=1 -> count(event_post, scope=user, op="<", value=1)
 # Expected: second submission denied (422)
 # ---------------------------------------------------------------------------
 def test_entry_020_one_submission_per_user(client):
-    """TC-ENTRY-020: create_relation(category_post) -- user already submitted -> deny"""
+    """TC-ENTRY-020: create_relation(event_post) -- user already submitted -> deny"""
     organizer = _create_user(client, "org020", role="organizer")
     user = _create_user(client, "user020", role="participant")
 
@@ -474,7 +474,7 @@ def test_entry_020_one_submission_per_user(client):
         max_submissions=1,
     )
 
-    cat_id = _create_category(client, organizer)
+    cat_id = _create_event(client, organizer)
     _link_rule(client, cat_id, rule_id)
 
     # First submission should succeed
@@ -494,12 +494,12 @@ def test_entry_020_one_submission_per_user(client):
 
 
 # ---------------------------------------------------------------------------
-# TC-ENTRY-022: Different categories are isolated -- max_submissions=1 per category
-# Two separate categories each with max_submissions=1. A user submits one post
-# to each category. Both should succeed because the count is per-category.
+# TC-ENTRY-022: Different events are isolated -- max_submissions=1 per event
+# Two separate events each with max_submissions=1. A user submits one post
+# to each event. Both should succeed because the count is per-event.
 # ---------------------------------------------------------------------------
 def test_entry_022_different_categories_isolated(client):
-    """TC-ENTRY-022: Two categories each with max_submissions=1, user submits to both -> OK"""
+    """TC-ENTRY-022: Two events each with max_submissions=1, user submits to both -> OK"""
     organizer = _create_user(client, "org022", role="organizer")
     user = _create_user(client, "user022", role="participant")
 
@@ -510,21 +510,21 @@ def test_entry_022_different_categories_isolated(client):
         max_submissions=1,
     )
 
-    cat_a = _create_category(client, organizer, name="Category A")
-    cat_b = _create_category(client, organizer, name="Category B")
+    cat_a = _create_event(client, organizer, name="Event A")
+    cat_b = _create_event(client, organizer, name="Event B")
     _link_rule(client, cat_a, rule_id)
     _link_rule(client, cat_b, rule_id)
 
     post_a = _create_post(client, user, title="Submission A")
     resp_a = _submit_post_to_category(client, cat_a, post_a)
     assert resp_a.status_code == 201, (
-        f"Submission to category A should succeed: {resp_a.json()}"
+        f"Submission to event A should succeed: {resp_a.json()}"
     )
 
     post_b = _create_post(client, user, title="Submission B")
     resp_b = _submit_post_to_category(client, cat_b, post_b)
     assert resp_b.status_code == 201, (
-        f"Submission to category B should succeed (isolated): {resp_b.json()}"
+        f"Submission to event B should succeed (isolated): {resp_b.json()}"
     )
 
 
@@ -544,7 +544,7 @@ def test_entry_030_fixed_and_custom_checks_and_logic(client):
         max_submissions=1,
         checks=[
             {
-                "trigger": "create_relation(category_post)",
+                "trigger": "create_relation(event_post)",
                 "phase": "pre",
                 "condition": {
                     "type": "resource_required",
@@ -556,7 +556,7 @@ def test_entry_030_fixed_and_custom_checks_and_logic(client):
         ],
     )
 
-    cat_id = _create_category(client, organizer)
+    cat_id = _create_event(client, organizer)
     _link_rule(client, cat_id, rule_id)
 
     # First submission: includes a resource -> should pass both checks
@@ -594,7 +594,7 @@ def test_entry_031_fixed_and_custom_checks_both_satisfied(client):
         max_submissions=1,
         checks=[
             {
-                "trigger": "create_relation(category_post)",
+                "trigger": "create_relation(event_post)",
                 "phase": "pre",
                 "condition": {
                     "type": "resource_required",
@@ -606,7 +606,7 @@ def test_entry_031_fixed_and_custom_checks_both_satisfied(client):
         ],
     )
 
-    cat_id = _create_category(client, organizer)
+    cat_id = _create_event(client, organizer)
     _link_rule(client, cat_id, rule_id)
 
     post_id = _create_post(client, user, title="Submission with resource")
@@ -634,7 +634,7 @@ def test_entry_900_unknown_condition_type(client, db_session):
         organizer,
         checks=[
             {
-                "trigger": "create_relation(category_post)",
+                "trigger": "create_relation(event_post)",
                 "phase": "pre",
                 "condition": {
                     "type": "nonexistent_check_type",
@@ -646,7 +646,7 @@ def test_entry_900_unknown_condition_type(client, db_session):
         ],
     )
 
-    cat_id = _create_category(client, organizer)
+    cat_id = _create_event(client, organizer)
     _link_rule(client, cat_id, rule_id)
 
     post_id = _create_post(client, user, title="Unknown check")
@@ -689,12 +689,12 @@ def test_entry_901_missing_trigger_field(client):
         ],
     )
 
-    cat_id = _create_category(client, organizer)
+    cat_id = _create_event(client, organizer)
     _link_rule(client, cat_id, rule_id)
 
     post_id = _create_post(client, user, title="No trigger match")
     resp = _submit_post_to_category(client, cat_id, post_id)
-    # Check's trigger does not match "create_relation(category_post)"
+    # Check's trigger does not match "create_relation(event_post)"
     # so the check is skipped and submission is allowed
     assert resp.status_code == 201, (
         f"Expected 201 (trigger mismatch), got {resp.status_code}: {resp.json()}"
@@ -717,7 +717,7 @@ def test_entry_902_pre_phase_without_condition(client, db_session):
         organizer,
         checks=[
             {
-                "trigger": "create_relation(category_post)",
+                "trigger": "create_relation(event_post)",
                 "phase": "pre",
                 # No "condition" key
                 "on_fail": "deny",
@@ -726,7 +726,7 @@ def test_entry_902_pre_phase_without_condition(client, db_session):
         ],
     )
 
-    cat_id = _create_category(client, organizer)
+    cat_id = _create_event(client, organizer)
     _link_rule(client, cat_id, rule_id)
 
     post_id = _create_post(client, user, title="Condition-less check")

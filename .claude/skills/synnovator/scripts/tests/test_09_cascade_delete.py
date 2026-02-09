@@ -22,8 +22,8 @@ class TestCascadeDelete(TestRunner):
         create_full_baseline(self.data_dir, self.ids)
 
     def test_tc_del_001_delete_category(self):
-        """TC-DEL-001: Delete category."""
-        print("\n=== TC-DEL-001: Delete Category ===")
+        """TC-DEL-001: Delete event."""
+        print("\n=== TC-DEL-001: Delete Event ===")
         pass
 
     def test_tc_del_002_delete_rule(self):
@@ -47,8 +47,8 @@ class TestCascadeDelete(TestRunner):
         pass
 
     def test_tc_del_010_category_interaction_cascade(self):
-        """TC-DEL-010: Delete category cascades linked interactions."""
-        print("\n=== TC-DEL-010: Category Interaction Cascade ===")
+        """TC-DEL-010: Delete event cascades linked interactions."""
+        print("\n=== TC-DEL-010: Event Interaction Cascade ===")
         pass
 
     def test_tc_del_011_user_cascade(self):
@@ -62,12 +62,12 @@ class TestCascadeDelete(TestRunner):
         pass
 
     def test_tc_del_013_rule_cascade_category_rule(self):
-        """TC-DEL-013: Delete rule cascades category_rule."""
+        """TC-DEL-013: Delete rule cascades event_rule."""
         print("\n=== TC-DEL-013: Rule Cascade ===")
         pass
 
     def test_tc_del_014_group_cascade(self):
-        """TC-DEL-014: Delete group cascades category_group."""
+        """TC-DEL-014: Delete group cascades event_group."""
         print("\n=== TC-DEL-014: Group Cascade ===")
         pass
 

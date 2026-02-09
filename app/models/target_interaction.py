@@ -12,7 +12,7 @@ class TargetInteraction(Base):
     )
 
     id = Column(Integer, primary_key=True, index=True)
-    target_type = Column(String, nullable=False)  # post | category | resource
+    target_type = Column(String, nullable=False)  # post | event | resource
     target_id = Column(Integer, nullable=False, index=True)
     interaction_id = Column(Integer, nullable=False, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

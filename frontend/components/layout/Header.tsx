@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { Search, Bell, Plus, Menu, Home, Compass, Calendar, Users, FileText } from "lucide-react"
+import { Search, Bell, Plus, Menu, Home, Compass, Calendar, Users, FileText, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -14,22 +14,21 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { SearchModal } from "@/components/search/SearchModal"
 import { NotificationDropdown } from "@/components/notification/NotificationDropdown"
+import { useAuth } from "@/contexts/AuthContext"
 import { cn } from "@/lib/utils"
 
 interface HeaderProps {
-  user?: {
-    id: number
-    username: string
-    display_name?: string
-    avatar_url?: string
-    role: "participant" | "organizer" | "admin"
-  } | null
   onMenuClick?: () => void
   showMenuButton?: boolean
 }
 
-export function Header({ user, onMenuClick, showMenuButton = false }: HeaderProps) {
+export function Header({ onMenuClick, showMenuButton = false }: HeaderProps) {
   const [searchOpen, setSearchOpen] = useState(false)
+  const { user, logout, isOrganizer, isAdmin, isLoading } = useAuth()
+
+  const handleLogout = async () => {
+    await logout()
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-[60px] bg-nf-surface border-b border-nf-secondary">
@@ -73,21 +72,36 @@ export function Header({ user, onMenuClick, showMenuButton = false }: HeaderProp
         <div className="flex items-center gap-2">
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-1">
-            <Link href="/explore">
+            <Link href="/explore" prefetch={false}>
               <Button variant="ghost" className="text-nf-light-gray hover:text-nf-white">
                 <Compass className="h-4 w-4 mr-2" />
                 探索
               </Button>
             </Link>
-            <Link href="/events">
+            <Link href="/events" prefetch={false}>
               <Button variant="ghost" className="text-nf-light-gray hover:text-nf-white">
                 <Calendar className="h-4 w-4 mr-2" />
                 活动
               </Button>
             </Link>
+            {/* Manage link for organizers/admins */}
+            {(isOrganizer || isAdmin) && (
+              <Link href="/manage" prefetch={false}>
+                <Button variant="ghost" className="text-nf-lime hover:text-nf-lime/80">
+                  <Settings className="h-4 w-4 mr-2" />
+                  管理
+                </Button>
+              </Link>
+            )}
           </nav>
 
-          {user ? (
+          {/* Auth-dependent UI: show skeleton during loading to prevent flash */}
+          {isLoading ? (
+            // Skeleton placeholder while checking auth state
+            <div className="flex items-center gap-2">
+              <div className="h-9 w-9 rounded-full bg-nf-secondary animate-pulse" />
+            </div>
+          ) : user ? (
             <>
               {/* Search Icon (Mobile) */}
               <Button
@@ -100,7 +114,7 @@ export function Header({ user, onMenuClick, showMenuButton = false }: HeaderProp
               </Button>
 
               {/* Notification Bell */}
-              <NotificationDropdown userId={user.id} />
+              <NotificationDropdown userId={user.user_id} />
 
               {/* Add New Button */}
               <DropdownMenu>
@@ -120,7 +134,7 @@ export function Header({ user, onMenuClick, showMenuButton = false }: HeaderProp
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/posts/create?type=for_category" className="flex items-center gap-2">
+                    <Link href="/posts/create?type=proposal" className="flex items-center gap-2">
                       <FileText className="h-4 w-4" />
                       发布提案
                     </Link>
@@ -131,7 +145,7 @@ export function Header({ user, onMenuClick, showMenuButton = false }: HeaderProp
                       创建团队
                     </Link>
                   </DropdownMenuItem>
-                  {(user.role === "organizer" || user.role === "admin") && (
+                  {(isOrganizer || isAdmin) && (
                     <DropdownMenuItem asChild>
                       <Link href="/events/create" className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
@@ -147,29 +161,46 @@ export function Header({ user, onMenuClick, showMenuButton = false }: HeaderProp
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                     <Avatar className="h-9 w-9 border-2 border-nf-secondary">
-                      <AvatarImage src={user.avatar_url} alt={user.display_name || user.username} />
                       <AvatarFallback className="bg-gradient-to-br from-nf-lime to-nf-cyan text-nf-near-black">
-                        {(user.display_name || user.username).charAt(0).toUpperCase()}
+                        {user.username.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-nf-secondary border-nf-dark w-48">
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-medium text-nf-white">{user.username}</p>
+                    <p className="text-xs text-nf-muted">
+                      {user.role === 'organizer' ? '组织者' : user.role === 'admin' ? '管理员' : '参赛者'}
+                    </p>
+                  </div>
+                  <DropdownMenuSeparator className="bg-nf-dark" />
                   <DropdownMenuItem asChild>
-                    <Link href={`/users/${user.id}`} className="flex items-center gap-2">
+                    <Link href={`/users/${user.user_id}`} className="flex items-center gap-2">
                       我的主页
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/my/posts" className="flex items-center gap-2">
+                    <Link href="/posts" className="flex items-center gap-2">
                       我的帖子
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/my/groups" className="flex items-center gap-2">
+                    <Link href="/groups" className="flex items-center gap-2">
                       我的团队
                     </Link>
                   </DropdownMenuItem>
+                  {(isOrganizer || isAdmin) && (
+                    <>
+                      <DropdownMenuSeparator className="bg-nf-dark" />
+                      <DropdownMenuItem asChild>
+                        <Link href="/manage" className="flex items-center gap-2 text-nf-lime">
+                          <Settings className="h-4 w-4" />
+                          管理中心
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuSeparator className="bg-nf-dark" />
                   <DropdownMenuItem asChild>
                     <Link href="/settings" className="flex items-center gap-2">
@@ -177,7 +208,10 @@ export function Header({ user, onMenuClick, showMenuButton = false }: HeaderProp
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-nf-dark" />
-                  <DropdownMenuItem className="text-nf-error cursor-pointer">
+                  <DropdownMenuItem
+                    className="text-nf-error cursor-pointer"
+                    onClick={handleLogout}
+                  >
                     退出登录
                   </DropdownMenuItem>
                 </DropdownMenuContent>

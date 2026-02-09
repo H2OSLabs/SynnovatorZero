@@ -13,7 +13,7 @@ router = APIRouter()
 def {{ endpoint.function_name }}(
     {% for param in endpoint.path_params %}{{ param.name }}: {{ param.type }},
     {% endfor %}{% if endpoint.request_body %}{{ endpoint.request_body.name }}: schemas.{{ endpoint.request_body.type }},
-    {% endif %}{% for param in endpoint.query_params %}{{ param.name }}: {{ param.type }} = Query({{ param.default }}{% if param.ge is defined %}, ge={{ param.ge }}{% endif %}{% if param.le is defined %}, le={{ param.le }}{% endif %}),
+    {% endif %}{% for param in endpoint.query_params %}{{ param.name }}: {{ param.type }} = Query({{ param.default }}{% if param.ge is not none %}, ge={{ param.ge }}{% endif %}{% if param.le is not none %}, le={{ param.le }}{% endif %}),
     {% endfor %}db: Session = Depends(get_db)
 ) -> {% if endpoint.return_type %}{{ endpoint.return_type }}{% else %}Any{% endif %}:
     """
