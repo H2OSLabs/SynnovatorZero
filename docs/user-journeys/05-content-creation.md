@@ -25,7 +25,9 @@ flowchart TD
 |---------|------|---------|
 | 创建个人资产 | 创作属于自己的文件资产（md文档，上传的各类文件视频图片等） | `CREATE resource` |
 | 创建资产方式 | 通过系统自带的md编辑器；通过同步elf内容；本地上传文档 | `CREATE resource`（多种来源） |
-| 创建资产文件 | 用户可以创建自己的文件作为自己的资产 | `CREATE resource` |
+| **上传图片/文件** | 用户上传本地**图片**、PDF或其他文件作为独立资产，可用于后续插入或展示 | `CREATE resource` (type=image/file) |
+
+> 关于资产的统一查看与管理（含证书、算力等），请参阅 [16. 资产管理](./16-asset-management.md)。
 
 ## 5.2 帖子与提案
 
@@ -33,6 +35,7 @@ flowchart TD
 |---------|------|---------|
 | 发布帖子 | 使用自己的资产发布帖子 | `CREATE post` + `CREATE post:resource` |
 | 发布提案 | 可以发布提案然后在提案中创建资产和放入自己的已有资产 | `CREATE post`（type: proposal） |
+| **插入图片** | 在帖子、提案或活动的编辑器中，从资产库选择**图片资产**插入正文 | `UPDATE post` (content embedding) + `CREATE post:resource` |
 | 引用内容 | 在帖子中通过卡片形式嵌入团队信息或引用其他帖子 | `CREATE post:post`（关联） |
 
 ## 5.3 编辑与版本管理

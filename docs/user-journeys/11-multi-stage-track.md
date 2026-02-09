@@ -47,7 +47,20 @@ flowchart TD
 - 同一赛道内仍受 Rule 约束（如 max_submissions）
 - 不同赛道的约束相互独立
 
-## 11.3 前置条件（Prerequisite）
+## 11.3 阶段间内容继承 (Content Inheritance)
+
+当从一个赛段晋级到下一个赛段（如 Stage 1 -> Stage 2）时，参赛者通常基于前一阶段的成果继续开发。
+
+| 步骤 | 操作者 | 数据操作 | 说明 |
+|------|-------|---------|------|
+| 1 | 参赛者 | 确认晋级资格 | `READ event:group` (status=accepted) | 确保已在上一阶段获得晋级资格 |
+| 2 | 参赛者 | **克隆提案** | `CLONE post` (source=Stage1_Proposal) | 创建 Stage 1 提案的可编辑副本 |
+| 3 | 参赛者 | 提交到新赛段 | `CREATE event:post` (Event=Stage2, Post=Cloned_Copy) | 将副本关联到 Stage 2 |
+| 4 | 参赛者 | 迭代开发 | `UPDATE post` (Cloned_Copy) | 在 Stage 2 中继续修改副本，不影响 Stage 1 的历史版本 |
+
+> **逻辑说明：** 此机制确保了 Stage 1 的提交记录（Snapshot）被永久保留，同时为 Stage 2 提供了干净的起步状态。
+
+## 11.4 前置条件（Prerequisite）
 
 | 步骤 | 操作者 | 数据操作 | 说明 |
 |------|-------|---------|------|
@@ -61,7 +74,7 @@ flowchart TD
 - 前置活动中组建的团队保持完整进入目标活动
 - 团队成员不因活动切换而变化
 
-## 11.4 负向约束
+## 11.5 负向约束
 
 | 约束 | 说明 |
 |------|------|

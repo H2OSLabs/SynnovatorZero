@@ -13,9 +13,11 @@ flowchart TD
     B -->|通过| C[活动状态 → closed]
     B2 --> C
     C --> D[post-phase actions 执行]
+    D --> D0[snapshot_proposals: 固化提案]
     D --> D1[flag_disqualified: 标记不合格]
     D --> D2[compute_ranking: 计算排名]
     D --> D3[award_certificate: 颁发证书]
+    D0 --> D1
     D1 --> D2
     D2 --> D3
     D3 --> E[参赛者收到证书]
@@ -28,7 +30,7 @@ flowchart TD
 |------|-------|---------|------|
 | 1 | 组织者 | `UPDATE event`（status → closed） | 触发关闭流程 |
 | 2 | 系统 | 执行 pre-phase checks | 关闭前校验（如所有团队是否有提交） |
-| 3 | 系统 | 执行 post-phase actions | 关闭后自动处理（终审、排名、颁奖） |
+| 3 | 系统 | 执行 post-phase actions | 关闭后自动处理（**提案固化**、终审、排名、颁奖） |
 
 ## 8.2 关闭前校验（pre phase）
 
@@ -37,9 +39,35 @@ flowchart TD
 | 所有团队人数满足要求 | `warn` | 警告但允许关闭 |
 | 所有团队有提交内容 | `deny` | 严格校验，不满足则拒绝关闭 |
 
-## 8.3 关闭后自动处理（post phase）
+## 8.3 异常处理：活动取消 (Activity Cancellation)
 
-### 8.3.1 标记不合格（flag_disqualified）
+在极端情况下（如不可抗力、严重违规），管理员可执行强制取消流程。
+
+| 步骤 | 操作者 | 数据操作 | 说明 |
+|------|-------|---------|------|
+| 1 | 管理员 | `UPDATE event` (status → cancelled) | 标记活动为取消状态 |
+| 2 | 系统 | `UPDATE event:group` (status → withdrawn) | 自动撤回所有报名记录 |
+| 3 | 系统 | `UPDATE event:post` (status → unlinked) | 解除内容与活动的关联（内容本身保留） |
+| 4 | 系统 | 发送全员通知 | 通知所有已报名用户活动已取消 |
+
+> **注意：** 取消活动**不会**触发结算、排名或证书发放流程。
+
+## 8.4 关闭后自动处理（post phase）
+
+### 8.4.0 提案固化与存档（Snapshot Proposals）
+
+活动结束时，系统会自动为所有有效提案生成**不可篡改的副本**，用于历史展示和审计。
+
+| 步骤 | 系统行为 | 数据操作 | 说明 |
+|------|---------|---------|------|
+| 1 | 遍历参赛提案 | `READ event:post` | 获取所有已提交的提案 |
+| 2 | **生成快照** | `CLONE post` (status=archived, immutable=true) | 创建“活动结束版本”副本，标记为不可修改 |
+| 3 | 关联快照 | `UPDATE event:post` (replace original with snapshot) | 将活动页面的展示链接指向此快照版本 |
+| 4 | 锁定原稿 | — | 原作者仍可编辑原提案，但**不再影响**已结束活动中的展示内容 |
+
+> **关键规则：** 用户（包括创作者）**无法修改**已归档的活动结束版本副本。
+
+### 8.4.1 标记不合格（flag_disqualified）
 
 | 步骤 | 系统行为 | 数据操作 | 说明 |
 |------|---------|---------|------|
@@ -49,7 +77,7 @@ flowchart TD
 | 4 | 检查提交内容 | `READ event:post` | 验证提交要求 |
 | 5 | 标记不合格提交 | `UPDATE post`（添加 tag） | 如 "missing_attachment" |
 
-### 8.3.2 计算排名（compute_ranking）
+### 8.4.2 计算排名（compute_ranking）
 
 | 步骤 | 系统行为 | 数据操作 | 说明 |
 |------|---------|---------|------|
@@ -61,7 +89,7 @@ flowchart TD
 - 相同分数并列排名（如两个 rank_1，下一个为 rank_3）
 - `average_rating` 为 null 的帖子不参与排名
 
-### 8.3.3 自动颁发证书（award_certificate）
+### 8.4.3 自动颁发证书（award_certificate）
 
 | 步骤 | 系统行为 | 数据操作 | 说明 |
 |------|---------|---------|------|
@@ -82,7 +110,7 @@ awards:
     name: "优秀奖"
 ```
 
-## 8.4 用户获取证书
+## 8.5 用户获取证书
 
 | 步骤 | 用户操作 | 数据操作 | 说明 |
 |------|---------|---------|------|
@@ -91,4 +119,4 @@ awards:
 | 3 | 下载证书文件 | `READ resource` | 获取证书 PDF |
 | 4 | （可选）分享证书 | `CREATE post`（引用证书帖） | 发帖展示荣誉 |
 
-- **结果：** 活动正式关闭，排名和证书自动生成，获奖者可查看和分享证书
+- **结果：** 活动正式关闭，**提案已固化存档**，排名和证书自动生成，获奖者可查看和分享证书
