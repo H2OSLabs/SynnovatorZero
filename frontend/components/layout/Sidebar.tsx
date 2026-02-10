@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Lightbulb,
   Bell,
+  Wallet,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -37,12 +38,10 @@ interface NavItem {
 }
 
 const mainNavItems: NavItem[] = [
-  { label: "首页", icon: <Home className="h-5 w-5" />, href: "/" },
   { label: "探索", icon: <Compass className="h-5 w-5" />, href: "/explore" },
-  { label: "星球", icon: <Calendar className="h-5 w-5" />, href: "/events" },
   { label: "营地", icon: <Lightbulb className="h-5 w-5" />, href: "/camps" },
-  { label: "帖子", icon: <FileText className="h-5 w-5" />, href: "/posts" },
-  { label: "团队", icon: <Users className="h-5 w-5" />, href: "/groups" },
+  { label: "星球", icon: <Calendar className="h-5 w-5" />, href: "/events" },
+  { label: "资产", icon: <Wallet className="h-5 w-5" />, href: "/assets" },
 ]
 
 const myNavItems: NavItem[] = [

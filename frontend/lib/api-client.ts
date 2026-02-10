@@ -299,6 +299,14 @@ export async function getPosts(
   return apiFetch<{ items: Post[]; total: number; skip: number; limit: number }>(`/posts?${params.toString()}`)
 }
 
+export async function getProposals(
+  skip = 0,
+  limit = 20,
+  filters?: { status?: PostStatus; tags?: string[]; q?: string; created_by?: number }
+) {
+  return getPosts(skip, limit, { ...filters, type: 'proposal' })
+}
+
 export async function getPost(postId: number) {
   return apiFetch<Post>(`/posts/${postId}`)
 }
