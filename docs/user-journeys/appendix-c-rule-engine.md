@@ -13,8 +13,12 @@
 | `exists` | 存在性检查 | `{ entity: post_resource, scope: post, require: true }` |
 | `field_match` | 字段匹配 | `{ entity: event, field: status, op: "==", value: "published" }` |
 | `resource_format` | 附件格式校验 | `{ formats: ["pdf", "zip"] }` |
+| `resource_content` | 资产内容校验 | `{ type: "dataset", min_size: 1024 }` |
+| `dependency` | 活动依赖校验 | `{ target_event_id: 101, status: "promoted" }` |
 | `resource_required` | 附件数量和格式 | `{ min_count: 2, formats: ["pdf"] }` |
 | `aggregate` | 聚合计算 | `{ entity: group_user, agg_func: count, op: ">=", value: 2 }` |
+| `check_enrollment` | **重复报名检查** | `{ check_team_membership: true }` (检查用户是否在已报名团队中) |
+| `role_check` | **角色检查** | `{ scope: "team", role: "owner" }` |
 
 ## C.2 固定字段自动展开
 

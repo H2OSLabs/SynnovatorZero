@@ -2,15 +2,24 @@
 
 本节详细说明活动报名环节中 Rule 的定义方式与执行逻辑。Rule 由组织者在创建活动时定义，系统在用户报名时自动执行。
 
-## B.1 规则类型
+## B.1 规则类型与模板
 
-| 规则名称 | 说明 | 用户行为约束 |
-|---------|------|-------------|
-| **Default**（默认） | 允许用户自由创建新 Post 参赛 | 无特殊限制 |
-| **Not create Only Select** | 仅允许选择已有 Post，不可新建 | 屏蔽"新建"入口，强制跳转"选择 Post" |
-| **Bounty** | 悬赏活动规则，提案互不可见 | 提案可见性受限 |
-| **Enterprise Challenge** | 企业出题规则，提案互不可见 | 提案可见性受限 |
-| （可扩展更多规则） | — | — |
+| 规则模板名称 | 逻辑说明 | 参数示例 |
+|-------------|---------|---------|
+| **Default**（默认） | 允许用户自由创建新 Post 参赛 | — |
+| **Not create Only Select** | 仅允许选择已有 Post，不可新建 | — |
+| **Must be Team** | **必须团队报名**，个人无法报名 | `{ allow_individual: false }` |
+| **Min Team Size** | **团队中至少有（N）人** | `{ min_size: 3 }` |
+| **Team Proposal Required** | **报名必须有关联到报名团队的团队提案** | `{ require_team_post: true }` |
+| **Leader Only** | **只有队长可以报名** | `{ role_required: "owner" }` |
+| **Leader Proposal Only** | **只有队长的提案可以作为报名提案** | `{ post_owner_role: "owner" }` |
+| **Auto Advancement** | **自动晋级**：前序活动晋级者自动获得资格 | `{ source_event_id: 101, condition: "promoted" }` |
+| **Prerequisite Participation** | **前置参赛**：必须是某活动（如 X 赛道）的参加者 | `{ source_event_id: 202, condition: "participated" }` |
+| **Asset Type Constraint** | **特定资产要求**：提案必须包含特定类型的资产 | `{ asset_type: "model", min_count: 1 }` |
+| **File Format Constraint** | **文件格式要求**：提案附件必须包含特定格式文件 | `{ formats: ["ipynb", "py"] }` |
+| **Bounty** | 悬赏活动规则，提案互不可见 | `{ visibility: "private" }` |
+| **Enterprise Challenge** | 企业出题规则，提案互不可见 | `{ visibility: "private" }` |
+| **Custom** | 用户自定义规则 | （见 checks 定义） |
 
 ## B.2 规则执行流程
 

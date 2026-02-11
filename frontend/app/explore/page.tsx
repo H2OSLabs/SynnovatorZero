@@ -11,6 +11,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { useDebounce } from "@/hooks/use-debounce"
+import {
   getCategories,
   getPosts,
   getProposals,
@@ -29,6 +36,9 @@ interface PostWithAuthor extends Post {
 
 export default function ExplorePage() {
   const [activeTab, setActiveTab] = useState("all")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [sort, setSort] = useState<'newest' | 'hottest'>('newest')
+  const debouncedSearchQuery = useDebounce(searchQuery, 500)
 
   // Events state
   const [events, setEvents] = useState<Event[]>([])
@@ -64,7 +74,7 @@ export default function ExplorePage() {
       setIsLoadingEvents(true)
       setEventsError(null)
       try {
-        const resp = await getCategories(0, 6, { status: "published" })
+        const resp = await getCategories(0, 6, { status: "published", q: debouncedSearchQuery, sort })
         setEvents(resp.items)
       } catch (e) {
         setEventsError(e instanceof Error ? e.message : "加载活动失败")
@@ -79,7 +89,7 @@ export default function ExplorePage() {
       setIsLoadingPosts(true)
       setPostsError(null)
       try {
-        const resp = await getPosts(0, 6, { status: "published" })
+        const resp = await getPosts(0, 6, { status: "published", q: debouncedSearchQuery, sort })
         // Fetch author details for each post
         const postsWithAuthors = await Promise.all(
           resp.items.map(async (post) => {
@@ -108,7 +118,7 @@ export default function ExplorePage() {
       setIsLoadingProposals(true)
       setProposalsError(null)
       try {
-        const resp = await getProposals(0, 6, { status: "published" })
+        const resp = await getProposals(0, 6, { status: "published", q: debouncedSearchQuery, sort })
         const proposalsWithAuthors = await Promise.all(
           resp.items.map(async (post) => {
             if (post.created_by) {
@@ -136,7 +146,7 @@ export default function ExplorePage() {
       setIsLoadingGroups(true)
       setGroupsError(null)
       try {
-        const resp = await getGroups(0, 6, { visibility: "public" })
+        const resp = await getGroups(0, 6, { visibility: "public", q: debouncedSearchQuery })
         setGroups(resp.items)
       } catch (e) {
         setGroupsError(e instanceof Error ? e.message : "加载团队失败")
@@ -151,7 +161,7 @@ export default function ExplorePage() {
       setIsLoadingUsers(true)
       setUsersError(null)
       try {
-        const resp = await listUsers(0, 6)
+        const resp = await listUsers(0, 6, undefined, debouncedSearchQuery)
         setUsers(resp.items)
       } catch (e) {
         setUsersError(e instanceof Error ? e.message : "加载用户失败")
@@ -166,7 +176,7 @@ export default function ExplorePage() {
     fetchProposals()
     fetchGroups()
     fetchUsers()
-  }, [])
+  }, [debouncedSearchQuery, sort])
 
   // Auto-rotate carousel
   useEffect(() => {
@@ -214,12 +224,26 @@ export default function ExplorePage() {
           <Input
             placeholder="搜索活动、帖子、团队、用户..."
             className="pl-10 bg-nf-surface border-nf-secondary"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <Button variant="outline" className="border-nf-secondary">
-          <SlidersHorizontal className="h-4 w-4 mr-2" />
-          筛选
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="border-nf-secondary min-w-[100px]">
+              <SlidersHorizontal className="h-4 w-4 mr-2" />
+              {sort === 'newest' ? '最新' : '最热'}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setSort('newest')}>
+              最新发布
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSort('hottest')}>
+              最热内容
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Hero Section */}
@@ -433,6 +457,57 @@ export default function ExplorePage() {
                         username: post.author.username,
                         display_name: post.author.display_name || post.author.username,
                       } : undefined}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* Groups Section */}
+            <section>
+              <h2 className="font-heading text-xl font-semibold text-nf-white mb-4">团队</h2>
+              {isLoadingGroups ? (
+                renderLoading()
+              ) : groupsError ? (
+                renderError(groupsError)
+              ) : groups.length === 0 ? (
+                renderEmpty("暂无团队")
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {groups.map((group) => (
+                    <GroupCard
+                      key={group.id}
+                      id={group.id}
+                      name={group.name}
+                      description={group.description}
+                      visibility={group.visibility}
+                      member_count={group.member_count}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* Users Section */}
+            <section>
+              <h2 className="font-heading text-xl font-semibold text-nf-white mb-4">用户</h2>
+              {isLoadingUsers ? (
+                renderLoading()
+              ) : usersError ? (
+                renderError(usersError)
+              ) : users.length === 0 ? (
+                renderEmpty("暂无用户")
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {users.map((user) => (
+                    <UserCard
+                      key={user.id}
+                      id={user.id}
+                      username={user.username}
+                      display_name={user.display_name}
+                      avatar_url={user.avatar_url}
+                      bio={user.bio}
+                      follower_count={user.follower_count}
                     />
                   ))}
                 </div>

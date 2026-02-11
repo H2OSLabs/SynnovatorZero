@@ -25,7 +25,7 @@
 
 ### 个人中心
 - [个性化设置](./user-journeys/12-personalization.md)
-- [星球与营地](./user-journeys/13-planet-camp.md)
+- [营地与星球](./user-journeys/13-planet-camp.md)
 - [资产转移](./user-journeys/14-asset-transfer.md)
 
 ### 附录

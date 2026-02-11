@@ -607,3 +607,37 @@ export interface Rule {
 export async function getRule(ruleId: number) {
   return apiFetch<Rule>(`/rules/${ruleId}`)
 }
+
+// Asset Copy & Link Actions
+export async function approveCopyResource(resourceId: number, requesterId: number) {
+  const params = new URLSearchParams({ requester_id: String(requesterId) })
+  return apiFetch<Resource>(`/resources/${resourceId}/copy-approve?${params.toString()}`, {
+    method: 'POST',
+  })
+}
+
+export async function rejectCopyResource(resourceId: number, requesterId: number) {
+  const params = new URLSearchParams({ requester_id: String(requesterId) })
+  return apiFetch<void>(`/resources/${resourceId}/copy-reject?${params.toString()}`, {
+    method: 'POST',
+  })
+}
+
+export async function approveLinkResource(postId: number, resourceId: number, requesterId: number) {
+  const params = new URLSearchParams({ requester_id: String(requesterId) })
+  return apiFetch<PostResource>(`/posts/${postId}/link-resource-approve?${params.toString()}`, {
+    method: 'POST',
+    body: JSON.stringify({ resource_id: resourceId }),
+  })
+}
+
+export async function rejectLinkResource(postId: number, resourceId: number, requesterId: number) {
+  const params = new URLSearchParams({ 
+    resource_id: String(resourceId),
+    requester_id: String(requesterId) 
+  })
+  return apiFetch<void>(`/posts/${postId}/link-resource-reject?${params.toString()}`, {
+    method: 'POST',
+  })
+}
+

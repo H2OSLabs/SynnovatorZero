@@ -60,19 +60,25 @@ flowchart TD
 
 > **逻辑说明：** 此机制确保了 Stage 1 的提交记录（Snapshot）被永久保留，同时为 Stage 2 提供了干净的起步状态。
 
-## 11.4 前置条件（Prerequisite）
+## 11.4 前置条件与规则依赖 (Prerequisite & Rule Dependency)
+
+> **核心逻辑：** 通过 Rule Engine 的 `dependency` check 严格控制参与资格。
+
+| 场景 | 规则配置 (Rule Template) | 校验逻辑 |
+|------|-------------------------|---------|
+| **晋级自动参加** | **Auto Advancement** | 检查用户/团队在 `source_event` 中是否获得 `promoted` 状态。若满足，自动通过报名检查；否则拒绝。 |
+| **必须参加过 X** | **Prerequisite Participation** | 检查用户/团队在 `source_event` 中是否有 `accepted` 的报名记录。 |
+| **赛道互斥** | **Mutual Exclusion** | 检查用户是否已报名互斥赛道（`count(events) where track_group=A == 0`）。 |
+
+### 11.4.1 执行流程示例
 
 | 步骤 | 操作者 | 数据操作 | 说明 |
 |------|-------|---------|------|
-| 1 | 组织者 | `CREATE event`（Bounty, Competition） | 创建悬赏活动和常规赛 |
-| 2 | 组织者 | `CREATE event:event`（Bounty→Competition, prerequisite） | Bounty 是 Competition 的前置 |
-| 3 | 参赛者 | `CREATE event:group`（报名 Competition） | 若未完成 Bounty，报名被拒绝 |
-| 4 | 参赛者 | 完成 Bounty 活动 | Bounty 关闭且团队有 accepted 记录 |
-| 5 | 参赛者 | `CREATE event:group`（报名 Competition） | 现在可以报名 |
-
-**特性：**
-- 前置活动中组建的团队保持完整进入目标活动
-- 团队成员不因活动切换而变化
+| 1 | 组织者 | `CREATE event`（复赛） | 创建复赛活动 |
+| 2 | 组织者 | `CREATE rule` | 配置规则：`dependency: { target_event_id: 初赛ID, status: "promoted" }` |
+| 3 | 参赛者 | `CREATE event:group`（报名复赛） | **系统执行 Rule Check** |
+| 4 | 系统 | 检查初赛状态 | 查询用户在初赛中是否标记为晋级 |
+| 5 | 系统 | 返回结果 | 通过则允许报名，失败则提示“未获得晋级资格” |
 
 ## 11.5 负向约束
 

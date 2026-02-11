@@ -30,13 +30,21 @@ flowchart TD
 | 团队报名 | 以团队身份报名活动 | `CREATE event:group` |
 | 个人报名 | 以个人身份报名活动 | `CREATE event:user` |
 | 提交参赛内容 | 将帖子关联到活动 | `CREATE event:post` |
-| **自动打标** | 报名成功后，关联的提案 Post 会自动获得该活动的专属标签（如 `#for_category`），用于标识内容归属 | `UPDATE post` (tags append `#for_category`) |
+| **自动打标** | 报名成功后，关联的提案会自动获得该活动的专属标签（如 `#for_category`），用于标识内容归属 | `UPDATE post` (tags append `#for_category`) |
 
 ## 4.2 报名规则校验（Entry Rule Enforcement）
 
 > 基于 TC-ENTRY 测试用例
 
-报名和提交操作会触发 Rule 的 `checks` 校验，校验在 `pre` 阶段执行：
+报名和提交操作会触发 Rule 的 `checks` 校验，系统按以下**优先级**顺序执行：
+
+1.  **全局前置校验 (System Checks)**：
+    *   **重复报名 (Unique Enrollment)**：检查用户是否已以个人身份报名，或**是否属于任何已报名该活动的团队成员**。若已存在，直接返回失败（Priority 1）。
+    *   **活动状态 (Event Status)**：检查活动是否处于报名窗口期内。
+
+2.  **自定义规则校验 (Custom Rule Checks)**：
+    *   依次执行 Rule 中定义的 checks（如 `Leader Only`, `Team Size`, `Asset Required`）。
+    *   任一 check 失败，立即终止并返回该 check 定义的**错误提示信息**。
 
 | 触发点 | 校验内容 | 失败处理 |
 |-------|---------|---------|
@@ -47,9 +55,10 @@ flowchart TD
 
 | 场景 | condition type | 说明 |
 |------|---------------|------|
+| **重复报名校验** | `unique_enrollment` | **最高优先级**。若用户所在的任一团队已成功报名，视为用户已报名。 |
+| **仅限队长报名** | `role_check` | 检查操作者在团队中的角色是否为 `owner`。若非队长，提示“仅限队长操作”。 |
 | **活动状态限制** | `status` | 已结束 (`ended`) 的活动**禁止报名**；未开始但处于报名期 (`enrollment_window`) 的活动允许报名 |
 | **报名时间限制** | `time_window` | 必须在 `enrollment_start` 和 `enrollment_end` 之间提交，否则**禁止报名** |
-| **重复报名校验** | `unique_enrollment` | 用户或其所在团队若已报名，**禁止重复报名** |
 | 必须已有 profile 帖子 | `exists` | 用户需先完善个人资料 |
 | 必须包含附件 | `resource_required` | 提案需包含指定数量/格式的附件 |
 | 团队人数限制 | `count` | 团队成员数满足 min/max 要求 |
@@ -58,7 +67,8 @@ flowchart TD
 
 ```
 ❌ 报名失败：当前不在报名时间段内
-❌ 报名失败：您或您的团队已经报名参加了该活动
+❌ 报名失败：您所在的团队 "Alpha Team" 已经报名了此活动（重复报名）
+❌ 报名失败：根据规则 "Leader Only"，只有团队队长可以执行报名操作
 ❌ 提交失败：提案必须包含至少一个 PDF 附件（TC-ENTRY-011）
 ```
 
