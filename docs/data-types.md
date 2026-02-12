@@ -324,7 +324,23 @@ created_at: datetime      # 创建时间
 
 > **设计说明：** notification 不支持软删除，已读通知可通过定期清理任务归档。用户可批量标记已读，但不能删除系统发送的通知。
 
+## notification_template
+
+系统通知模板，用于标准化各类通知内容。
+
+```yaml
 ---
+# === 必填字段 ===
+key: string               # 模板唯一键 (e.g., "activity_approved")
+title_template: string    # 标题模板 (支持 {{var}} 替换)
+content_template: string  # 内容模板 (支持 {{var}} 替换)
+type: enum                # 默认通知类型: system | activity | team | social
+
+# === 自动生成字段 ===
+id: string
+updated_at: datetime
+---
+```
 
 ## asset_pool
 
