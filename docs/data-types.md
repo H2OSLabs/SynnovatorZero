@@ -20,14 +20,16 @@ type: enum                # 活动类型: competition | operation
                           #   operation   = 运营活动（关联流程、权限类 Rule）
 
 # === 可选字段 ===
-status: enum              # 活动状态: draft | published | closed
-                          #   默认: draft
-                          #   状态机（严格单向）: draft → published → closed
-                          #   closed 为终态，不可逆转。
-                          #   如需修改已发布/已关闭的活动，应创建新版本（重置为 draft）。
+status: enum              # 活动状态: draft | pending_review | published | rejected | closed
+                          #   draft          = 草稿（默认）
+                          #   pending_review = 待审核（提交后）
+                          #   published      = 已发布（审核通过，资产冻结）
+                          #   rejected       = 审核驳回
+                          #   closed         = 已结束（资产结算）
 cover_image: string       # 封面图 URL
 start_date: datetime      # 活动开始时间
 end_date: datetime        # 活动结束时间
+asset_pool_id: string     # 关联的资产池 ID（用于奖金管理）
 
 # === 自动生成字段 ===
 id: string                # 唯一标识（自动生成）
@@ -170,7 +172,7 @@ checks:                           # 声明式条件-动作列表
       params: object              #     条件参数（因类型而异）
     on_fail: enum                 #   失败行为: deny | warn | flag（默认: deny）
     action: string                #   动作类型（仅 post 阶段使用: flag_disqualified |
-                                  #     compute_ranking | award_certificate | notify）
+                                  #     compute_ranking | award_certificate | notify | transfer_asset）
     action_params: object         #   动作参数
     message: string               #   人类可读提示信息
 
@@ -324,12 +326,41 @@ created_at: datetime      # 创建时间
 
 ---
 
+## asset_pool
+
+活动资产池，用于管理活动奖金和资源冻结。
+
+```yaml
+---
+# === 必填字段 ===
+event_id: string          # 关联活动
+amount: decimal           # 总金额/积分
+currency: string          # 货币类型
+
+# === 可选字段 ===
+status: enum              # 状态: pending | frozen | distributing | settled | refunded
+                          #   pending      = 草稿/配置中
+                          #   frozen       = 活动发布后资金冻结
+                          #   distributing = 结算中
+                          #   settled      = 已全额发放
+                          #   refunded     = 活动取消，资金回退
+
+# === 自动生成字段 ===
+id: string
+created_at: datetime
+frozen_at: datetime
+settled_at: datetime
+---
+```
+
+---
+
 ## 枚举值汇总
 
 | 内容类型 | 字段 | 可选值 |
 |---------|------|-------|
 | event | type | `competition`, `operation` |
-| event | status | `draft`, `published`, `closed` |
+| event | status | `draft`, `pending_review`, `published`, `rejected`, `closed` |
 | post | type | `profile`, `team`, `event`, `proposal`, `certificate`, `general` |
 | post | status | `draft`, `pending_review`, `published`, `rejected` |
 | post | visibility | `public`, `private` |
@@ -337,10 +368,11 @@ created_at: datetime      # 创建时间
 | group | visibility | `public`, `private` |
 | interaction | type | `like`, `comment`, `rating` |
 | notification | type | `system`, `activity`, `team`, `social` |
+| asset_pool | status | `pending`, `frozen`, `distributing`, `settled`, `refunded` |
 | rule.checks | phase | `pre`, `post` |
 | rule.checks | on_fail | `deny`, `warn`, `flag` |
 | rule.checks | condition.type | `time_window`, `count`, `exists`, `field_match`, `resource_format`, `resource_required`, `unique_per_scope`, `aggregate` |
-| rule.checks | action | `flag_disqualified`, `compute_ranking`, `award_certificate`, `notify` |
+| rule.checks | action | `flag_disqualified`, `compute_ranking`, `award_certificate`, `notify`, `transfer_asset` |
 
 | 关系 | 字段 | 可选值 |
 |-----|------|-------|
@@ -364,4 +396,4 @@ created_at: datetime      # 创建时间
 |------|------|-------------|
 | **参赛者（Participant）** | 普通用户，参与活动 | 浏览、注册、报名、创建/编辑自己的 Post、组队 |
 | **组织者（Organizer）** | 活动发起人，管理活动 | 创建/管理 Event 和 Rule、审核活动内容、管理活动相关 Post |
-| **管理员（Admin）** | 平台运营，管理平台 | 平台级用户管理、全局内容管理、系统配置 |
+| **管理员（Admin）** | 平台运营，管理平台 | 平台级用户管理、全局内容管理、系统配置、活动审核、资产仲裁 |

@@ -48,7 +48,17 @@
 | 流量与访问控制 | 监控 Captcha 触发频率，手动锁定异常 IP 或账号 | `UPDATE user` (status=locked) / `BLOCK ip` |
 | AI 算力池审计 | 监控“AI 评论员”算力消耗，调整不同角色的调用速率限制 | `UPDATE rate_limit_config` |
 
-## 15.7 平台数据监控 (Platform Data Monitoring)
+## 15.8 活动审核 (Activity Audit)
+
+管理员对组织者提交的活动进行合规性审查，并确认资产冻结情况。
+
+| 用户旅程 | 说明 | 数据操作 |
+|---------|------|---------|
+| 待审列表查看 | 筛选所有状态为 `pending_review` 的活动 | `READ event` (status=pending_review) |
+| 审核通过 | 批准活动发布。系统自动触发 AssetPool 冻结检查，若成功则活动上线 | `UPDATE event` (status=published) + `AssetPool.freeze()` |
+| 审核驳回 | 拒绝活动发布，需填写驳回原因。活动回退至草稿状态 | `UPDATE event` (status=draft, reject_reason=...) |
+
+## 15.9 平台数据监控 (Platform Data Monitoring)
 
 平台级宏观数据**仅管理员可见**，严禁对普通用户展示：
 

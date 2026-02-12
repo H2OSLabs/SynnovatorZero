@@ -235,3 +235,11 @@ stage_order: integer          # 赛段序号（仅 stage 类型使用，数值�
 > **自引用限制：** `source_category_id` 不能等于 `target_category_id`。
 >
 > **循环依赖检测：** stage 和 prerequisite 类型禁止循环依赖（A→B→C→A）。
+
+---
+
+## 管理员与关系维护
+
+管理员 (Admin) 拥有对上述所有关系的超级管理权限，并维护专门的治理关系（如举报、资产冻结等）。
+
+详细定义见：[管理员系统定义与关系 Schema](./admin-schema.md)

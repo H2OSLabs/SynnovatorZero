@@ -89,7 +89,19 @@ flowchart TD
 - 相同分数并列排名（如两个 rank_1，下一个为 rank_3）
 - `average_rating` 为 null 的帖子不参与排名
 
-### 8.4.3 自动颁发证书（award_certificate）
+### 8.4.3 资金结算 (distribute_assets)
+
+系统基于 AssetPool 和排名结果，执行资产划转。
+
+| 步骤 | 系统行为 | 数据操作 | 说明 |
+|------|---------|---------|------|
+| 1 | 检查资金池状态 | `READ asset_pool` | 确认为 `frozen` 状态 |
+| 2 | 计算分配方案 | `Rule.calculate_distribution(ranking)` | 根据排名和规则计算每个获奖者的金额 |
+| 3 | 执行转账 | `CREATE transaction` (Pool -> User) | 批量创建转账记录 |
+| 4 | 更新池状态 | `UPDATE asset_pool` (status=settled) | 标记结算完成 |
+| 5 | 退还剩余资金 | `CREATE transaction` (Pool -> Organizer) | 若有剩余资金，退回给组织者 |
+
+## 8.4.4 自动颁发证书 (award_certificate)
 
 | 步骤 | 系统行为 | 数据操作 | 说明 |
 |------|---------|---------|------|
