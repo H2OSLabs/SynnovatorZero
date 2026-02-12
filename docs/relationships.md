@@ -180,6 +180,11 @@ target_id: string         # 目标对象 ID（必填）
 interaction_id: string    # 交互记录 ID（必填）
 ```
 
+> **注意：为什么 target_type 不包含 user？**
+> - **社交关系**（关注/拉黑）：请使用专门的 `user : user` 关系。
+> - **用户互动**（点赞/评论用户）：请针对该用户的 `profile` 类型 `post` 进行交互。这能统一内容管理逻辑（如评论审核、点赞计数）。
+
+
 > **权限规则：** 只要目标对象（post/event/resource）对当前用户可见，其关联的所有 interaction 即公开可读。
 >
 > **副作用：** 创建此关系时，系统自动执行以下操作：
