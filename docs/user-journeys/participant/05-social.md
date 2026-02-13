@@ -29,8 +29,19 @@
 |---------|------|---------|
 | 发表评论 | 对帖子发表评论 | `CREATE interaction`（type: comment） |
 | **楼中楼回复** | 对已有评论进行回复，支持多级嵌套展示 | `CREATE interaction`（type: comment, parent_id） |
+| **折叠/展开回复** | 点击“查看回复”或“收起回复” | 前端交互 |
 | 删除评论 | 删除自己发表的评论 | `DELETE interaction`（软删除） |
 | 查看评论列表 | 查看帖子下的所有评论，前端按层级结构展示 | `READ interaction`（type: comment, target_id） |
+
+### 6.3.1 楼中楼交互细节
+
+> **UI 表现：** 二级回复通常缩进显示，或在模态框中展开。
+
+| 步骤 | 用户操作 | 数据操作 | 说明 |
+|------|---------|---------|------|
+| 1 | 点击某条评论下的“回复”按钮 | — | 唤起回复输入框，自动填充 `@Username` |
+| 2 | 输入回复内容并发送 | `CREATE interaction` (type: comment, parent_id=父评论ID) | 若回复的是回复，parent_id 仍为该楼层的根评论 ID（视实现而定，通常为二级扁平化或无限嵌套） |
+| 3 | 查看对话 | 点击“查看 X 条回复” | `READ interaction` (parent_id=父评论ID) | 加载该楼层下的子评论 |
 
 ## 6.4 评分
 

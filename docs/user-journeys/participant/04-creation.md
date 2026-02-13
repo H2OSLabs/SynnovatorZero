@@ -29,7 +29,21 @@ flowchart TD
 
 > 关于资产的统一查看与管理（含证书、算力等），请参阅 [16. 资产管理](./16-asset-management.md)。
 
-## 5.2 帖子与提案
+## 5.2 多功能创作面板 (Creative Panel)
+
+> **UI 入口：** 右下角/侧边栏的 "+" 按钮唤起多功能面板。
+> **核心逻辑：** 不同的创作意图对应不同的 Post 类型和预设模板。
+
+| 用户旅程 | 说明 | 数据操作 |
+|---------|------|---------|
+| **发布帖子 (常规)** | 发布日常动态，可关联图片或文档 | `CREATE post` (type: general) |
+| **找队友 (Looking for Team)** | 发布人才招募贴，包含技能需求标签和项目简介 | `CREATE post` (type: looking_for_team, tags=[skills]) |
+| **找点子 (Brainstorm)** | 发布创意验证贴，征求社区反馈而非正式立项 | `CREATE post` (type: brainstorm) |
+| **社交媒体 (Short Post)** | 发布短动态（类似 Tweet），仅包含正文，无标题 | `CREATE post` (type: social_media) |
+| **团队媒体 (Team News)** | 以**团队身份**发布官方新闻或更新（需有团队管理权限） | `CREATE post` (type: team_news, author=team_id) |
+| **全局关联上下文** | 在面板中直接选择关联的**团队 (Team)** 或 **星球 (ent)**，将内容归属到特定空间 | 前端 `Context Selector` -> `post.group_id` / `post.event_id` |
+
+## 5.3 帖子与提案详情
 
 > **业务定义：** 提案 (Proposal) 与 帖子 (Post) 在业务逻辑上是**平级且独立**的实体。提案专注于项目交付与竞赛，而帖子专注于日常社交与分享。
 
