@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { ArrowLeft, Users, UserPlus, Share2, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 import { PageLayout } from "@/components/layout/PageLayout"
 import { Panel, PanelSection, PanelCard } from "@/components/layout/Panel"
 import { Button } from "@/components/ui/button"
@@ -14,6 +15,7 @@ import {
   getGroup,
   getGroupMembers,
   getUser,
+  joinGroup,
   type Group,
   type Member,
   type User,
@@ -32,10 +34,23 @@ export default function GroupDetailPage() {
   const [group, setGroup] = useState<Group | null>(null)
   const [members, setMembers] = useState<MemberWithUser[]>([])
   const [owner, setOwner] = useState<User | null>(null)
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingMembers, setIsLoadingMembers] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Check for logged in user
+    const stored = localStorage.getItem('synnovator_user')
+    if (stored) {
+      try {
+        const u = JSON.parse(stored)
+        setCurrentUserId(u.id)
+      } catch {}
+    }
+  }, [])
 
   useEffect(() => {
     if (!Number.isFinite(id)) {
@@ -94,7 +109,24 @@ export default function GroupDetailPage() {
 
     fetchGroup()
     fetchMembers()
-  }, [id])
+  }, [id, refreshTrigger])
+
+  const isMember = members.some(m => m.user_id === currentUserId && m.status === 'accepted')
+  const isPending = members.some(m => m.user_id === currentUserId && m.status === 'pending')
+
+  const handleJoin = async () => {
+    if (!currentUserId) {
+      toast.error("请先登录")
+      return
+    }
+    try {
+      await joinGroup(id, currentUserId)
+      toast.success("申请已发送")
+      setRefreshTrigger(prev => prev + 1)
+    } catch (e) {
+      toast.error("申请失败或已经加入")
+    }
+  }
 
   if (isLoading) {
     return (
@@ -126,9 +158,13 @@ export default function GroupDetailPage() {
     <Panel title="Team Actions">
       <PanelSection>
         <div className="space-y-3">
-          <Button className="w-full bg-nf-lime text-nf-near-black hover:bg-nf-lime/90">
+          <Button 
+            className="w-full bg-nf-lime text-nf-near-black hover:bg-nf-lime/90"
+            disabled={isMember || isPending}
+            onClick={handleJoin}
+          >
             <UserPlus className="h-4 w-4 mr-2" />
-            Join Team
+            {isMember ? "已加入" : isPending ? "申请中" : "申请加入"}
           </Button>
           <Button variant="outline" className="w-full border-nf-secondary">
             <Share2 className="h-4 w-4 mr-2" />

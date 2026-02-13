@@ -90,6 +90,11 @@ def like_post(
     db.refresh(interaction)
     crud.target_interactions.create(db, target_type="post", target_id=post_id, interaction_id=interaction.id)
     _update_post_cache(db, post_id)
+    
+    # Notification
+    from app.services.notification_events import notify_like
+    notify_like(db, liker_id=user_id, post_id=post_id)
+    
     return {"post_id": post_id, "liked": True}
 
 
@@ -112,6 +117,96 @@ def unlike_post(
     if interaction:
         db.delete(interaction)
         db.commit()
+    _update_post_cache(db, post_id)
+    return None
+
+
+# --- Bookmark endpoints ---
+
+@router.get("/posts/{post_id}/bookmark", tags=["interactions"])
+def check_post_bookmark_status(
+    post_id: int,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(require_current_user_id),
+):
+    """Check if the current user has bookmarked the post."""
+    post = crud.posts.get(db, id=post_id)
+    if post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+    bookmarked = crud.target_interactions.count_by_target_and_type(
+        db, target_type="post", target_id=post_id, interaction_type="bookmark", user_id=user_id
+    ) > 0
+    return {"post_id": post_id, "bookmarked": bookmarked}
+
+
+@router.post("/posts/{post_id}/bookmark", status_code=status.HTTP_201_CREATED, tags=["interactions"])
+def bookmark_post(
+    post_id: int,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(require_current_user_id),
+):
+    post = crud.posts.get(db, id=post_id)
+    if post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    # Dedup check
+    existing = crud.target_interactions.count_by_target_and_type(
+        db, target_type="post", target_id=post_id, interaction_type="bookmark", user_id=user_id
+    )
+    if existing > 0:
+        raise HTTPException(status_code=409, detail="Already bookmarked this post")
+        
+    # Create interaction + binding
+    interaction = Interaction(type="bookmark", created_by=user_id)
+    db.add(interaction)
+    db.commit()
+    db.refresh(interaction)
+    crud.target_interactions.create(db, target_type="post", target_id=post_id, interaction_id=interaction.id)
+    # Bookmarks don't usually affect cache counts unless we add bookmark_count. Doc says we have bookmark_count.
+    # We should update cache logic to include bookmark_count.
+    _update_post_cache(db, post_id)
+    
+    # Notification
+    from app.services.notification_events import notify_bookmark
+    notify_bookmark(db, user_id=user_id, post_id=post_id)
+    
+    return {"post_id": post_id, "bookmarked": True}
+
+
+@router.delete("/posts/{post_id}/bookmark", status_code=status.HTTP_204_NO_CONTENT, tags=["interactions"])
+def unbookmark_post(
+    post_id: int,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(require_current_user_id),
+):
+    post = crud.posts.get(db, id=post_id)
+    if post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    # Find binding
+    # Need to query TI joined with Interaction
+    tis = crud.target_interactions.get_multi_by_target(
+        db, target_type="post", target_id=post_id, interaction_type="bookmark"
+    )
+    # Filter for user's interaction
+    target_ti = None
+    for ti in tis:
+        interaction = crud.interactions.get(db, id=ti.interaction_id)
+        if interaction and interaction.created_by == user_id:
+            target_ti = ti
+            break
+            
+    if target_ti is None:
+        raise HTTPException(status_code=404, detail="Not bookmarked")
+        
+    # Remove interaction + binding
+    interaction_id = target_ti.interaction_id
+    crud.target_interactions.remove(db, id=target_ti.id)
+    interaction = crud.interactions.get(db, id=interaction_id)
+    if interaction:
+        db.delete(interaction)
+        db.commit()
+        
     _update_post_cache(db, post_id)
     return None
 
