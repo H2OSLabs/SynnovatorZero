@@ -21,13 +21,22 @@
 |---------|------|---------|
 | 创建团队 | 发起并命名一个新的团队，添加团队简介 | `CREATE group` |
 | 关联团队提案 | 将个人提案作为团队提案与团队进行关联 | `CREATE group:post`（关联） |
-| 邀请成员 | 在团队中搜索并邀请他人，等待对方批准 | `CREATE group:user`（status: pending） |
-| 成员批准 | 被邀请成员可在通知界面选择加入/拒绝 | `UPDATE group:user`（status: accepted/rejected） |
-| 申请加入团队 | 在目标团队主页点击申请，触发系统通知给队长 | `CREATE group:user` (pending) + `CREATE notification` (type: team_apply) |
+| 邀请成员 (按用户名) | **熟人组队**: 队长在团队管理后台通过精确搜索用户名，直接向目标用户发送邀请。 | `CREATE group:user`（status: pending, type: invitation） |
+| 邀请成员 (通过帖子) | **人才市场招募**: 队长在浏览“个人求组队”帖子时，可直接对发帖人发起邀请。 | `CREATE group:user`（status: pending, type: invitation） |
+| 成员批准邀请 | 被邀请成员在通知中心收到邀请信息，可选择加入或拒绝。 | `UPDATE group:user`（status: accepted/rejected） |
+| 用户申请加入 | **自主申请**: 用户在团队主页点击“申请加入”，触发系统通知给队长。 | `CREATE group:user` (pending, type: application) + `CREATE notification` (type: team_apply) |
 | 审批成员申请 | 队长收到含申请人主页链接的通知，点击查看详情并操作同意/拒绝。申请人收到结果通知。 | `UPDATE group:user` + `CREATE notification` (type: team_apply_result) |
 | 成员退出/移除 | 成员主动退出或被队长移除出组 | `DELETE group:user` |
 
-## 3.3 团队资产管理
+## 3.3 成员离队与活动资格预检 (Leave & Pre-check)
+
+为保证已报名活动的团队资格持续有效，成员在退出团队时会触发系统的预检机制。
+
+| 场景 | 触发操作 | 系统校验 | 行为与反馈 |
+|------|----------|----------|------------|
+| **离队预检** | 成员点击“退出团队”按钮 | 1. 检查该团队是否已报名任何进行中的活动。<br>2. 如果是，检查该成员的退出是否会导致团队人数**低于**活动设定的**最小人数要求**。 | - **校验通过**: 允许退出。<br>- **校验失败**: **阻止退出**，并弹出警告窗口：`您所在的团队已报名活动 [活动名]，您的退出将导致团队因不满足最低人数要求而被强制取消参赛资格。是否确认退出？` |
+
+## 3.4 团队资产管理
 
 | 用户旅程 | 说明 | 数据操作 |
 |---------|------|---------|

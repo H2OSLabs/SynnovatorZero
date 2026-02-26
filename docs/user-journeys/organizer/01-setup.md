@@ -41,15 +41,23 @@ flowchart TD
 
 ### 第二步：规则设置 (Rule Settings)
 
-配置活动的准入条件、时间节点和约束。每条规则作为独立的配置项呈现。
+配置活动的准入条件、时间节点和约束。所有规则均为标准化配置，**不支持**组织者添加自定义规则或报名问卷。
+
+#### 时间与格式规则
 
 | 规则项 | 输入方式 | 数据映射 |
 |-------|---------|---------|
-| **时间安排** | 起止日期选择器 | `Event.start_date`, `Event.end_date` |
-| **报名时间** | 提交起止时间选择器 | `Rule.submission_start`, `Rule.submission_deadline` |
-| **团队规模** | 最小/最大人数输入框 | `Rule.min_team_size`, `Rule.max_team_size` |
+| **活动周期** | 起止日期选择器 | `Event.start_date`, `Event.end_date` |
+| **报名周期** | 报名起止时间选择器 | `Rule.enrollment_start`, `Rule.enrollment_end` |
+| **提交周期** | 提交起止时间选择器 | `Rule.submission_start`, `Rule.submission_deadline` |
 | **提交格式** | 文件类型多选 (PDF, ZIP, MD) | `Rule.submission_format` |
-| **自定义规则** | 声明式规则配置 (如"仅限队长报名") | `Rule.checks` |
+
+#### 报名与资格规则 (Enrollment & Qualification)
+
+| 规则项 | 输入方式 | 规则说明 |
+|-------|---------|-----------|
+| **团队规模** | 最小/最大人数输入框 | 设置团队报名的人数上下限 (例如 3-4 人)。系统将在报名时严格校验。 |
+| **赛道报名模式** | 单选按钮 (单选/多选) | - **主赛道 (X-Track)**: 用户只能选择一个主赛道参与。<br>- **子赛道 (Y-Track)**: 在主赛道下，可允许多选。 |
 
 ### 第三步：资产设置 (Asset Settings)
 
