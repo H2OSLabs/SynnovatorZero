@@ -31,6 +31,42 @@ def _ensure_schema() -> None:
 def _seed_users(db: Session) -> dict[str, int]:
     users = [
         {
+            "username": "cosmic_explorer",
+            "email": "cosmic@example.com",
+            "display_name": "Cosmic Explorer",
+            "role": "participant",
+            "password": "password",
+            "avatar_url": "/avatars/1.png",
+            "bio": "Exploring the universe one step at a time.",
+        },
+        {
+            "username": "star_builder",
+            "email": "builder@example.com",
+            "display_name": "Star Builder",
+            "role": "organizer",
+            "password": "password",
+            "avatar_url": "/avatars/2.png",
+            "bio": "Building the next generation of starships.",
+        },
+        {
+            "username": "nebula_artist",
+            "email": "artist@example.com",
+            "display_name": "Nebula Artist",
+            "role": "participant",
+            "password": "password",
+            "avatar_url": "/avatars/3.png",
+            "bio": "Capturing the beauty of the cosmos.",
+        },
+        {
+            "username": "quantum_physicist",
+            "email": "physicist@example.com",
+            "display_name": "Quantum Physicist",
+            "role": "participant",
+            "password": "password",
+            "avatar_url": "/avatars/4.png",
+            "bio": "Understanding the fundamental laws of nature.",
+        },
+        {
             "username": "techcorp",
             "email": "techcorp@example.com",
             "display_name": "TechCorp",
@@ -95,8 +131,45 @@ def _seed_users(db: Session) -> dict[str, int]:
     return ids
 
 
-def _seed_categories(db: Session, creator_user_id: int) -> None:
+def _seed_categories(db: Session, user_ids: dict[str, int]) -> None:
+    creator_user_id = user_ids["techcorp"]
     events = [
+        {
+            "name": "Mars Colonization Challenge",
+            "description": "Design a sustainable habitat for Mars.",
+            "type": "competition",
+            "status": "published",
+            "tags": ["Space", "Mars", "Habitat"],
+            "participant_count": 120,
+            "start_date": datetime(2023, 11, 1),
+            "end_date": datetime(2023, 12, 31),
+            "cover_image": "https://images.unsplash.com/photo-1541185933-710f50746b95?auto=format&fit=crop&q=80&w=800",
+            "creator_username": "star_builder",
+        },
+        {
+            "name": "Interstellar Travel Symposium",
+            "description": "Discussing the future of faster-than-light travel.",
+            "type": "competition",
+            "status": "published",
+            "tags": ["Space", "Travel", "Physics"],
+            "participant_count": 85,
+            "start_date": datetime(2024, 1, 15),
+            "end_date": datetime(2024, 1, 17),
+            "cover_image": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800",
+            "creator_username": "star_builder",
+        },
+        {
+            "name": "Asteroid Mining Hackathon",
+            "description": "Develop software for automated asteroid mining.",
+            "type": "competition",
+            "status": "published",
+            "tags": ["Space", "Mining", "Software"],
+            "participant_count": 200,
+            "start_date": datetime(2024, 2, 10),
+            "end_date": datetime(2024, 2, 12),
+            "cover_image": "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&q=80&w=800",
+            "creator_username": "star_builder",
+        },
         {
             "name": "AI 创新挑战赛 2024",
             "description": "探索人工智能的无限可能，用 AI 改变世界",
@@ -164,7 +237,9 @@ def _seed_categories(db: Session, creator_user_id: int) -> None:
     for c in events:
         if c["name"] in existing_names:
             continue
-        db.add(Event(**c, created_by=creator_user_id))
+        creator_name = c.pop("creator_username", None)
+        cid = user_ids.get(creator_name) if creator_name else creator_user_id
+        db.add(Event(**c, created_by=cid))
         inserted += 1
     db.commit()
     print(f"Seeded events: +{inserted}")
@@ -183,6 +258,61 @@ def _seed_posts(db: Session, author_user_ids: dict[str, int]) -> None:
         print(f"Normalized legacy posts with unknown type: {normalized} → {PostType.general.value}")
 
     posts = [
+        {
+            "title": "My thoughts on warp drive",
+            "content": "Is it theoretically possible? Let's discuss.",
+            "type": "general",
+            "status": "published",
+            "visibility": "public",
+            "tags": ["Space", "Physics", "Warp Drive"],
+            "created_by": author_user_ids["cosmic_explorer"],
+            "like_count": 45,
+            "comment_count": 12,
+        },
+        {
+            "title": "Beautiful nebula photo",
+            "content": "Took this with my backyard telescope.",
+            "type": "general",
+            "status": "published",
+            "visibility": "public",
+            "tags": ["Space", "Photography", "Nebula"],
+            "created_by": author_user_ids["nebula_artist"],
+            "like_count": 120,
+            "comment_count": 8,
+        },
+        {
+            "title": "Quantum entanglement explained",
+            "content": "A simple guide to a complex phenomenon.",
+            "type": "general",
+            "status": "published",
+            "visibility": "public",
+            "tags": ["Physics", "Quantum", "Education"],
+            "created_by": author_user_ids["quantum_physicist"],
+            "like_count": 89,
+            "comment_count": 23,
+        },
+        {
+            "title": "Modular Habitat Design",
+            "content": "A proposal for a modular habitat system for Mars.",
+            "type": "proposal",
+            "status": "published",
+            "visibility": "public",
+            "tags": ["Space", "Mars", "Design"],
+            "created_by": author_user_ids["cosmic_explorer"],
+            "like_count": 67,
+            "comment_count": 5,
+        },
+        {
+            "title": "Solar Sail Propulsion",
+            "content": "Using solar sails for efficient interplanetary travel.",
+            "type": "proposal",
+            "status": "published",
+            "visibility": "public",
+            "tags": ["Space", "Propulsion", "Solar"],
+            "created_by": author_user_ids["quantum_physicist"],
+            "like_count": 56,
+            "comment_count": 9,
+        },
         {
             "title": "基于大模型的智能教育平台",
             "type": "proposal",
@@ -267,6 +397,18 @@ def _seed_posts(db: Session, author_user_ids: dict[str, int]) -> None:
 def _seed_groups(db: Session, user_ids: dict[str, int]) -> dict[str, int]:
     groups = [
         {
+            "name": "Space Explorers Guild",
+            "visibility": "public",
+            "description": "A group for all space enthusiasts.",
+            "created_by": user_ids["cosmic_explorer"],
+        },
+        {
+            "name": "Rocket Engineers",
+            "visibility": "public",
+            "description": "Discussing rocket science and engineering.",
+            "created_by": user_ids["star_builder"],
+        },
+        {
             "name": "创新先锋队",
             "visibility": "public",
             "description": "热爱技术，热爱开源，我们是一群热情的创客！",
@@ -326,6 +468,8 @@ def _seed_groups(db: Session, user_ids: dict[str, int]) -> dict[str, int]:
 
 def _seed_members(db: Session, group_ids: dict[str, int], user_ids: dict[str, int]) -> None:
     pairs = [
+        ("Space Explorers Guild", "cosmic_explorer", "owner"),
+        ("Rocket Engineers", "star_builder", "owner"),
         ("创新先锋队", "alice", "owner"),
         ("创新先锋队", "bob", "member"),
         ("创新先锋队", "carol", "member"),
@@ -376,7 +520,7 @@ def main() -> None:
 
     with SessionLocal() as db:
         user_ids = _seed_users(db)
-        _seed_categories(db, creator_user_id=user_ids["techcorp"])
+        _seed_categories(db, user_ids=user_ids)
         _seed_posts(db, author_user_ids=user_ids)
         group_ids = _seed_groups(db, user_ids=user_ids)
         _seed_members(db, group_ids=group_ids, user_ids=user_ids)

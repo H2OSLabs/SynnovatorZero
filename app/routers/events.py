@@ -17,12 +17,26 @@ def list_categories(
     limit: int = Query(100, ge=1, le=1000),
     status: Optional[str] = Query(None),
     type: Optional[str] = Query(None),
+    q: Optional[str] = Query(None),
+    sort: Optional[str] = Query(None, description="Sort by: newest, hottest"),
     db: Session = Depends(get_db),
     current_user_id: Optional[int] = Depends(get_current_user_id),
 ):
+    from sqlalchemy import or_, func, desc
     query = db.query(crud.events.model).filter(
         crud.events.model.deleted_at.is_(None),
     )
+    
+    if q is not None and q.strip():
+        q_norm = q.strip().lower()
+        like = f"%{q_norm}%"
+        query = query.filter(
+            or_(
+                func.lower(crud.events.model.name).like(like),
+                func.lower(crud.events.model.description).like(like),
+            )
+        )
+
     if status is not None:
         if status not in CATEGORY_STATUSES:
             raise HTTPException(status_code=422, detail=f"Invalid status: {status}")
@@ -45,6 +59,14 @@ def list_categories(
         if type not in CATEGORY_TYPES:
             raise HTTPException(status_code=422, detail=f"Invalid type: {type}")
         query = query.filter(crud.events.model.type == type)
+        
+    # Sorting
+    if sort == "hottest":
+        query = query.order_by(desc(crud.events.model.participant_count))
+    else:
+        # Default to newest
+        query = query.order_by(desc(crud.events.model.created_at))
+        
     total = query.count()
     items = query.offset(skip).limit(limit).all()
     return {"items": items, "total": total, "skip": skip, "limit": limit}
@@ -125,6 +147,13 @@ def update_category(
             raise HTTPException(status_code=422, detail=e.message)
 
     result = crud.events.update(db, db_obj=item, obj_in=event_in)
+
+    # Post-update actions: Archive proposals if event is closed
+    if status_changed and new_status == "closed":
+        from app.services.archive_service import archive_event_proposals
+        archive_event_proposals(db, event_id=event_id)
+        
+    return result
     # Rule engine: post-hooks for event status change
     if status_changed:
         from app.services.rule_engine import run_post_hooks

@@ -28,6 +28,7 @@ flowchart TD
 | 阶段性奖励发放 | 第一阶段结束后选择优秀提案，发放奖励并进入第二阶段 | `CREATE resource`（奖励） + `CREATE event`（第二阶段） |
 | 自动组队 | 被选中晋级第二阶段的用户及其团队成员自动加入悬赏方新创建的团队 | `CREATE group` + `CREATE group:user`（批量） |
 | 提案可见性控制 | 在悬赏活动中，参加用户的提案互相不可见 | `READ post`（权限控制） |
+| **驳回与重报名** | 悬赏方可驳回不合格提案。被驳回提案自动生成**不可见副本存档**并视为淘汰，允许用户基于反馈使用**新提案**重新报名。 | `CLONE post` (archive) + `UPDATE event:post` (status=rejected) |
 
 ## 10.2 企业出题活动流程
 

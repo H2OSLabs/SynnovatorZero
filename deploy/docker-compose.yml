@@ -22,7 +22,7 @@ services:
     environment:
       - SYNNOVATOR_DATA_DIR=/app/data
     volumes:
-      - /app/synnovator-zero/data:/app/data
+      - ../data:/app/data
     networks:
       - synnovator_net
 

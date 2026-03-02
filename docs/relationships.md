@@ -180,6 +180,11 @@ target_id: string         # 目标对象 ID（必填）
 interaction_id: string    # 交互记录 ID（必填）
 ```
 
+> **注意：为什么 target_type 不包含 user？**
+> - **社交关系**（关注/拉黑）：请使用专门的 `user : user` 关系。
+> - **用户互动**（点赞/评论用户）：请针对该用户的 `profile` 类型 `post` 进行交互。这能统一内容管理逻辑（如评论审核、点赞计数）。
+
+
 > **权限规则：** 只要目标对象（post/event/resource）对当前用户可见，其关联的所有 interaction 即公开可读。
 >
 > **副作用：** 创建此关系时，系统自动执行以下操作：
@@ -235,3 +240,11 @@ stage_order: integer          # 赛段序号（仅 stage 类型使用，数值�
 > **自引用限制：** `source_category_id` 不能等于 `target_category_id`。
 >
 > **循环依赖检测：** stage 和 prerequisite 类型禁止循环依赖（A→B→C→A）。
+
+---
+
+## 管理员与关系维护
+
+管理员 (Admin) 拥有对上述所有关系的超级管理权限，并维护专门的治理关系（如举报、资产冻结等）。
+
+详细定义见：[管理员系统定义与关系 Schema](./admin-schema.md)

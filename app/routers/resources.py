@@ -78,3 +78,81 @@ def delete_resource(
 
     crud.resources.remove(db, id=resource_id)
     return None
+
+
+@router.post("/resources/{resource_id}/copy-request", status_code=status.HTTP_202_ACCEPTED, tags=["resources"])
+def request_copy_resource(
+    resource_id: int,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(require_current_user_id),
+):
+    resource = crud.resources.get(db, id=resource_id)
+    if resource is None:
+        raise HTTPException(status_code=404, detail="Resource not found")
+        
+    if resource.created_by == user_id:
+        raise HTTPException(status_code=400, detail="Cannot copy your own resource (just use it)")
+        
+    from app.services.notification_events import notify_asset_copy_request
+    notify_asset_copy_request(db, requester_id=user_id, resource_id=resource_id)
+    
+    return {"message": "Copy request sent"}
+
+
+@router.post("/resources/{resource_id}/copy-approve", response_model=schemas.Resource, status_code=status.HTTP_201_CREATED, tags=["resources"])
+def approve_copy_resource(
+    resource_id: int,
+    requester_id: int = Query(..., description="User ID of the requester"),
+    db: Session = Depends(get_db),
+    user_id: int = Depends(require_current_user_id),
+):
+    resource = crud.resources.get(db, id=resource_id)
+    if resource is None:
+        raise HTTPException(status_code=404, detail="Resource not found")
+        
+    # Only owner can approve
+    if resource.created_by != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to approve copy of this resource")
+        
+    # Check if requester exists
+    requester = crud.users.get(db, id=requester_id)
+    if not requester:
+        raise HTTPException(status_code=404, detail="Requester not found")
+        
+    # Perform copy
+    # We create a new resource with same data but new owner
+    new_resource_in = schemas.ResourceCreate(
+        name=f"{resource.name} (Copy)",
+        type=resource.type,
+        url=resource.url,
+        description=resource.description,
+        meta_info=resource.meta_info
+    )
+    new_resource_in.created_by = requester_id
+    new_resource = crud.resources.create(db, obj_in=new_resource_in)
+    
+    # Notify requester
+    from app.services.notification_events import notify_asset_copy_result
+    notify_asset_copy_result(db, requester_id=requester_id, resource_id=resource_id, result="accepted")
+    
+    return new_resource
+
+
+@router.post("/resources/{resource_id}/copy-reject", status_code=status.HTTP_204_NO_CONTENT, tags=["resources"])
+def reject_copy_resource(
+    resource_id: int,
+    requester_id: int = Query(..., description="User ID of the requester"),
+    db: Session = Depends(get_db),
+    user_id: int = Depends(require_current_user_id),
+):
+    resource = crud.resources.get(db, id=resource_id)
+    if resource is None:
+        raise HTTPException(status_code=404, detail="Resource not found")
+        
+    if resource.created_by != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+        
+    from app.services.notification_events import notify_asset_copy_result
+    notify_asset_copy_result(db, requester_id=requester_id, resource_id=resource_id, result="rejected")
+    
+    return None

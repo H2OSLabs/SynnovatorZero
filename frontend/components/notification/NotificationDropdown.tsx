@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { toast } from 'sonner'
 import {
   Popover,
   PopoverContent,
@@ -15,6 +17,11 @@ import {
   getUnreadCount,
   markNotificationAsRead,
   markAllNotificationsAsRead,
+  updateGroupMemberStatus,
+  approveCopyResource,
+  rejectCopyResource,
+  approveLinkResource,
+  rejectLinkResource,
 } from '@/lib/api-client'
 
 interface Notification {
@@ -34,9 +41,20 @@ interface NotificationDropdownProps {
 
 const NOTIFICATION_ICONS: Record<string, string> = {
   follow: '👤',
+  friend: '🤝',
   comment: '💬',
   mention: '@',
   team_request: '📩',
+  team_apply: '👋',
+  team_apply_result: '📝',
+  team_invite: '📨',
+  team_invite_result: '📝',
+  asset_copy_req: '📄',
+  asset_copy_result: '📝',
+  asset_link_req: '🔗',
+  asset_link_result: '📝',
+  like: '👍',
+  bookmark: '🔖',
   award: '🏆',
   system: '📢',
 }
@@ -57,6 +75,7 @@ function formatTime(dateStr: string): string {
 }
 
 export function NotificationDropdown({ userId, className = '' }: NotificationDropdownProps) {
+  const router = useRouter()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
@@ -118,6 +137,145 @@ export function NotificationDropdown({ userId, className = '' }: NotificationDro
     }
   }
 
+  const handleTeamApplyAction = async (notification: Notification, action: 'accepted' | 'rejected') => {
+    try {
+      if (!notification.related_url) return
+      // Parse related_url: /users/{userId}?apply_group_id={groupId}
+      // Note: new URL() requires a base for relative URLs
+      const url = new URL(notification.related_url, 'http://dummy.com')
+      
+      const groupIdParam = url.searchParams.get('apply_group_id')
+      if (!groupIdParam) {
+        console.error("Missing group ID in notification URL")
+        return
+      }
+      
+      // Extract user ID from path (last segment)
+      const pathParts = url.pathname.split('/')
+      const applicantIdStr = pathParts[pathParts.length - 1]
+      
+      const groupId = parseInt(groupIdParam)
+      const applicantId = parseInt(applicantIdStr)
+      
+      if (isNaN(groupId) || isNaN(applicantId)) {
+        console.error("Invalid IDs in notification data")
+        return
+      }
+
+      await updateGroupMemberStatus(groupId, applicantId, action)
+      toast.success(action === 'accepted' ? '已批准加入' : '已拒绝申请')
+      
+      // Mark as read and refresh
+      if (!notification.is_read) {
+        await handleMarkAsRead(notification.id)
+      }
+      fetchNotifications()
+    } catch (err) {
+      toast.error('操作失败')
+      console.error(err)
+    }
+  }
+
+  const handleTeamInviteAction = async (notification: Notification, action: 'accepted' | 'rejected') => {
+    try {
+      if (!notification.related_url) return
+      // Parse related_url: /groups/{groupId}?invite_id={groupId}
+      const url = new URL(notification.related_url, 'http://dummy.com')
+      
+      // The group ID is in the path
+      const pathParts = url.pathname.split('/')
+      const groupIdStr = pathParts[pathParts.length - 1]
+      const groupId = parseInt(groupIdStr)
+      
+      if (isNaN(groupId)) {
+        console.error("Invalid Group ID in notification URL")
+        return
+      }
+      
+      // For invites, the "member" record already exists with status "invited".
+      // We are the current user, so we update our own status in that group.
+      await updateGroupMemberStatus(groupId, userId, action)
+      
+      toast.success(action === 'accepted' ? '已加入团队' : '已拒绝邀请')
+      
+      if (!notification.is_read) await handleMarkAsRead(notification.id)
+      fetchNotifications()
+    } catch (err) {
+      toast.error('操作失败')
+      console.error(err)
+    }
+  }
+
+  const handleAssetCopyAction = async (notification: Notification, action: 'accepted' | 'rejected') => {
+    try {
+      if (!notification.related_url) return
+      // /assets/{resource_id}?requester_id={requester_id}
+      const url = new URL(notification.related_url, 'http://dummy.com')
+      
+      const requesterIdParam = url.searchParams.get('requester_id')
+      if (!requesterIdParam) return
+      
+      const pathParts = url.pathname.split('/')
+      const resourceIdStr = pathParts[pathParts.length - 1]
+      
+      const resourceId = parseInt(resourceIdStr)
+      const requesterId = parseInt(requesterIdParam)
+      
+      if (isNaN(resourceId) || isNaN(requesterId)) return
+      
+      if (action === 'accepted') {
+        await approveCopyResource(resourceId, requesterId)
+        toast.success('已同意复制')
+      } else {
+        await rejectCopyResource(resourceId, requesterId)
+        toast.success('已拒绝复制')
+      }
+      
+      if (!notification.is_read) await handleMarkAsRead(notification.id)
+      fetchNotifications()
+    } catch (err) {
+      toast.error('操作失败')
+      console.error(err)
+    }
+  }
+
+  const handleAssetLinkAction = async (notification: Notification, action: 'accepted' | 'rejected') => {
+    try {
+      if (!notification.related_url) return
+      // /posts/{post_id}?link_resource_id={resource_id}
+      const url = new URL(notification.related_url, 'http://dummy.com')
+      
+      const resourceIdParam = url.searchParams.get('link_resource_id')
+      if (!resourceIdParam) return
+      
+      const pathParts = url.pathname.split('/')
+      const postIdStr = pathParts[pathParts.length - 1]
+      
+      const postId = parseInt(postIdStr)
+      const resourceId = parseInt(resourceIdParam)
+      
+      // Notification actor_id is the requester
+      const requesterId = notification.actor_id 
+      if (!requesterId) return 
+      
+      if (isNaN(postId) || isNaN(resourceId)) return
+      
+      if (action === 'accepted') {
+        await approveLinkResource(postId, resourceId, requesterId)
+        toast.success('已同意关联')
+      } else {
+        await rejectLinkResource(postId, resourceId, requesterId)
+        toast.success('已拒绝关联')
+      }
+      
+      if (!notification.is_read) await handleMarkAsRead(notification.id)
+      fetchNotifications()
+    } catch (err) {
+      toast.error('操作失败')
+      console.error(err)
+    }
+  }
+
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
@@ -176,7 +334,8 @@ export function NotificationDropdown({ userId, className = '' }: NotificationDro
                       handleMarkAsRead(notification.id)
                     }
                     if (notification.related_url) {
-                      window.location.href = notification.related_url
+                      router.push(notification.related_url)
+                      setIsOpen(false)
                     }
                   }}
                 >
@@ -190,15 +349,121 @@ export function NotificationDropdown({ userId, className = '' }: NotificationDro
                           {notification.title}
                         </p>
                       )}
-                      <p className="text-sm text-nf-light-gray line-clamp-2">
+                      <p className="text-sm text-nf-muted line-clamp-2">
                         {notification.content}
                       </p>
-                      <p className="text-xs text-nf-muted mt-1">
+                      
+                      {/* Action Buttons */}
+                      {notification.type === 'team_apply' && (
+                        <div className="flex gap-2 mt-2">
+                          <Button 
+                            size="sm" 
+                            className="h-7 text-xs bg-nf-lime text-nf-black hover:bg-nf-lime/90"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleTeamApplyAction(notification, 'accepted')
+                            }}
+                          >
+                            同意
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="h-7 text-xs border-nf-muted text-nf-muted hover:text-nf-white hover:border-nf-white bg-transparent"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleTeamApplyAction(notification, 'rejected')
+                            }}
+                          >
+                            拒绝
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {notification.type === 'team_invite' && (
+                        <div className="flex gap-2 mt-2">
+                          <Button 
+                            size="sm" 
+                            className="h-7 text-xs bg-nf-lime text-nf-black hover:bg-nf-lime/90"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleTeamInviteAction(notification, 'accepted')
+                            }}
+                          >
+                            接受邀请
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="h-7 text-xs border-nf-muted text-nf-muted hover:text-nf-white hover:border-nf-white bg-transparent"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleTeamInviteAction(notification, 'rejected')
+                            }}
+                          >
+                            忽略
+                          </Button>
+                        </div>
+                      )}
+
+                      {notification.type === 'asset_copy_req' && (
+                        <div className="flex gap-2 mt-2">
+                          <Button 
+                            size="sm" 
+                            className="h-7 text-xs bg-nf-lime text-nf-black hover:bg-nf-lime/90"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleAssetCopyAction(notification, 'accepted')
+                            }}
+                          >
+                            允许复制
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="h-7 text-xs border-nf-muted text-nf-muted hover:text-nf-white hover:border-nf-white bg-transparent"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleAssetCopyAction(notification, 'rejected')
+                            }}
+                          >
+                            拒绝
+                          </Button>
+                        </div>
+                      )}
+
+                      {notification.type === 'asset_link_req' && (
+                        <div className="flex gap-2 mt-2">
+                          <Button 
+                            size="sm" 
+                            className="h-7 text-xs bg-nf-lime text-nf-black hover:bg-nf-lime/90"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleAssetLinkAction(notification, 'accepted')
+                            }}
+                          >
+                            允许关联
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="h-7 text-xs border-nf-muted text-nf-muted hover:text-nf-white hover:border-nf-white bg-transparent"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleAssetLinkAction(notification, 'rejected')
+                            }}
+                          >
+                            拒绝
+                          </Button>
+                        </div>
+                      )}
+                      
+                      <span className="text-xs text-nf-muted/60 mt-1 block">
                         {formatTime(notification.created_at)}
-                      </p>
+                      </span>
                     </div>
                     {!notification.is_read && (
-                      <div className="w-2 h-2 rounded-full bg-nf-lime flex-shrink-0 mt-1.5" />
+                      <div className="w-2 h-2 rounded-full bg-nf-lime flex-shrink-0 mt-2" />
                     )}
                   </div>
                 </div>

@@ -15,12 +15,30 @@ def list_users(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     role: Optional[str] = Query(None),
+    q: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
-    items = crud.users.get_multi(db, skip=skip, limit=limit)
+    from sqlalchemy import or_, func
+    query = db.query(crud.users.model).filter(
+        crud.users.model.deleted_at.is_(None),
+    )
+
+    if q is not None and q.strip():
+        q_norm = q.strip().lower()
+        like = f"%{q_norm}%"
+        query = query.filter(
+            or_(
+                func.lower(crud.users.model.username).like(like),
+                func.lower(crud.users.model.display_name).like(like),
+                func.lower(crud.users.model.bio).like(like),
+            )
+        )
+
     if role:
-        items = [u for u in items if u.role == role]
-    total = len(items)
+        query = query.filter(crud.users.model.role == role)
+        
+    total = query.count()
+    items = query.offset(skip).limit(limit).all()
     return {"items": items, "total": total, "skip": skip, "limit": limit}
 
 
@@ -127,8 +145,13 @@ def follow_user(
     update_user_follow_cache(db, current_user_id)  # following_count +1
     update_user_follow_cache(db, user_id)  # follower_count +1
     # Create notification for the followed user
-    from app.services.notification_events import notify_follow
+    from app.services.notification_events import notify_follow, notify_friend
     notify_follow(db, follower_id=current_user_id, followed_id=user_id)
+    
+    # Check for mutual follow (Friendship)
+    if crud.user_users.is_mutual_follow(db, user_a=current_user_id, user_b=user_id):
+        notify_friend(db, user_a_id=current_user_id, user_b_id=user_id)
+        
     return result
 
 
